@@ -1,0 +1,23 @@
+# Core dependencies (required)
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-multipart==0.0.12
+sqlalchemy==2.0.36
+pydantic==2.9.2
+pydantic[email]
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.1
+PyPDF2==3.0.1
+numpy>=1.24.0
+email-validator>=2.0.0
+psycopg2-binary>=2.9.0
+Pillow>=10.0.0
+pytesseract>=0.3.10
+
+# Optional: AI/ML features (install when you have disk space)
+# These are large packages (~1GB+). The backend works without them using text-based search.
+openai==1.54.3
+httpx==0.27.2
+# sentence-transformers==2.7.0
+# faiss-cpu>=1.9.0

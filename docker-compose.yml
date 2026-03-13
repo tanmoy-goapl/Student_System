@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16
+    container_name: student_system_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: student_rag
+    ports:
+      - "5435:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d student_rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: student_system_backend
+    restart: unless-stopped
+    env_file:
+      - ./Backend/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/student_rag
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8020:8000"
+    volumes:
+      - uploads_data:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BACKEND_URL: http://10.10.90.95:8020
+    container_name: student_system_frontend
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      - backend
+    ports:
+      - "3500:3000"
+
+volumes:
+  db_data:
+  uploads_data:
