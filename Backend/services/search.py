@@ -22,14 +22,15 @@ from typing import List, Tuple
 import numpy as np
 from sqlalchemy.orm import Session
 
-# Ensure project root is on sys.path so `Backend.*` imports work when run directly.
-CURRENT_DIR = os.path.dirname(__file__)
-PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", ".."))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+# Ensure Backend/ is on sys.path so `models` and `services.*` imports work
+# when running this file directly (python Backend/services/search.py).
+CURRENT_DIR = os.path.dirname(__file__)          # .../Backend/services
+BACKEND_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))  # .../Backend
+if BACKEND_DIR not in sys.path:
+    sys.path.insert(0, BACKEND_DIR)
 
-from Backend.models import Document, DocumentChunk  # type: ignore
-from Backend.services.embedding import get_embedding, string_to_embedding  # type: ignore
+from models import Document, DocumentChunk  # type: ignore
+from services.embedding import get_embedding, string_to_embedding  # type: ignore
 
 # ── Thresholds ────────────────────────────────────────────────────────────────
 MIN_SEMANTIC_SIM  = 0.20   # lowered slightly so fringe-but-valid chunks aren't dropped
