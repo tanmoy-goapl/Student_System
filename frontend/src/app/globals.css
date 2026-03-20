@@ -25,3 +25,33 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+:root {
+  /* Mentor AI brand palette (reused across components) */
+  --mentor-blue-900: #071a3a;
+  --mentor-blue-800: #08224e;
+  --mentor-blue-700: #0a2a5e;
+
+  --mentor-accent: #22d3ee; /* cyan-400-ish */
+  --mentor-accent-hover: #06b6d4; /* cyan-500-ish */
+}
+
+/* Reusable navbar/button styles so we don't repeat hex values. */
+.mentor-navbar {
+  background: linear-gradient(
+    90deg,
+    var(--mentor-blue-900),
+    var(--mentor-blue-800),
+    var(--mentor-blue-700)
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mentor-get-started {
+  background: var(--mentor-accent);
+  color: var(--mentor-blue-900);
+}
+
+.mentor-get-started:hover {
+  background: var(--mentor-accent-hover);
+}
+
