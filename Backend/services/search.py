@@ -14,14 +14,22 @@ Improvements over original:
 
 from __future__ import annotations
 
+import os
+import sys
 import re
 from typing import List, Tuple
 
 import numpy as np
 from sqlalchemy.orm import Session
 
-from models import Document, DocumentChunk
-from services.embedding import get_embedding, string_to_embedding
+# Ensure project root is on sys.path so `Backend.*` imports work when run directly.
+CURRENT_DIR = os.path.dirname(__file__)
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from Backend.models import Document, DocumentChunk  # type: ignore
+from Backend.services.embedding import get_embedding, string_to_embedding  # type: ignore
 
 # ── Thresholds ────────────────────────────────────────────────────────────────
 MIN_SEMANTIC_SIM  = 0.20   # lowered slightly so fringe-but-valid chunks aren't dropped
