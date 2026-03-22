@@ -28,7 +28,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from Backend.models import Document, DocumentChunk  # type: ignore
+from models import Document, DocumentChunk
 from Backend.services.embedding import get_embedding, string_to_embedding  # type: ignore
 
 # ── Thresholds ────────────────────────────────────────────────────────────────
