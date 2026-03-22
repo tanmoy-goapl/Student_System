@@ -16,7 +16,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [initLoading, setInitLoading] = useState(true);
   const [error, setError] = useState("");
-  const [role, setRole] = useState<"admin" | "student" | null>(null);
+  const [role, setRole] = useState<"admin" | "student" | "professor" | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [users, setUsers] = useState<UserOption[]>([]);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
@@ -32,7 +32,7 @@ export default function ChatPage() {
   };
 
   useEffect(() => {
-    const storedRole = localStorage.getItem("role") as "admin" | "student" | null;
+    const storedRole = localStorage.getItem("role") as "admin" | "student" | "professor" | null;
     const userId = parseInt(localStorage.getItem("user_id") || "0", 10);
     setRole(storedRole);
     setCurrentUserId(userId);

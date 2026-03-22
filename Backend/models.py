@@ -15,7 +15,7 @@ class User(Base):
     department   = Column(String, nullable=True)
     email        = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role         = Column(String, default="student")   # student | admin | teacher
+    role         = Column(String, default="student")   # student | admin | professor
     is_active    = Column(Boolean, default=True)
     created_at   = Column(DateTime, default=datetime.utcnow)
 

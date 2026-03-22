@@ -47,6 +47,8 @@ class UserOut(BaseModel):
     class Config:
         from_attributes = True
 
+ALLOWED_ROLES = {"student", "admin", "professor"}
+
 # ── Routes ────────────────────────────────────────────────
 
 @router.post("/login", response_model=AuthResponse)
@@ -97,7 +99,7 @@ def admin_create_user(payload: CreateUserRequest, db: Session = Depends(get_db))
         )
 
     # 3) Create the new user
-    new_role = payload.role if payload.role in {"student", "admin"} else "student"
+    new_role = payload.role if payload.role in ALLOWED_ROLES else "student"    
     user = User(
         name=payload.name,
         department=payload.department,
