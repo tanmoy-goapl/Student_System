@@ -131,7 +131,7 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
       {/* ── Header Text ───────────────────── */}
       <div className="mb-4">
         <p className="text-sm text-gray-600 mb-4">
-          {loginType === "admin" && "Admin access portal"}
+          {loginType === "admin" && "Management access portal"}
           {loginType === "user" && "Student access portal"}
           {loginType === "professor" && "Professor access portal"}
         </p>

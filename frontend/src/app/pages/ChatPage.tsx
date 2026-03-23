@@ -78,6 +78,17 @@ export default function ChatPage() {
     }
   }, []);
 
+  useEffect(() => {
+  const savedInput = localStorage.getItem("chat_input");
+  if (savedInput) {
+    setQuestion(savedInput);
+  }
+}, []);
+
+useEffect(() => {
+  localStorage.setItem("chat_input", question);
+}, [question]);
+
   // On page load or when switching users, keep the visible chat empty.
   // Full history is still available in the Chat History sidebar.
   useEffect(() => {
@@ -106,6 +117,7 @@ export default function ChatPage() {
     setError("");
     setHistory((prev) => [...prev, { role: "user", content: q }]);
     setQuestion("");
+    localStorage.removeItem("chat_input");
     setLoading(true);
 
     try {
