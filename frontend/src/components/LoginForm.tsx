@@ -192,8 +192,8 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
           <span className="font-mono">admin123</span>
         </p>
         <p>
-          Professor → <span className="font-mono">prof@example.com</span> /{" "}
-          <span className="font-mono">prof123</span>
+          Professor → <span className="font-mono">professor@gmail.com</span> /{" "}
+          <span className="font-mono">professor123</span>
         </p>
       </div>
     </div>
