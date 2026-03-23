@@ -4,7 +4,7 @@ import { useState } from "react";
 import { login } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
-type LoginType = "admin" | "user";
+type LoginType = "admin" | "user" | "professor";
 
 type Props = {
   onLoginSuccess?: () => void;
@@ -35,12 +35,20 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
         setLoading(false);
         return;
       }
+
       if (loginType === "user" && res.role !== "student") {
         setError("This account is not a student account");
         setLoading(false);
         return;
       }
 
+      if (loginType === "professor" && res.role !== "professor") {
+        setError("This account is not a professor account");
+        setLoading(false);
+        return;
+      }
+
+      // ── Store session ───────────────────────────────
       localStorage.setItem("user_id", String(res.user_id));
       localStorage.setItem("role", res.role);
       if (res.name) {
@@ -53,10 +61,11 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
             .replace(/\b\w/g, (l) => l.toUpperCase());
         localStorage.setItem("user_name", derived);
       }
+
       localStorage.setItem("user_email", res.email || email);
-      
+
       onLoginSuccess?.();
-      
+
       if (redirectAfterLogin) {
         router.push(redirectAfterLogin);
         router.refresh();
@@ -72,8 +81,11 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
+      
+      {/* ── Tabs ───────────────────────────── */}
       <div className="mb-6">
         <div className="flex gap-4 border-b border-gray-200">
+
           <button
             onClick={() => {
               setLoginType("admin");
@@ -87,6 +99,7 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
           >
             ADMIN LOGIN
           </button>
+
           <button
             onClick={() => {
               setLoginType("user");
@@ -98,23 +111,43 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            USER LOGIN
+            STUDENT LOGIN
           </button>
+
+          <button
+            onClick={() => {
+              setLoginType("professor");
+              setError("");
+            }}
+            className={`pb-3 px-2 text-sm font-medium transition-colors ${
+              loginType === "professor"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            PROFESSOR LOGIN
+          </button>
+
         </div>
       </div>
 
+      {/* ── Header Text ───────────────────── */}
       <div className="mb-4">
         <p className="text-sm text-gray-600 mb-4">
-          Enter your email and password to continue.
+          {loginType === "admin" && "Admin access portal"}
+          {loginType === "user" && "Student access portal"}
+          {loginType === "professor" && "Professor access portal"}
         </p>
       </div>
 
+      {/* ── Error ─────────────────────────── */}
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
           {error}
         </div>
       )}
 
+      {/* ── Email ─────────────────────────── */}
       <div className="mb-4">
         <input
           type="email"
@@ -126,6 +159,7 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
         />
       </div>
 
+      {/* ── Password ──────────────────────── */}
       <div className="mb-6">
         <input
           type="password"
@@ -137,6 +171,7 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
         />
       </div>
 
+      {/* ── Submit ───────────────────────── */}
       <button
         className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         onClick={handleLogin}
@@ -145,6 +180,7 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
         {loading ? "Unlocking..." : "Unlock"}
       </button>
 
+      {/* ── Default creds ─────────────────── */}
       <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500">
         <p className="font-semibold text-gray-600 mb-1">Default credentials:</p>
         <p>
@@ -152,8 +188,12 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
           <span className="font-mono">student123</span>
         </p>
         <p>
-          Admin &nbsp;&nbsp;→ <span className="font-mono">admin@example.com</span> /{" "}
+          Admin → <span className="font-mono">admin@example.com</span> /{" "}
           <span className="font-mono">admin123</span>
+        </p>
+        <p>
+          Professor → <span className="font-mono">prof@example.com</span> /{" "}
+          <span className="font-mono">prof123</span>
         </p>
       </div>
     </div>

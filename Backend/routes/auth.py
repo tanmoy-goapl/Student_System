@@ -99,13 +99,12 @@ def admin_create_user(payload: CreateUserRequest, db: Session = Depends(get_db))
         )
 
     # 3) Create the new user
-    new_role = payload.role if payload.role in ALLOWED_ROLES else "student"    
     user = User(
         name=payload.name,
         department=payload.department,
         email=payload.email,
         password_hash=hash_password(payload.password),
-        role=new_role,
+        role=payload.role,
     )
     db.add(user)
     db.commit()

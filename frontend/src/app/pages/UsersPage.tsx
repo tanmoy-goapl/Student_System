@@ -11,6 +11,8 @@ export type UserRow = {
   role: string;
 };
 
+export type UserRole = 'admin' | 'professor' | 'student'
+
 function UserTable({
   users,
   loading,
@@ -49,26 +51,26 @@ function UserTable({
               // Extract name from email if name is not set
               const displayName = u.name?.trim() || u.email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, l => l.toUpperCase()) || "—";
               return (
-              <tr key={u.id} className="border-t bg-white hover:bg-gray-50">
-                <td className="px-4 py-3 text-gray-800">
-                  {displayName}
-                </td>
-                <td className="px-4 py-3 text-gray-800">
-                  {u.department?.trim() || "—"}
-                </td>
-                <td className="px-4 py-3 text-gray-800">{u.email}</td>
-                <td className="px-4 py-3 text-right">
-                  {u.role !== "admin" && (
-                    <button
-                      type="button"
-                      className="inline-flex items-center px-3 py-1.5 rounded bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium"
-                      onClick={() => onDelete(u)}
-                    >
-                      Delete
-                    </button>
-                  )}
-                </td>
-              </tr>
+                <tr key={u.id} className="border-t bg-white hover:bg-gray-50">
+                  <td className="px-4 py-3 text-gray-800">
+                    {displayName}
+                  </td>
+                  <td className="px-4 py-3 text-gray-800">
+                    {u.department?.trim() || "—"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-800">{u.email}</td>
+                  <td className="px-4 py-3 text-right">
+                    {u.role !== "admin" && (
+                      <button
+                        type="button"
+                        className="inline-flex items-center px-3 py-1.5 rounded bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium"
+                        onClick={() => onDelete(u)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </td>
+                </tr>
               );
             })
           )}
@@ -88,6 +90,7 @@ export default function UsersPage() {
   const [newDepartment, setNewDepartment] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState<UserRole>("student");
   const [userMsg, setUserMsg] = useState("");
   const [userError, setUserError] = useState("");
   const [userLoading, setUserLoading] = useState(false);
@@ -144,7 +147,7 @@ export default function UsersPage() {
         adminId,
         newEmail,
         newPassword,
-        "student",
+        newRole,
         newName || undefined,
         newDepartment || undefined
       );
@@ -251,6 +254,17 @@ export default function UsersPage() {
                   onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="newuser@example.com"
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1">Role</label>
+                <select
+                  className="w-full border rounded px-3 py-2 text-sm"
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as UserRole)}                >
+                  <option value="student">Student</option>
+                  <option value="professor">Professor</option>
+                  <option value="admin">Admin</option>
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1">Password</label>

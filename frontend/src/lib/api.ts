@@ -41,7 +41,7 @@ export async function createUser(
   adminId: number,
   email: string,
   password: string,
-  role: "student" | "admin" = "student",
+  role: "student" | "admin" | "professor",
   name?: string,
   department?: string
 ): Promise<AuthResponse> {
