@@ -30,6 +30,7 @@ function UserTable({
             <th className="px-4 py-3 text-left font-semibold">Name</th>
             <th className="px-4 py-3 text-left font-semibold">Department</th>
             <th className="px-4 py-3 text-left font-semibold">Email</th>
+            <th className="px-4 py-3 text-left font-semibold">Role</th>
             <th className="px-4 py-3 text-right font-semibold">Actions</th>
           </tr>
         </thead>
@@ -59,6 +60,7 @@ function UserTable({
                     {u.department?.trim() || "—"}
                   </td>
                   <td className="px-4 py-3 text-gray-800">{u.email}</td>
+                  <td className="px-4 py-3 text-gray-800">{u.role}</td>
                   <td className="px-4 py-3 text-right">
                     {u.role !== "admin" && (
                       <button
