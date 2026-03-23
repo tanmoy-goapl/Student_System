@@ -41,6 +41,10 @@ class Document(Base):
     student = relationship("User", back_populates="documents")
     chunks  = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
 
+    readable_by = Column(String, default="owner")
+    # "owner"     = only the uploader sees it
+    # "professor" = professors + owner can see it  
+    # "all"       = everyone can see it
 
 # ─────────────────────────────────────────────
 # DocumentChunk Model

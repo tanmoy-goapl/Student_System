@@ -21,6 +21,7 @@ from typing import List, Tuple
 
 import numpy as np
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 # Ensure project root is on sys.path so `Backend.*` imports work when run directly.
 CURRENT_DIR = os.path.dirname(__file__)
@@ -70,7 +71,8 @@ STOP_WORDS = {
 
 def search_relevant_chunks(
     question: str,
-    student_id: int,
+    user_id: int,
+    user_role: str,
     db: Session,
     top_k: int = 5,
 ) -> List[DocumentChunk]:
@@ -84,12 +86,34 @@ def search_relevant_chunks(
     3. Keyword-only fallback if embeddings unavailable
     4. First-chunk fallback so the LLM always has something
     """
-    chunks = (
-        db.query(DocumentChunk)
-        .join(Document)
-        .filter(Document.student_id == student_id)
-        .all()
-    )
+
+    if user_role == "admin":
+        # admin sees everything
+        chunks = db.query(DocumentChunk).join(Document).all()
+
+    elif user_role == "professor":
+        # professor sees: their own docs + any doc marked readable by professor/all
+        chunks = (
+            db.query(DocumentChunk)
+            .join(Document)
+            .filter(or_(
+                Document.student_id == user_id,
+                Document.readable_by.in_(["professor", "all"]),
+            ))
+            .all()
+        )
+
+    else:  # student
+        # student sees: their own docs + any doc marked readable by all
+        chunks = (
+            db.query(DocumentChunk)
+            .join(Document)
+            .filter(or_(
+                Document.student_id == user_id,
+                Document.readable_by == "all",
+            ))
+            .all()
+        )
     if not chunks:
         return []
 
@@ -136,7 +160,7 @@ def build_rich_context(chunks: List[DocumentChunk]) -> str:
         parts.append(
             f"[Excerpt {i} — Source: {doc_name}]\n{chunk.chunk_text.strip()}"
         )
-    return "\n\n{'─'*60}\n\n".join(parts)
+    return f"\n\n{'─'*60}\n\n".join(parts)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

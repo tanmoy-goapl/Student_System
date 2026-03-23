@@ -22,6 +22,7 @@ type DocItem = {
   filename: string;
   uploaded_at: string;
   file_size?: number;
+  readable_by?: string;
 };
 
 export default function DocumentsPage() {
@@ -32,6 +33,7 @@ export default function DocumentsPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
+  const [readableBy, setReadableBy] = useState("owner");
 
   const getStudentId = () => parseInt(localStorage.getItem("user_id") || "0", 10);
 
@@ -90,7 +92,7 @@ export default function DocumentsPage() {
     setUploadMessage("");
     setUploading(true);
     try {
-      const res = await uploadDocument(studentId, file);
+      const res = await uploadDocument(studentId, file, readableBy);
       setUploadMessage(
         `✅ "${res.filename}" uploaded — ${res.chunks_created} chunks processed`
       );
@@ -120,6 +122,15 @@ export default function DocumentsPage() {
             accept=".pdf,.txt,.doc,.docx,.png,.jpg,.jpeg,.bmp,.webp,.tiff,.tif,.gif"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
+          <select                                                          
+            className="text-sm border rounded px-2 py-2 text-gray-700"
+            value={readableBy}
+            onChange={(e) => setReadableBy(e.target.value)}
+          >
+            <option value="owner">Only Me</option>
+            <option value="professor">Professors</option>
+            <option value="all">Everyone</option>
+          </select>
           <button
             className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
             onClick={handleUpload}
@@ -155,7 +166,8 @@ export default function DocumentsPage() {
               <tr className="border-b border-gray-200">
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">File</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Uploaded</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                {/* <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th> */}
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Visible To</th>
               </tr>
             </thead>
             <tbody>
@@ -165,6 +177,14 @@ export default function DocumentsPage() {
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {formatDate(doc.uploaded_at)}
                   </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">          
+                    {{
+                      owner: "Only Me",
+                      professor: "Professors",
+                      all: "Everyone",
+                    }[doc.readable_by ?? "owner"]}
+                  </td>                                                        
+                  <td className="px-4 py-3"></td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleDelete(doc.id, doc.filename)}

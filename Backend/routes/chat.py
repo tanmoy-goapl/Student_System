@@ -201,28 +201,23 @@ CRITICAL RULES:
 def apply_role_guardrails(role: str, question: str) -> str:
     q = question.lower()
 
-    colors = ["red", "blue", "green"]
-    mentioned_colors = [c for c in colors if c in q]
-
-    print(f"[GUARDRAIL DEBUG] role={role}, question={q}, colors={mentioned_colors}")
-
-    if not mentioned_colors:
-        return "❌ You must ask about a color (red, blue, green)."
-
-    if role == "admin":
-        return ""
+    if role == "student":
+        forbidden_patterns = [
+            "professor", "other student", "admin", 
+            "college document", "faculty", "staff"
+        ]
+        if any(p in q for p in forbidden_patterns):
+            return "❌ You can only ask about your own documents and learning."
 
     elif role == "professor":
-        if "red" in mentioned_colors:
-            return "❌ Professors are not allowed to ask about RED."
-        return ""
+        forbidden_patterns = [
+            "other professor", "admin document", "college policy",
+            "system", "all users"
+        ]
+        if any(p in q for p in forbidden_patterns):
+            return "❌ You can only access your own documents and your students' records."
 
-    elif role == "student":
-        if "blue" not in mentioned_colors or len(mentioned_colors) > 1:
-            return "❌ Students can ONLY ask about BLUE."
-        return ""
-
-    return ""
+    return ""  # allowed
 # ═════════════════════════════════════════════════════════════════════════════
 #  MAIN CHAT ENDPOINT
 # ═════════════════════════════════════════════════════════════════════════════
@@ -301,7 +296,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     top_k = 6 if intent in (Intent.MARKS, Intent.STUDY_PLAN) else 4
     try:
         chunks = search_relevant_chunks(
-            request.question, request.student_id, db, top_k=top_k
+            request.question, request.student_id, request.role, db, top_k=top_k
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search error: {e}")
@@ -311,6 +306,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         # clean, mentor response without mentioning missing documents.
         if intent is Intent.GENERAL:
             doc_names = [d.filename for d in all_docs]
+            context = ""
             system_prompt = _build_system_prompt(intent, doc_names, context, request.role, student_name)
             answer = _call_llm(system_prompt, [], request.question)
             if not answer:
@@ -351,7 +347,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     db.commit()
 
     # ── Call LLM ──────────────────────────────────────────────────────────────
-    system_prompt = _build_system_prompt(intent, doc_names, context, student_name)
+    system_prompt = _build_system_prompt(intent, doc_names, context, request.role, student_name)
     # For GENERAL questions, or when reset=True, skip history to keep responses
     # focused on the new question only.
     if intent is Intent.GENERAL or request.reset:
