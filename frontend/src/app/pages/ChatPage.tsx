@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { listUsers } from "@/lib/api";
 import ChatHistorySidebar from "@/components/ChatHistorySidebar";
+import ReactMarkdown from "react-markdown";
 
 type UserOption = {
   id: number;
@@ -37,16 +38,17 @@ export default function ChatPage() {
     const userId = parseInt(localStorage.getItem("user_id") || "0", 10);
     setRole(storedRole);
     setCurrentUserId(userId);
-
+    setSelectedUserRole(storedRole);
     // Load users for admin
     if (storedRole === "admin" && userId) {
       listUsers(userId)
         .then((userList) => {
           setUsers(userList);
           if (userList.length > 0) {
-            const firstUser = userList[0];
+            const firstUser = userList[1];
             setSelectedUserId(firstUser.id);
             setCurrentUserName(getDisplayName(firstUser));
+            setSelectedUserRole(firstUser.role);
           }
         })
         .catch(() => {
@@ -59,6 +61,20 @@ export default function ChatPage() {
       const userEmail = localStorage.getItem("user_email") || "";
       const userName = localStorage.getItem("user_name") || userEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, l => l.toUpperCase());
       setCurrentUserName(userName);
+      setSelectedUserRole("student");
+    } else if (storedRole === "professor" && userId) {
+      setSelectedUserId(userId);
+
+      const userEmail = localStorage.getItem("user_email") || "";
+      const userName = localStorage.getItem("user_name") ||
+        userEmail.split("@")[0]
+          .replace(/[._]/g, " ")
+          .replace(/\b\w/g, l => l.toUpperCase());
+
+      setCurrentUserName(userName);
+
+      // ✅ important
+      setSelectedUserRole("professor");
     }
   }, []);
 
@@ -99,7 +115,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           student_id: sid,
           question: q,
-          role: selectedUserRole, // ✅ FIX
+          role: selectedUserRole,
           reset: resetNext
         })
       });
@@ -267,51 +283,17 @@ export default function ChatPage() {
         <div className="flex flex-col h-[600px] max-w-4xl mx-auto">
           {/* Top Control Bar */}
           <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
-            {role === "admin" ? (
-              <>
-                <select
-                  value={selectedUserId || ""}
-                  onChange={(e) => {
-                    const userId = parseInt(e.target.value);
-                    setSelectedUserId(userId);
-
-                    const selectedUser = users.find(u => u.id === userId);
-                    if (selectedUser) {
-                      setCurrentUserName(getDisplayName(selectedUser));
-                      setSelectedUserRole(selectedUser.role); // ✅ IMPORTANT
-                    }
-
-                    setHistory([]);
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                >
-                  <option value="">Select User</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {getDisplayName(user)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleNewSession}
-                  className="px-4 py-2 bg-blue-100 text-blue-700 rounded text-sm font-medium hover:bg-blue-200"
-                >
-                  New Session
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="px-4 py-2 border border-gray-300 rounded bg-gray-50 text-sm text-gray-600">
-                  {currentUserName || "Student"}
-                </div>
-                <button
-                  onClick={handleNewSession}
-                  className="px-4 py-2 bg-blue-100 text-blue-700 rounded text-sm font-medium hover:bg-blue-200"
-                >
-                  New Session
-                </button>
-              </>
-            )}
+            <>
+              <div className="px-4 py-2 border border-gray-300 rounded bg-gray-50 text-sm text-gray-600">
+                {currentUserName || "Student"}
+              </div>
+              <button
+                onClick={handleNewSession}
+                className="px-4 py-2 bg-blue-100 text-blue-700 rounded text-sm font-medium hover:bg-blue-200"
+              >
+                New Session
+              </button>
+            </>
           </div>
 
           {/* Chat Display Area */}
@@ -367,14 +349,39 @@ export default function ChatPage() {
                           </div>
                         </div>
                       )}
+
                       <div
                         className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm whitespace-pre-wrap shadow-sm
-                  ${isUser
+  ${isUser
                             ? "bg-blue-500 text-white rounded-br-none"
                             : "bg-gray-100 text-gray-800 rounded-bl-none"
                           }`}
                       >
-                        {msg.content}
+                        <ReactMarkdown
+                          components={{
+                            h3: ({ children }) => (
+                              <h3 className="font-semibold text-base mt-2 mb-1">
+                                {children}
+                              </h3>
+                            ),
+                            ul: ({ children }) => (
+                              <ul className="list-disc ml-5 space-y-1">
+                                {children}
+                              </ul>
+                            ),
+                            li: ({ children }) => (
+                              <li className="text-sm">{children}</li>
+                            ),
+                            strong: ({ children }) => (
+                              <strong className="font-semibold">{children}</strong>
+                            ),
+                            p: ({ children }) => (
+                              <p className="mb-2">{children}</p>
+                            ),
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
                       </div>
                       {isUser && (
                         <div className="ml-2 flex-shrink-0">
