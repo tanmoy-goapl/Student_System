@@ -23,7 +23,8 @@ def get_documents(student_id: int, db: Session = Depends(get_db)):
             "filename": d.filename,
             "file_size": d.file_size,
             "uploaded_at": d.uploaded_at.isoformat(),
-            "readable_by": d.readable_by,   # ← ADD THIS LINE
+            "readable_by": d.readable_by, 
+            "file_path": os.path.basename(d.file_path), 
         }
         for d in docs
     ]

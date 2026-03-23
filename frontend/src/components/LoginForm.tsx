@@ -181,16 +181,16 @@ export default function LoginForm({ onLoginSuccess, redirectAfterLogin }: Props)
       <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500">
         <p className="font-semibold text-gray-600 mb-1">Default credentials:</p>
         <p>
-          Management → <span className="font-mono">admin@example.com</span> /{" "}
+          Management → <span className="font-mono">rg@gmail.com</span> /{" "}
           <span className="font-mono">admin123</span>
         </p>
         <p>
-          Professor → <span className="font-mono">professor@gmail.com</span> /{" "}
-          <span className="font-mono">professor123</span>
+          Professor → <span className="font-mono">sunilsharma@gmail.com</span> /{" "}
+          <span className="font-mono">prof123</span>
         </p>
         <p>
-          Student → <span className="font-mono">student@example.com</span> /{" "}
-          <span className="font-mono">student123</span>
+          Student → <span className="font-mono">keshav@gmail.com</span> /{" "}
+          <span className="font-mono">keshav123</span>
         </p>
       </div>
     </div>
