@@ -22,6 +22,8 @@ type DocItem = {
   filename: string;
   uploaded_at: string;
   file_size?: number;
+  readable_by?: string;
+  file_path?: string;
 };
 
 export default function DocumentsPage() {
@@ -32,6 +34,8 @@ export default function DocumentsPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
+  const [readableBy, setReadableBy] = useState("owner");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const getStudentId = () => parseInt(localStorage.getItem("user_id") || "0", 10);
 
@@ -90,7 +94,7 @@ export default function DocumentsPage() {
     setUploadMessage("");
     setUploading(true);
     try {
-      const res = await uploadDocument(studentId, file);
+      const res = await uploadDocument(studentId, file, readableBy);
       setUploadMessage(
         `✅ "${res.filename}" uploaded — ${res.chunks_created} chunks processed`
       );
@@ -120,6 +124,15 @@ export default function DocumentsPage() {
             accept=".pdf,.txt,.doc,.docx,.png,.jpg,.jpeg,.bmp,.webp,.tiff,.tif,.gif"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
+          <select
+            className="text-sm border rounded px-2 py-2 text-gray-700"
+            value={readableBy}
+            onChange={(e) => setReadableBy(e.target.value)}
+          >
+            <option value="owner">Only Me</option>
+            <option value="professor">Professors</option>
+            <option value="all">Everyone</option>
+          </select>
           <button
             className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
             onClick={handleUpload}
@@ -155,16 +168,37 @@ export default function DocumentsPage() {
               <tr className="border-b border-gray-200">
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">File</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Uploaded</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                {/* <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th> */}
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Visible To</th>
               </tr>
             </thead>
             <tbody>
               {docs.map((doc) => (
                 <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-800">{doc.filename}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <button
+                      className="text-blue-600 hover:text-blue-800 hover:underline text-left cursor-pointer"
+                      onClick={() =>
+                        setPreviewUrl(
+                          `http://localhost:8000/uploads/${encodeURIComponent(doc.file_path ?? "")}`
+                        )
+                      }
+                      title="Click to view"
+                    >
+                      {doc.filename}
+                    </button>
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {formatDate(doc.uploaded_at)}
                   </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {{
+                      owner: "Only Me",
+                      professor: "Professors",
+                      all: "Everyone",
+                    }[doc.readable_by ?? "owner"]}
+                  </td>
+                  <td className="px-4 py-3"></td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleDelete(doc.id, doc.filename)}
@@ -196,6 +230,31 @@ export default function DocumentsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {previewUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white w-[90%] h-[90%] rounded-lg shadow-lg flex flex-col">
+
+            {/* Header */}
+            <div className="flex justify-between items-center p-3 border-b">
+              <h3 className="text-sm font-semibold">Document Preview</h3>
+              <button
+                onClick={() => setPreviewUrl(null)}
+                className="text-gray-600 hover:text-black cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1">
+              <iframe
+                src={previewUrl}
+                className="w-full h-full rounded-b-lg"
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

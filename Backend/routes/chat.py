@@ -46,6 +46,7 @@ MAX_CONTEXT_LEN = 1200  # max chars of retrieved context sent to LLM
 class ChatRequest(BaseModel):
     student_id: int
     question: str
+    role: str
     reset: bool = False
 
 class Message(BaseModel):
@@ -95,6 +96,38 @@ def detect_intent(question: str) -> Intent:
             return intent
     return Intent.GENERAL
 
+def get_role_instruction(role: str, student_name: str) -> str:
+    if role == "admin":
+        return f"""
+You are assisting an ADMIN user.
+
+• You can analyze ALL uploaded documents (students + professors).
+• You can evaluate professors, compare students, and give high-level insights.
+• You can answer strategic, analytical, and evaluation questions.
+• You are allowed full access to all knowledge in the system.
+"""
+
+    elif role == "professor":
+        return f"""
+You are assisting a PROFESSOR.
+
+• You can analyze student performance, marks, and feedback.
+• You can suggest teaching improvements, course plans, and strategies.
+• You MUST NOT provide admin-level system insights.
+• Focus on helping improve students and course quality.
+"""
+
+    elif role == "student":
+        return f"""
+You are assisting a STUDENT ({student_name}).
+
+• You can ONLY talk about the student's own learning.
+• You MUST NOT evaluate professors or other students.
+• You MUST NOT provide system-level or admin insights.
+• Focus on study help, marks, improvement, and learning plans.
+"""
+
+    return ""
 
 # ═════════════════════════════════════════════════════════════════════════════
 #  SYSTEM PROMPT FACTORY
@@ -104,6 +137,7 @@ def _build_system_prompt(
     intent: Intent,
     doc_names: list[str],
     context: str,
+    role: str,
     student_name: str = "the student",
 ) -> str:
     doc_list = ", ".join(doc_names) or "(none)"
@@ -119,7 +153,11 @@ def _build_system_prompt(
             "Never invent facts not present in the documents."
         )
 
+    role_instruction = get_role_instruction(role, student_name)
     base = f"""You are MentorAI — a warm, encouraging academic mentor.
+
+    ROLE GUIDELINE:
+    {role_instruction}
 {knowledge_line}
 
 STUDENT: {student_name}
@@ -160,7 +198,26 @@ CRITICAL RULES:
 
     return base + rules
 
+def apply_role_guardrails(role: str, question: str) -> str:
+    q = question.lower()
 
+    if role == "student":
+        forbidden_patterns = [
+            "professor", "other student", "admin", 
+            "college document", "faculty", "staff"
+        ]
+        if any(p in q for p in forbidden_patterns):
+            return "❌ You can only ask about your own documents and learning."
+
+    elif role == "professor":
+        forbidden_patterns = [
+            "other professor", "admin document", "college policy",
+            "system", "all users"
+        ]
+        if any(p in q for p in forbidden_patterns):
+            return "❌ You can only access your own documents and your students' records."
+
+    return ""  # allowed
 # ═════════════════════════════════════════════════════════════════════════════
 #  MAIN CHAT ENDPOINT
 # ═════════════════════════════════════════════════════════════════════════════
@@ -172,6 +229,17 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == request.student_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Student not found")
+
+    # ── Role Guardrail ─────────────────────────────────────────
+    guardrail_response = apply_role_guardrails(request.role, request.question)
+
+    if guardrail_response:
+        return ChatResponse(
+            answer=guardrail_response,
+            intent="restricted",
+            sources=[],
+            history=[]
+        )
 
     student_name = getattr(user, "name", f"Student #{request.student_id}")
 
@@ -228,7 +296,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     top_k = 6 if intent in (Intent.MARKS, Intent.STUDY_PLAN) else 4
     try:
         chunks = search_relevant_chunks(
-            request.question, request.student_id, db, top_k=top_k
+            request.question, request.student_id, request.role, db, top_k=top_k
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search error: {e}")
@@ -238,7 +306,8 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         # clean, mentor response without mentioning missing documents.
         if intent is Intent.GENERAL:
             doc_names = [d.filename for d in all_docs]
-            system_prompt = _build_system_prompt(intent, doc_names, "", student_name)
+            context = ""
+            system_prompt = _build_system_prompt(intent, doc_names, context, request.role, student_name)
             answer = _call_llm(system_prompt, [], request.question)
             if not answer:
                 answer = (
@@ -278,7 +347,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     db.commit()
 
     # ── Call LLM ──────────────────────────────────────────────────────────────
-    system_prompt = _build_system_prompt(intent, doc_names, context, student_name)
+    system_prompt = _build_system_prompt(intent, doc_names, context, request.role, student_name)
     # For GENERAL questions, or when reset=True, skip history to keep responses
     # focused on the new question only.
     if intent is Intent.GENERAL or request.reset:

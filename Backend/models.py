@@ -15,7 +15,7 @@ class User(Base):
     department   = Column(String, nullable=True)
     email        = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role         = Column(String, default="student")   # student | admin | teacher
+    role         = Column(String, default="student")   # student | admin | professor
     is_active    = Column(Boolean, default=True)
     created_at   = Column(DateTime, default=datetime.utcnow)
 
@@ -41,6 +41,10 @@ class Document(Base):
     student = relationship("User", back_populates="documents")
     chunks  = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
 
+    readable_by = Column(String, default="owner")
+    # "owner"     = only the uploader sees it
+    # "professor" = professors + owner can see it  
+    # "all"       = everyone can see it
 
 # ─────────────────────────────────────────────
 # DocumentChunk Model

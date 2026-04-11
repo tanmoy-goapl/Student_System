@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import ALLOWED_ORIGINS
 from routes import auth, upload, chat, settings
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="Student System API", version="1.0.0")
 
@@ -25,6 +26,7 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 if __name__ == "__main__":
     import uvicorn

@@ -22,7 +22,9 @@ def get_documents(student_id: int, db: Session = Depends(get_db)):
             "id": d.id,
             "filename": d.filename,
             "file_size": d.file_size,
-            "uploaded_at": d.uploaded_at.isoformat()
+            "uploaded_at": d.uploaded_at.isoformat(),
+            "readable_by": d.readable_by, 
+            "file_path": os.path.basename(d.file_path), 
         }
         for d in docs
     ]
@@ -77,6 +79,7 @@ def delete_document(document_id: int, db: Session = Depends(get_db)):
 async def upload_file(
     student_id: int = Form(...),
     file: UploadFile = File(...),
+    readable_by: str = Form(default="owner"), 
     db: Session = Depends(get_db)
 ):
     # Verify student
@@ -103,6 +106,7 @@ async def upload_file(
             file_path=file_path,
             file_size=len(content),
             file_type=file.content_type or ext,
+            readable_by=readable_by,   
         )
         db.add(doc)
         db.commit()

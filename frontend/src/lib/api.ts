@@ -41,7 +41,7 @@ export async function createUser(
   adminId: number,
   email: string,
   password: string,
-  role: "student" | "admin" = "student",
+  role: "student" | "admin" | "professor",
   name?: string,
   department?: string
 ): Promise<AuthResponse> {
@@ -73,11 +73,13 @@ export async function deleteUser(adminId: number, userId: number): Promise<void>
 
 export async function uploadDocument(
   studentId: number,
-  file: File
+  file: File,
+  readableBy: string = "owner"        // ← ADD THIS
 ): Promise<UploadResponse> {
   const form = new FormData();
   form.append("student_id", String(studentId));
   form.append("file", file);
+  form.append("readable_by", readableBy);   // ← ADD THIS
   return request<UploadResponse>("/api/upload", { method: "POST", body: form });
 }
 

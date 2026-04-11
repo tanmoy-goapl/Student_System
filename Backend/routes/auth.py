@@ -45,7 +45,9 @@ class UserOut(BaseModel):
     created_at: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+ALLOWED_ROLES = {"student", "admin", "professor"}
 
 # ── Routes ────────────────────────────────────────────────
 
@@ -97,13 +99,12 @@ def admin_create_user(payload: CreateUserRequest, db: Session = Depends(get_db))
         )
 
     # 3) Create the new user
-    new_role = payload.role if payload.role in {"student", "admin"} else "student"
     user = User(
         name=payload.name,
         department=payload.department,
         email=payload.email,
         password_hash=hash_password(payload.password),
-        role=new_role,
+        role=payload.role,
     )
     db.add(user)
     db.commit()
