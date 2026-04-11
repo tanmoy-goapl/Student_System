@@ -26,8 +26,12 @@ export default function Documents() {
   }
 
   if (!isAuthenticated) {
-    router.push("/profile");
-    return null;
+    router.replace("/login?next=/documents");
+    return (
+      <div className="rounded-lg bg-white p-6 shadow-md">
+        <p className="text-gray-400">Redirecting to login…</p>
+      </div>
+    );
   }
 
   return <DocumentsPage />;

@@ -87,7 +87,7 @@ export default function Navbar() {
                 <Link href="/" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
                   How it Works
                 </Link>
-                <Link href="/profile" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
+                <Link href="/login" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
                   Login
                 </Link>
                 <Link
