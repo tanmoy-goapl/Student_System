@@ -3,8 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import ALLOWED_ORIGINS
 from routes import auth, upload, chat, settings
 from fastapi.staticfiles import StaticFiles
+from database import init_db
 
 app = FastAPI(title="Student System API", version="1.0.0")
+
+init_db()
 
 app.add_middleware(
     CORSMiddleware,

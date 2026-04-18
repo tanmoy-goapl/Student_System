@@ -31,7 +31,7 @@ if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
 from models import Document, DocumentChunk
-from Backend.services.embedding import get_embedding, string_to_embedding  # type: ignore
+from services.embedding import get_embedding, string_to_embedding
 
 # ── Thresholds ────────────────────────────────────────────────────────────────
 MIN_SEMANTIC_SIM  = 0.20   # lowered slightly so fringe-but-valid chunks aren't dropped
