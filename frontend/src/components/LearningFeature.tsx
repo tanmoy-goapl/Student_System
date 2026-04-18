@@ -86,16 +86,16 @@ export default function LearningFeature() {
       className="bg-[#050a14] px-6 py-16 font-sans text-white lg:px-10"
       aria-labelledby="learning-features-heading"
     >
-      <div className="mx-auto max-w-7xl">
+      <div className="max-w-[70vw]">
         <div className="mb-12 flex flex-col gap-6 lg:mb-14 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
           <div className="max-w-2xl">
-            <h2
+            <h3
               id="learning-features-heading"
               className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
             >
               Supercharged Learning Features
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-slate-400 sm:text-lg">
+            </h3>
+            <p className="mt-4 text-sm leading-relaxed text-slate-400 sm:text-lg">
               Everything you need to master any subject in record time. Our AI is built with privacy
               and accuracy at its core.
             </p>
@@ -108,7 +108,7 @@ export default function LearningFeature() {
           </Link>
         </div>
 
-        <ul className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-2">
           {FEATURES.map(({ title, description, Icon }) => (
             <li
               key={title}

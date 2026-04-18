@@ -34,14 +34,14 @@ export default function Information() {
                 <span>99.9% Citation Accuracy</span>
               </div>
 
-              <h2
+              <h3
                 id="information-heading"
                 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-[2.5rem] lg:leading-[1.15]"
               >
                 Never lose your source of information again.
-              </h2>
+              </h3>
 
-              <p className="mt-5 text-base leading-relaxed text-[#a0aec0] sm:text-lg">
+              <p className="mt-5 text-sm leading-relaxed text-[#a0aec0] sm:text-lg">
                 Unlike generic AI bots, Mentor AI provides direct links and highlighted passages within
                 your original documents, ensuring you never have to worry about hallucinations.
               </p>
@@ -50,7 +50,7 @@ export default function Information() {
                 {BULLETS.map((item) => (
                   <li key={item} className="flex items-start gap-3 text-[#a0aec0]">
                     <IconCheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#007bff]" />
-                    <span className="text-sm leading-relaxed sm:text-base">{item}</span>
+                    <span className="text-xs leading-relaxed sm:text-base">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -83,7 +83,7 @@ export default function Information() {
                   </div>
 
                   {/* Cited passage tooltip */}
-                  <div className="absolute bottom-4 right-4 z-10 max-w-[min(calc(100%-2rem),280px)] rounded-xl border border-white/20 bg-[#007bff] p-4 shadow-lg shadow-blue-900/50 sm:max-w-[300px]">
+                  <div className="absolute bottom-[-16] z-10 max-w-[min(calc(100%-2rem),280px)] rounded-xl border border-white/20 bg-[#007bff] p-4 shadow-lg shadow-blue-900/50 sm:max-w-[300px]">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-white/90">
                       Cited passage
                     </p>

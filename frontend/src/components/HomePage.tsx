@@ -30,7 +30,7 @@ function PlayIcon({ className }: { className?: string }) {
 export default function HomePage() {
   return (
     <>
-    <section className="relative isolate min-h-[calc(100vh-3.5rem)] overflow-hidden px-6 pb-20 pt-10 font-sans text-white lg:px-10 lg:pt-14">
+    <section className="relative min-h-[calc(100vh-3.5rem)] w-full overflow-hidden px-6 pb-20 pt-10 font-sans text-white lg:px-10 lg:pt-14">
       {/* Ambient glow */}
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-[#020617]"
@@ -40,8 +40,8 @@ export default function HomePage() {
       <div className="pointer-events-none absolute -right-20 top-1/3 -z-10 h-[380px] w-[380px] rounded-full bg-violet-600/20 blur-[100px]" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 -z-10 h-[300px] w-[300px] rounded-full bg-cyan-500/10 blur-[90px]" />
 
-      <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-2 lg:gap-12">
-        {/* Left column */}
+      <div className="mx-auto">
+        {/* Top */}
         <div className="flex flex-col gap-8">
           <div className="inline-flex w-fit items-center gap-2 rounded-full border border-cyan-400/30 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-300 backdrop-blur-sm">
             <SparkIcon className="h-3.5 w-3.5 text-cyan-400" />
@@ -49,17 +49,13 @@ export default function HomePage() {
           </div>
 
           <h1 className="text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.25rem] lg:leading-[1.08]">
-            <span className="block text-white">Your Personal AI</span>
+            <span className="block text-white">Your Personal AI Mentor for</span>
             <span className="mt-1 block bg-gradient-to-r from-sky-300 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
-              Mentor for
+              Smarter Learning.
             </span>
-            <span className="mt-1 block bg-gradient-to-r from-sky-300 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
-              Smarter
-            </span>
-            <span className="mt-1 block text-white">Learning.</span>
           </h1>
 
-          <p className="max-w-xl text-base leading-relaxed text-slate-400 sm:text-lg">
+          <p className="max-w-[70vw] text-base leading-relaxed text-slate-400 sm:text-lg">
             Upload your study materials, ask questions, and get intelligent guidance tailored just
             for you. Master any subject with your private AI tutor.
           </p>
@@ -81,8 +77,8 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Right column — chat mockup */}
-        <div className="relative lg:justify-self-end">
+        {/* Bottom */}
+        <div className="relative mt-10">
           <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-1 shadow-2xl shadow-black/40 backdrop-blur-xl">
             {/* Window chrome */}
             <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">

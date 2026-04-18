@@ -64,14 +64,14 @@ export default function ResumeSteps() {
       className="relative border-t border-white/5 bg-[#020617] px-6 py-20 font-sans text-white lg:px-10"
       aria-labelledby="resume-steps-heading"
     >
-      <div className="mx-auto max-w-6xl">
+      <div className="">
         <header className="mb-16 text-center">
-          <h2
+          <h3
             id="resume-steps-heading"
             className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
           >
             Simple 3-Step Process
-          </h2>
+          </h3>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg">
             We&apos;ve streamlined the learning process using advanced AI logic to help you focus on
             what matters.
@@ -81,23 +81,23 @@ export default function ResumeSteps() {
         <div className="relative">
           {/* Connector line (desktop): behind icons, through circle centers */}
           <div
-            className="pointer-events-none absolute left-[10%] right-[10%] top-[52px] hidden h-px bg-gradient-to-r from-transparent via-sky-500/25 to-transparent md:block"
+            className="pointer-events-none absolute left-[10%] right-[10%] top-[65px] hidden h-px bg-gradient-to-r from-transparent via-sky-500/25 to-transparent md:block"
             aria-hidden
           />
 
-          <ul className="grid gap-14 md:grid-cols-3 md:gap-8 lg:gap-12">
+          <ul className="grid md:grid-cols-3">
             {STEPS.map(({ step, title, description, Icon }) => (
-              <li key={step} className="relative flex flex-col items-center text-center">
-                <div className="relative mb-6">
+              <li key={step} className="relative flex flex-col items-center text-center max-w-[10vw] mx-auto">
+                <div className="relative mb-6 ">
                   <span className="absolute -right-1 -top-1 z-10 flex h-7 min-w-[1.75rem] items-center justify-center rounded-full bg-sky-600 px-1.5 text-xs font-bold text-white shadow-lg shadow-sky-900/40">
                     {step}
                   </span>
-                  <div className="relative flex h-[88px] w-[88px] items-center justify-center rounded-full border border-sky-500/40 bg-white/[0.03] text-sky-400">
-                    <Icon className="h-9 w-9" />
+                  <div className="relative flex h-[60px] w-[60px] items-center justify-center rounded-full border border-sky-500/40 bg-white/[0.03] text-sky-400">
+                    <Icon className="h-5 w-5" />
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-white">{title}</h3>
-                <p className="mt-3 max-w-xs text-sm leading-relaxed text-slate-400">{description}</p>
+                <h3 className="text-sm font-bold text-white">{title}</h3>
+                <p className="mt-3 max-w-xs text-xs leading-relaxed text-slate-400">{description}</p>
               </li>
             ))}
           </ul>

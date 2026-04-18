@@ -142,13 +142,13 @@ export default function ChatPage() {
       />
 
       {/* Left action bar */}
-      {!isHistoryOpen && (
+      {/* {!isHistoryOpen && (
         <div className="fixed left-4 top-24 flex flex-col gap-3 z-20">
           <IconButton label="Menu"     onClick={() => setIsHistoryOpen(v => !v)} icon={<MenuIcon />} />
           <IconButton label="New chat" onClick={handleNewSession}                icon={<PlusIcon />} />
           <IconButton label="Search"   onClick={() => setIsHistoryOpen(true)}    icon={<SearchIcon />} />
         </div>
-      )}
+      )} */}
 
       {/* Page title */}
       <div className="pt-6 pb-3 text-center">

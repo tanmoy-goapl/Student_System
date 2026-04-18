@@ -4,122 +4,158 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import {
+  Home,
+  MessageSquare,
+  FileText,
+  Settings,
+  Users,
+  LayoutDashboard,
+  Plus,
+} from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [role, setRole] = useState<"admin" | "student" | null>(() => {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("role") as "admin" | "student" | null;
-  });
-  const [roleLoaded, setRoleLoaded] = useState(true);
+
+  const [role, setRole] = useState<"admin" | "student" | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [roleLoaded, setRoleLoaded] = useState(false);
 
   useEffect(() => {
-    const updateRole = () => {
-      const storedRole = localStorage.getItem("role") as "admin" | "student" | null;
+    const updateData = () => {
+      const storedRole = localStorage.getItem("role") as
+        | "admin"
+        | "student"
+        | null;
+      const storedName = localStorage.getItem("user_name");
+
       setRole(storedRole);
+      setUserName(storedName);
       setRoleLoaded(true);
     };
 
-    // Initial load
-    updateRole();
-
-    // Listen for storage changes (when user logs in/out)
-    window.addEventListener("storage", updateRole);
-    
-    // Also check on pathname change (in case of same-tab navigation)
-    updateRole();
+    updateData();
+    window.addEventListener("storage", updateData);
 
     return () => {
-      window.removeEventListener("storage", updateRole);
+      window.removeEventListener("storage", updateData);
     };
   }, [pathname]);
 
   const navItems = [
-    { id: "home", label: "HOME", path: "/" },
-    { id: "dashboard", label: "DASHBOARD", path: "/dashboard" },
-    { id: "profile", label: "PROFILE", path: "/profile" },
-    // documents tab should only be visible after login (role is set)
-    ...(role ? [{ id: "documents", label: "DOCUMENTS", path: "/documents" }] : []),
-    { id: "chat", label: "CHAT", path: "/chat" },
-    // { id: "integrations", label: "INTEGRATIONS", path: "/integrations" },
-    // settings page should also only be visible after login
-    ...(role ? [{ id: "settings", label: "SETTINGS", path: "/settings" }] : []),
+    { id: "home", label: "Home", path: "/", icon: Home },
+    { id: "chat", label: "Chat", path: "/chat", icon: MessageSquare },
+    ...(role
+      ? [
+        {
+          id: "documents",
+          label: "Documents",
+          path: "/documents",
+          icon: FileText,
+        },
+      ]
+      : []),
+    ...(role
+      ? [
+        {
+          id: "settings",
+          label: "Settings",
+          path: "/settings",
+          icon: Settings,
+        },
+      ]
+      : []),
   ];
 
-  // Only add users page for admin - explicitly check role
   const filteredNavItems =
     role === "admin"
-      ? [...navItems, { id: "users", label: "USERS", path: "/users" }]
+      ? [...navItems, { id: "users", label: "Users", path: "/users", icon: Users }, { id: "dashboard", label: "Analytics", path: "/dashboard", icon: LayoutDashboard },]
       : navItems;
 
-  const isActive = (path: string) => {
-    if (path === "/") {
-      return pathname === "/";
-    }
-    return pathname?.startsWith(path);
-  };
+  const isActive = (path: string) =>
+    path === "/" ? pathname === "/" : pathname?.startsWith(path);
 
   return (
-    <header className="sticky top-0 z-30 mentor-navbar shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 py-3">
-        <div className="flex items-center justify-between gap-4">
-          {/* Brand */}
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/mentor-logo.png"
-              alt="Mentor AI"
-              width={100}
-              height={100}
-              className="w-9 h-9 rounded-xl"
-              priority
-            />
-            <span className="text-lg font-bold text-white">Mentor AI</span>
-          </Link>
-
-          {/* Nav */}
-          <nav className="flex items-center gap-5 flex-wrap justify-end">
-            {/* Marketing / signed-out state (matches screenshot) */}
-            {roleLoaded && role === null ? (
-              <>
-                <Link href="/" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
-                  Features
-                </Link>
-                <Link href="/" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
-                  How it Works
-                </Link>
-                <Link href="/login" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
-                  Login
-                </Link>
-                <Link
-                  href="/chat"
-                  className="ml-1 inline-flex items-center px-4 py-2 rounded-lg font-semibold shadow-sm transition-colors mentor-get-started"
-                >
-                  Get Started
-                </Link>
-              </>
-            ) : (
-              <>
-                {filteredNavItems.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={item.path}
-                    className={`text-sm font-medium uppercase tracking-wide transition-colors ${
-                      isActive(item.path)
-                        ? "text-white font-bold border-b-2 border-cyan-300 pb-1"
-                        : "text-white/90 hover:text-cyan-200"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </>
-            )}
-          </nav>
+<aside className="fixed left-0 top-0 h-screen w-64 z-50 mentor-navbar shadow-lg flex flex-col justify-between">
+      {/* TOP SECTION */}
+      <div>
+        {/* Brand */}
+        <div className="flex items-center gap-2 px-4 py-4 border-b border-white/10">
+          <Image
+            src="/mentor-logo.png"
+            alt="Mentor AI"
+            width={30}
+            height={30}
+            className="rounded-xl"
+          />
+          <span className="text-sm font-bold text-white">Mentor AI</span>
+        </div>
+        {/* New Chat Button */}
+        <div className="px-2">
+          <button className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold hover:opacity-90 transition">
+            <Plus size={12} />
+            <span>New Chat</span>
+          </button>
         </div>
       </div>
-      {/* subtle divider */}
-      <div className="h-px bg-white/5" />
-    </header>
+
+      <div>
+        {/* Navigation */}
+        <div className="px-4 py-2 border-t border-white/10 flex flex-col">
+          <span className="text-white text-xs mb-2">Navigation</span>
+
+          {/* Scrollable container */}
+          <div className="max-h-[30vh] overflow-y-auto pr-1">
+            <nav className="flex flex-col gap-2">
+              {roleLoaded && role === null ? (
+                <>
+                  <Link href="/" className="sidebar-link">Features</Link>
+                  <Link href="/" className="sidebar-link">How it Works</Link>
+                  <Link href="/login" className="sidebar-link">Login</Link>
+                  <Link href="/chat" className="sidebar-btn">
+                    Get Started
+                  </Link>
+                </>
+              ) : (
+                filteredNavItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.path}
+                      className={`sidebar-link flex items-center gap-3 ${isActive(item.path) ? "active" : ""
+                        }`}
+                    >
+                      <Icon size={15} color="white" />
+                      <span className="text-white text-xs">{item.label}</span>
+                    </Link>
+                  );
+                })
+              )}
+            </nav>
+          </div>
+        </div>
+        {/* User Info */}
+        {role && userName && (
+          <div className="px-4 py-4 border-t border-white/10 flex items-center gap-2">
+
+            {/* Avatar */}
+            <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white text-sm font-semibold">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+
+            {/* User Info */}
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-white">
+                {userName}
+              </span>
+              <span className="text-xs text-white/70 capitalize">
+                {role}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </aside>
   );
 }
-
