@@ -76,11 +76,11 @@ export default function Navbar() {
     path === "/" ? pathname === "/" : pathname?.startsWith(path);
 
   return (
-<aside className="fixed left-0 top-0 h-screen w-64 z-50 mentor-navbar shadow-lg flex flex-col justify-between">
+    <aside className="fixed left-0 top-0 h-screen w-64 z-50 mentor-navbar shadow-lg flex flex-col justify-between">
       {/* TOP SECTION */}
       <div>
         {/* Brand */}
-        <div className="flex items-center gap-2 px-4 py-4 border-b border-white/10">
+        <div className="flex items-center gap-2 px-4 py-4">
           <Image
             src="/mentor-logo.png"
             alt="Mentor AI"
@@ -120,15 +120,25 @@ export default function Navbar() {
                 filteredNavItems.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <Link
-                      key={item.id}
-                      href={item.path}
-                      className={`sidebar-link flex items-center gap-3 ${isActive(item.path) ? "active" : ""
-                        }`}
-                    >
-                      <Icon size={15} color="white" />
-                      <span className="text-white text-xs">{item.label}</span>
-                    </Link>
+<Link
+  key={item.id}
+  href={item.path}
+  className={`relative flex items-center justify-between gap-3 px-3 py-1 rounded-md transition
+    ${isActive(item.path)
+      ? "bg-blue-500/20 text-white"
+      : "hover:bg-white/10 text-white/80"
+    }`}
+>
+  <div className="flex items-center gap-3">
+    <Icon size={12} />
+    <span className="text-xs">{item.label}</span>
+  </div>
+
+  {/* Active blue dot */}
+  {isActive(item.path) && (
+    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+  )}
+</Link>
                   );
                 })
               )}

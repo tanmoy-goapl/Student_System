@@ -19,7 +19,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         className={`
     transition-all duration-100
     ${isLogin ? "" : "ml-64"}
-    ${isLogin ? "w-full" : "max-w-4xl"}
   `}
       >
         {children}
