@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Proxy to backend /settings/llm (reuse same env name as other API routes)
-const BACKEND_URL = "http://10.10.90.95:8000"
+const BACKEND_URL = "http://10.10.90.95:8001"
 
 export async function GET() {
   try {

@@ -127,7 +127,7 @@ export default function ChatPage() {
 
   return (
     // Outer: row so chat + right sidebar sit side by side
-    <div className="flex w-full h-full font-sans overflow-hidden">
+    <div className="flex w-full h-screen font-sans overflow-hidden">
 
       {/* ── Left: chat column ── */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
@@ -140,6 +140,7 @@ export default function ChatPage() {
         />
 
         {/* Top bar */}
+
         <ConfigProvider
           theme={{
             components: {
@@ -200,10 +201,10 @@ export default function ChatPage() {
         </ConfigProvider>
 
         {/* Message area */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4">
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
 
           {history.length === 0 && !loading && (
-            <div className="flex flex-col items-center justify-center h-full gap-6 text-center px-4">
+            <div className="flex flex-col items-center h-[68vh] overflow-hidden gap-6 text-center px-4">
               <Image src="/mentor-logo.png" alt="Mentor AI" width={60} height={60} className="rounded-xl" />
               <div>
                 <p className="text-3xl font-semibold text-white">Hi {user?.name || "User"} 👋</p>
@@ -276,12 +277,10 @@ export default function ChatPage() {
       </div>
 
       {/* ── Right: insights panel (slides in/out) ── */}
-      <div
-        className={`shrink-0 h-full border-l border-white/8 bg-[#080d19]/80 backdrop-blur-xl overflow-hidden transition-all duration-300 ease-in-out
-          ${rightOpen ? "w-64" : "w-0"}`}
-      >
+      <div className={`shrink-0 h-full min-h-0 border-l border-white/8 bg-[#080d19]/80 backdrop-blur-xl overflow-hidden transition-all duration-300 ease-in-out ${rightOpen ? "w-64" : "w-0"}`}>
+
         {/* Always mounted so it doesn't remount on open */}
-        <div className="w-64 h-full">
+        <div className="w-64 h-full overflow-y-auto">
           <RightSidebar />
         </div>
       </div>

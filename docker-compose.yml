@@ -31,7 +31,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8020:8000"
+      - "8020:8001"
     volumes:
       - uploads_data:/app/uploads
 
@@ -44,7 +44,7 @@ services:
     container_name: student_system_frontend
     restart: unless-stopped
     environment:
-      BACKEND_URL: http://backend:8000
+      BACKEND_URL: http://backend:8001
     depends_on:
       - backend
     ports:

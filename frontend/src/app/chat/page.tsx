@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ChatPage from "@/app/pages/ChatPage";
+import Loader from "@/components/Loader";
 
 export default function Chat() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,8 +26,9 @@ export default function Chat() {
 
   if (loading) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow-md">
-        <p className="text-gray-400">Loading...</p>
+      <div className="h-[80vh] w-[80vw] flex items-center justify-center gap-2">
+        <Loader size={30} />
+        <span className="text-lg text-blue-300">Thinking...</span>
       </div>
     );
   }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = "http://10.10.90.95:8000"
+const BACKEND_URL = "http://10.10.90.95:8001"
 
 // GET /api/documents/view?document_id=5
 export async function GET(req: NextRequest) {

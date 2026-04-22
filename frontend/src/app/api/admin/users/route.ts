@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = "http://10.10.90.95:8000"
+const BACKEND_URL = "http://10.10.90.95:8001"
 
 // POST /api/admin/users  ->  POST /admin/users on backend
 export async function POST(req: NextRequest) {

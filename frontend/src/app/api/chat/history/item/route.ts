@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = "http://10.10.90.95:8000"
+const BACKEND_URL = "http://10.10.90.95:8001"
 
 // DELETE /api/chat/history/item?student_id=1&created_at=...
 export async function DELETE(req: NextRequest) {
