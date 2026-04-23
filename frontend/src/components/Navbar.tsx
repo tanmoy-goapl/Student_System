@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   MessageSquare,
@@ -20,6 +20,7 @@ export default function Navbar() {
   const [role, setRole] = useState<"admin" | "student" | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [roleLoaded, setRoleLoaded] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const updateData = () => {
@@ -80,7 +81,7 @@ export default function Navbar() {
       {/* TOP SECTION */}
       <div>
         {/* Brand */}
-        <div className="flex items-center gap-2 px-4 py-4">
+        <Link href="/" className="flex items-center gap-2 px-4 py-4">
           <Image
             src="/mentor-logo.png"
             alt="Mentor AI"
@@ -89,10 +90,18 @@ export default function Navbar() {
             className="rounded-xl"
           />
           <span className="text-sm font-bold text-white">Mentor AI</span>
-        </div>
+        </Link>
         {/* New Chat Button */}
         <div className="px-2">
-          <button className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold hover:opacity-90 transition">
+          <button
+            onClick={() => {
+              window.dispatchEvent(new Event("new-chat"));
+              if (pathname !== "/chat") {
+                router.push("/chat");
+              }
+            }}
+            className="w-full flex items-center justify-center cursor-pointer gap-2 px-3 py-2 rounded-md bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold hover:opacity-90 transition"
+          >
             <Plus size={12} />
             <span>New Chat</span>
           </button>
@@ -120,25 +129,25 @@ export default function Navbar() {
                 filteredNavItems.map((item) => {
                   const Icon = item.icon;
                   return (
-<Link
-  key={item.id}
-  href={item.path}
-  className={`relative flex items-center justify-between gap-3 px-3 py-1 rounded-md transition
+                    <Link
+                      key={item.id}
+                      href={item.path}
+                      className={`relative flex items-center justify-between gap-3 px-3 py-1 rounded-md transition
     ${isActive(item.path)
-      ? "bg-blue-500/20 text-white"
-      : "hover:bg-white/10 text-white/80"
-    }`}
->
-  <div className="flex items-center gap-3">
-    <Icon size={12} />
-    <span className="text-xs">{item.label}</span>
-  </div>
+                          ? "bg-blue-500/20 text-white"
+                          : "hover:bg-white/10 text-white/80"
+                        }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon size={12} />
+                        <span className="text-xs">{item.label}</span>
+                      </div>
 
-  {/* Active blue dot */}
-  {isActive(item.path) && (
-    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-  )}
-</Link>
+                      {/* Active blue dot */}
+                      {isActive(item.path) && (
+                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                      )}
+                    </Link>
                   );
                 })
               )}
@@ -147,23 +156,26 @@ export default function Navbar() {
         </div>
         {/* User Info */}
         {role && userName && (
-          <div className="px-4 py-4 border-t border-white/10 flex items-center gap-2">
+          <Link href="/profile">
+            <div className="px-4 py-4 border-t border-white/10 flex items-center gap-2 cursor-pointer hover:bg-white/5 transition">
 
-            {/* Avatar */}
-            <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white text-sm font-semibold">
-              {userName.charAt(0).toUpperCase()}
-            </div>
+              {/* Avatar */}
+              <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white text-sm font-semibold">
+                {userName.charAt(0).toUpperCase()}
+              </div>
 
-            {/* User Info */}
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-white">
-                {userName}
-              </span>
-              <span className="text-xs text-white/70 capitalize">
-                {role}
-              </span>
+              {/* User Info */}
+              <div className="flex flex-col">
+                <span className="text-xs font-medium text-white">
+                  {userName}
+                </span>
+                <span className="text-xs text-white/70 capitalize">
+                  {role}
+                </span>
+              </div>
+
             </div>
-          </div>
+          </Link>
         )}
       </div>
     </aside>

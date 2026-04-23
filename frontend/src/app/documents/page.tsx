@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DocumentsPage from "@/app/pages/DocumentsPage";
+import Loader from "@/components/Loader";
 
 export default function Documents() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -19,9 +20,7 @@ export default function Documents() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <p className="text-gray-400">Loading...</p>
-      </div>
+      <Loader fullScreen text="Loading..." />
     );
   }
 

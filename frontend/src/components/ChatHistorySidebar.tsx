@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef } from "react";
+import Loader from "./Loader";
 
 type HistoryItem = {
   role: string;
@@ -165,7 +166,7 @@ export default function ChatHistorySidebar({
 
       <div className="flex-1 overflow-y-auto text-xs">
         {loading && (
-          <div className="p-4 text-gray-400 text-center">Loading history…</div>
+          <Loader fullScreen text="Loading..." />
         )}
         {error && !loading && (
           <div className="p-4 text-red-500 text-center">{error}</div>
@@ -177,10 +178,10 @@ export default function ChatHistorySidebar({
         )}
 
         {visible.map((item, idx) => {
-              const key = `${item.role}-${item.created_at}-${item.content.slice(
-                0,
-                20
-              )}`;
+          const key = `${item.role}-${item.created_at}-${item.content.slice(
+            0,
+            20
+          )}`;
           const isDeleting = deletingKey === key;
           return (
             <div

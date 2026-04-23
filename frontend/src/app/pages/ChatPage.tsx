@@ -89,12 +89,20 @@ export default function ChatPage() {
     }
   };
 
-  const handleNewSession = () => {
+useEffect(() => {
+  const handleNewChat = () => {
     setHistory([]);
     setQuestion("");
     setError("");
     setResetNext(true);
   };
+
+  window.addEventListener("new-chat", handleNewChat);
+
+  return () => {
+    window.removeEventListener("new-chat", handleNewChat);
+  };
+}, []);
 
   const handleSelectHistoryEntry = async (item: { content: string; created_at?: string | null }) => {
     if (!user?.id) return;

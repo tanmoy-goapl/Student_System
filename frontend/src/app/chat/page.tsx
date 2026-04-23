@@ -26,10 +26,7 @@ export default function Chat() {
 
   if (loading) {
     return (
-      <div className="h-[80vh] w-[80vw] flex items-center justify-center gap-2">
-        <Loader size={30} />
-        <span className="text-lg text-blue-300">Thinking...</span>
-      </div>
+      <Loader fullScreen text="Loading..." />
     );
   }
 

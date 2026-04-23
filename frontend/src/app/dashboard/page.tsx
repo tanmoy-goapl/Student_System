@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardPage from "@/app/pages/DashboardPage";
 import AdminDashboardPage from "@/app/pages/AdminDashboardPage";
+import Loader from "@/components/Loader";
 
 export default function Dashboard() {
   const [role, setRole] = useState<"admin" | "student" | null>(null);
@@ -28,9 +29,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow-md">
-        <p className="text-gray-400">Loading...</p>
-      </div>
+      <Loader fullScreen text="Loading..." />
     );
   }
 

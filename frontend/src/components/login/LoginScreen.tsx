@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { login } from "@/lib/api";
 import LoginShell from "./LoginShell";
+import { Check, Copy } from "lucide-react";
 
 type LoginType = "admin" | "user" | "professor";
 
@@ -20,6 +21,7 @@ export default function LoginScreen({ onLoginSuccess, redirectAfterLogin = "/pro
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const nextPath = redirectAfterLogin;
@@ -74,6 +76,32 @@ export default function LoginScreen({ onLoginSuccess, redirectAfterLogin = "/pro
     }
   };
 
+  const handleCopy = async (text: string, key: string) => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // fallback for older browsers / insecure context
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed"; // avoid scrolling
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+
+      setCopied(key);
+
+      setTimeout(() => {
+        setCopied(null);
+      }, 1200);
+    } catch (err) {
+      console.error("Copy failed", err);
+    }
+  };
+
   const roleTabs: { id: LoginType; label: string }[] = [
     { id: "admin", label: "Management" },
     { id: "professor", label: "Professor" },
@@ -104,11 +132,10 @@ export default function LoginScreen({ onLoginSuccess, redirectAfterLogin = "/pro
                 setLoginType(id);
                 setError("");
               }}
-              className={`rounded-lg px-3 py-2 text-xs font-medium transition sm:text-sm ${
-                loginType === id
+              className={`rounded-lg px-3 py-2 text-xs font-medium cursor-pointer transition sm:text-sm ${loginType === id
                   ? "bg-slate-700 text-white shadow"
                   : "text-slate-400 hover:text-white"
-              }`}
+                }`}
             >
               {label}
             </button>
@@ -182,7 +209,7 @@ export default function LoginScreen({ onLoginSuccess, redirectAfterLogin = "/pro
               <button
                 type="button"
                 className="text-xs font-medium text-sky-400 hover:text-sky-300"
-                onClick={() => {}}
+                onClick={() => { }}
               >
                 Forgot password?
               </button>
@@ -251,17 +278,77 @@ export default function LoginScreen({ onLoginSuccess, redirectAfterLogin = "/pro
 
         <div className="mt-8 rounded-lg border border-white/5 bg-slate-950/50 p-4 text-[11px] leading-relaxed text-slate-500">
           <p className="font-semibold text-slate-400">Demo credentials</p>
-          <p className="mt-2">
-            Management → <span className="font-mono text-slate-400">rg@gmail.com</span> /{" "}
-            <span className="font-mono">admin123</span>
+
+          {/* Management */}
+          <p className="mt-2 flex items-center gap-2">
+            Management →
+            <span className="flex items-center gap-1 font-mono text-slate-400">
+              rg@gmail.com
+              <button
+                className="text-slate-400 hover:text-white transition"
+                onClick={() => handleCopy("rg@gmail.com", "admin-email")}
+              >
+                {copied === "admin-email" ? <Check size={12} /> : <Copy size={12} />}
+              </button>
+            </span>
+            /
+            <span className="flex items-center gap-1 font-mono">
+              admin123
+              <button
+                className="text-slate-400 hover:text-white transition"
+                onClick={() => handleCopy("admin123", "admin-pass")}
+              >
+                {copied === "admin-pass" ? <Check size={12} /> : <Copy size={12} />}
+              </button>
+            </span>
           </p>
-          <p>
-            Professor → <span className="font-mono text-slate-400">sunilsharma@gmail.com</span> /{" "}
-            <span className="font-mono">prof123</span>
+
+          {/* Professor */}
+          <p className="mt-2 flex items-center gap-2">
+            Professor →
+            <span className="flex items-center gap-1 font-mono text-slate-400">
+              sunilsharma@gmail.com
+              <button
+                className="text-slate-400 hover:text-white transition"
+                onClick={() => handleCopy("sunilsharma@gmail.com", "prof-email")}
+              >
+                {copied === "prof-email" ? <Check size={12} /> : <Copy size={12} />}
+              </button>
+            </span>
+            /
+            <span className="flex items-center gap-1 font-mono">
+              prof123
+              <button
+                className="text-slate-400 hover:text-white transition"
+                onClick={() => handleCopy("prof123", "prof-pass")}
+              >
+                {copied === "prof-pass" ? <Check size={12} /> : <Copy size={12} />}
+              </button>
+            </span>
           </p>
-          <p>
-            Student → <span className="font-mono text-slate-400">keshav@gmail.com</span> /{" "}
-            <span className="font-mono">keshav123</span>
+
+          {/* Student */}
+          <p className="mt-2 flex items-center gap-2">
+            Student →
+            <span className="flex items-center gap-1 font-mono text-slate-400">
+              keshav@gmail.com
+              <button
+                className="text-slate-400 hover:text-white transition"
+                onClick={() => handleCopy("keshav@gmail.com", "student-email")}
+              >
+                {copied === "student-email" ? <Check size={12} /> : <Copy size={12} />}
+              </button>
+            </span>
+            /
+            <span className="flex items-center gap-1 font-mono">
+              keshav123
+              <button
+                className="text-slate-400 hover:text-white transition"
+                onClick={() => handleCopy("keshav123", "student-pass")}
+              >
+                {copied === "student-pass" ? <Check size={12} /> : <Copy size={12} />}
+              </button>
+            </span>
           </p>
         </div>
       </div>
