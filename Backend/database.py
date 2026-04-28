@@ -21,8 +21,7 @@ Base = declarative_base()
 
 
 def init_db():
-    """Create all tables (import models first so they register)."""
-    from models import User, Document, DocumentChunk  # noqa
+    from models import User, Document  # removed DocumentChunk
     Base.metadata.create_all(bind=engine)
 
 
