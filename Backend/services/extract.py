@@ -57,16 +57,6 @@ def extract_text_from_docx(file_path: str) -> str:
     try:
         from docx import Document
         doc = Document(file_path)
-        # Preserve table rows (marks tables) as tab-separated lines
-        parts: list[str] = []
-        for block in doc.element.body:
-            tag = block.tag.split("}")[-1]
-            if tag == "p":
-                para = block.text_content() if hasattr(block, "text_content") else ""
-                # Use python-docx paragraph API for cleaner text
-                pass
-            elif tag == "tbl":
-                pass  # handled below via doc.tables
 
         paragraphs = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
         table_rows = []
