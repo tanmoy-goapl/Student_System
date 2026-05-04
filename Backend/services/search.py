@@ -12,31 +12,64 @@ def search_relevant_chunks(
 ):
     results = query_chunks(question, top_k=top_k)
 
-    documents = results.get("documents", [[]])[0]
-    metadatas = results.get("metadatas", [[]])[0]
+    print("=== CHROMA RESULTS ===")
+    print(results)
+
+    documents = results.get("documents", [[]])
+    metadatas = results.get("metadatas", [[]])
+
+    # ✅ guard for empty
+    if not documents or not documents[0]:
+        return []
+
+    docs_list = documents[0]
+    metas_list = metadatas[0]
+
+    # ✅ collect doc_ids first (avoid N+1 queries)
+    doc_ids = {
+        m.get("document_id")
+        for m in metas_list
+        if m and m.get("document_id") is not None
+    }
+
+    if not doc_ids:
+        return []
+
+    # ✅ fetch all documents in one query
+    db_docs = db.query(Document).filter(Document.id.in_(doc_ids)).all()
+    doc_map = {d.id: d for d in db_docs}
 
     chunks = []
 
-    for text, meta in zip(documents, metadatas):
-        doc = db.query(Document).filter(Document.id == meta["document_id"]).first()
+    for text, meta in zip(docs_list, metas_list):
+        if not meta:
+            continue
 
+        doc = doc_map.get(meta.get("document_id"))
         if not doc:
             continue
 
-        # Access control
+        # 🔐 Access control
         if user_role == "admin":
-            pass
+            allowed = True
         elif user_role == "professor":
-            if not (doc.student_id == user_id or doc.readable_by in ["professor", "all"]):
-                continue
+            allowed = (
+                doc.student_id == user_id
+                or doc.readable_by in ["professor", "all"]
+            )
         else:
-            if not (doc.student_id == user_id or doc.readable_by == "all"):
-                continue
+            allowed = (
+                doc.student_id == user_id
+                or doc.readable_by == "all"
+            )
+
+        if not allowed:
+            continue
 
         chunks.append({
             "text": text,
             "document": doc.filename,
-            "chunk_index": meta["chunk_index"],
+            "chunk_index": meta.get("chunk_index", 0),
         })
 
     return chunks
@@ -44,7 +77,7 @@ def search_relevant_chunks(
 
 def build_rich_context(chunks):
     if not chunks:
-        return ""
+        return "NO_CONTEXT_FOUND"
 
     parts = []
     for i, c in enumerate(chunks, 1):

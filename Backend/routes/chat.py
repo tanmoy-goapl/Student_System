@@ -21,6 +21,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+# from opentelemetry import context
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -141,59 +142,57 @@ def _build_system_prompt(
     student_name: str = "the student",
 ) -> str:
     doc_list = ", ".join(doc_names) or "(none)"
+
+    # 🔴 HARD enforcement
     if intent is Intent.GENERAL:
         knowledge_line = (
-            "Use the student's documents as primary source. "
-            "If context is thin, add general academic guidance "
-            "but never claim it came from the documents."
+            "You may answer using general academic knowledge. "
+            "Do NOT reference documents or context."
         )
     else:
         knowledge_line = (
-            "Your ONLY knowledge source is the student's uploaded documents. "
-            "Never invent facts not present in the documents."
+            "You MUST answer ONLY using the CONTEXT below. "
+            "Do NOT use prior knowledge. "
+            "Do NOT generalize. "
+            "If the answer is not clearly present in the context, say:\n"
+            "'I could not find this information in the provided documents.'"
         )
 
     role_instruction = get_role_instruction(role, student_name)
+
     base = f"""You are MentorAI — a warm, encouraging academic mentor.
 
-    ROLE GUIDELINE:
-    {role_instruction}
+ROLE GUIDELINE:
+{role_instruction}
+
 {knowledge_line}
 
 STUDENT: {student_name}
 DOCUMENTS: {doc_list}
-CONTEXT:
+
+===== CONTEXT (ONLY SOURCE OF TRUTH) =====
 {context[:MAX_CONTEXT_LEN]}
----
+===== END CONTEXT =====
 """
 
     intent_hints = {
-        Intent.MARKS: "The student is asking about marks/grades/scores. "
-            "List subjects with scores, highlight strengths and weaknesses.",
-        Intent.IMPROVEMENT: "The student wants to know what to improve. "
-            "Identify weak areas from the documents and suggest concrete steps. "
-            "If documents are a resume/CV, point out skill gaps for their target role.",
-        Intent.STUDY_PLAN: "The student wants a study plan. "
-            "Create a practical schedule using subjects from their documents.",
-        Intent.FEEDBACK: "The student is asking about feedback/comments. "
-            "Quote or paraphrase relevant feedback from documents.",
-        Intent.GENERAL: "General academic question. "
-            "Give a clear explanation. You may use standard textbook knowledge. "
-            "Do NOT mention documents or sources.",
+        Intent.MARKS: "Extract marks exactly as written. Do NOT approximate.",
+        Intent.IMPROVEMENT: "Base suggestions ONLY on weaknesses found in the context.",
+        Intent.STUDY_PLAN: "Use subjects/topics explicitly mentioned in the context.",
+        Intent.FEEDBACK: "Quote or closely paraphrase feedback from the context.",
+        Intent.GENERAL: "Answer normally using standard knowledge.",
     }
 
     rules = f"""
 INTENT HINT: {intent_hints[intent]}
 
 CRITICAL RULES:
-• Answer ONLY what the user asked. Do NOT add extra sections or unsolicited advice.
-• Keep responses concise and focused. Use short paragraphs or bullet points.
-• If the user asks a simple question, give a simple answer. Do NOT force a multi-section template.
-• Only use structured sections (headings, emojis) when the user explicitly asks for a plan, breakdown, or detailed analysis.
-• Be encouraging and supportive.
-• Keep total response under 400 words.
-• For GENERAL questions: never mention documents or files.
-• For other questions: use ONLY info from the context above.
+• NEVER use information outside the provided CONTEXT (except GENERAL intent).
+• NEVER invent policies, rules, or facts.
+• If CONTEXT contains bullet points or structured rules → preserve structure in answer.
+• Prefer quoting or closely paraphrasing the CONTEXT.
+• Keep answer concise and relevant.
+• Maximum 300–400 words.
 """
 
     return base + rules
@@ -299,6 +298,8 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             request.question, request.student_id, request.role, db, top_k=top_k
         )
     except Exception as e:
+        import traceback
+        traceback.print_exc()        # full stack trace to terminal
         raise HTTPException(status_code=500, detail=f"Search error: {e}")
 
     if not chunks:
@@ -325,9 +326,11 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         return ChatResponse(answer=fallback_answer, intent=intent.value)
 
     context    = build_rich_context(chunks)
+    print("=== CONTEXT SENT TO LLM ===")
+    print(context)
     doc_names  = [d.filename for d in all_docs]
     source_docs = list({
-        c.document.filename for c in chunks if c.document
+        c["document"] for c in chunks if c.get("document")
     })
 
     # ── Conversation history ──────────────────────────────────────────────────

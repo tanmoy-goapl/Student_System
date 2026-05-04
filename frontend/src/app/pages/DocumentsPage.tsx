@@ -77,6 +77,8 @@ export default function DocumentsPage() {
     owner: "Only Me", professor: "Professors", all: "Everyone",
   };
 
+  console.log(previewUrl)
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -159,7 +161,7 @@ export default function DocumentsPage() {
                     <td className="px-5 py-3.5">
                       <button
                         className="text-sm font-medium text-cyan-400 transition hover:text-cyan-300 hover:underline text-left"
-                        onClick={() => setPreviewUrl(`http://localhost:8000/uploads/${encodeURIComponent(doc.file_path ?? "")}`)}
+                        onClick={() => setPreviewUrl(`http://localhost:8001/uploads/${encodeURIComponent(doc.file_path ?? "")}`)}
                         title="Click to view"
                       >
                         {doc.filename}
