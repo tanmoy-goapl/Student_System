@@ -1,64 +1,9 @@
-"use client";
-
+import { PlayIcon, SparkleIcon } from "lucide-react";
 import Link from "next/link";
-import ResumeSteps from "@/components/ResumeSteps";
-import LearningFeature from "@/components/LearningFeature";
-import Information from "@/components/Information";
-import StartLearning from "@/components/StartLearning";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
-function SparkIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M12 1.5l1.62 5.02h5.24l-4.24 3.08 1.62 5.02L12 11.54l-4.24 3.08 1.62-5.02-4.24-3.08h5.24L12 1.5zM5 14.5l.92 2.85h2.98l-2.41 1.75.92 2.85L5 20.1l-2.41 1.75.92-2.85-2.41-1.75h2.98L5 14.5zM17 14.5l.92 2.85h2.98l-2.41 1.75.92 2.85-2.41-1.75-2.41 1.75.92-2.85-2.41-1.75h2.98L17 14.5z" />
-    </svg>
-  );
-}
-
-function PlayIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M8 5v14l11-7z" />
-    </svg>
-  );
-}
-
-export default function HomePage() {
-  const router = useRouter();
-  const [ready, setReady] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    const role = localStorage.getItem("role");
-
-    const authenticated = !!userId && !!role;
-    setIsAuthenticated(authenticated);
-    setReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    if (!isAuthenticated) {
-      router.replace("/login?next=/");
-    }
-  }, [ready, isAuthenticated, router]);
-
-  if (!ready) return null;
-
-  if (!isAuthenticated) {
-    return <p className="text-white">Redirecting...</p>;
-  }
-
-  return (
-    <>
-      <section className="relative min-h-[calc(100vh-3.5rem)] w-full overflow-hidden px-6 pb-20 pt-6 font-sans text-white lg:px-10 lg:pt-14">
+export default function LandingPageTop() {
+    return (
+              <section className="relative min-h-[calc(100vh-3.5rem)] w-full overflow-hidden px-6 pb-20 pt-6 font-sans text-white lg:px-10 lg:pt-14">
         {/* Ambient glow */}
         <div
           className="pointer-events-none absolute inset-0 -z-10 bg-[#020617]"
@@ -72,7 +17,7 @@ export default function HomePage() {
           {/* Top */}
           <div className="flex flex-col gap-8">
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-cyan-400/30 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-300 backdrop-blur-sm">
-              <SparkIcon className="h-3.5 w-3.5 text-cyan-400" />
+              <SparkleIcon className="h-3.5 w-3.5 text-cyan-400" />
               Next-gen AI learning
             </div>
 
@@ -134,7 +79,7 @@ export default function HomePage() {
                 {/* AI response */}
                 <div className="flex gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600">
-                    <SparkIcon className="h-4 w-4 text-white" />
+                    <SparkleIcon className="h-4 w-4 text-white" />
                   </div>
                   <div className="min-w-0 flex-1 rounded-2xl rounded-tl-md border border-blue-500/20 bg-gradient-to-br from-blue-950/80 to-slate-900/90 px-4 py-3">
                     <p className="mb-2 text-sm font-semibold text-cyan-200">Mentor AI Assistant</p>
@@ -178,10 +123,5 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <ResumeSteps />
-      <LearningFeature />
-      <Information />
-      <StartLearning />
-    </>
-  );
+    )
 }
