@@ -19,6 +19,57 @@ export interface CategoryItem {
   subjects: SubjectItem[];
 }
 
+type ContentBlock =
+  | {
+      type: "heading";
+      text: string;
+    }
+  | {
+      type: "paragraph";
+      text: string;
+    }
+  | {
+      type: "highlight";
+      variant: "constructive" | "destructive";
+      title: string;
+      text: string;
+    }
+  | {
+      type: "code_block";
+      language: string;
+      title: string;
+      code: string;
+    }
+  | {
+      type: "note";
+      text: string;
+    };
+
+interface ApiResponse {
+  success: boolean;
+  generatedBy: string;
+  status: string;
+  topic: string;
+  content: ContentBlock[];
+}
+
+export interface LearningHeaderStat {
+  label: string;
+  value: string;
+  valueColor?: string;
+}
+
+export interface LearningHeaderResponse {
+  success: boolean;
+  data: {
+    category: string;
+    status: string;
+    title: string;
+    subtitle: string;
+    stats: LearningHeaderStat[];
+  };
+}
+
 export const SIDEBAR_DATA: CategoryItem[] = [
   {
     id: "physics",
@@ -357,3 +408,81 @@ export const SIDEBAR_DATA: CategoryItem[] = [
     ],
   },
 ];
+
+export const NOTES_RESPONSE: ApiResponse = {
+  success: true,
+  generatedBy: "Mentor AI",
+  status: "Generating explanation...",
+  topic: "Interference of Light",
+  content: [
+    {
+      type: "heading",
+      text: "What is Interference of Light?",
+    },
+    {
+      type: "paragraph",
+      text: "Interference is the phenomenon where two or more waves superpose to form a resultant wave of greater, lower, or the same amplitude. It occurs when coherent light waves overlap.",
+    },
+    {
+      type: "heading",
+      text: "Types of Interference",
+    },
+    {
+      type: "highlight",
+      variant: "constructive",
+      title: "Constructive Interference",
+      text: "Occurs when path difference is nλ, resulting in bright fringes.",
+    },
+    {
+      type: "highlight",
+      variant: "destructive",
+      title: "Destructive Interference",
+      text: "Occurs when path difference is (2n−1)λ/2, resulting in dark fringes.",
+    },
+    {
+      type: "heading",
+      text: "Young's Double Slit Experiment",
+    },
+    {
+      type: "paragraph",
+      text: "Thomas Young's 1801 experiment demonstrated the wave nature of light by passing a coherent beam through two narrow slits, producing alternating bright and dark fringes on a screen.",
+    },
+    {
+      type: "code_block",
+      language: "latex",
+      title: "Fringe Width Formula",
+      code: "β = λD / d",
+    },
+    {
+      type: "note",
+      text: "β = fringe width, λ = wavelength, D = distance to screen, d = slit separation",
+    },
+  ],
+};
+
+export const HEADER_RESPONSE: LearningHeaderResponse = {
+  success: true,
+  data: {
+    category: "Physics",
+    status: "Weak Topic",
+    title: "Interference of Light",
+    subtitle: "Wave Optics • Chapter 10",
+    stats: [
+      {
+        label: "Difficulty",
+        value: "Hard",
+        valueColor: "text-amber-400",
+      },
+      {
+        label: "Est. Time",
+        value: "45 min",
+        valueColor: "text-cyan-400",
+      },
+      {
+        label: "Accuracy",
+        value: "38%",
+        valueColor: "text-rose-400",
+      },
+    ],
+  },
+};

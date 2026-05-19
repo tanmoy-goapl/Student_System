@@ -34,7 +34,7 @@ export default function LearningSidebar() {
   };
 
   return (
-    <div className="bg-black w-[20vw]">
+    <div className="bg-[#131826] w-[20vw]">
       <div className="py-2 px-2">
         <h2 className="text-[0.6rem] text-left uppercase tracking-[0.22em] px-2 pt-2 text-white/55">
           Topic Navigator
@@ -49,7 +49,7 @@ export default function LearningSidebar() {
         </div>
       </div>
 
-      <div className="h-[82vh] overflow-y-auto text-white p-2 scrollbar-thin scrollbar-thumb-white/10">
+      <div className="h-[84vh] overflow-y-auto text-white p-2 scrollbar-thin scrollbar-thumb-white/10">
         {SIDEBAR_DATA.map((category) => (
           <CategorySection
             key={category.id}
