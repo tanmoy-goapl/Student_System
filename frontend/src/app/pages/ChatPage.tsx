@@ -209,10 +209,10 @@ useEffect(() => {
         </ConfigProvider>
 
         {/* Message area */}
-        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+        <div ref={scrollRef} className="h-[80vh] min-h-0 overflow-y-auto p-4 space-y-4">
 
           {history.length === 0 && !loading && (
-            <div className="flex flex-col items-center h-[68vh] overflow-hidden gap-6 text-center px-4">
+            <div className="flex flex-col items-center h-[60vh] overflow-hidden gap-6 text-center px-4">
               <Image src="/mentor-logo.png" alt="Mentor AI" width={60} height={60} className="rounded-xl" />
               <div>
                 <p className="text-3xl font-semibold text-white">Hi {user?.name || "User"} 👋</p>
