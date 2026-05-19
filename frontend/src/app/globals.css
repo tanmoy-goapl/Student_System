@@ -37,12 +37,7 @@ body {
 
 /* Reusable navbar/button styles so we don't repeat hex values. */
 .mentor-navbar {
-  background: linear-gradient(
-    90deg,
-    var(--mentor-blue-900),
-    var(--mentor-blue-800),
-    var(--mentor-blue-700)
-  );
+  background: #0A0F1E;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
