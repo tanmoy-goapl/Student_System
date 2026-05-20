@@ -1,3 +1,8 @@
+import { Bookmark, CircleQuestionMark, FileText, Flag, FlaskConical, Lightbulb, MessageSquare, Pen, BookOpen, Zap, Eye, MessageCircle,  } from "lucide-react";
+import React from "react";
+
+import { SidebarResponse } from "@/components/learningpage/Sidebar/types";
+
 export type StrengthType = "weak" | "medium" | "strong" | "neutral";
 
 export interface TopicItem {
@@ -21,29 +26,29 @@ export interface CategoryItem {
 
 type ContentBlock =
   | {
-      type: "heading";
-      text: string;
-    }
+    type: "heading";
+    text: string;
+  }
   | {
-      type: "paragraph";
-      text: string;
-    }
+    type: "paragraph";
+    text: string;
+  }
   | {
-      type: "highlight";
-      variant: "constructive" | "destructive";
-      title: string;
-      text: string;
-    }
+    type: "highlight";
+    variant: "constructive" | "destructive";
+    title: string;
+    text: string;
+  }
   | {
-      type: "code_block";
-      language: string;
-      title: string;
-      code: string;
-    }
+    type: "code_block";
+    language: string;
+    title: string;
+    code: string;
+  }
   | {
-      type: "note";
-      text: string;
-    };
+    type: "note";
+    text: string;
+  };
 
 interface ApiResponse {
   success: boolean;
@@ -70,6 +75,48 @@ export interface LearningHeaderResponse {
   };
 }
 
+export interface RevisionPoint {
+  id: number;
+  text: string;
+}
+
+export interface QuickAction {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  variant: 'primary' | 'cyan' | 'purple' | 'amber';
+}
+
+export interface RelatedConcept {
+  id: string;
+  label: string;
+}
+
+export interface LearningAction {
+  id: string;
+  label: string;
+  subLabel: string;
+  icon: React.ElementType;
+  variant: 'neutral' | 'weak' | 'medium' | 'strong';
+}
+
+export interface LearningAssistantResponse {
+  success: boolean;
+
+  data: {
+    revision: {
+      title: string;
+      points: RevisionPoint[];
+    };
+
+    actions: QuickAction[];
+
+    relatedConcepts: RelatedConcept[];
+
+    learningActions: LearningAction[];
+  };
+}
+
 export const SIDEBAR_DATA: CategoryItem[] = [
   {
     id: "physics",
@@ -87,7 +134,7 @@ export const SIDEBAR_DATA: CategoryItem[] = [
           },
           {
             id: "diffraction",
-            title: "Diffraction",          
+            title: "Diffraction",
           },
           {
             id: "polarization",
@@ -484,5 +531,252 @@ export const HEADER_RESPONSE: LearningHeaderResponse = {
         valueColor: "text-rose-400",
       },
     ],
+  },
+};
+
+
+export const LEARNING_ASSISTANT_RESPONSE: LearningAssistantResponse = {
+  success: true,
+
+  data: {
+    revision: {
+      title: 'Quick Revision',
+
+      points: [
+        {
+          id: 1,
+          text: 'Interference requires coherent sources with a constant phase difference.',
+        },
+
+        {
+          id: 2,
+          text: 'Fringe width β = λD/d — inversely proportional to slit separation.',
+        },
+
+        {
+          id: 3,
+          text: 'Constructive: path diff = nλ | Destructive: path diff = (2n−1)λ/2.',
+        },
+
+        {
+          id: 4,
+          text: 'YDSE fringe pattern disappears when slit width > slit separation.',
+        },
+      ],
+    },
+
+    actions: [
+      {
+        id: 'simpler',
+        label: 'Explain Simpler',
+        icon: Lightbulb,
+        variant: 'primary',
+      },
+
+      {
+        id: 'example',
+        label: 'Give Example',
+        icon: FlaskConical,
+        variant: 'cyan',
+      },
+
+      {
+        id: 'summary',
+        label: 'Summarize',
+        icon: FileText,
+        variant: 'purple',
+      },
+
+      {
+        id: 'ask',
+        label: 'Ask AI',
+        icon: MessageSquare,
+        variant: 'amber',
+      },
+    ],
+
+    relatedConcepts: [
+      {
+        id: '1',
+        label: "Huygens' Principle",
+      },
+
+      {
+        id: '2',
+        label: 'Diffraction Grating',
+      },
+
+      {
+        id: '3',
+        label: "Brewster's Angle",
+      },
+
+      {
+        id: '4',
+        label: 'Coherent Sources',
+      },
+    ],
+
+    learningActions: [
+      {
+        id: 'practice_topic',
+        label: 'Practice Topic',
+        subLabel: 'Solve problems',
+        icon: Pen,
+        variant: 'neutral',
+      },
+      {
+        id: 'mark_as_weak',
+        label: 'Mark as Weak',
+        subLabel: 'Flag for extra review',
+        icon: Flag,
+        variant: 'weak',
+      },
+      {
+        id: 'add_to_revision',
+        label: 'Add to Revision',
+        subLabel: 'Schedule review',
+        icon: Bookmark,
+        variant: 'medium',
+      },
+      {
+        id: 'generate_quiz',
+        label: 'Generate Quiz',
+        subLabel: '10 MCQ instant',
+        icon: CircleQuestionMark,
+        variant: 'strong',
+      },
+    ]
+  },
+};
+
+export const RIGHT_SIDEBAR_DATA: SidebarResponse = {
+  success: true,
+  data: {
+    understandingLevel: {
+      mainPercentage: 38,
+      status: "weak",
+      skillBreakdown: [
+        {
+          id: "conceptual",
+          label: "Conceptual",
+          percentage: 45,
+          color: "#a78bfa",
+        },
+        {
+          id: "problem-solving",
+          label: "Problem Solving",
+          percentage: 30,
+          color: "#f87171",
+        },
+        {
+          id: "formulae",
+          label: "Formulae",
+          percentage: 55,
+          color: "#60a5fa",
+        },
+      ],
+      baselineText: "Based on 12 practice attempts",
+    },
+
+    commonMistakes: {
+      mistakes: [
+        {
+          id: "mistake-1",
+          text: "Confusing path difference with phase difference",
+          severity: "high",
+        },
+        {
+          id: "mistake-2",
+          text: "Forgetting to square amplitude for intensity",
+          severity: "high",
+        },
+        {
+          id: "mistake-3",
+          text: "Assuming fringes only appear at screen center",
+          severity: "medium",
+        },
+      ],
+    },
+
+    aiSuggestions: {
+      suggestions: [
+        {
+          id: "suggest-1",
+          label: "Practice 5 YDSE problems",
+          icon: BookOpen,
+          color: "indigo",
+        },
+        {
+          id: "suggest-2",
+          label: "Revise Huygens' Principle",
+          icon: Zap,
+          color: "amber",
+        },
+        {
+          id: "suggest-3",
+          label: "Watch interference simulation",
+          icon: Eye,
+          color: "cyan",
+        },
+      ],
+    },
+
+    relatedDocuments: {
+      documents: [
+        {
+          id: "doc-1",
+          title: "NCERT Ch:10 – Wave Optics",
+          type: "pdf",
+          icon: FileText,
+        },
+        {
+          id: "doc-2",
+          title: "YDSE Formula Sheet",
+          type: "note",
+          icon: FileText,
+        },
+        {
+          id: "doc-3",
+          title: "PYQs – Wave Optics 2019-24",
+          type: "pyq",
+          icon: MessageCircle,
+        },
+      ],
+    },
+
+    timeSpent: {
+      metrics: [
+        {
+          id: "time-today",
+          label: "Today",
+          value: "22 min",
+          color: "text-blue-400",
+        },
+        {
+          id: "time-week",
+          label: "This Week",
+          value: "1h 14m",
+          color: "text-purple-400",
+        },
+        {
+          id: "time-total",
+          label: "Total",
+          value: "3h 48m",
+          color: "text-slate-400",
+        },
+        {
+          id: "sessions",
+          label: "Sessions",
+          value: "8",
+          color: "text-slate-400",
+        },
+      ],
+      comparison: {
+        value: "+18 min",
+        trend: "up",
+        text: "more than yesterday",
+      },
+    },
   },
 };
