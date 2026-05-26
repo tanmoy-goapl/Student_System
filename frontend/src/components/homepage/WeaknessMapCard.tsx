@@ -48,7 +48,7 @@ export default function WeaknessMapCard() {
                 </div>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div className="flex-1 space-y-3 overflow-y-auto purple-scrollbar pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 {WEAKNESS_MAP_RESPONSE.subjects.map((subject) => {
                     const isExpanded = expandedSubjects.includes(subject.id);
 

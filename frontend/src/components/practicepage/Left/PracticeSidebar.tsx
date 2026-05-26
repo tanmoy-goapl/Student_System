@@ -29,7 +29,7 @@ export default function PracticeSidebar() {
 
   return (
     <div className="bg-[#131826] w-[20vw] h-screen flex flex-col text-white">
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto purple-scrollbar">
         {/* Practice Mode Section */}
         <PracticeModeSection
           modes={PRACTICE_MODES}

@@ -164,7 +164,7 @@ export default function ChatHistorySidebar({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto text-xs">
+      <div className="flex-1 overflow-y-auto purple-scrollbar text-xs">
         {loading && (
           <Loader fullScreen text="Loading..." />
         )}

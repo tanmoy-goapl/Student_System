@@ -28,6 +28,42 @@ export interface SessionStats {
   total: number;
 }
 
+export interface Answer {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface Question {
+  id: number;
+  number: number;
+  totalQuestions: number;
+  category: string;
+  topic: string;
+  difficulty: string;
+  mode: string;
+  description: string;
+  questionText: string;
+  answers: Answer[];
+  progressColor: string;
+}
+
+export interface SubmittedAnswer {
+  questionId: number;
+  answerId: string;
+  isCorrect: boolean;
+  timestamp: Date;
+}
+
+export interface SessionProgress {
+  currentQuestion: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  skippedQuestions: number;
+  timeElapsed: number;
+  accuracy: number;
+}
+
 export const PRACTICE_MODES: PracticeMode[] = [
   {
     id: "weakness",
@@ -141,3 +177,26 @@ export const SESSION_STATS: SessionStats = {
   progress: 30,
   total: 40,
 };
+
+export const SAMPLE_QUESTIONS: Question[] = [
+  {
+    id: 1,
+    number: 1,
+    totalQuestions: 20,
+    category: "PHYSICS",
+    topic: "Wave Optics",
+    difficulty: "Hard",
+    mode: "Weakness-Based",
+    description:
+      "AI-curated question",
+    questionText:
+      "In Young's double-slit experiment, the slits are separated by 0.5 mm and the screen is placed 1.0 m away. If monochromatic light of wavelength 600 nm is used, what is the fringe width?",
+    answers: [
+      { id: "A", text: "0.6 mm", isCorrect: false },
+      { id: "B", text: "1.2 mm", isCorrect: true },
+      { id: "C", text: "0.3 mm", isCorrect: false },
+      { id: "D", text: "2.4 mm", isCorrect: false },
+    ],
+    progressColor: "bg-gradient-to-r from-emerald-500 via-cyan-500 to-red-500",
+  },
+];

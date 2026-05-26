@@ -49,7 +49,7 @@ export default function LearningSidebar() {
         </div>
       </div>
 
-      <div className="h-[84vh] overflow-y-auto text-white p-2 scrollbar-thin scrollbar-thumb-white/10">
+      <div className="h-[84vh] overflow-y-auto purple-scrollbar text-white p-2 scrollbar-thin scrollbar-thumb-white/10">
         {SIDEBAR_DATA.map((category) => (
           <CategorySection
             key={category.id}

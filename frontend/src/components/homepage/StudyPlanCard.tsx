@@ -35,7 +35,7 @@ export default function StudyPlanCard() {
                 </p>
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div className="flex-1 overflow-y-auto purple-scrollbar pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 <div className="space-y-2.5">
                     {TODAY_STUDY_PLAN_RESPONSE.sessions.map((session) => (
                         <div

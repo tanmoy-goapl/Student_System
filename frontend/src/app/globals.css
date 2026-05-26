@@ -50,3 +50,35 @@ body {
   background: var(--mentor-accent-hover);
 }
 
+/* globals.css */
+
+.purple-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(91, 95, 255, 0.45) transparent;
+}
+
+/* Chrome / Edge / Safari */
+.purple-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.purple-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+.purple-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(91, 95, 255, 0.6);
+}
+
+.purple-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    to bottom,
+    rgba(124, 92, 255, 0.5),
+    rgba(91, 95, 255, 0.25)
+  );
+
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+

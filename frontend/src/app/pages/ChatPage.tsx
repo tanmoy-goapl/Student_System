@@ -209,7 +209,7 @@ useEffect(() => {
         </ConfigProvider>
 
         {/* Message area */}
-        <div ref={scrollRef} className="h-[80vh] min-h-0 overflow-y-auto p-4 space-y-4">
+        <div ref={scrollRef} className="h-[80vh] min-h-0 overflow-y-auto purple-scrollbar p-4 space-y-4">
 
           {history.length === 0 && !loading && (
             <div className="flex flex-col items-center h-[60vh] overflow-hidden gap-6 text-center px-4">
@@ -288,7 +288,7 @@ useEffect(() => {
       <div className={`shrink-0 h-full min-h-0 border-l border-white/8 bg-[#080d19]/80 backdrop-blur-xl overflow-hidden transition-all duration-300 ease-in-out ${rightOpen ? "w-64" : "w-0"}`}>
 
         {/* Always mounted so it doesn't remount on open */}
-        <div className="w-64 h-full overflow-y-auto">
+        <div className="w-64 h-full overflow-y-auto purple-scrollbar">
           <RightSidebar />
         </div>
       </div>

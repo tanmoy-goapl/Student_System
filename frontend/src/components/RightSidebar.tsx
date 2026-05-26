@@ -35,7 +35,7 @@ export default function RightSidebar() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1">
+      <div className="flex-1 overflow-y-auto purple-scrollbar p-3 space-y-1">
         {role === "student" && <StudentPanel />}
         {role === "professor" && <ProfessorPanel />}
         {role === "admin" && <AdminPanel />}

@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import TopBar from "./navbar/TopBar";
 import LearningSidebar from "./learningpage/LearningSidebar";
-import PracticeSidebar from "./practicepage/Aside/PracticeSidebar";
+import PracticeSidebar from "./practicepage/Left/PracticeSidebar";
 
 interface SidebarRoute {
   match: string;
@@ -99,7 +99,7 @@ return (
 
       {/* Secondary Sidebar */}
       {!isLogin && activeSidebar && (
-        <div className="h-screen shrink-0 overflow-y-auto">
+        <div className="h-screen shrink-0 overflow-y-auto purple-scrollbar">
           {activeSidebar}
         </div>
       )}
@@ -115,7 +115,7 @@ return (
         )}
 
         {/* Page content — the only thing that scrolls */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto purple-scrollbar">
           {children}
         </main>
       </div>
