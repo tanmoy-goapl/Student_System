@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import TopBar from "./navbar/TopBar";
 import LearningSidebar from "./learningpage/LearningSidebar";
+import PracticeSidebar from "./practicepage/Aside/PracticeSidebar";
 
 interface SidebarRoute {
   match: string;
@@ -52,6 +53,10 @@ export default function AppLayout({
     {
       match: "/learning",
       component: <LearningSidebar />,
+    },
+    {
+      match: "/practice",
+      component: <PracticeSidebar />,
     },
 
     // Future Sidebars
