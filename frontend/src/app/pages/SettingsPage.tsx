@@ -3,6 +3,16 @@
 import { useEffect, useState } from "react";
 import { getLlmConfig, updateLlmConfig, type LLMProvider } from "../../lib/api";
 import Loader from "@/components/Loader";
+import MentorPreferences from "@/components/settingpage/MentorPreferences";
+import ResponseStyle from "@/components/settingpage/ResponseStyle";
+import ToneSelector from "@/components/settingpage/ToneSelector";
+import PersonalizationCard from "@/components/settingpage/PersonalizationCard";
+import {
+  defaultModes,
+  responseStyles,
+  tones,
+} from "@/constants/settingpage-data";
+
 
 function RadioCard({
   value, current, pending, onChange, disabled, title, description,
@@ -90,7 +100,10 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-slate-400">Manage platform-wide configuration</p>
       </div>
 
-
+      <MentorPreferences data={defaultModes} />
+      <ResponseStyle data={responseStyles} />
+      <ToneSelector data={tones} />
+      <PersonalizationCard />
 
       {/* LLM card */}
       <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 backdrop-blur-sm">
