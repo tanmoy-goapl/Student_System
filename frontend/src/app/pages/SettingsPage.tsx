@@ -90,6 +90,8 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-slate-400">Manage platform-wide configuration</p>
       </div>
 
+
+
       {/* LLM card */}
       <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 backdrop-blur-sm">
         <div className="mb-1 flex items-center gap-2">
