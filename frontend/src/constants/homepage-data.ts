@@ -14,7 +14,19 @@ import {
   RefreshCcw,
   LineChart,
   Calendar,
+  LucideIcon,
 } from 'lucide-react';
+
+
+export interface AIAction {
+  id: string;
+  title: string;
+  subtitle: string;
+  action: string;
+  icon: LucideIcon;
+  iconClassName: string;
+  cardClassName: string;
+}
 
 
 export const MODEL_MODE = [
@@ -64,7 +76,7 @@ export const MENTOR_AI_CARD = {
   logo: 'mentor-logo.png'
 };
 
-export const AI_ACTIONS = [
+export const AI_ACTIONS: AIAction[] = [
   {
     id: 'resume-learning',
     title: 'Resume Learning',

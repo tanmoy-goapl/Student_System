@@ -1,5 +1,9 @@
 import { ArrowRight } from 'lucide-react';
-import { AI_ACTIONS } from '../../constants/homepage-data';
+import { AI_ACTIONS, AIAction } from '../../constants/homepage-data';
+
+type AIActionsProps = {
+  data: AIAction[];
+};
 
 type ActionCardProps = {
   action: {
@@ -46,7 +50,7 @@ function ActionCard({ action }: ActionCardProps) {
   );
 }
 
-export default function AIActions() {
+export default function AIActions({ data }: AIActionsProps) {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
@@ -56,7 +60,7 @@ export default function AIActions() {
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {AI_ACTIONS.map((action) => (
+        {data.map((action) => (
           <ActionCard key={action.id} action={action} />
         ))}
       </div>
