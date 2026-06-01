@@ -56,7 +56,7 @@ export default function PracticeStats() {
                             <h3 className="text-2xl font-bold text-slate-200">
                                 400
                             </h3>
-                            <text className="text-slate-500 text-sm">Questions attempted</text>
+                            <p className="text-slate-500 text-sm">Questions attempted</p>
                         </div>
 
                         <div className="flex items-center gap-5 text-lg font-semibold">
@@ -64,14 +64,14 @@ export default function PracticeStats() {
                                 <span className="text-emerald-400">
                                     284
                                 </span>
-                                <text className="text-slate-500 text-xs">Correct</text>
+                                <p className="text-slate-500 text-xs">Correct</p>
                             </div>
 
                             <div className="flex flex-col">
                                 <span className="text-red-400">
                                     116
                                 </span>
-                                <text className="text-slate-500 text-xs">Incorrect</text>
+                                <p className="text-slate-500 text-xs">Incorrect</p>
                             </div>
 
                         </div>
@@ -81,8 +81,8 @@ export default function PracticeStats() {
                 {/* Right */}
                 <div className="space-y-1">
                     {weakestTopics.map((item, idx) => (
-                        <div className="flex justify-between">
-                            <text className="text-slate-500 text-sm">{item.label}</text>
+                        <div key={idx} className="flex justify-between">
+                            <span className="text-slate-500 text-sm">{item.label}</span>
                             <p
                                 key={idx}
                                 className={`text-sm  text-${item.color}-400`}
