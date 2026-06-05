@@ -3,9 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import ChatHistorySidebar from "@/components/ChatHistorySidebar";
 import ReactMarkdown from "react-markdown";
-import { ConfigProvider, Radio } from "antd";
 import Image from "next/image";
-import { Paperclip, Send, PanelRightOpen, PanelRightClose } from "lucide-react";
+import { Paperclip, Send } from "lucide-react";
 import { ROLE_SUGGESTIONS } from "@/constants/chat-suggestions";
 import RightSidebar from "@/components/RightSidebar";
 
@@ -29,8 +28,6 @@ export default function ChatPage() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [resetNext, setResetNext] = useState(false);
   const [user, setUser] = useState<{ id: number; role: string; name: string } | null>(null);
-  const [mode, setMode] = useState("explain");
-  const [rightOpen, setRightOpen] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -89,20 +86,19 @@ export default function ChatPage() {
     }
   };
 
-useEffect(() => {
-  const handleNewChat = () => {
-    setHistory([]);
-    setQuestion("");
-    setError("");
-    setResetNext(true);
-  };
+  useEffect(() => {
+    const handleNewChat = () => {
+      setHistory([]);
+      setQuestion("");
+      setError("");
+      setResetNext(true);
+    };
 
-  window.addEventListener("new-chat", handleNewChat);
-
-  return () => {
-    window.removeEventListener("new-chat", handleNewChat);
-  };
-}, []);
+    window.addEventListener("new-chat", handleNewChat);
+    return () => {
+      window.removeEventListener("new-chat", handleNewChat);
+    };
+  }, []);
 
   const handleSelectHistoryEntry = async (item: { content: string; created_at?: string | null }) => {
     if (!user?.id) return;
@@ -134,85 +130,20 @@ useEffect(() => {
   };
 
   return (
-    // Outer: row so chat + right sidebar sit side by side
-    <div className="flex w-full h-screen font-sans overflow-hidden">
+    <div className="flex w-full h-full overflow-hidden">
+      <ChatHistorySidebar
+        studentId={user?.id ?? null}
+        open={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onSelectEntry={handleSelectHistoryEntry}
+      />
 
-      {/* ── Left: chat column ── */}
+      {/* ── Main chat column ── */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
-
-        <ChatHistorySidebar
-          studentId={user?.id ?? null}
-          open={isHistoryOpen}
-          onClose={() => setIsHistoryOpen(false)}
-          onSelectEntry={handleSelectHistoryEntry}
-        />
-
-        {/* Top bar */}
-
-        <ConfigProvider
-          theme={{
-            components: {
-              Radio: {
-                buttonBg: "#000000",
-                buttonCheckedBg: "#1C398E66",
-                buttonColor: "#9CA3AF",
-                buttonSolidCheckedColor: "#ffffff",
-                buttonSolidCheckedBg: "#165EFC",
-                buttonSolidCheckedHoverBg: "#1C398E66",
-                colorBorder: "transparent",
-              },
-            },
-          }}
-        >
-          <div className="shrink-0 py-3 px-4 bg-[#0D122199] border-b border-white/10 flex items-center gap-3">
-
-            {/* LEFT: logo */}
-            <div className="flex items-center gap-2 w-[120px]">
-              <Image src="/mentor-logo.png" alt="Mentor AI" width={28} height={28} className="rounded-xl" />
-              <span className="text-sm font-bold text-white">Mentor AI</span>
-            </div>
-
-            {/* CENTER: mode toggle */}
-            <div className="flex-1 flex justify-center">
-              <Radio.Group
-                value={mode}
-                onChange={(e) => setMode(e.target.value)}
-                optionType="button"
-                buttonStyle="solid"
-              >
-                <Radio.Button value="explain" className="px-5 text-center">Explain</Radio.Button>
-                <Radio.Button value="quiz" className="px-5 text-center">Quiz</Radio.Button>
-                <Radio.Button value="quick" className="px-5 text-center">Quick Answer</Radio.Button>
-              </Radio.Group>
-            </div>
-
-            {/* RIGHT: panel toggle */}
-            <div className="w-[120px] flex justify-end">
-              <button
-                onClick={() => setRightOpen(v => !v)}
-                title={rightOpen ? "Close panel" : "Open insights panel"}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all
-                  ${rightOpen
-                    ? "bg-blue-500/20 border-blue-500/40 text-blue-300"
-                    : "bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10"
-                  }`}
-              >
-                {rightOpen
-                  ? <PanelRightClose size={14} />
-                  : <PanelRightOpen size={14} />
-                }
-                <span>{rightOpen ? "Close" : "Insights"}</span>
-              </button>
-            </div>
-
-          </div>
-        </ConfigProvider>
-
         {/* Message area */}
-        <div ref={scrollRef} className="h-[80vh] min-h-0 overflow-y-auto purple-scrollbar p-4 space-y-4">
-
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto purple-scrollbar p-4 space-y-4">
           {history.length === 0 && !loading && (
-            <div className="flex flex-col items-center h-[60vh] overflow-hidden gap-6 text-center px-4">
+            <div className="flex flex-col items-center h-full justify-center gap-6 text-center px-4">
               <Image src="/mentor-logo.png" alt="Mentor AI" width={60} height={60} className="rounded-xl" />
               <div>
                 <p className="text-3xl font-semibold text-white">Hi {user?.name || "User"} 👋</p>
@@ -283,16 +214,6 @@ useEffect(() => {
           </div>
         </div>
       </div>
-
-      {/* ── Right: insights panel (slides in/out) ── */}
-      <div className={`shrink-0 h-full min-h-0 border-l border-white/8 bg-[#080d19]/80 backdrop-blur-xl overflow-hidden transition-all duration-300 ease-in-out ${rightOpen ? "w-64" : "w-0"}`}>
-
-        {/* Always mounted so it doesn't remount on open */}
-        <div className="w-64 h-full overflow-y-auto purple-scrollbar">
-          <RightSidebar />
-        </div>
-      </div>
-
     </div>
   );
 }
