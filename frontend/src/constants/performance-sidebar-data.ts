@@ -155,51 +155,61 @@ import {
     Sparkles,
     Star,
     ShieldCheck,
+    Timer,
+    Network,
 } from 'lucide-react';
 
 export const insights = [
     {
         id: 1,
         color: 'yellow',
+        icon: Timer,
         text: 'You perform 23% better in morning sessions. Try shifting study time to 8–10 AM.',
     },
     {
         id: 2,
         color: 'purple',
+        icon: Activity,
         text: 'Pattern: you rush formula derivation steps — take 10s more per numeric question.',
     },
     {
         id: 3,
         color: 'green',
+        icon: Network,
         text: 'Accuracy spikes after concept revision. Do a 15-min review before each practice session.',
     },
     {
         id: 4,
-        color: 'orange',
+        color: 'yellow', // Wait, the last card in the screenshot is yellow/orange color with Timer icon as well! Let's make it yellow.
+        icon: Timer,
         text: 'Your strongest window is post 8 PM for conceptual topics. Night reading works for you.',
     },
 ];
 
 export const weakTopics = [
     {
-        name: 'Electrostatics',
+        name: 'Wave Optics',
+        subject: 'Physics',
+        questionsCount: 14,
         percentage: 38,
-        color: 'bg-red-500',
     },
     {
-        name: 'Modern Physics',
+        name: 'Calculus',
+        subject: 'Mathematics',
+        questionsCount: 22,
         percentage: 42,
-        color: 'bg-red-400',
     },
     {
-        name: 'Organic Chemistry',
+        name: 'Electrostatics',
+        subject: 'Physics',
+        questionsCount: 18,
         percentage: 51,
-        color: 'bg-orange-400',
     },
     {
-        name: 'Coordinate Geometry',
+        name: 'Electrochemistry',
+        subject: 'Chemistry',
+        questionsCount: 11,
         percentage: 55,
-        color: 'bg-orange-500',
     },
 ];
 

@@ -15,6 +15,7 @@ interface TopBarProps {
 export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarProps) {
   const [selectedMode, setSelectedMode] = useState("explain");
   const pathname = usePathname();
+  const isHomePage = pathname === "/";
   const isChatPage = pathname?.startsWith("/chat");
 
   return (
@@ -56,8 +57,8 @@ export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarP
             </Radio.Group>
           </div>
 
-          {/* CENTER: Search bar (if not on chat page) */}
-          {!isChatPage && (
+          {/* CENTER: Search bar (only on home page) */}
+          {isHomePage && (
             <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-1 mx-6">
               <button
                 type="button"

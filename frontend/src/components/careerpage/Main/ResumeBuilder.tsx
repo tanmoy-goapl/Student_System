@@ -60,8 +60,23 @@ export default function ResumeBuilder({
   onImprove,
   suggestions,
 }: ResumeBuilderProps) {
-  const scoreColor = score >= 80 ? 'text-emerald-400' : score >= 60 ? 'text-amber-400' : 'text-red-400';
-  const scoreBgColor = score >= 80 ? 'from-emerald-500/20' : score >= 60 ? 'from-amber-500/20' : 'from-red-500/20';
+  let statusText = 'bad';
+  let strokeColor = 'stroke-red-500';
+  let textColor = 'text-red-400';
+
+  if (score >= 90) {
+    statusText = 'excellent';
+    strokeColor = 'stroke-emerald-500';
+    textColor = 'text-emerald-400';
+  } else if (score >= 70) {
+    statusText = 'good';
+    strokeColor = 'stroke-amber-500';
+    textColor = 'text-amber-400';
+  }
+
+  const radius = 32;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
     <section className="space-y-4">
@@ -74,10 +89,34 @@ export default function ResumeBuilder({
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden">
         <div className="p-5 space-y-4">
           <div className="flex items-start gap-4">
-            <div className={`flex h-20 w-20 items-center justify-center rounded-xl bg-gradient-to-br ${scoreBgColor} to-transparent border border-white/10`}>
-              <div className="text-center">
-                <p className={`text-2xl font-bold ${scoreColor}`}>{score}</p>
-                <p className="text-xs text-white/55">/100</p>
+            <div className="relative flex h-20 w-20 items-center justify-center flex-shrink-0">
+              <svg className="w-full h-full" viewBox="0 0 80 80">
+                {/* Background circle */}
+                <circle
+                  cx="40"
+                  cy="40"
+                  r={radius}
+                  className="stroke-white/[0.06]"
+                  strokeWidth="6"
+                  fill="transparent"
+                />
+                {/* Foreground circle */}
+                <circle
+                  cx="40"
+                  cy="40"
+                  r={radius}
+                  className={`${strokeColor} transition-all duration-500 ease-out`}
+                  strokeWidth="6"
+                  fill="transparent"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  transform="rotate(-90 40 40)"
+                />
+              </svg>
+              <div className="absolute text-center">
+                <p className="text-lg font-bold leading-none text-white">{score}%</p>
+                <p className={`text-[10px] leading-none mt-1 font-medium uppercase tracking-wider ${textColor}`}>{statusText}</p>
               </div>
             </div>
 

@@ -20,8 +20,10 @@ export default function PerformanceSidebar() {
             {/* Insights */}
             <div className="space-y-3">
                 <SectionTitle
-                    title="AI Insights"
+                    title="AI BEHAVIORAL INSIGHTS"
                     Icon={sectionIcons.insights}
+                    className="text-slate-400 text-xs font-bold tracking-wider uppercase"
+                    iconClassName="text-violet-500"
                 />
 
                 {insights.map((item) => (
@@ -29,32 +31,41 @@ export default function PerformanceSidebar() {
                         key={item.id}
                         text={item.text}
                         color={item.color as any}
+                        Icon={item.icon as any}
                     />
                 ))}
             </div>
 
             {/* Weak Areas */}
-            <div className="space-y-4 rounded-3xl border border-slate-700 bg-slate-800/60 p-4">
+            <div className="space-y-3">
                 <SectionTitle
-                    title="Weak Areas"
+                    title="WEAK AREAS"
                     Icon={sectionIcons.weakness}
+                    className="text-slate-400 text-xs font-bold tracking-wider uppercase"
+                    iconClassName="text-rose-500"
+                    rightContent={<span className="text-[11px] text-rose-500 font-medium lowercase">4 topics</span>}
                 />
 
-                {weakTopics.map((topic) => (
-                    <WeaknessBar
-                        key={topic.name}
-                        name={topic.name}
-                        percentage={topic.percentage}
-                        color={topic.color}
-                    />
-                ))}
+                <div className="space-y-3">
+                    {weakTopics.map((topic) => (
+                        <WeaknessBar
+                            key={topic.name}
+                            name={topic.name}
+                            percentage={topic.percentage}
+                            subject={topic.subject}
+                            questionsCount={topic.questionsCount}
+                        />
+                    ))}
+                </div>
             </div>
 
             {/* Stats */}
             <div className="space-y-3">
                 <SectionTitle
-                    title="Performance Snapshot"
+                    title="AI PREDICTIONS"
                     Icon={sectionIcons.stats}
+                    className="text-slate-400 text-xs font-bold tracking-wider uppercase"
+                    iconClassName="text-amber-500"
                 />
 
                 {statCards.map((card) => (
