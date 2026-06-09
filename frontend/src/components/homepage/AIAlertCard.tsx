@@ -1,7 +1,14 @@
-import { AI_ALERTS } from "@/constants/homepage-data";
 import IndividualAlertCard from "./IndividualAlertCard";
+import { HomepageDataResponse } from "@/lib/api";
+import { RefreshCcw, LineChart, Calendar } from "lucide-react";
 
-export default function AIAlertCard() {
+const iconMap: Record<string, any> = {
+  RefreshCcw,
+  LineChart,
+  Calendar
+};
+
+export default function AIAlertCard({ alerts }: { alerts: HomepageDataResponse["aiAlerts"] }) {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
@@ -11,8 +18,8 @@ export default function AIAlertCard() {
       </div>
 
       <div className="space-y-2">
-        {AI_ALERTS.map((stat) => (
-          <IndividualAlertCard key={stat.id} stat={stat} />
+        {alerts.map((stat: any) => (
+          <IndividualAlertCard key={stat.id} stat={{ ...stat, icon: iconMap[stat.iconName] || RefreshCcw }} />
         ))}
       </div>
     </section>

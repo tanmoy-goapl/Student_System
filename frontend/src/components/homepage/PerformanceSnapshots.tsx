@@ -1,7 +1,15 @@
-import { PERFORMANCE_SNAPSHOTS } from "@/constants/homepage-data";
 import IndividualPrepCard from "./IndividualPrepCard";
+import { HomepageDataResponse } from "@/lib/api";
+import { Target, Flame, BookOpenText, Trophy } from "lucide-react";
 
-export default function PerformanceSnapshots() {
+const iconMap: Record<string, any> = {
+  Target,
+  Flame,
+  BookOpenText,
+  Trophy
+};
+
+export default function PerformanceSnapshots({ snapshots }: { snapshots: HomepageDataResponse["performanceSnapshots"] }) {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
@@ -11,8 +19,8 @@ export default function PerformanceSnapshots() {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        {PERFORMANCE_SNAPSHOTS.map((stat) => (
-          <IndividualPrepCard key={stat.id} stat={stat} />
+        {snapshots.map((stat: any) => (
+          <IndividualPrepCard key={stat.id} stat={{ ...stat, icon: iconMap[stat.iconName] || Target }} />
         ))}
       </div>
     </section>

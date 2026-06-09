@@ -1,5 +1,12 @@
-import { EXAM_OVERVIEW_STATS, MENTOR_AI_CARD } from '../../constants/homepage-data';
 import IndividualPrepCard from './IndividualPrepCard';
+import { HomepageDataResponse } from '@/lib/api';
+import { Target, TriangleAlert, CalendarDays } from 'lucide-react';
+
+const iconMap: Record<string, any> = {
+  Target,
+  TriangleAlert,
+  CalendarDays
+};
 
 export type IndividualPrepCardProps = {
   stat: {
@@ -7,12 +14,13 @@ export type IndividualPrepCardProps = {
     title: string;
     value: string;
     subtitle: string;
+    iconName: string;
     icon: React.ElementType;
     iconClassName?: string;
   };
 };
 
-function MentorAICard() {
+function MentorAICard({ mentorCard }: { mentorCard: HomepageDataResponse["mentorCard"] }) {
   return (
     <div className="relative flex flex-col justify-between overflow-hidden rounded-2xl border border-violet-500/20 bg-gradient-to-br from-[#111133] via-[#0c1029] to-[#090b1f] p-6">
       {/* glow */}
@@ -22,56 +30,53 @@ function MentorAICard() {
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/15">
             <img
-              src={MENTOR_AI_CARD.logo}
+              src={mentorCard.logo}
               alt="Mentor AI"
               className="h-5 w-5 object-contain"
             />
           </div>
 
           <p className="text-sm font-medium text-white">
-            {MENTOR_AI_CARD.title}
+            {mentorCard.title}
           </p>
         </div>
 
         <p className="max-w-2xl text-xs text-white/75">
-          You need to focus on{' '}
-          <span className="font-semibold text-rose-400">
-            Wave Optics
-          </span>{' '}
-          and{' '}
-          <span className="font-semibold text-amber-300">
-            Calculus
-          </span>{' '}
-          today. These are your two most critical weak areas before the exam.
+          {mentorCard.message}
         </p>
       </div>
 
       <div className="mt-2 flex items-center gap-3">
         <button className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90">
-          {MENTOR_AI_CARD.primaryAction}
+          {mentorCard.primaryAction}
         </button>
 
         <button className="rounded-xl border border-white/10 bg-white/[0.03] px-5 py-2.5 text-sm text-white/70 transition hover:bg-white/[0.05]">
-          {MENTOR_AI_CARD.secondaryAction}
+          {mentorCard.secondaryAction}
         </button>
       </div>
     </div>
   );
 }
 
-export default function PrepDashboardHero() {
+export default function PrepDashboardHero({ 
+  examOverview, mentorCard 
+}: { 
+  examOverview: HomepageDataResponse["examOverview"], 
+  mentorCard: HomepageDataResponse["mentorCard"] 
+}) {
   return (
     <div className="grid grid-cols-10 gap-4 rounded-3xl border border-violet-500/10 bg-[#090B1A] p-2">
       {/* Left Section - 60% */}
       <div className="col-span-6 grid grid-cols-3 gap-4">
-        {EXAM_OVERVIEW_STATS.map((stat) => (
-          <IndividualPrepCard key={stat.id} stat={stat} />
+        {examOverview.map((stat) => (
+          <IndividualPrepCard key={stat.id} stat={{ ...stat, icon: iconMap[stat.iconName] || Target }} />
         ))}
       </div>
 
       {/* Right Section - 40% */}
       <div className="col-span-4">
-        <MentorAICard />
+        <MentorAICard mentorCard={mentorCard} />
       </div>
     </div>
   );

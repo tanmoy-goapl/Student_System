@@ -217,6 +217,7 @@ export const MOCK_PHASES: Phase[] = [
             { name: "Sorting" },
         ],
         status: "completed",
+        iconName: "CheckCircle2",
         icon: CheckCircle2,
     },
     {
@@ -230,6 +231,7 @@ export const MOCK_PHASES: Phase[] = [
             { name: "CAP Theorem" },
         ],
         status: "in-progress",
+        iconName: "Zap",
         icon: Zap,
     },
     {
@@ -243,6 +245,7 @@ export const MOCK_PHASES: Phase[] = [
         ],
         status: "upcoming",
         duration: "2 weeks",
+        iconName: "Cpu",
         icon: Cpu,
     },
     {
@@ -256,6 +259,7 @@ export const MOCK_PHASES: Phase[] = [
         ],
         status: "upcoming",
         duration: "2 weeks",
+        iconName: "Mic",
         icon: Mic,
     },
 ];

@@ -4,7 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
 from config import ALLOWED_ORIGINS
-from routes import auth, upload, chat, settings
+from routes import auth, upload, chat, settings, performance
+from routes import homepage, career, practice, learning, documents, chat_sidebar
 from database import init_db
 
 
@@ -29,9 +30,16 @@ app.add_middleware(
 )
 
 app.include_router(auth.router,     tags=["auth"])
+app.include_router(documents.router, tags=["documents"])
 app.include_router(upload.router,   tags=["upload"])
 app.include_router(chat.router,     tags=["chat"])
 app.include_router(settings.router, tags=["settings"])
+app.include_router(performance.router, tags=["performance"])
+app.include_router(homepage.router, tags=["homepage"])
+app.include_router(career.router, tags=["career"])
+app.include_router(practice.router, tags=["practice"])
+app.include_router(learning.router, tags=["learning"])
+app.include_router(chat_sidebar.router, tags=["chat-sidebar"])
 
 
 @app.get("/")

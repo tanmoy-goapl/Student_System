@@ -1,11 +1,8 @@
 "use client";
 
-import { NOTES_RESPONSE } from "@/constants/learningpage-data";
 import Image from "next/image";
 
-
-
-export default function NotesCard() {
+export default function NotesCard({ notesResponse }: { notesResponse: any }) {
     return (
         <div className="w-full rounded-xl border border-white/10 bg-gradient-to-br from-[#0c0c16] via-[#101126] to-[#111827] p-6 shadow-2xl backdrop-blur-xl">
             {/* Header */}
@@ -21,19 +18,19 @@ export default function NotesCard() {
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <h2 className="text-sm font-semibold text-white">
-                            {NOTES_RESPONSE.generatedBy}
+                            {notesResponse.generatedBy}
                         </h2>
 
                         <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
                     </div>
 
-                    <p className="text-[0.6rem] text-zinc-400">{NOTES_RESPONSE.status}</p>
+                    <p className="text-[0.6rem] text-zinc-400">{notesResponse.status}</p>
                 </div>
             </div>
 
             {/* Content */}
             <div className="space-y-4">
-                {NOTES_RESPONSE.content.map((block, index) => {
+                {notesResponse.content.map((block: any, index: number) => {
                     switch (block.type) {
                         case "heading":
                             return (

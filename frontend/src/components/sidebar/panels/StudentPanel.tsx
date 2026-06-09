@@ -1,10 +1,9 @@
 "use client";
 
-import { STUDENT_DATA } from "@/constants/chat-sidebar-data";
 import StatCard from "../StatCard";
 
-export default function StudentPanel() {
-  const d = STUDENT_DATA;
+export default function StudentPanel({ data }: { data: any }) {
+  const d = data;
   const pct = Math.round((d.docsLoaded / d.docsTotal) * 100);
 
   return (
@@ -29,7 +28,7 @@ export default function StudentPanel() {
       <div>
         <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-2">Active Documents</p>
         <div className="space-y-1.5">
-          {d.documents.map((doc) => (
+          {d.documents.map((doc: any) => (
             <div key={doc.name} className="flex items-center gap-2 bg-white/5 border border-white/8 rounded-lg px-3 py-2">
               <span className="text-sm">📄</span>
               <div className="flex-1 min-w-0">
@@ -51,7 +50,7 @@ export default function StudentPanel() {
       <div>
         <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-2">Session Stats</p>
         <div className="grid grid-cols-2 gap-2">
-          {d.stats.map((s) => (
+          {d.stats.map((s: any) => (
             <StatCard key={s.label} label={s.label} value={s.value} />
           ))}
         </div>

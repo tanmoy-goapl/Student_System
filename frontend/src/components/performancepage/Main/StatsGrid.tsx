@@ -1,13 +1,24 @@
-import { PERFORMANCE_STATS } from "@/constants/performance-sidebar-data";
+import { PerformanceMainResponse } from "@/lib/api";
 import StatsCard from "./StatsCard";
+import { Target, TrendingUp, Flame, BookOpen } from "lucide-react";
 
-export default function StatsGrid() {
+const iconMap: Record<string, any> = {
+    Target,
+    TrendingUp,
+    Flame,
+    BookOpen
+};
+
+export default function StatsGrid({ stats }: { stats: PerformanceMainResponse["stats"] }) {
     return (
         <div className="grid grid-cols-4 gap-2">
-            {PERFORMANCE_STATS.map((stat) => (
+            {stats.map((stat) => (
                 <StatsCard
                     key={stat.title}
-                    stat={stat}
+                    stat={{
+                        ...stat,
+                        icon: iconMap[stat.iconName] || Target
+                    }}
                 />
             ))}
         </div>

@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, Zap } from 'lucide-react';
+import { CheckCircle, Clock, Zap, CheckCircle2, Cpu, Mic } from 'lucide-react';
 
 export type Skill = {
   name: string;
@@ -10,7 +10,15 @@ export type Phase = {
   skills: Skill[];
   status: 'completed' | 'in-progress' | 'upcoming';
   duration?: string;
-  icon: React.ElementType;
+  iconName: string;
+  icon?: React.ElementType;
+};
+
+const iconMap: Record<string, any> = {
+  CheckCircle2,
+  Zap,
+  Cpu,
+  Mic
 };
 
 type PhaseCardProps = {
@@ -19,7 +27,7 @@ type PhaseCardProps = {
 };
 
 function PhaseCard({ phase, isCurrentPhase = false }: PhaseCardProps) {
-  const Icon = phase.icon;
+  const Icon = iconMap[phase.iconName] || CheckCircle2;
 
   const statusConfig = {
     completed: {

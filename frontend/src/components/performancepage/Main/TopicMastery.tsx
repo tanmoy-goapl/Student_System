@@ -1,9 +1,15 @@
-import { TOPIC_MASTERY_DATA } from '@/constants/performance-sidebar-data';
 import { useState } from 'react';
 import TopicSubjectCard from './TopicSubjectCard';
+import { PerformanceMainResponse } from '@/lib/api';
+import { Atom, BookOpen, Activity } from 'lucide-react';
 
+const iconMap: Record<string, any> = {
+    Atom,
+    BookOpen,
+    Activity
+};
 
-export default function TopicMastery() {
+export default function TopicMastery({ masteryData }: { masteryData: PerformanceMainResponse["mastery"] }) {
     const [expandedSubjects, setExpandedSubjects] =
         useState<string[]>(['physics']);
 
@@ -42,10 +48,13 @@ export default function TopicMastery() {
             </div>
 
             <div className="space-y-2">
-                {TOPIC_MASTERY_DATA.map((subject) => (
+                {masteryData.map((subject) => (
                     <TopicSubjectCard
                         key={subject.id}
-                        subject={subject}
+                        subject={{
+                            ...subject,
+                            icon: iconMap[subject.iconName] || Atom
+                        }}
                         expanded={expandedSubjects.includes(subject.id)}
                         onToggle={() => toggleExpand(subject.id)}
                     />

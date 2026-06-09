@@ -1,6 +1,5 @@
 "use client";
 
-import { PROFESSOR_DATA } from "@/constants/chat-sidebar-data";
 import StatCard from "../StatCard";
 import MiniBarChart from "../MiniBarChart";
 import AlertItem from "../AlertItem";
@@ -9,8 +8,8 @@ import AIConfig from "../AIConfig";
 
 
 
-export default function ProfessorPanel() {
-  const d = PROFESSOR_DATA;
+export default function ProfessorPanel({ data }: { data: any }) {
+  const d = data;
 
   return (
     <div className="space-y-4">
@@ -18,7 +17,7 @@ export default function ProfessorPanel() {
       <div>
         <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-2">Class Overview</p>
         <div className="grid grid-cols-2 gap-2">
-          {d.stats.map((s) => (
+          {d.stats.map((s: any) => (
             <StatCard key={s.label} label={s.label} value={s.value} delta={s.delta} up={s.up} />
           ))}
         </div>
@@ -40,7 +39,7 @@ export default function ProfessorPanel() {
           <button className="text-[10px] text-blue-400 hover:text-blue-300">View all</button>
         </div>
         <div className="space-y-1.5">
-          {d.spotlight.map((s) => (
+          {d.spotlight.map((s: any) => (
             <div key={s.name} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/5 border border-white/8">
               <div className="w-6 h-6 rounded-full bg-indigo-500/40 text-indigo-200 flex items-center justify-center text-[10px] font-bold shrink-0">
                 {s.initial}
@@ -58,7 +57,7 @@ export default function ProfessorPanel() {
       <div>
         <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-2">🛡 Alerts</p>
         <div className="space-y-1.5">
-          {d.alerts.map((a, i) => (
+          {d.alerts.map((a: any, i: number) => (
             <AlertItem key={i} level={a.level as any} message={a.message} affected={a.affected} />
           ))}
         </div>
@@ -68,7 +67,7 @@ export default function ProfessorPanel() {
       <div>
         <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-2">Quick Actions</p>
         <div className="space-y-1.5">
-          {d.quickActions.map((q) => <QuickActionItem key={q} label={q} />)}
+          {d.quickActions.map((q: string) => <QuickActionItem key={q} label={q} />)}
         </div>
       </div>
 

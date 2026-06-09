@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import QuestionHeader from "../../components/practicepage/Main/QuestionHeader";
 import QuestionContent from "../../components/practicepage/Main/QuestionContent";
 import AnswerOptions from "../../components/practicepage/Main/AnswerOptions";
 import ActionButtons from "../../components/practicepage/Main/ActionButtons";
 import AIHelpSection from "../../components/practicepage/Main/AIHelpSection";
-import { SAMPLE_QUESTIONS } from "@/constants/practicepage-data";
 import PracticeSidebar from "@/components/practicepage/Right/Practicesidebar";
+import { getPracticeData, PracticeDataResponse } from "@/lib/api";
 
 export interface PracticePageProps {
     onAnswerSubmit?: (
@@ -26,15 +26,38 @@ export default function PracticePage({
     onHintRequest,
     onAIHelp,
 }: PracticePageProps) {
-    const [currentQuestionIndex, setCurrentQuestionIndex] =
-        useState(0);
-    const [selectedAnswer, setSelectedAnswer] =
-        useState<string | null>(null);
+    const [data, setData] = useState<PracticeDataResponse | null>(null);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [answered, setAnswered] = useState(false);
     const [aiQuery, setAiQuery] = useState("");
     const [showAIHelp, setShowAIHelp] = useState(false);
 
-    const currentQuestion = SAMPLE_QUESTIONS[currentQuestionIndex];
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const response = await getPracticeData();
+                setData(response);
+            } catch (error) {
+                console.error("Failed to load practice data:", error);
+            }
+        }
+        fetchData();
+    }, []);
+
+    if (!data) {
+        return (
+            <div className="flex gap-2 min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 px-6 py-4 space-y-4 animate-pulse">
+                <div className="flex-1 space-y-4">
+                    <div className="h-16 bg-slate-800 rounded-xl"></div>
+                    <div className="h-64 bg-slate-800 rounded-xl"></div>
+                </div>
+                <div className="w-[20vw] bg-slate-800 rounded-xl"></div>
+            </div>
+        );
+    }
+
+    const currentQuestion = data.sampleQuestions[currentQuestionIndex];
 
     const handleAnswerSelect = (answerId: string) => {
         if (!answered) {
@@ -46,7 +69,7 @@ export default function PracticePage({
         if (selectedAnswer) {
             const isCorrect =
                 currentQuestion.answers.find(
-                    (a) => a.id === selectedAnswer
+                    (a: any) => a.id === selectedAnswer
                 )?.isCorrect || false;
 
             setAnswered(true);
@@ -65,10 +88,7 @@ export default function PracticePage({
     const handleSkip = () => {
         setSelectedAnswer(null);
         setAnswered(false);
-        if (
-            currentQuestionIndex <
-            SAMPLE_QUESTIONS.length - 1
-        ) {
+        if (currentQuestionIndex < data.sampleQuestions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         }
         onSkip?.(currentQuestion.id);
@@ -80,10 +100,7 @@ export default function PracticePage({
     };
 
     const handleNextQuestion = () => {
-        if (
-            currentQuestionIndex <
-            SAMPLE_QUESTIONS.length - 1
-        ) {
+        if (currentQuestionIndex < data.sampleQuestions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
             setSelectedAnswer(null);
             setAnswered(false);
@@ -117,7 +134,7 @@ export default function PracticePage({
                     }
                     canProceed={
                         currentQuestionIndex <
-                        SAMPLE_QUESTIONS.length - 1
+                        data.sampleQuestions.length - 1
                     }
                 />
 

@@ -17,9 +17,18 @@ export type DocumentItem = {
     status: DocumentStatus;
 };
 
+export type DocumentKPI = {
+    id: string;
+    value: string;
+    label: string;
+    color: string;
+    iconType: string;
+};
+
 type Props = {
     documents: DocumentItem[];
     totalCount: number;
+    kpis: DocumentKPI[];
 };
 
 // ── KPI icons ──────────────────────────────────────────────────────────────────
@@ -33,7 +42,7 @@ function KPIIcon({ type, color }: { type: string; color: string }) {
     };
 
     return (
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${colorMap[color]}`}>
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${colorMap[color] || 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
             {type === 'docs' && <FileText className="h-4 w-4" />}
             {type === 'subjects' && (
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -147,12 +156,12 @@ function DocumentCard({ doc }: { doc: DocumentItem }) {
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 
-export default function DocumentsMain({ documents, totalCount }: Props) {
+export default function DocumentsMain({ documents, totalCount, kpis }: Props) {
     return (
         <main className="flex-1 min-w-0 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
             {/* KPI Row */}
             <div className="flex items-center gap-3">
-                {DOCUMENT_KPIS.map((kpi) => (
+                {kpis.map((kpi) => (
                     <div
                         key={kpi.id}
                         className="flex flex-1 items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3"

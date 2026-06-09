@@ -3,15 +3,9 @@ import MarketInsights from './MarketInsights';
 import AIRecommendations from './AIRecommendations';
 import PlacementReadiness from './PlacementReadiness';
 import ProgressTracking from './ProgressTracking';
-import {
-  SKILL_GAP_DATA,
-  MARKET_INSIGHTS_DATA,
-  AI_RECOMMENDATIONS_DATA,
-  PLACEMENT_READINESS_DATA,
-  PROGRESS_TRACKING_DATA,
-} from '@/constants/careerpage-data';
+import { CareerDataResponse } from '@/lib/api';
 
-export default function CareerIntelligenceSidebar() {
+export default function CareerIntelligenceSidebar({ data }: { data: CareerDataResponse }) {
   return (
     <aside className="w-[20vw] min-w-[260px] flex flex-col gap-4 overflow-y-auto">
       <div className="rounded-2xl border border-violet-500/15 bg-[#090B1A] p-4 space-y-5">
@@ -25,11 +19,11 @@ export default function CareerIntelligenceSidebar() {
           </h1>
         </div>
 
-        <SkillGapAnalysis skills={SKILL_GAP_DATA} />
-        <MarketInsights data={MARKET_INSIGHTS_DATA} />
-        <AIRecommendations recommendations={AI_RECOMMENDATIONS_DATA} />
-        <PlacementReadiness data={PLACEMENT_READINESS_DATA} />
-        <ProgressTracking items={PROGRESS_TRACKING_DATA} />
+        <SkillGapAnalysis skills={data.skillGapData} />
+        <MarketInsights data={data.marketInsightsData} />
+        <AIRecommendations recommendations={data.aiRecommendationsData} />
+        <PlacementReadiness data={data.placementReadinessData} />
+        <ProgressTracking items={data.progressTrackingData} />
       </div>
     </aside>
   );

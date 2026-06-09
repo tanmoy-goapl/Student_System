@@ -1,14 +1,21 @@
-import { WEAKNESS_MAP_RESPONSE } from '@/constants/homepage-data';
 import { getStrengthClasses } from '@/utils/getStrengthClasses';
 import { ChevronDown, ChevronRight, Layers3 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { HomepageDataResponse } from '@/lib/api';
 
-export default function WeaknessMapCard() {
-    const [expandedSubjects, setExpandedSubjects] = useState<string[]>(
-        WEAKNESS_MAP_RESPONSE.subjects
-            .filter((subject) => subject.expanded)
-            .map((subject) => subject.id)
-    );
+export default function WeaknessMapCard({ weaknessMap }: { weaknessMap: HomepageDataResponse["weaknessMap"] }) {
+    const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
+
+    // Initialize expanded subjects when weaknessMap loads
+    useEffect(() => {
+        if (weaknessMap && weaknessMap.subjects) {
+            setExpandedSubjects(
+                weaknessMap.subjects
+                    .filter((subject: any) => subject.expanded)
+                    .map((subject: any) => subject.id)
+            );
+        }
+    }, [weaknessMap]);
 
     const toggleSubject = (subjectId: string) => {
         setExpandedSubjects((prev) =>
@@ -49,7 +56,7 @@ export default function WeaknessMapCard() {
             </div>
 
             <div className="flex-1 space-y-3 overflow-y-auto purple-scrollbar pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                {WEAKNESS_MAP_RESPONSE.subjects.map((subject) => {
+                {weaknessMap?.subjects?.map((subject: any) => {
                     const isExpanded = expandedSubjects.includes(subject.id);
 
                     return (
@@ -82,7 +89,7 @@ export default function WeaknessMapCard() {
                             {/* Topics */}
                             {isExpanded && (
                                 <div className="space-y-2 pl-3">
-                                    {subject.topics.map((topic) => {
+                                    {subject.topics.map((topic: any) => {
                                         const styles = getStrengthClasses(topic.strength);
 
                                         return (

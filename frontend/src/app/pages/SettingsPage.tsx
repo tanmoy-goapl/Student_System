@@ -1,17 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getLlmConfig, updateLlmConfig, type LLMProvider } from "../../lib/api";
+import { getLlmConfig, updateLlmConfig, type LLMProvider, getSettingsData, SettingsDataResponse } from "../../lib/api";
 import Loader from "@/components/Loader";
 import MentorPreferences from "@/components/settingpage/MentorPreferences";
 import ResponseStyle from "@/components/settingpage/ResponseStyle";
 import ToneSelector from "@/components/settingpage/ToneSelector";
 import PersonalizationCard from "@/components/settingpage/PersonalizationCard";
-import {
-  defaultModes,
-  responseStyles,
-  tones,
-} from "@/constants/settingpage-data";
 
 
 function RadioCard({
@@ -60,6 +55,7 @@ function RadioCard({
 }
 
 export default function SettingsPage() {
+  const [data, setData] = useState<SettingsDataResponse | null>(null);
   const [selectedModel, setSelectedModel] = useState<LLMProvider>("llama");
   const [pendingModel, setPendingModel] = useState<LLMProvider>("llama");
   const [saving, setSaving] = useState(false);
@@ -71,10 +67,14 @@ export default function SettingsPage() {
     (async () => {
       try {
         setLoading(true);
-        const data = await getLlmConfig();
-        setSelectedModel(data.provider);
-        setPendingModel(data.provider);
-      } catch { setError("Failed to load current LLM setting."); }
+        const [llmConfig, settingsData] = await Promise.all([
+            getLlmConfig(),
+            getSettingsData()
+        ]);
+        setSelectedModel(llmConfig.provider);
+        setPendingModel(llmConfig.provider);
+        setData(settingsData);
+      } catch { setError("Failed to load settings data."); }
       finally { setLoading(false); }
     })();
   }, []);
@@ -92,6 +92,16 @@ export default function SettingsPage() {
 
   const isDirty = pendingModel !== selectedModel;
 
+  if (!data) {
+    return (
+        <div className="space-y-6 p-6 animate-pulse">
+            <div className="h-10 w-48 bg-slate-800 rounded"></div>
+            <div className="h-64 bg-slate-800 rounded-2xl"></div>
+            <div className="h-64 bg-slate-800 rounded-2xl"></div>
+        </div>
+    );
+  }
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -100,9 +110,9 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-slate-400">Manage platform-wide configuration</p>
       </div>
 
-      <MentorPreferences data={defaultModes} />
-      <ResponseStyle data={responseStyles} />
-      <ToneSelector data={tones} />
+      <MentorPreferences data={data.defaultModes} />
+      <ResponseStyle data={data.responseStyles} />
+      <ToneSelector data={data.tones} />
       <PersonalizationCard />
 
       {/* LLM card */}

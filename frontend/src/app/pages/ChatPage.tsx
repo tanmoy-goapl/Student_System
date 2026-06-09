@@ -5,8 +5,8 @@ import ChatHistorySidebar from "@/components/ChatHistorySidebar";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
 import { Paperclip, Send } from "lucide-react";
-import { ROLE_SUGGESTIONS } from "@/constants/chat-suggestions";
 import RightSidebar from "@/components/RightSidebar";
+import { getChatSidebarData } from "@/lib/api";
 
 type Message = { role: string; content: string; created_at?: string | null };
 
@@ -28,11 +28,18 @@ export default function ChatPage() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [resetNext, setResetNext] = useState(false);
   const [user, setUser] = useState<{ id: number; role: string; name: string } | null>(null);
+  const [roleSuggestions, setRoleSuggestions] = useState<any>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => { setUser(getStoredUser()); }, []);
+
+  useEffect(() => {
+    getChatSidebarData().then(data => {
+      setRoleSuggestions(data.ROLE_SUGGESTIONS);
+    }).catch(err => console.error("Failed to fetch suggestions", err));
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("chat_input");
@@ -154,7 +161,7 @@ export default function ChatPage() {
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-3 w-full max-w-2xl">
-                {ROLE_SUGGESTIONS[user?.role as keyof typeof ROLE_SUGGESTIONS]?.map((item, i) => (
+                {roleSuggestions?.[user?.role as keyof typeof roleSuggestions]?.map((item: any, i: number) => (
                   <button
                     key={i}
                     onClick={() => setQuestion(item.h)}

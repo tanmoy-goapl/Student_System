@@ -1,8 +1,16 @@
-import { ArrowRight } from 'lucide-react';
-import { AI_ACTIONS, AIAction } from '../../constants/homepage-data';
+'use client';
 
-type AIActionsProps = {
-  data: AIAction[];
+import { useEffect, useState } from 'react';
+import { ArrowRight, Play, Target, NotebookPen, RefreshCw, LucideIcon } from 'lucide-react';
+import { getAIActions, AIActionCardResponse } from '../../lib/api';
+import { AI_ACTIONS as FALLBACK_ACTIONS, AIAction } from '../../constants/homepage-data';
+
+// Maps backend iconName strings to actual Lucide icon components
+const ICON_MAP: Record<string, LucideIcon> = {
+  Play,
+  Target,
+  NotebookPen,
+  RefreshCw,
 };
 
 type ActionCardProps = {
@@ -50,7 +58,44 @@ function ActionCard({ action }: ActionCardProps) {
   );
 }
 
-export default function AIActions({ data }: AIActionsProps) {
+export default function AIActions() {
+  const [actions, setActions] = useState<AIAction[]>(FALLBACK_ACTIONS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchActions() {
+      try {
+        const data: AIActionCardResponse[] = await getAIActions();
+
+        if (!cancelled && data && Array.isArray(data)) {
+          // Map backend response (iconName string) to frontend format (icon component)
+          const mapped: AIAction[] = data.map((item) => ({
+            id: item.id,
+            title: item.title,
+            subtitle: item.subtitle,
+            action: item.action,
+            icon: ICON_MAP[item.iconName] || Play,
+            iconClassName: item.iconClassName,
+            cardClassName: item.cardClassName,
+          }));
+          setActions(mapped);
+        }
+      } catch {
+        // On error, keep using the fallback static data
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchActions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
@@ -60,9 +105,17 @@ export default function AIActions({ data }: AIActionsProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {data.map((action) => (
-          <ActionCard key={action.id} action={action} />
-        ))}
+        {loading
+          ? // Skeleton placeholders while loading
+            Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-[140px] animate-pulse rounded-2xl border border-white/5 bg-white/5"
+              />
+            ))
+          : actions.map((action) => (
+              <ActionCard key={action.id} action={action} />
+            ))}
       </div>
     </section>
   );

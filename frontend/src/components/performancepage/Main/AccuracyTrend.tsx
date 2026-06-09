@@ -1,6 +1,6 @@
-import { ACCURACY_TREND_DATA } from "@/constants/performance-sidebar-data";
+import { PerformanceMainResponse } from "@/lib/api";
 
-export default function AccuracyTrend() {
+export default function AccuracyTrend({ trendData }: { trendData: PerformanceMainResponse["trend"] }) {
     return (
         <div className="rounded-xl border border-slate-700/50 bg-gradient-to-br from-slate-900/80 to-slate-950/80 p-4 overflow-hidden relative">
             <div className="flex items-start justify-between mb-2">
@@ -26,7 +26,7 @@ export default function AccuracyTrend() {
                 </div>
 
                 <div className="absolute inset-1 flex items-end justify-between px-2">
-                    {ACCURACY_TREND_DATA.labels.map(
+                    {trendData.labels.map(
                         (label, index) => (
                             <div
                                 key={label}
@@ -35,7 +35,7 @@ export default function AccuracyTrend() {
                                 <div
                                     className="absolute w-full flex justify-center"
                                     style={{
-                                        bottom: `${ACCURACY_TREND_DATA.accuracy[index]}%`,
+                                        bottom: `${trendData.accuracy[index]}%`,
                                     }}
                                 >
                                     <div className="w-3 h-3 rounded-full bg-indigo-400 border-[3px] border-slate-950" />
@@ -44,19 +44,19 @@ export default function AccuracyTrend() {
                                 <div
                                     className="absolute w-full border-t-2 border-dashed border-emerald-400/80"
                                     style={{
-                                        bottom: `${ACCURACY_TREND_DATA.practiceVolume[index]}%`,
+                                        bottom: `${trendData.practiceVolume[index]}%`,
                                     }}
                                 />
 
                                 {index !==
-                                    ACCURACY_TREND_DATA.labels
+                                    trendData.labels
                                         .length -
                                     1 && (
                                         <div
                                             className="absolute left-1/2 border-t-2 border-indigo-400"
                                             style={{
                                                 width: '100%',
-                                                bottom: `${ACCURACY_TREND_DATA.accuracy[index]}%`,
+                                                bottom: `${trendData.accuracy[index]}%`,
                                             }}
                                         />
                                     )}
@@ -68,6 +68,7 @@ export default function AccuracyTrend() {
                         )
                     )}
                 </div>
+
             </div>
         </div>
     );

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import StudentPanel from "./sidebar/panels/StudentPanel";
 import ProfessorPanel from "./sidebar/panels/ProfessorPanel";
 import AdminPanel from "./sidebar/panels/AdminPanel";
+import { getChatSidebarData, ChatSidebarDataResponse } from "@/lib/api";
 
 const PANEL_META = {
   student: { label: "Context", icon: "🧠" },
@@ -13,6 +14,7 @@ const PANEL_META = {
 
 export default function RightSidebar() {
   const [role, setRole] = useState<"student" | "professor" | "admin" | null>(null);
+  const [data, setData] = useState<ChatSidebarDataResponse | null>(null);
 
   useEffect(() => {
     const r = localStorage.getItem("role") as typeof role;
@@ -22,7 +24,11 @@ export default function RightSidebar() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  if (!role) return null;
+  useEffect(() => {
+    getChatSidebarData().then(setData).catch(console.error);
+  }, []);
+
+  if (!role || !data) return null;
 
   const meta = PANEL_META[role];
 
@@ -36,9 +42,9 @@ export default function RightSidebar() {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto purple-scrollbar p-3 space-y-1">
-        {role === "student" && <StudentPanel />}
-        {role === "professor" && <ProfessorPanel />}
-        {role === "admin" && <AdminPanel />}
+        {role === "student" && <StudentPanel data={data.STUDENT_DATA} />}
+        {role === "professor" && <ProfessorPanel data={data.PROFESSOR_DATA} />}
+        {role === "admin" && <AdminPanel data={data.ADMIN_DATA} />}
       </div>
     </div>
   );
