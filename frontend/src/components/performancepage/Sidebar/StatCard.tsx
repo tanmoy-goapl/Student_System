@@ -6,12 +6,21 @@ interface Props {
 }
 
 const styles = {
-    purple:
-        'bg-violet-500/20 border-violet-400',
-    green:
-        'bg-emerald-500/20 border-emerald-400',
-    yellow:
-        'bg-yellow-400/20 border-yellow-400',
+    purple: {
+        bg: 'bg-violet-500/5',
+        border: 'border-violet-500/20',
+        text: 'text-violet-400',
+    },
+    green: {
+        bg: 'bg-emerald-500/5',
+        border: 'border-emerald-500/20',
+        text: 'text-emerald-400',
+    },
+    yellow: {
+        bg: 'bg-yellow-500/5',
+        border: 'border-yellow-500/20',
+        text: 'text-yellow-400',
+    },
 };
 
 export default function StatCard({
@@ -20,17 +29,18 @@ export default function StatCard({
     subtitle,
     color,
 }: Props) {
+    const style = styles[color] || styles.purple;
     return (
         <div
-            className={`rounded-2xl border p-4 shadow-md ${styles[color]}`}
+            className={`rounded-lg border p-3 backdrop-blur-sm hover:border-white/20 transition-all ${style.bg} ${style.border}`}
         >
-            <p className="text-xs text-slate-300">{title}</p>
+            <p className="text-[10px] text-white/50 leading-tight font-medium uppercase tracking-wider">{title}</p>
 
-            <h3 className="mt-1 text-2xl font-bold text-white">
+            <h3 className="mt-1.5 text-base font-bold text-white leading-tight">
                 {value}
             </h3>
 
-            <p className="mt-1 text-xs text-slate-400">{subtitle}</p>
+            <p className="mt-1 text-[10px] text-white/30 leading-snug">{subtitle}</p>
         </div>
     );
 }

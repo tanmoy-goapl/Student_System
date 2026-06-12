@@ -32,7 +32,7 @@ from config import (
     GPT_API_KEY, GPT_BASE_URL, GPT_MODEL,
     LLAMA_BASE_URL, LLAMA_API_KEY, LLAMA_MODEL,
 )
-from llm_state import get_provider
+from llm_state import get_provider, get_user_preferences
 
 router = APIRouter()
 
@@ -160,8 +160,29 @@ def _build_system_prompt(
 
     role_instruction = get_role_instruction(role, student_name)
 
-    base = f"""You are MentorAI — a warm, encouraging academic mentor.
+    # Fetch preferences
+    prefs = get_user_preferences()
+    pref_style = prefs.get("response_style", "Detailed")
+    pref_tone = prefs.get("tone", "Friendly")
 
+    style_guide = ""
+    if pref_style == "Simple":
+        style_guide = "• RESPONSE STYLE: Keep explanations very simple, direct, and brief. Avoid jargon."
+    elif pref_style == "Step-by-Step":
+        style_guide = "• RESPONSE STYLE: Break down your answer into a clear, numbered step-by-step walkthrough."
+    else:
+        style_guide = "• RESPONSE STYLE: Provide a detailed, deep, and thoroughly structured response."
+
+    tone_guide = ""
+    if pref_tone == "Friendly":
+        tone_guide = "• TONE: Keep your tone friendly, warm, conversational, and encouraging."
+    elif pref_tone == "Professional":
+        tone_guide = "• TONE: Keep your tone formal, objective, professional, and academic."
+    elif pref_tone == "Concise":
+        tone_guide = "• TONE: Be direct, clear, and highly concise. Do not use fluff or filler words."
+
+    base = f"""You are MentorAI — a warm, encouraging academic mentor.
+ 
 ROLE GUIDELINE:
 {role_instruction}
 
@@ -192,6 +213,8 @@ CRITICAL RULES:
 • If CONTEXT contains bullet points or structured rules → preserve structure in answer.
 • Prefer quoting or closely paraphrasing the CONTEXT.
 • Keep answer concise and relevant.
+{style_guide}
+{tone_guide}
 • Maximum 300–400 words.
 """
 

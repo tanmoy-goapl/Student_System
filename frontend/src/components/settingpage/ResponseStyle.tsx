@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 
-export default function ResponseStyle({ data }: any) {
-  const [selected, setSelected] = useState("Detailed");
-
+export default function ResponseStyle({ data, selected, onChange }: any) {
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 backdrop-blur-sm">
       <div className="mb-5">
@@ -24,7 +22,8 @@ export default function ResponseStyle({ data }: any) {
           return (
             <button
               key={item.id}
-              onClick={() => setSelected(item.title)}
+              onClick={() => onChange(item.title)}
+              type="button"
               className={`rounded-xl border p-4 text-left transition ${
                 isSelected
                   ? "border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/10"

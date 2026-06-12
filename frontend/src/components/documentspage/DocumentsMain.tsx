@@ -1,7 +1,6 @@
 'use client';
 
 import { ArrowUpDown, CheckCircle, Clock, FileText } from 'lucide-react';
-import { DOCUMENT_KPIS } from '@/constants/documents-data';
 
 export type DocumentStatus = 'ready' | 'processing';
 

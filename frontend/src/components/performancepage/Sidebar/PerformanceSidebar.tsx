@@ -60,92 +60,126 @@ export default function PerformanceSidebar() {
     if (!data) return null;
 
     return (
-        <div className="space-y-6">
-            {/* Insights */}
-            <div className="space-y-3">
-                <SectionTitle
-                    title="AI BEHAVIORAL INSIGHTS"
-                    Icon={sectionIcons.insights}
-                    className="text-slate-400 text-xs font-bold tracking-wider uppercase"
-                    iconClassName="text-violet-500"
-                />
+        <div className="w-[20vw] h-screen bg-gradient-to-b from-slate-900 to-slate-950 flex flex-col border-l border-white/10 overflow-hidden">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                {/* Insights */}
+                <div className="px-4 py-4 border-b border-white/10 space-y-2.5">
+                    <SectionTitle
+                        title="AI BEHAVIORAL INSIGHTS"
+                        Icon={sectionIcons.insights}
+                        className="text-white/60 text-xs font-semibold tracking-widest uppercase mb-3"
+                        iconClassName="text-violet-400"
+                    />
 
-                {data.insights.map((item) => {
-                    const IconComponent = iconMap[item.iconName] || Activity;
-                    return (
-                        <InsightCard
-                            key={item.id}
-                            text={item.text}
-                            color={item.color as any}
-                            Icon={IconComponent}
-                        />
-                    );
-                })}
-            </div>
+                    <div className="space-y-2">
+                        {data.insights.map((item) => {
+                            const IconComponent = iconMap[item.iconName] || Activity;
+                            return (
+                                <InsightCard
+                                    key={item.id}
+                                    text={item.text}
+                                    color={item.color as any}
+                                    Icon={IconComponent}
+                                />
+                            );
+                        })}
+                    </div>
+                </div>
 
-            {/* Weak Areas */}
-            <div className="space-y-3">
-                <SectionTitle
-                    title="WEAK AREAS"
-                    Icon={sectionIcons.weakness}
-                    className="text-slate-400 text-xs font-bold tracking-wider uppercase"
-                    iconClassName="text-rose-500"
-                    rightContent={<span className="text-[11px] text-rose-500 font-medium lowercase">{data.weakTopics.length} topics</span>}
-                />
+                {/* Weak Areas */}
+                <div className="px-4 py-4 border-b border-white/10 space-y-2.5">
+                    <SectionTitle
+                        title="WEAK AREAS"
+                        Icon={sectionIcons.weakness}
+                        className="text-white/60 text-xs font-semibold tracking-widest uppercase mb-3"
+                        iconClassName="text-rose-400"
+                        rightContent={<span className="text-[10px] text-red-400 font-medium">{data.weakTopics.length} topics</span>}
+                    />
 
-                <div className="space-y-3">
-                    {data.weakTopics.map((topic) => (
-                        <WeaknessBar
-                            key={topic.name}
-                            name={topic.name}
-                            percentage={topic.percentage}
-                            subject={topic.subject}
-                            questionsCount={topic.questionsCount}
-                        />
-                    ))}
+                    <div className="space-y-2.5">
+                        {data.weakTopics.map((topic) => (
+                            <WeaknessBar
+                                key={topic.name}
+                                name={topic.name}
+                                percentage={topic.percentage}
+                                subject={topic.subject}
+                                questionsCount={topic.questionsCount}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Stats */}
+                <div className="px-4 py-4 border-b border-white/10 space-y-2.5">
+                    <SectionTitle
+                        title="AI PREDICTIONS"
+                        Icon={sectionIcons.stats}
+                        className="text-white/60 text-xs font-semibold tracking-widest uppercase mb-3"
+                        iconClassName="text-amber-400"
+                    />
+
+                    <div className="grid grid-cols-1 gap-2.5">
+                        {data.statCards.map((card) => (
+                            <StatCard
+                                key={card.title}
+                                title={card.title}
+                                value={card.value}
+                                subtitle={card.subtitle}
+                                color={card.color as any}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="px-4 py-4 border-b border-white/10 space-y-2.5">
+                    <SectionTitle
+                        title="Smart Actions"
+                        Icon={sectionIcons.actions}
+                        className="text-white/60 text-xs font-semibold tracking-widest uppercase mb-3"
+                        iconClassName="text-sky-400"
+                    />
+
+                    <div className="space-y-2.5">
+                        {data.actionCards.map((card) => (
+                            <ActionCard
+                                key={card.title}
+                                title={card.title}
+                                subtitle={card.subtitle}
+                                tag={card.tag}
+                                color={card.color as any}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Readiness */}
+                <div className="px-4 py-4 space-y-2.5">
+                    <ReadinessCard readiness={data.readiness} />
                 </div>
             </div>
 
-            {/* Stats */}
-            <div className="space-y-3">
-                <SectionTitle
-                    title="AI PREDICTIONS"
-                    Icon={sectionIcons.stats}
-                    className="text-slate-400 text-xs font-bold tracking-wider uppercase"
-                    iconClassName="text-amber-500"
-                />
+            {/* Custom Scrollbar Styles */}
+            <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
 
-                {data.statCards.map((card) => (
-                    <StatCard
-                        key={card.title}
-                        title={card.title}
-                        value={card.value}
-                        subtitle={card.subtitle}
-                        color={card.color as any}
-                    />
-                ))}
-            </div>
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
 
-            {/* Actions */}
-            <div className="space-y-3">
-                <SectionTitle
-                    title="Smart Actions"
-                    Icon={sectionIcons.actions}
-                />
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(139, 92, 246, 0.3);
+                    border-radius: 3px;
+                    transition: background 0.2s;
+                }
 
-                {data.actionCards.map((card) => (
-                    <ActionCard
-                        key={card.title}
-                        title={card.title}
-                        subtitle={card.subtitle}
-                        tag={card.tag}
-                        color={card.color as any}
-                    />
-                ))}
-            </div>
-
-            {/* Readiness */}
-            <ReadinessCard readiness={data.readiness} />
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(139, 92, 246, 0.5);
+                }
+            `}</style>
         </div>
     );
 }

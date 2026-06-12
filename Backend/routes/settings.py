@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from llm_state import get_provider, set_provider, LLMProvider
+from llm_state import get_provider, set_provider, LLMProvider, get_user_preferences, set_user_preferences
 
 
 router = APIRouter(prefix="/settings")
@@ -9,6 +9,39 @@ router = APIRouter(prefix="/settings")
 
 class LLMConfig(BaseModel):
     provider: LLMProvider  # "gpt4o" or "llama"
+
+
+class UserPreferences(BaseModel):
+    default_mode: str
+    response_style: str
+    tone: str
+
+
+@router.get("/preferences", response_model=UserPreferences)
+def get_preferences_endpoint():
+    """Return current user settings preferences."""
+    prefs = get_user_preferences()
+    return UserPreferences(
+        default_mode=prefs["default_mode"],
+        response_style=prefs["response_style"],
+        tone=prefs["tone"]
+    )
+
+
+@router.post("/preferences", response_model=UserPreferences)
+def update_preferences_endpoint(prefs: UserPreferences):
+    """Update user preferences."""
+    set_user_preferences(
+        default_mode=prefs.default_mode,
+        response_style=prefs.response_style,
+        tone=prefs.tone
+    )
+    current_prefs = get_user_preferences()
+    return UserPreferences(
+        default_mode=current_prefs["default_mode"],
+        response_style=current_prefs["response_style"],
+        tone=current_prefs["tone"]
+    )
 
 
 @router.get("/llm", response_model=LLMConfig)
@@ -49,4 +82,5 @@ SETTINGS_DATA = {
 @router.get("/data")
 def get_settings_data():
     return SETTINGS_DATA
+
 

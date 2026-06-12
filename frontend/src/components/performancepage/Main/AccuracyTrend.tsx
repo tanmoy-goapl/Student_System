@@ -2,7 +2,7 @@ import { PerformanceMainResponse } from "@/lib/api";
 
 export default function AccuracyTrend({ trendData }: { trendData: PerformanceMainResponse["trend"] }) {
     return (
-        <div className="rounded-xl border border-slate-700/50 bg-gradient-to-br from-slate-900/80 to-slate-950/80 p-4 overflow-hidden relative">
+        <div className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm p-5 overflow-hidden relative">
             <div className="flex items-start justify-between mb-2">
                 <div>
                     <h2 className="text-white text-sm font-semibold">
@@ -20,7 +20,7 @@ export default function AccuracyTrend({ trendData }: { trendData: PerformanceMai
                     {[1, 2, 3, 4].map((i) => (
                         <div
                             key={i}
-                            className="border-t border-slate-700"
+                            className="border-t border-white/5"
                         />
                     ))}
                 </div>

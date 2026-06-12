@@ -17,10 +17,11 @@ export default function TopicSubjectCard({
     const Icon = subject.icon;
 
     return (
-        <div className="rounded-xl border border-slate-700/60 bg-gradient-to-r from-slate-900/80 to-slate-800/30 overflow-hidden">
+        <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden hover:border-white/20 transition-colors">
             <button
                 onClick={onToggle}
-                className="w-full px-4 py-4 flex items-center gap-4"
+                type="button"
+                className="w-full px-4 py-4 flex items-center gap-4 cursor-pointer"
             >
                 <div
                     className={`w-10 h-10 rounded-xl bg-gradient-to-br ${subject.progressColor} flex items-center justify-center`}
@@ -38,7 +39,7 @@ export default function TopicSubjectCard({
                 </div>
 
                 <div className="flex-1">
-                    <div className="w-full h-2 rounded-full bg-slate-700/60 overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-white/[0.05] border border-white/5 overflow-hidden">
                         <div
                             className={`h-full rounded-full bg-gradient-to-r ${subject.progressColor}`}
                             style={{
@@ -71,7 +72,7 @@ export default function TopicSubjectCard({
                         (topic: any, idx: number) => (
                             <div
                                 key={idx}
-                                className="flex items-center gap-4 px-3 py-3 rounded-xl bg-black/20 border border-slate-800/60"
+                                className="flex items-center gap-4 px-3 py-3 rounded-xl bg-white/[0.02] border border-white/[0.07]"
                             >
                                 <div
                                     className={`w-2 h-2 rounded-full ${
@@ -86,7 +87,7 @@ export default function TopicSubjectCard({
                                     {topic.name}
                                 </p>
 
-                                <div className="flex-1 h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
+                                <div className="flex-1 h-1.5 rounded-full bg-white/[0.05] border border-white/5 overflow-hidden">
                                     <div
                                         className={`h-full rounded-full ${
                                             topic.status ===
@@ -114,7 +115,7 @@ export default function TopicSubjectCard({
 
                                     {topic.status ===
                                         'weak' && (
-                                        <span className="text-[0.65rem] px-2 py-1 rounded-md bg-red-500/15 border border-red-500/20 text-red-300 font-semibold">
+                                        <span className="text-[0.65rem] px-2 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 font-semibold">
                                             WEAK
                                         </span>
                                     )}

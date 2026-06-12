@@ -12,14 +12,14 @@ interface Props {
 export default function SectionTitle({
     title,
     Icon,
-    className = 'text-slate-200',
-    iconClassName,
+    className = 'text-white/60 text-xs font-semibold tracking-widest uppercase mb-3.5',
+    iconClassName = 'text-white/40',
     rightContent,
 }: Props) {
     return (
-        <div className={`flex items-center justify-between gap-2 text-sm font-semibold ${className}`}>
+        <div className={`flex items-center justify-between gap-2 ${className}`}>
             <div className="flex items-center gap-2">
-                <Icon size={16} className={iconClassName} />
+                <Icon size={14} className={iconClassName} />
                 <span>{title}</span>
             </div>
             {rightContent}

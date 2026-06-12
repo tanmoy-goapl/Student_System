@@ -21,9 +21,16 @@ const weakestTopics = [
     }
 ];
 
+const colorMap: Record<string, string> = {
+    cyan: 'text-cyan-400',
+    violet: 'text-violet-400',
+    emerald: 'text-emerald-400',
+    red: 'text-red-400',
+};
+
 export default function PracticeStats() {
     return (
-        <div className="rounded-xl border border-slate-700/50 bg-gradient-to-br from-slate-900/80 to-slate-950/80 p-5 backdrop-blur-xl">
+        <div className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm p-5 hover:border-white/20 transition-all">
             <div className="mb-4">
                 <h2 className="text-white text-sm font-semibold">
                     Practice Stats
@@ -38,7 +45,7 @@ export default function PracticeStats() {
                 {/* Left */}
                 <div className="flex items-center gap-5">
                     {/* Circular score */}
-                    <div className="relative w-24 h-24 rounded-full flex items-center justify-center bg-slate-950">
+                    <div className="relative w-24 h-24 rounded-full flex items-center justify-center bg-white/5 border border-white/10">
                         <div className="text-center">
                             <p className="text-2xl font-bold text-emerald-400">
                                 71%
@@ -85,7 +92,7 @@ export default function PracticeStats() {
                             <span className="text-slate-500 text-sm">{item.label}</span>
                             <p
                                 key={idx}
-                                className={`text-sm  text-${item.color}-400`}
+                                className={`text-sm font-semibold ${colorMap[item.color] || 'text-slate-200'}`}
                             >
                                 {item.value}
                             </p>

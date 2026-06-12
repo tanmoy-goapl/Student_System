@@ -18,7 +18,7 @@ const SUBJECT_PERFORMANCE = [
 
 export default function SpeedVsAccuracy() {
     return (
-        <div className="rounded-xl border border-slate-700/50 bg-gradient-to-br from-slate-900/80 to-slate-950/80 p-4 backdrop-blur-xl">
+        <div className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm p-5 hover:border-white/20 transition-all">
             <div className="mb-8">
                 <h2 className="text-white text-sm font-semibold">
                     Speed vs. Accuracy
@@ -49,7 +49,7 @@ export default function SpeedVsAccuracy() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                            <div className="flex-1 h-1.5 rounded-full bg-white/[0.05] border border-white/5 overflow-hidden">
                                 <div
                                     className="h-full rounded-full bg-cyan-400"
                                     style={{
@@ -58,7 +58,7 @@ export default function SpeedVsAccuracy() {
                                 />
                             </div>
 
-                            <div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                            <div className="flex-1 h-1.5 rounded-full bg-white/[0.05] border border-white/5 overflow-hidden">
                                 <div
                                     className="h-full rounded-full bg-indigo-400"
                                     style={{
@@ -71,8 +71,8 @@ export default function SpeedVsAccuracy() {
                 ))}
             </div>
 
-            <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/15 p-4">
-                <p className="text-xs text-amber-200 leading-relaxed">
+            <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                <p className="text-xs text-amber-300 leading-relaxed">
                     <span className="">
                         In Maths,
                     </span>{' '}

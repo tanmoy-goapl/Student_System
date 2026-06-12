@@ -279,6 +279,25 @@ export async function getSettingsData(): Promise<SettingsDataResponse> {
   });
 }
 
+export interface UserPreferences {
+  default_mode: string;
+  response_style: string;
+  tone: string;
+}
+
+export async function getUserPreferences(): Promise<UserPreferences> {
+  return request<UserPreferences>("/api/settings/preferences", {
+    method: "GET",
+  });
+}
+
+export async function updateUserPreferences(prefs: UserPreferences): Promise<UserPreferences> {
+  return request<UserPreferences>("/api/settings/preferences", {
+    method: "POST",
+    body: JSON.stringify(prefs),
+  });
+}
+
 // -- Chat Sidebar Data --
 
 export interface ChatSidebarDataResponse {

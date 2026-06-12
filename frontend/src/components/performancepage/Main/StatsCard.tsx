@@ -8,10 +8,10 @@ export default function StatsCard({
     const Icon = stat.icon;
 
     return (
-        <div className="rounded-3xl border border-slate-700/50 bg-gradient-to-br from-slate-900/80 to-slate-950/80 p-5">
+        <div className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm p-4 hover:border-white/20 transition-all">
             <div className="flex items-start justify-between mb-2">
                 <div
-                    className={`w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center ${stat.iconColor}`}
+                    className={`w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center ${stat.iconColor}`}
                 >
                     <Icon size={15} />
                 </div>

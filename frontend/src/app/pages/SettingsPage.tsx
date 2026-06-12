@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getLlmConfig, updateLlmConfig, type LLMProvider, getSettingsData, SettingsDataResponse } from "../../lib/api";
+import { getLlmConfig, updateLlmConfig, type LLMProvider, getSettingsData, SettingsDataResponse, getUserPreferences, updateUserPreferences, type UserPreferences } from "../../lib/api";
 import Loader from "@/components/Loader";
 import MentorPreferences from "@/components/settingpage/MentorPreferences";
 import ResponseStyle from "@/components/settingpage/ResponseStyle";
@@ -63,17 +63,26 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  // User preference states
+  const [defaultMode, setDefaultMode] = useState<string>("Explain");
+  const [responseStyle, setResponseStyle] = useState<string>("Detailed");
+  const [tone, setTone] = useState<string>("Friendly");
+
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
-        const [llmConfig, settingsData] = await Promise.all([
+        const [llmConfig, settingsData, userPrefs] = await Promise.all([
             getLlmConfig(),
-            getSettingsData()
+            getSettingsData(),
+            getUserPreferences()
         ]);
         setSelectedModel(llmConfig.provider);
         setPendingModel(llmConfig.provider);
         setData(settingsData);
+        setDefaultMode(userPrefs.default_mode);
+        setResponseStyle(userPrefs.response_style);
+        setTone(userPrefs.tone);
       } catch { setError("Failed to load settings data."); }
       finally { setLoading(false); }
     })();
@@ -88,6 +97,30 @@ export default function SettingsPage() {
       setTimeout(() => setSaved(false), 2500);
     } catch { setError("Failed to save LLM selection."); }
     finally { setSaving(false); }
+  };
+
+  const handlePrefChange = async (key: keyof UserPreferences, value: string) => {
+    try {
+      setError(null);
+      
+      const newPrefs: UserPreferences = {
+        default_mode: key === "default_mode" ? value : defaultMode,
+        response_style: key === "response_style" ? value : responseStyle,
+        tone: key === "tone" ? value : tone,
+      };
+
+      // Optimistically update UI
+      if (key === "default_mode") setDefaultMode(value);
+      if (key === "response_style") setResponseStyle(value);
+      if (key === "tone") setTone(value);
+
+      await updateUserPreferences(newPrefs);
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      setError("Failed to save preference changes.");
+    }
   };
 
   const isDirty = pendingModel !== selectedModel;
@@ -110,9 +143,21 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-slate-400">Manage platform-wide configuration</p>
       </div>
 
-      <MentorPreferences data={data.defaultModes} />
-      <ResponseStyle data={data.responseStyles} />
-      <ToneSelector data={data.tones} />
+      <MentorPreferences 
+        data={data.defaultModes} 
+        selected={defaultMode} 
+        onChange={(val: string) => handlePrefChange("default_mode", val)} 
+      />
+      <ResponseStyle 
+        data={data.responseStyles} 
+        selected={responseStyle} 
+        onChange={(val: string) => handlePrefChange("response_style", val)} 
+      />
+      <ToneSelector 
+        data={data.tones} 
+        selected={tone} 
+        onChange={(val: string) => handlePrefChange("tone", val)} 
+      />
       <PersonalizationCard />
 
       {/* LLM card */}

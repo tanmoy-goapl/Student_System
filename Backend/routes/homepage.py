@@ -186,7 +186,7 @@ AI_ACTIONS = [
     {
         "id": "resume-learning",
         "title": "Resume Learning",
-        "subtitle": "Semiconductor Devices Ch.3",
+        "subtitle": "Wave optics Ch.3",
         "action": "Go",
         "iconName": "Play",
         "iconClassName": "text-violet-400 bg-violet-500/10 border border-violet-500/20",

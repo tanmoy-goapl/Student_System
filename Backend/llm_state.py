@@ -20,3 +20,25 @@ def set_provider(provider: LLMProvider) -> None:
   global _current_provider
   _current_provider = provider
 
+
+# In‑memory global state for AI preferences.
+_user_preferences = {
+    "default_mode": "Explain",
+    "response_style": "Detailed",
+    "tone": "Friendly"
+}
+
+
+def get_user_preferences() -> dict:
+  """Return the current user preferences."""
+  return _user_preferences
+
+
+def set_user_preferences(default_mode: str, response_style: str, tone: str) -> None:
+  """Update the user preferences in memory."""
+  global _user_preferences
+  _user_preferences["default_mode"] = default_mode
+  _user_preferences["response_style"] = response_style
+  _user_preferences["tone"] = tone
+
+

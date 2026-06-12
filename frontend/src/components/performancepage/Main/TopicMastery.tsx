@@ -22,7 +22,7 @@ export default function TopicMastery({ masteryData }: { masteryData: Performance
     };
 
     return (
-        <div className="rounded-xl border border-slate-700/50 bg-gradient-to-br from-slate-900/80 to-slate-950/80 p-5 backdrop-blur-xl">
+        <div className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm p-5">
             <div className="flex items-start justify-between mb-2">
                 <div>
                     <h2 className="text-white text-sm font-semibold">
