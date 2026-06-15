@@ -259,8 +259,9 @@ export interface DocumentsDataResponse {
   documents: any[];
 }
 
-export async function getDocumentsData(): Promise<DocumentsDataResponse> {
-  return request<DocumentsDataResponse>("/api/documents/data", {
+export async function getDocumentsData(studentId?: number): Promise<DocumentsDataResponse> {
+  const url = studentId ? `/api/documents/data?student_id=${studentId}` : "/api/documents/data";
+  return request<DocumentsDataResponse>(url, {
     method: "GET",
   });
 }
@@ -310,6 +311,13 @@ export interface ChatSidebarDataResponse {
 export async function getChatSidebarData(): Promise<ChatSidebarDataResponse> {
   return request<ChatSidebarDataResponse>("/api/chat-sidebar/data", {
     method: "GET",
+  });
+}
+
+export async function deleteDocument(documentId: string): Promise<void> {
+  const id = documentId.startsWith("db-") ? documentId.substring(3) : documentId;
+  await request(`/api/documents?document_id=${id}`, {
+    method: "DELETE",
   });
 }
 

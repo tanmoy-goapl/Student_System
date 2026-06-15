@@ -23,6 +23,18 @@ Base = declarative_base()
 def init_db():
     from models import User, Document  # removed DocumentChunk
     Base.metadata.create_all(bind=engine)
+    
+    # Run automatic column migrations
+    from sqlalchemy import text
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS category VARCHAR;"))
+            conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS subject VARCHAR;"))
+            conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS title VARCHAR;"))
+            conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS pages INTEGER;"))
+            conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS document_format VARCHAR;"))
+    except Exception as e:
+        print("Database schema migration notice/error:", e)
 
 
 def get_db():

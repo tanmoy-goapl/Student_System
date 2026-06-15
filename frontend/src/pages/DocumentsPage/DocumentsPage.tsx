@@ -4,24 +4,39 @@ import { useState, useMemo, useEffect } from 'react';
 import DocumentsHeader, { type FilterType } from '@/components/documentspage/DocumentsHeader';
 import DocumentsSidebar from '@/components/documentspage/DocumentsSidebar';
 import DocumentsMain from '@/components/documentspage/DocumentsMain';
-import { getDocumentsData, DocumentsDataResponse } from '@/lib/api';
+import UploadModal from '@/components/documentspage/UploadModal';
+import { getDocumentsData, DocumentsDataResponse, deleteDocument } from '@/lib/api';
 
 export default function DocumentsPage() {
     const [data, setData] = useState<DocumentsDataResponse | null>(null);
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
+    const [isUploadOpen, setIsUploadOpen] = useState(false);
+
+    const fetchDocs = async () => {
+        try {
+            const userId = localStorage.getItem("user_id");
+            const sid = userId ? parseInt(userId, 10) : 1;
+            const res = await getDocumentsData(sid);
+            setData(res);
+        } catch (error) {
+            console.error("Failed to load documents data:", error);
+        }
+    };
+
+    const handleDelete = async (docId: string) => {
+        try {
+            await deleteDocument(docId);
+            await fetchDocs();
+        } catch (error) {
+            console.error("Failed to delete document:", error);
+            alert("Failed to delete document: " + (error instanceof Error ? error.message : String(error)));
+        }
+    };
 
     useEffect(() => {
-        async function fetchData() {
-            try {
-                const res = await getDocumentsData();
-                setData(res);
-            } catch (error) {
-                console.error("Failed to load documents data:", error);
-            }
-        }
-        fetchData();
+        fetchDocs();
     }, []);
 
     const filteredDocs = useMemo(() => {
@@ -39,16 +54,19 @@ export default function DocumentsPage() {
 
             const matchesWorkspace = (() => {
                 if (!activeWorkspace) return true;
+                if (activeWorkspace === '1') return doc.category === 'Studies';
+                if (activeWorkspace === '2') return doc.category === 'Resume & Interview';
+                if (activeWorkspace === '3') return doc.category === 'Personal Learning';
                 const subjectMap: Record<string, string[]> = {
                     '1-1': ['Physics'],
                     '1-2': ['Chemistry'],
                     '1-3': ['Maths'],
-                    '2': ['Resume', 'Interview'],
-                    '3': ['Personal'],
+                    '2-1': ['Resume'],
+                    '2-2': ['Interview'],
                 };
                 const allowed = subjectMap[activeWorkspace];
                 if (!allowed) return true;
-                return allowed.some((s) => doc.subject.includes(s));
+                return allowed.some((s) => (doc.subject || '').toLowerCase().includes(s.toLowerCase()));
             })();
 
             return matchesType && matchesSearch && matchesWorkspace;
@@ -74,7 +92,7 @@ export default function DocumentsPage() {
                 onFilterChange={setActiveFilter}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
-                onUpload={() => console.log('Upload clicked')}
+                onUpload={() => setIsUploadOpen(true)}
             />
 
             <div className="flex flex-1 overflow-hidden">
@@ -90,8 +108,15 @@ export default function DocumentsPage() {
                     documents={filteredDocs}
                     totalCount={filteredDocs.length}
                     kpis={data.kpis}
+                    onDelete={handleDelete}
                 />
             </div>
+
+            <UploadModal
+                isOpen={isUploadOpen}
+                onClose={() => setIsUploadOpen(false)}
+                onUploadSuccess={fetchDocs}
+            />
         </div>
     );
 }

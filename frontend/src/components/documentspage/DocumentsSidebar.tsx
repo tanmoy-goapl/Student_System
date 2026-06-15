@@ -26,12 +26,16 @@ const subjectIcons: Record<string, React.ElementType> = {
     Physics: Atom,
     Chemistry: FlaskConical,
     Maths: Calculator,
+    Resume: Briefcase,
+    Interview: BookOpen,
 };
 
 const subjectColors: Record<string, string> = {
     Physics: 'text-blue-400',
     Chemistry: 'text-amber-400',
     Maths: 'text-emerald-400',
+    Resume: 'text-orange-400',
+    Interview: 'text-violet-400',
 };
 
 const workspaceColors: Record<string, string> = {

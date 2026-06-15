@@ -46,6 +46,13 @@ class Document(Base):
     # "professor" = professors + owner can see it  
     # "all"       = everyone can see it
 
+    category         = Column(String, nullable=True)
+    subject          = Column(String, nullable=True)
+    title            = Column(String, nullable=True)       # user-provided document title
+    pages            = Column(Integer, nullable=True)      # page count
+    document_format  = Column(String, nullable=True)       # e.g. PDF, DOC, TXT
+
+
 # ─────────────────────────────────────────────
 # DocumentChunk Model
 # ─────────────────────────────────────────────

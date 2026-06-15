@@ -33,11 +33,31 @@ from config import (
     LLAMA_BASE_URL, LLAMA_API_KEY, LLAMA_MODEL,
 )
 from llm_state import get_provider, get_user_preferences
+import os
+import logging
+from logging.handlers import RotatingFileHandler
+
+logger = logging.getLogger("chatbot")
+logger.setLevel(logging.INFO)
+
+if not logger.handlers:
+    # Console Handler
+    c_handler = logging.StreamHandler()
+    c_handler.setLevel(logging.INFO)
+    c_handler.setFormatter(logging.Formatter('%(message)s'))
+    logger.addHandler(c_handler)
+
+    # File Handler
+    log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "chatbot.log")
+    f_handler = RotatingFileHandler(log_file_path, maxBytes=10*1024*1024, backupCount=5, encoding="utf-8")
+    f_handler.setLevel(logging.INFO)
+    f_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(f_handler)
 
 router = APIRouter()
 
 HISTORY_LIMIT   = 4     # max turns kept verbatim (smaller for speed)
-MAX_CONTEXT_LEN = 1200  # max chars of retrieved context sent to LLM
+MAX_CONTEXT_LEN = 8000  # max chars of retrieved context sent to LLM
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -143,11 +163,10 @@ def _build_system_prompt(
 ) -> str:
     doc_list = ", ".join(doc_names) or "(none)"
 
-    # 🔴 HARD enforcement
     if intent is Intent.GENERAL:
         knowledge_line = (
             "You may answer using general academic knowledge. "
-            "Do NOT reference documents or context."
+            "You should also use and prioritize the provided CONTEXT below if it contains relevant information to the student's question."
         )
     else:
         knowledge_line = (
@@ -181,6 +200,11 @@ def _build_system_prompt(
     elif pref_tone == "Concise":
         tone_guide = "• TONE: Be direct, clear, and highly concise. Do not use fluff or filler words."
 
+    if intent is Intent.GENERAL:
+        context_header = "REFERENCE CONTEXT (supplementary — use to enhance your answer if relevant)"
+    else:
+        context_header = "CONTEXT (ONLY SOURCE OF TRUTH)"
+
     base = f"""You are MentorAI — a warm, encouraging academic mentor.
  
 ROLE GUIDELINE:
@@ -191,7 +215,7 @@ ROLE GUIDELINE:
 STUDENT: {student_name}
 DOCUMENTS: {doc_list}
 
-===== CONTEXT (ONLY SOURCE OF TRUTH) =====
+===== {context_header} =====
 {context[:MAX_CONTEXT_LEN]}
 ===== END CONTEXT =====
 """
@@ -201,17 +225,33 @@ DOCUMENTS: {doc_list}
         Intent.IMPROVEMENT: "Base suggestions ONLY on weaknesses found in the context.",
         Intent.STUDY_PLAN: "Use subjects/topics explicitly mentioned in the context.",
         Intent.FEEDBACK: "Quote or closely paraphrase feedback from the context.",
-        Intent.GENERAL: "Answer normally using standard knowledge.",
+        Intent.GENERAL: "This is a GENERAL academic question. You MUST answer it using your own academic knowledge. If the REFERENCE CONTEXT above contains related information, incorporate it to personalise the answer. Do NOT say you cannot find information in documents — just answer the academic question directly.",
     }
+
+    if intent is Intent.GENERAL:
+        context_rule = (
+            "• For this GENERAL academic question: USE YOUR OWN ACADEMIC KNOWLEDGE to answer.\n"
+            "  The REFERENCE CONTEXT above is supplementary — use it to personalise your answer if relevant,\n"
+            "  but do NOT limit yourself to it. Answer the question fully from your knowledge.\n"
+            "• Do NOT say 'I could not find this information in the provided documents.'\n"
+            "• Do NOT refuse to answer academic questions just because they are not in the documents."
+        )
+    else:
+        context_rule = (
+            "• NEVER use information outside the provided CONTEXT.\n"
+            "• If the answer is not clearly present in the CONTEXT, say: "
+            "'I could not find this information in the provided documents.'\n"
+            "• Prefer quoting or closely paraphrasing the CONTEXT.\n"
+            "• If CONTEXT contains bullet points or structured rules → preserve structure in answer."
+        )
 
     rules = f"""
 INTENT HINT: {intent_hints[intent]}
 
 CRITICAL RULES:
-• NEVER use information outside the provided CONTEXT (except GENERAL intent).
+• NON-ACADEMIC QUESTIONS FILTER: You MUST NOT answer questions that are not related to academics, education, science, technology, courses, university, careers, study plans, or the uploaded study documents. If a question is about general pop culture, sports (e.g. "who is virat kohli"), entertainment, celebrities, or other general non-academic topics, you must politely decline to answer, saying: "I am MentorAI, your academic mentor. I can only assist you with academic, study, and career-related questions."
+{context_rule}
 • NEVER invent policies, rules, or facts.
-• If CONTEXT contains bullet points or structured rules → preserve structure in answer.
-• Prefer quoting or closely paraphrasing the CONTEXT.
 • Keep answer concise and relevant.
 {style_guide}
 {tone_guide}
@@ -246,16 +286,25 @@ def apply_role_guardrails(role: str, question: str) -> str:
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest, db: Session = Depends(get_db)):
+    logger.info("\n" + "="*80)
+    logger.info(f"[{datetime.now().isoformat()}] CHATBOT REQUEST RECEIVED")
+    logger.info(f"  Student ID : {request.student_id}")
+    logger.info(f"  Question   : {request.question}")
+    logger.info(f"  Role       : {request.role}")
+    logger.info(f"  Reset      : {request.reset}")
+    logger.info("="*80)
 
     # ── Verify student ────────────────────────────────────────────────────────
     user = db.query(User).filter(User.id == request.student_id).first()
     if not user:
+        logger.error(f"❌ Error: Student with ID {request.student_id} not found in database!")
         raise HTTPException(status_code=404, detail="Student not found")
 
     # ── Role Guardrail ─────────────────────────────────────────
     guardrail_response = apply_role_guardrails(request.role, request.question)
 
     if guardrail_response:
+        logger.warning(f"⚠️ Guardrail triggered: {guardrail_response}")
         return ChatResponse(
             answer=guardrail_response,
             intent="restricted",
@@ -264,6 +313,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         )
 
     student_name = getattr(user, "name", f"Student #{request.student_id}")
+    logger.info(f"  Student Name: {student_name}")
 
     # ── Guard: no documents ───────────────────────────────────────────────────
     all_docs = (
@@ -273,6 +323,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         .all()
     )
     if not all_docs:
+        logger.warning("⚠️ No documents uploaded yet for this student!")
         return ChatResponse(
             answer=(
                 "📚 **No documents uploaded yet!**\n\n"
@@ -292,43 +343,38 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             intent="general",
         )
 
-    # ── Guard: no chunks ──────────────────────────────────────────────────────
-    has_chunks = (
-        db.query(DocumentChunk)
-        .join(Document)
-        .filter(Document.student_id == request.student_id)
-        .first()
-    )
-    if not has_chunks:
-        return ChatResponse(
-            answer=(
-                "⚠️ **Documents uploaded but not yet indexed.**\n\n"
-                "Your files are saved, but their text couldn't be extracted "
-                "for search. Try re-uploading as PDF or plain text.\n\n"
-                "Supported: PDF, DOCX, TXT, PNG, JPG, JPEG, BMP, TIFF, WEBP."
-            ),
-            intent="general",
-        )
+    logger.info(f"  Uploaded documents: {[d.filename for d in all_docs]}")
 
     # ── Detect intent ─────────────────────────────────────────────────────────
     intent = detect_intent(request.question)
+    logger.info(f"  Detected Intent: {intent}")
 
     # ── RAG: retrieve relevant chunks ─────────────────────────────────────────
     # For marks/study-plan intents fetch more chunks to capture full report.
-    top_k = 6 if intent in (Intent.MARKS, Intent.STUDY_PLAN) else 4
+    top_k = 10 if intent in (Intent.MARKS, Intent.STUDY_PLAN) else 8
+    logger.info(f"  Retrieving top_{top_k} chunks from vector DB...")
     try:
         chunks = search_relevant_chunks(
             request.question, request.student_id, request.role, db, top_k=top_k
         )
     except Exception as e:
         import traceback
-        traceback.print_exc()        # full stack trace to terminal
+        logger.error("❌ Search error:")
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Search error: {e}")
 
+    logger.info(f"  Retrieved {len(chunks)} chunks from ChromaDB.")
+    for idx, c in enumerate(chunks):
+        doc_info = c.get("document", "Unknown Doc")
+        snippet = c.get("text", "")[:100].replace('\n', ' ')
+        logger.info(f"    Chunk {idx+1}: Doc='{doc_info}' | Snippet: {snippet}...")
+
     if not chunks:
+        logger.warning("⚠️ No relevant chunks returned from search.")
         # If no relevant chunks: for GENERAL intent, still answer using a
         # clean, mentor response without mentioning missing documents.
         if intent is Intent.GENERAL:
+            logger.info("  Intent is GENERAL, falling back to LLM call with empty context.")
             doc_names = [d.filename for d in all_docs]
             context = ""
             system_prompt = _build_system_prompt(intent, doc_names, context, request.role, student_name)
@@ -341,6 +387,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             return ChatResponse(answer=answer, intent=intent.value)
 
         # Non-GENERAL intents still need document grounding.
+        logger.info("  Non-GENERAL intent requires document grounding; returning fallback message.")
         fallback_answer = (
             "📌 I need relevant content from your uploaded documents to answer\n"
             "this specific request accurately. Please upload or add the\n"
@@ -349,8 +396,9 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         return ChatResponse(answer=fallback_answer, intent=intent.value)
 
     context    = build_rich_context(chunks)
-    print("=== CONTEXT SENT TO LLM ===")
-    print(context)
+    logger.info("\n--- CONTEXT SENT TO LLM ---")
+    logger.info(context)
+    logger.info("---------------------------\n")
     doc_names  = [d.filename for d in all_docs]
     source_docs = list({
         c["document"] for c in chunks if c.get("document")
@@ -363,6 +411,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         .order_by(ChatMessage.created_at.asc())
         .all()
     )[-HISTORY_LIMIT:]
+    logger.info(f"  Conversation history loaded: {len(history)} messages.")
 
     # ── Persist user message ──────────────────────────────────────────────────
     db.add(ChatMessage(
@@ -380,7 +429,10 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         history_for_llm: list[Message] = []
     else:
         history_for_llm = history
+    
+    logger.info("  Calling _call_llm()...")
     answer = _call_llm(system_prompt, history_for_llm, request.question)
+    logger.info(f"  LLM Response received: {answer[:150].replace(chr(10), ' ')}...")
 
     # ── Persist assistant reply ───────────────────────────────────────────────
     db.add(ChatMessage(
@@ -507,13 +559,19 @@ def _call_llm(system_prompt: str, history: list, question: str) -> str:
     provider = get_provider()
     configs = []
 
+    logger.info(f"  [LLM Call] Preferred provider: {provider}")
+
     def add_gpt():
         if GPT_API_KEY and GPT_BASE_URL:
-            configs.append((GPT_API_KEY, GPT_BASE_URL, GPT_MODEL))
+            configs.append(("GPT-4o-mini", GPT_API_KEY, GPT_BASE_URL, GPT_MODEL))
+        else:
+            logger.warning("  [LLM Call] GPT config missing API_KEY or BASE_URL")
 
     def add_llama():
         if LLAMA_API_KEY and LLAMA_BASE_URL:
-            configs.append((LLAMA_API_KEY or GPT_API_KEY, LLAMA_BASE_URL, LLAMA_MODEL))
+            configs.append(("Llama", LLAMA_API_KEY or GPT_API_KEY, LLAMA_BASE_URL, LLAMA_MODEL))
+        else:
+            logger.warning("  [LLM Call] Llama config missing API_KEY or BASE_URL")
 
     # Try preferred provider first, then fall back to the other if available.
     if provider == "gpt4o":
@@ -526,8 +584,11 @@ def _call_llm(system_prompt: str, history: list, question: str) -> str:
         add_gpt()
         add_llama()
 
-    for api_key, base_url, model in configs:
+    logger.info(f"  [LLM Call] Resolved configuration chain: {[c[0] for c in configs]}")
+
+    for name, api_key, base_url, model in configs:
         try:
+            logger.info(f"  [LLM Call] Trying provider '{name}' at {base_url} using model {model}...")
             from openai import OpenAI
             client = OpenAI(api_key=api_key, base_url=base_url)
 
@@ -541,13 +602,17 @@ def _call_llm(system_prompt: str, history: list, question: str) -> str:
                 messages=messages,
                 max_tokens=500,
                 temperature=0.2,
-                timeout=10,
+                timeout=30,
             )
+            logger.info(f"  [LLM Call] Success with provider '{name}'!")
             return resp.choices[0].message.content
         except Exception as e:
-            print(f"LLM error for {base_url} {model}: {e}")
+            import traceback
+            logger.error(f"  [LLM Call] ERROR trying provider '{name}' ({base_url} {model}): {e}")
+            logger.error(traceback.format_exc())
             continue  # try next provider
 
+    logger.error("  [LLM Call] ❌ All configured LLM providers failed. Falling back to plain context.")
     # Plain context fallback (no LLM available)
     return (
         "⚠️ AI service temporarily unavailable.\n\n"

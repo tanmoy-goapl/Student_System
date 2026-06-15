@@ -10,7 +10,25 @@ def search_relevant_chunks(
     db: Session,
     top_k: int = 5,
 ):
-    results = query_chunks(question, top_k=top_k)
+    # 🔐 Pre-filter by allowed document IDs for the user
+    if user_role == "admin":
+        allowed_docs = db.query(Document).all()
+    elif user_role == "professor":
+        allowed_docs = db.query(Document).filter(
+            (Document.student_id == user_id) |
+            (Document.readable_by.in_(["professor", "all"]))
+        ).all()
+    else:
+        allowed_docs = db.query(Document).filter(
+            (Document.student_id == user_id) |
+            (Document.readable_by == "all")
+        ).all()
+
+    allowed_doc_ids = [d.id for d in allowed_docs]
+    if not allowed_doc_ids:
+        return []
+
+    results = query_chunks(question, top_k=top_k, allowed_doc_ids=allowed_doc_ids)
 
     print("=== CHROMA RESULTS ===")
     print(results)
@@ -25,18 +43,8 @@ def search_relevant_chunks(
     docs_list = documents[0]
     metas_list = metadatas[0]
 
-    # ✅ collect doc_ids first (avoid N+1 queries)
-    doc_ids = {
-        m.get("document_id")
-        for m in metas_list
-        if m and m.get("document_id") is not None
-    }
-
-    if not doc_ids:
-        return []
-
     # ✅ fetch all documents in one query
-    db_docs = db.query(Document).filter(Document.id.in_(doc_ids)).all()
+    db_docs = db.query(Document).filter(Document.id.in_(allowed_doc_ids)).all()
     doc_map = {d.id: d for d in db_docs}
 
     chunks = []
@@ -47,23 +55,6 @@ def search_relevant_chunks(
 
         doc = doc_map.get(meta.get("document_id"))
         if not doc:
-            continue
-
-        # 🔐 Access control
-        if user_role == "admin":
-            allowed = True
-        elif user_role == "professor":
-            allowed = (
-                doc.student_id == user_id
-                or doc.readable_by in ["professor", "all"]
-            )
-        else:
-            allowed = (
-                doc.student_id == user_id
-                or doc.readable_by == "all"
-            )
-
-        if not allowed:
             continue
 
         chunks.append({

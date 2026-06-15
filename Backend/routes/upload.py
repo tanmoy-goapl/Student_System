@@ -20,9 +20,15 @@ def get_documents(student_id: int, db: Session = Depends(get_db)):
     return [
         {
             "id": d.id,
+            "user_id": d.student_id,
+            "title": d.title or d.filename,
             "filename": d.filename,
+            "category": d.category,
+            "subject": d.subject,
+            "pages": d.pages,
             "file_size": d.file_size,
             "uploaded_at": d.uploaded_at.isoformat(),
+            "document_format": d.document_format,
             "readable_by": d.readable_by, 
             "file_path": os.path.basename(d.file_path), 
         }
@@ -77,19 +83,27 @@ def delete_document(document_id: int, db: Session = Depends(get_db)):
 
 @router.post("/upload")
 async def upload_file(
-    student_id: int = Form(...),
-    file: UploadFile = File(...),
+    user_id: int = Form(None),
+    student_id: int = Form(None),
+    title: str = Form(None),
+    category: str = Form(None),
+    subject: str = Form(None),
     readable_by: str = Form(default="owner"), 
+    file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
+    actual_student_id = user_id if user_id is not None else student_id
+    if not actual_student_id:
+        raise HTTPException(status_code=400, detail="Missing user_id or student_id")
+
     # Verify student
-    if not db.query(User).filter(User.id == student_id).first():
+    if not db.query(User).filter(User.id == actual_student_id).first():
         raise HTTPException(status_code=404, detail="Student not found")
 
     content = await file.read()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    safe_name = f"{student_id}_{timestamp}_{file.filename}"
+    safe_name = f"{actual_student_id}_{timestamp}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, safe_name)
 
     try:
@@ -97,15 +111,48 @@ async def upload_file(
         with open(file_path, "wb") as f:
             f.write(content)
 
-        # Save metadata in Postgres
+        # Derive document format from extension
         ext = os.path.splitext(file.filename)[1].lower()
+        format_map = {
+            ".pdf": "PDF",
+            ".doc": "DOC",
+            ".docx": "DOC",
+            ".txt": "TXT",
+            ".png": "PNG",
+            ".jpg": "JPG",
+            ".jpeg": "JPG",
+        }
+        doc_format = format_map.get(ext, ext.lstrip(".").upper() or "UNKNOWN")
+
+        # Estimate page count
+        page_count = None
+        if ext == ".pdf":
+            try:
+                from PyPDF2 import PdfReader
+                reader = PdfReader(file_path)
+                page_count = len(reader.pages)
+            except Exception:
+                page_count = max(1, len(content) // 50000)
+        elif ext == ".txt":
+            # Estimate: ~3000 chars per page
+            page_count = max(1, len(content) // 3000)
+        else:
+            page_count = max(1, len(content) // 50000)
+
+        # Save metadata in Postgres
+        doc_title = title if title else file.filename
         doc = Document(
-            student_id=student_id,
-            filename=file.filename,
+            student_id=actual_student_id,
+            filename=file.filename,         # original filename
+            title=doc_title,                # user-provided title
             file_path=file_path,
             file_size=len(content),
             file_type=file.content_type or ext,
             readable_by=readable_by,
+            category=category,
+            subject=subject,
+            pages=page_count,
+            document_format=doc_format,
         )
         db.add(doc)
         db.commit()

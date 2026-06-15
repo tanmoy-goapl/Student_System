@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpDown, CheckCircle, Clock, FileText } from 'lucide-react';
+import { ArrowUpDown, CheckCircle, Clock, FileText, Trash2 } from 'lucide-react';
 
 export type DocumentStatus = 'ready' | 'processing';
 
@@ -28,6 +28,7 @@ type Props = {
     documents: DocumentItem[];
     totalCount: number;
     kpis: DocumentKPI[];
+    onDelete?: (id: string) => void;
 };
 
 // ── KPI icons ──────────────────────────────────────────────────────────────────
@@ -126,7 +127,7 @@ function FileIcon({ type }: { type: DocumentItem['type'] }) {
 
 // ── Document Card ──────────────────────────────────────────────────────────────
 
-function DocumentCard({ doc }: { doc: DocumentItem }) {
+function DocumentCard({ doc, onDelete }: { doc: DocumentItem; onDelete?: (id: string) => void }) {
     return (
         <div className="group flex items-center gap-5 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-5 py-4 hover:border-white/15 hover:bg-white/[0.04] transition cursor-pointer">
             <FileIcon type={doc.type} />
@@ -148,14 +149,31 @@ function DocumentCard({ doc }: { doc: DocumentItem }) {
                 </div>
             </div>
 
-            <StatusBadge status={doc.status} />
+            <div className="flex items-center gap-4">
+                <StatusBadge status={doc.status} />
+
+                {doc.id.startsWith('db-') && onDelete && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm('Are you sure you want to delete this document?')) {
+                                onDelete(doc.id);
+                            }
+                        }}
+                        className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition"
+                        title="Delete Document"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </button>
+                )}
+            </div>
         </div>
     );
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 
-export default function DocumentsMain({ documents, totalCount, kpis }: Props) {
+export default function DocumentsMain({ documents, totalCount, kpis, onDelete }: Props) {
     return (
         <main className="flex-1 min-w-0 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
             {/* KPI Row */}
@@ -172,15 +190,6 @@ export default function DocumentsMain({ documents, totalCount, kpis }: Props) {
                         </div>
                     </div>
                 ))}
-
-                {/* AI Indexing Active pill */}
-                <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 flex-shrink-0">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-                    </span>
-                    <span className="text-xs font-medium text-emerald-400 whitespace-nowrap">AI Indexing Active</span>
-                </div>
             </div>
 
             {/* Doc count + Sort */}
@@ -197,7 +206,7 @@ export default function DocumentsMain({ documents, totalCount, kpis }: Props) {
             {/* Document list */}
             <div className="space-y-2.5">
                 {documents.map((doc) => (
-                    <DocumentCard key={doc.id} doc={doc} />
+                    <DocumentCard key={doc.id} doc={doc} onDelete={onDelete} />
                 ))}
             </div>
         </main>

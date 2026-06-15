@@ -1,12 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const response = await fetch(`${BACKEND_URL}/documents/data`, {
+    const studentId = req.nextUrl.searchParams.get("student_id") || "1";
+    const response = await fetch(`${BACKEND_URL}/documents/data?student_id=${studentId}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
