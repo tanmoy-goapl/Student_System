@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "edge";
+export const dynamic = "force-dynamic";
+
 const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001"
 
 export async function POST(req: NextRequest) {
@@ -10,8 +13,24 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const data = await response.json();
-    return NextResponse.json(data, { status: response.status });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { detail: errData.detail || `Backend error: ${response.status}` },
+        { status: response.status }
+      );
+    }
+
+    return new Response(response.body, {
+      status: response.status,
+      headers: {
+        "Content-Type": "application/x-ndjson",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    });
   } catch {
     return NextResponse.json(
       { detail: "Backend server is not reachable." },

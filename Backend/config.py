@@ -26,7 +26,7 @@ LLAMA_MODEL:    str = (
 )
 
 # Default provider used at startup: "gpt4o" or "llama"
-DEFAULT_LLM_PROVIDER: str = os.getenv("DEFAULT_LLM_PROVIDER", "llama")
+DEFAULT_LLM_PROVIDER: str = os.getenv("DEFAULT_LLM_PROVIDER", "gpt4o")
 
 # ── Auth ──────────────────────────────────────────────────
 SECRET_KEY:   str = os.getenv("SECRET_KEY", "change-this-in-production")

@@ -50,10 +50,6 @@ export default function AppLayout({
       component: <LearningSidebar />,
     },
     {
-      match: "/practice",
-      component: <PracticeSidebar />,
-    },
-    {
       match: "/performance",
       component: <PerformanceSidebar />,
     },

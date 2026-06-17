@@ -4,18 +4,13 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const studentId = searchParams.get("student_id");
-    const url = studentId
-      ? `${BACKEND_URL}/practice/data?student_id=${studentId}`
-      : `${BACKEND_URL}/practice/data`;
-
-    const response = await fetch(url, {
-      method: "GET",
+    const body = await req.json();
+    const response = await fetch(`${BACKEND_URL}/practice/session/start`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      cache: "no-store",
+      body: JSON.stringify(body),
     });
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });

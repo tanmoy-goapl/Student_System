@@ -24,15 +24,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "8001:8001"
+    network_mode: "host"
     env_file:
       - ./Backend/.env
     environment:
-      # Override the DATABASE_URL to use the docker network db container name instead of localhost
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/student_rag
+      - DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5451/student_rag
+      - HF_HUB_OFFLINE=1
     volumes:
       - ./Backend:/app
+      - /home/galaxy/.cache/huggingface:/root/.cache/huggingface
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
 
   frontend:
@@ -40,14 +40,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: student_frontend
-    depends_on:
-      - backend
     ports:
       - "3000:3000"
     environment:
-      # Tell Next.js API routes how to reach the backend inside the Docker network
-      - BACKEND_URL=http://backend:8001
-      # For client-side API requests if NEXT_PUBLIC is used
+      # Tell Next.js API routes how to reach the backend on the host network
+      - BACKEND_URL=http://10.10.90.95:8001
+      # For client-side API requests
       - NEXT_PUBLIC_BACKEND_URL=http://10.10.90.95:8001
 
 volumes:

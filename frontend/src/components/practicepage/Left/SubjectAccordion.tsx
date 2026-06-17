@@ -73,22 +73,20 @@ export default function SubjectAccordion({
           overflow-hidden transition-all duration-300
           ${
             isExpanded
-              ? "max-h-[500px] opacity-100"
+              ? "max-h-[3000px] opacity-100"
               : "max-h-0 opacity-0"
           }
         `}
       >
         <div className="px-3 pb-2 space-y-1.5">
-          {subject.weakAreas?.map((area) => {
-            const isSelected =
-              selectedTopic === area;
+          {(subject.topics || []).map((area) => {
+            const isSelected = selectedTopic === area;
+            const isWeak = (subject.weakAreas || []).includes(area);
 
             return (
               <button
                 key={area}
-                onClick={() =>
-                  onSelectTopic(area)
-                }
+                onClick={() => onSelectTopic(area)}
                 className={`
                   w-full flex items-center justify-between
                   px-3 py-2 rounded-lg
@@ -104,34 +102,30 @@ export default function SubjectAccordion({
                 <div className="flex items-center gap-2">
                   <div
                     className="w-1.5 h-1.5 rounded-full"
-                    style={{
-                      background:
-                        subject.color,
-                    }}
+                    style={{ background: subject.color }}
                   />
-
                   <span className="text-[0.7rem] text-white">
                     {area}
                   </span>
                 </div>
 
-                <span
-                  className={`
-                    text-[9px]
-                    font-semibold
-                    px-2 py-1 rounded-md
-                    tracking-wider
-                    ${
-                      isSelected
-                        ? "bg-white/20 text-white"
-                        : "bg-[#ff5c5c] text-white"
-                    }
-                  `}
-                >
-                  {isSelected
-                    ? "Active"
-                    : "Weak"}
-                </span>
+                {(isSelected || isWeak) && (
+                  <span
+                    className={`
+                      text-[9px]
+                      font-semibold
+                      px-2 py-1 rounded-md
+                      tracking-wider
+                      ${
+                        isSelected
+                          ? "bg-white/20 text-white"
+                          : "bg-[#ff5c5c] text-white"
+                      }
+                    `}
+                  >
+                    {isSelected ? "Active" : "Weak"}
+                  </span>
+                )}
               </button>
             );
           })}

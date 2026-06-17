@@ -1,7 +1,9 @@
 interface WeakTopic {
-  name: string;
+  topic: string;
   subject: string;
   accuracy: number;
+  total_attempts?: number;
+  mastery_level?: string;
 }
 
 interface WeakTopicsProps {
@@ -10,12 +12,7 @@ interface WeakTopicsProps {
 }
 
 export default function WeakTopics({
-  topics = [
-    { name: "Wave Optics", subject: "Physics", accuracy: 38 },
-    { name: "Calculus", subject: "Mathematics", accuracy: 42 },
-    { name: "Electrostatics", subject: "Physics", accuracy: 51 },
-    { name: "Electrochemistry", subject: "Chemistry", accuracy: 0 },
-  ],
+  topics = [],
   maxTopics = 4,
 }: WeakTopicsProps) {
   const visibleTopics = topics.slice(0, maxTopics);
@@ -47,7 +44,7 @@ export default function WeakTopics({
             <div className="flex items-center justify-between mb-1.5">
               <div>
                 <div className="text-xs font-medium text-white">
-                  {topic.name}
+                  {topic.topic}
                 </div>
                 <div className="text-[10px] text-white/40">{topic.subject}</div>
               </div>

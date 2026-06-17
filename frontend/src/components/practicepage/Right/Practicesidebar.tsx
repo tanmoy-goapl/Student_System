@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from "react";
 import LivePerformance from "./LivePerformance";
 import AIBehavioralInsights from "./AIBehavioralInsights";
 import WeakTopics from "./WeakTopics";
@@ -14,6 +13,21 @@ interface PracticeSidebarProps {
   streak?: number;
   pointsEarned?: number;
 
+  // Dynamic data from API
+  weakTopics?: {
+    topic: string;
+    subject: string;
+    accuracy: number;
+    total_attempts: number;
+    mastery_level: string;
+  }[];
+  insights?: {
+    type: string;
+    title: string;
+    description: string;
+    frequency: number;
+  }[];
+
   // Callbacks
   onContinuePractice?: () => void;
   onReviewMistakes?: () => void;
@@ -21,10 +35,12 @@ interface PracticeSidebarProps {
 }
 
 export default function PracticeSidebar({
-  accuracy = 67,
-  avgSpeed = "1m 42s",
-  streak = 3,
-  pointsEarned = 148,
+  accuracy = 0,
+  avgSpeed = "0s",
+  streak = 0,
+  pointsEarned = 0,
+  weakTopics,
+  insights,
   onContinuePractice,
   onReviewMistakes,
   onGoToLearning,
@@ -40,9 +56,9 @@ export default function PracticeSidebar({
           pointsEarned={pointsEarned}
         />
 
-        <AIBehavioralInsights />
+        <AIBehavioralInsights insights={insights} />
 
-        <WeakTopics />
+        <WeakTopics topics={weakTopics} />
 
         <AdaptiveEngine />
       </div>

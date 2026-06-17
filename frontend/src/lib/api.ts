@@ -229,8 +229,137 @@ export interface PracticeDataResponse {
   sampleQuestions: any[];
 }
 
-export async function getPracticeData(): Promise<PracticeDataResponse> {
-  return request<PracticeDataResponse>("/api/practice/data", {
+export async function getPracticeData(studentId?: number): Promise<PracticeDataResponse> {
+  const url = studentId ? `/api/practice/data?student_id=${studentId}` : "/api/practice/data";
+  return request<PracticeDataResponse>(url, {
+    method: "GET",
+  });
+}
+
+// -- Practice Session --
+
+export interface PracticeQuestion {
+  id: number;
+  topic: string;
+  subtopic: string;
+  difficulty: string;
+  question: string;
+  options: { id: string; text: string }[];
+}
+
+export interface StartSessionResponse {
+  session_id: number;
+  mode: string;
+  topic: string;
+  difficulty: string;
+  total_questions: number;
+  questions: PracticeQuestion[];
+}
+
+export async function startPracticeSession(
+  studentId: number,
+  mode: string,
+  topic?: string,
+  difficulty?: string,
+  questionCount?: number
+): Promise<StartSessionResponse> {
+  return request<StartSessionResponse>("/api/practice/session/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      student_id: studentId,
+      mode,
+      topic: topic || undefined,
+      difficulty: difficulty || "mixed",
+      question_count: questionCount || 5,
+    }),
+  });
+}
+
+export interface SubmitAnswerResponse {
+  is_correct: boolean;
+  correct_answer: string;
+  explanation: string;
+  stats: {
+    total_questions: number;
+    answered: number;
+    correct: number;
+    accuracy: number;
+    streak: number;
+    points: number;
+    avg_time_seconds: number;
+    total_time_seconds: number;
+  };
+}
+
+export async function submitPracticeAnswer(
+  sessionId: number,
+  questionId: number,
+  answer: string,
+  timeSpent: number
+): Promise<SubmitAnswerResponse> {
+  return request<SubmitAnswerResponse>(`/api/practice/session/${sessionId}/answer`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      question_id: questionId,
+      answer,
+      time_spent: timeSpent,
+    }),
+  });
+}
+
+export interface NextBatchResponse {
+  questions: PracticeQuestion[];
+  session_complete: boolean;
+  difficulty?: string;
+  stats?: any;
+}
+
+export async function getNextBatch(sessionId: number): Promise<NextBatchResponse> {
+  return request<NextBatchResponse>(`/api/practice/session/${sessionId}/next-batch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function getSessionStatus(sessionId: number): Promise<any> {
+  return request<any>(`/api/practice/session/${sessionId}/status`, {
+    method: "GET",
+  });
+}
+
+// -- Practice Topics & Performance --
+
+export async function getStudentTopics(studentId: number): Promise<any> {
+  return request<any>(`/api/practice/topics/${studentId}`, {
+    method: "GET",
+  });
+}
+
+export interface PracticePerformanceResponse {
+  overall_accuracy: number;
+  total_attempts: number;
+  total_correct: number;
+  weak_topics: {
+    topic: string;
+    subject: string;
+    accuracy: number;
+    total_attempts: number;
+    mastery_level: string;
+    current_difficulty: string;
+  }[];
+  insights: {
+    type: string;
+    title: string;
+    description: string;
+    frequency: number;
+  }[];
+  topic_performances: any[];
+}
+
+export async function getStudentPerformance(studentId: number): Promise<PracticePerformanceResponse> {
+  return request<PracticePerformanceResponse>(`/api/practice/performance/${studentId}`, {
     method: "GET",
   });
 }

@@ -76,13 +76,65 @@ export default function ChatPage() {
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.detail || `Error ${res.status}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.detail || `Error ${res.status}`);
+      }
 
-      if (data.answer) {
-        setHistory(prev => [...prev, { role: "assistant", content: data.answer }]);
-      } else {
+      setLoading(false); // remove initial typing dots indicator
+
+      const reader = res.body?.getReader();
+      if (!reader) {
+        throw new Error("No response stream available");
+      }
+
+      // Prepend an empty assistant message which we will fill progressively
+      setHistory(prev => [...prev, { role: "assistant", content: "" }]);
+
+      const decoder = new TextDecoder();
+      let done = false;
+      let assistantAnswer = "";
+      let buffer = "";
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            try {
+              const parsed = JSON.parse(trimmed);
+              if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+              if (parsed.content) {
+                assistantAnswer += parsed.content;
+                setHistory(prev => {
+                  const copy = [...prev];
+                  if (copy.length > 0) {
+                    copy[copy.length - 1] = {
+                      ...copy[copy.length - 1],
+                      content: assistantAnswer,
+                    };
+                  }
+                  return copy;
+                });
+              }
+            } catch (err) {
+              console.error("Error parsing stream line:", err);
+            }
+          }
+        }
+      }
+
+      if (!assistantAnswer) {
         setError("No response received. Please try again.");
+        setHistory(prev => prev.slice(0, -1));
       }
     } catch (err: any) {
       setError(err.message || "Failed to get answer. Please try again.");

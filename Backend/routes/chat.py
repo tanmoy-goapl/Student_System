@@ -19,8 +19,10 @@ import re
 from enum import Enum
 from datetime import datetime
 from typing import List, Optional
+import json
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 # from opentelemetry import context
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -87,35 +89,38 @@ class ChatResponse(BaseModel):
 # ═════════════════════════════════════════════════════════════════════════════
 
 class Intent(str, Enum):
-    MARKS       = "marks"
-    IMPROVEMENT = "improvement"
-    STUDY_PLAN  = "study_plan"
-    FEEDBACK    = "feedback"
-    GENERAL     = "general"
+    DOCUMENT_QUERY = "DOCUMENT_QUERY"
+    GENERAL_QUERY = "GENERAL_QUERY"
+    HYBRID_QUERY = "HYBRID_QUERY"
 
-_INTENT_PATTERNS: list[tuple[Intent, list[str]]] = [
-    (Intent.MARKS,       ["marks", "score", "grade", "result", "percentage",
-                          "gpa", "cgpa", "rank", "pass", "fail",
-                          "how much", "how many marks", "what did i get"]),
-    (Intent.IMPROVEMENT, ["improve", "weak", "struggle", "bad", "low", "poor",
-                          "lacking", "behind", "need to work", "help me"]),
-    (Intent.STUDY_PLAN,  ["study plan", "schedule", "timetable", "how to study",
-                          "when to study", "routine", "prepare for"]),
-    (Intent.FEEDBACK,    ["feedback", "comment", "teacher said", "remark",
-                          "suggestion", "advice", "review"]),
-]
 
 def detect_intent(question: str) -> Intent:
-    q = question.lower()
-    # Internship / resume / job questions should not be treated as marks queries.
-    career_terms = ["internship", "resume", "cv", "portfolio", "job", "role", "position"]
-    marks_terms = ["marks", "score", "grade", "result", "percentage", "gpa", "cgpa", "rank", "pass", "fail"]
-    if any(t in q for t in career_terms) and not any(t in q for t in marks_terms):
-        return Intent.IMPROVEMENT
-    for intent, patterns in _INTENT_PATTERNS:
-        if any(p in q for p in patterns):
-            return intent
-    return Intent.GENERAL
+    system_prompt = """Classify the query into one category:
+
+1. DOCUMENT_QUERY 
+2. GENERAL_QUERY
+3. HYBRID_QUERY
+
+DOCUMENT_QUERY:
+Questions about the user's resume, profile, skills, projects, academics, achievements, experience, placements, career goals.
+
+GENERAL_QUERY:
+General knowledge, answering any question across all academic subjects, science, general trivia, pop culture, sports, programming, interview questions, or literally any topic the user asks about.
+
+HYBRID_QUERY:
+Questions that require both user profile information and general knowledge.
+
+Return only one label."""
+    try:
+        # Re-using the synchronous _call_llm defined below
+        # since python resolves this at runtime.
+        response = _call_llm(system_prompt, [], question).strip()
+        for cat in Intent:
+            if cat.value in response:
+                return cat
+    except Exception as e:
+        logger.error(f"Error classifying query: {e}")
+    return Intent.HYBRID_QUERY
 
 def get_role_instruction(role: str, student_name: str) -> str:
     if role == "admin":
@@ -163,19 +168,25 @@ def _build_system_prompt(
 ) -> str:
     doc_list = ", ".join(doc_names) or "(none)"
 
-    if intent is Intent.GENERAL:
+    # We restrict DOCUMENT_QUERY to rely heavily on the documents.
+    if intent == Intent.DOCUMENT_QUERY:
         knowledge_line = (
-            "You may answer using general academic knowledge. "
-            "You should also use and prioritize the provided CONTEXT below if it contains relevant information to the student's question."
+            "You MUST prioritize answering using the CONTEXT below. "
+            "If the answer is not clearly present in the context, state that based on the documents you don't know, but you can provide general guidance."
         )
+        context_header = "CONTEXT (PRIMARY SOURCE OF TRUTH)"
+    elif intent == Intent.GENERAL_QUERY:
+        knowledge_line = (
+            "You MUST answer using your general knowledge regarding coding, DSA, Python, OS, DBMS, aptitude, or interview questions. "
+            "The context provided might not be relevant, but you can use it if it helps."
+        )
+        context_header = "REFERENCE CONTEXT (supplementary)"
     else:
         knowledge_line = (
-            "You MUST answer ONLY using the CONTEXT below. "
-            "Do NOT use prior knowledge. "
-            "Do NOT generalize. "
-            "If the answer is not clearly present in the context, say:\n"
-            "'I could not find this information in the provided documents.'"
+            "You should answer using BOTH the provided CONTEXT below and your general knowledge. "
+            "Combine information from the documents and external knowledge to provide a comprehensive answer."
         )
+        context_header = "REFERENCE CONTEXT"
 
     role_instruction = get_role_instruction(role, student_name)
 
@@ -200,11 +211,6 @@ def _build_system_prompt(
     elif pref_tone == "Concise":
         tone_guide = "• TONE: Be direct, clear, and highly concise. Do not use fluff or filler words."
 
-    if intent is Intent.GENERAL:
-        context_header = "REFERENCE CONTEXT (supplementary — use to enhance your answer if relevant)"
-    else:
-        context_header = "CONTEXT (ONLY SOURCE OF TRUTH)"
-
     base = f"""You are MentorAI — a warm, encouraging academic mentor.
  
 ROLE GUIDELINE:
@@ -221,35 +227,33 @@ DOCUMENTS: {doc_list}
 """
 
     intent_hints = {
-        Intent.MARKS: "Extract marks exactly as written. Do NOT approximate.",
-        Intent.IMPROVEMENT: "Base suggestions ONLY on weaknesses found in the context.",
-        Intent.STUDY_PLAN: "Use subjects/topics explicitly mentioned in the context.",
-        Intent.FEEDBACK: "Quote or closely paraphrase feedback from the context.",
-        Intent.GENERAL: "This is a GENERAL academic question. You MUST answer it using your own academic knowledge. If the REFERENCE CONTEXT above contains related information, incorporate it to personalise the answer. Do NOT say you cannot find information in documents — just answer the academic question directly.",
+        Intent.DOCUMENT_QUERY: "Extract info exactly as written in the documents regarding the user's resume, academics, or profile.",
+        Intent.GENERAL_QUERY: "Answer the user's question based on your broad general knowledge. You can answer any topic ranging from academics and programming to sports, pop culture, and trivia.",
+        Intent.HYBRID_QUERY: "Blend information from the documents with your general knowledge to provide a complete answer.",
     }
 
-    if intent is Intent.GENERAL:
+    if intent == Intent.DOCUMENT_QUERY:
         context_rule = (
-            "• For this GENERAL academic question: USE YOUR OWN ACADEMIC KNOWLEDGE to answer.\n"
-            "  The REFERENCE CONTEXT above is supplementary — use it to personalise your answer if relevant,\n"
-            "  but do NOT limit yourself to it. Answer the question fully from your knowledge.\n"
-            "• Do NOT say 'I could not find this information in the provided documents.'\n"
-            "• Do NOT refuse to answer academic questions just because they are not in the documents."
+            "• Use information from the provided CONTEXT as much as possible.\n"
+            "• If the context lacks details, say what is missing but provide whatever relevant general info you can.\n"
+            "• Prefer quoting or closely paraphrasing the CONTEXT.\n"
+        )
+    elif intent == Intent.GENERAL_QUERY:
+        context_rule = (
+            "• USE YOUR OWN KNOWLEDGE to answer.\n"
+            "• The context may not contain the answer, and that is perfectly fine. DO NOT say 'I could not find this information in the provided documents.'\n"
+            "• Provide detailed explanations, code snippets, or interview tips as appropriate.\n"
         )
     else:
         context_rule = (
-            "• NEVER use information outside the provided CONTEXT.\n"
-            "• If the answer is not clearly present in the CONTEXT, say: "
-            "'I could not find this information in the provided documents.'\n"
-            "• Prefer quoting or closely paraphrasing the CONTEXT.\n"
-            "• If CONTEXT contains bullet points or structured rules → preserve structure in answer."
+            "• Provide a hybrid response utilizing both the user's document context and your broad knowledge.\n"
+            "• DO NOT refuse to answer just because it's not fully in the documents.\n"
         )
 
     rules = f"""
 INTENT HINT: {intent_hints[intent]}
 
 CRITICAL RULES:
-• NON-ACADEMIC QUESTIONS FILTER: You MUST NOT answer questions that are not related to academics, education, science, technology, courses, university, careers, study plans, or the uploaded study documents. If a question is about general pop culture, sports (e.g. "who is virat kohli"), entertainment, celebrities, or other general non-academic topics, you must politely decline to answer, saying: "I am MentorAI, your academic mentor. I can only assist you with academic, study, and career-related questions."
 {context_rule}
 • NEVER invent policies, rules, or facts.
 • Keep answer concise and relevant.
@@ -284,10 +288,10 @@ def apply_role_guardrails(role: str, question: str) -> str:
 #  MAIN CHAT ENDPOINT
 # ═════════════════════════════════════════════════════════════════════════════
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat")
 def chat(request: ChatRequest, db: Session = Depends(get_db)):
     logger.info("\n" + "="*80)
-    logger.info(f"[{datetime.now().isoformat()}] CHATBOT REQUEST RECEIVED")
+    logger.info(f"[{datetime.now().isoformat()}] CHATBOT REQUEST RECEIVED (STREAMING)")
     logger.info(f"  Student ID : {request.student_id}")
     logger.info(f"  Question   : {request.question}")
     logger.info(f"  Role       : {request.role}")
@@ -305,11 +309,13 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
 
     if guardrail_response:
         logger.warning(f"⚠️ Guardrail triggered: {guardrail_response}")
-        return ChatResponse(
-            answer=guardrail_response,
-            intent="restricted",
-            sources=[],
-            history=[]
+        def yield_guardrail():
+            yield json.dumps({"content": guardrail_response}) + "\n"
+            yield json.dumps({"intent": "restricted", "sources": []}) + "\n"
+        return StreamingResponse(
+            yield_guardrail(),
+            media_type="application/x-ndjson",
+            headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
         )
 
     student_name = getattr(user, "name", f"Student #{request.student_id}")
@@ -324,23 +330,28 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     )
     if not all_docs:
         logger.warning("⚠️ No documents uploaded yet for this student!")
-        return ChatResponse(
-            answer=(
-                "📚 **No documents uploaded yet!**\n\n"
-                "MentorAI works by reading *your* study materials — "
-                "reports, notes, grade sheets, assignments — and giving you "
-                "personalised guidance based on what's actually in them.\n\n"
-                "**To get started:**\n"
-                "1. Go to the **Documents** tab\n"
-                "2. Upload a PDF, Word doc, image, or text file\n"
-                "3. Come back here and ask me anything!\n\n"
-                "Once your documents are uploaded, I can:\n"
-                "• Break down your marks subject by subject 📊\n"
-                "• Build you a custom study plan 📅\n"
-                "• Identify exactly what to improve and how 💡\n"
-                "• Explain teacher feedback in plain language 📝"
-            ),
-            intent="general",
+        no_docs_msg = (
+            "📚 **No documents uploaded yet!**\n\n"
+            "MentorAI works by reading *your* study materials — "
+            "reports, notes, grade sheets, assignments — and giving you "
+            "personalised guidance based on what's actually in them.\n\n"
+            "**To get started:**\n"
+            "1. Go to the **Documents** tab\n"
+            "2. Upload a PDF, Word doc, image, or text file\n"
+            "3. Come back here and ask me anything!\n\n"
+            "Once your documents are uploaded, I can:\n"
+            "• Break down your marks subject by subject 📊\n"
+            "• Build you a custom study plan 📅\n"
+            "• Identify exactly what to improve and how 💡\n"
+            "• Explain teacher feedback in plain language 📝"
+        )
+        def yield_no_docs():
+            yield json.dumps({"content": no_docs_msg}) + "\n"
+            yield json.dumps({"intent": "general", "sources": []}) + "\n"
+        return StreamingResponse(
+            yield_no_docs(),
+            media_type="application/x-ndjson",
+            headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
         )
 
     logger.info(f"  Uploaded documents: {[d.filename for d in all_docs]}")
@@ -350,8 +361,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     logger.info(f"  Detected Intent: {intent}")
 
     # ── RAG: retrieve relevant chunks ─────────────────────────────────────────
-    # For marks/study-plan intents fetch more chunks to capture full report.
-    top_k = 10 if intent in (Intent.MARKS, Intent.STUDY_PLAN) else 8
+    top_k = 10 if intent == Intent.DOCUMENT_QUERY else 8
     logger.info(f"  Retrieving top_{top_k} chunks from vector DB...")
     try:
         chunks = search_relevant_chunks(
@@ -370,30 +380,44 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         logger.info(f"    Chunk {idx+1}: Doc='{doc_info}' | Snippet: {snippet}...")
 
     if not chunks:
-        logger.warning("⚠️ No relevant chunks returned from search.")
-        # If no relevant chunks: for GENERAL intent, still answer using a
-        # clean, mentor response without mentioning missing documents.
-        if intent is Intent.GENERAL:
-            logger.info("  Intent is GENERAL, falling back to LLM call with empty context.")
-            doc_names = [d.filename for d in all_docs]
-            context = ""
-            system_prompt = _build_system_prompt(intent, doc_names, context, request.role, student_name)
-            answer = _call_llm(system_prompt, [], request.question)
-            if not answer:
-                answer = (
-                    "I can help with that! Try asking a more specific question "
-                    "and I'll give you a focused answer."
-                )
-            return ChatResponse(answer=answer, intent=intent.value)
+        logger.warning("⚠️ No relevant chunks returned from search. Allowing LLM to answer anyway.")
+        
+        doc_names = [d.filename for d in all_docs]
+        context = ""
+        system_prompt = _build_system_prompt(intent, doc_names, context, request.role, student_name)
+        
+        # Persist user message
+        db.add(ChatMessage(
+            student_id=request.student_id,
+            role="user",
+            content=request.question,
+        ))
+        db.commit()
 
-        # Non-GENERAL intents still need document grounding.
-        logger.info("  Non-GENERAL intent requires document grounding; returning fallback message.")
-        fallback_answer = (
-            "📌 I need relevant content from your uploaded documents to answer\n"
-            "this specific request accurately. Please upload or add the\n"
-            "related study material, then ask again.\n"
+        def yield_fallback():
+            full_answer = ""
+            for chunk in _call_llm_stream(system_prompt, [], request.question):
+                full_answer += chunk
+                yield json.dumps({"content": chunk}) + "\n"
+            
+            if not full_answer:
+                fallback_empty = "I can help with that! Try asking a more specific question and I'll give you a focused answer."
+                yield json.dumps({"content": fallback_empty}) + "\n"
+                full_answer = fallback_empty
+
+            db.add(ChatMessage(
+                student_id=request.student_id,
+                role="assistant",
+                content=full_answer,
+            ))
+            db.commit()
+            yield json.dumps({"intent": intent.value, "sources": []}) + "\n"
+            
+        return StreamingResponse(
+            yield_fallback(),
+            media_type="application/x-ndjson",
+            headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
         )
-        return ChatResponse(answer=fallback_answer, intent=intent.value)
 
     context    = build_rich_context(chunks)
     logger.info("\n--- CONTEXT SENT TO LLM ---")
@@ -423,69 +447,36 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
 
     # ── Call LLM ──────────────────────────────────────────────────────────────
     system_prompt = _build_system_prompt(intent, doc_names, context, request.role, student_name)
-    # For GENERAL questions, or when reset=True, skip history to keep responses
+    # For GENERAL_QUERY questions, or when reset=True, skip history to keep responses
     # focused on the new question only.
-    if intent is Intent.GENERAL or request.reset:
+    if intent == Intent.GENERAL_QUERY or request.reset:
         history_for_llm: list[Message] = []
     else:
-        history_for_llm = history
-    
-    logger.info("  Calling _call_llm()...")
-    answer = _call_llm(system_prompt, history_for_llm, request.question)
-    logger.info(f"  LLM Response received: {answer[:150].replace(chr(10), ' ')}...")
+        history_for_llm = [Message(role=m.role, content=m.content) for m in history]
 
-    # ── Persist assistant reply ───────────────────────────────────────────────
-    db.add(ChatMessage(
-        student_id=request.student_id,
-        role="assistant",
-        content=answer,
-    ))
-    db.commit()
+    def yield_main():
+        full_answer = ""
+        for chunk in _call_llm_stream(system_prompt, history_for_llm, request.question):
+            full_answer += chunk
+            yield json.dumps({"content": chunk}) + "\n"
 
-    # ── Return history ────────────────────────────────────────────────────────
-    # For a reset request, we don't need to send all old messages back to the
-    # client – that would repopulate the cleared UI. Just return the latest Q/A.
-    if request.reset:
-        last_msgs = (
-            db.query(ChatMessage)
-            .filter(ChatMessage.student_id == request.student_id)
-            .order_by(ChatMessage.created_at.desc())
-            .limit(2)
-            .all()
-        )
-        return ChatResponse(
-            answer=answer,
-            intent=intent.value,
-            sources=source_docs,
-            history=[
-                Message(
-                    role=m.role,
-                    content=m.content,
-                    created_at=m.created_at.isoformat() if m.created_at else None,
-                )
-                for m in reversed(last_msgs)
-            ],
-        )
+        # Persist assistant reply
+        try:
+            db.add(ChatMessage(
+                student_id=request.student_id,
+                role="assistant",
+                content=full_answer,
+            ))
+            db.commit()
+        except Exception as e:
+            logger.error(f"Failed to persist assistant reply: {e}")
 
-    all_msgs = (
-        db.query(ChatMessage)
-        .filter(ChatMessage.student_id == request.student_id)
-        .order_by(ChatMessage.created_at.asc())
-        .all()
-    )
+        yield json.dumps({"intent": intent.value, "sources": source_docs}) + "\n"
 
-    return ChatResponse(
-        answer=answer,
-        intent=intent.value,
-        sources=source_docs,
-        history=[
-            Message(
-                role=m.role,
-                content=m.content,
-                created_at=m.created_at.isoformat() if m.created_at else None,
-            )
-            for m in all_msgs
-        ],
+    return StreamingResponse(
+        yield_main(),
+        media_type="application/x-ndjson",
+        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
     )
 
 
@@ -600,7 +591,7 @@ def _call_llm(system_prompt: str, history: list, question: str) -> str:
             resp = client.chat.completions.create(
                 model=model,
                 messages=messages,
-                max_tokens=500,
+                max_tokens=2048,
                 temperature=0.2,
                 timeout=30,
             )
@@ -617,5 +608,80 @@ def _call_llm(system_prompt: str, history: list, question: str) -> str:
     return (
         "⚠️ AI service temporarily unavailable.\n\n"
         "**Relevant content from your documents:**\n\n"
-        + system_prompt[system_prompt.find("RETRIEVED CONTEXT"):system_prompt.find("━━━", 300)][:800]
+        + system_prompt[system_prompt.find("REFERENCE CONTEXT"):system_prompt.find("━━━", 300)][:800]
     )
+
+
+def _call_llm_stream(system_prompt: str, history: list, question: str):
+    provider = get_provider()
+    configs = []
+
+    logger.info(f"  [LLM Stream] Preferred provider: {provider}")
+
+    def add_gpt():
+        if GPT_API_KEY and GPT_BASE_URL:
+            configs.append(("GPT-4o-mini", GPT_API_KEY, GPT_BASE_URL, GPT_MODEL))
+        else:
+            logger.warning("  [LLM Stream] GPT config missing API_KEY or BASE_URL")
+
+    def add_llama():
+        if LLAMA_API_KEY and LLAMA_BASE_URL:
+            configs.append(("Llama", LLAMA_API_KEY or GPT_API_KEY, LLAMA_BASE_URL, LLAMA_MODEL))
+        else:
+            logger.warning("  [LLM Stream] Llama config missing API_KEY or BASE_URL")
+
+    # Try preferred provider first, then fall back to the other if available.
+    if provider == "gpt4o":
+        add_gpt()
+        add_llama()
+    elif provider == "llama":
+        add_llama()
+        add_gpt()
+    else:
+        add_gpt()
+        add_llama()
+
+    logger.info(f"  [LLM Stream] Resolved configuration chain: {[c[0] for c in configs]}")
+
+    for name, api_key, base_url, model in configs:
+        try:
+            logger.info(f"  [LLM Stream] Trying provider '{name}' at {base_url} using model {model}...")
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key, base_url=base_url)
+
+            messages = [{"role": "system", "content": system_prompt}]
+            for msg in history:
+                messages.append({"role": msg.role, "content": msg.content})
+            messages.append({"role": "user", "content": question})
+
+            resp = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                max_tokens=2048,
+                temperature=0.2,
+                timeout=30,
+                stream=True,
+            )
+            for chunk in resp:
+                if not getattr(chunk, "choices", None):
+                    continue
+                delta = chunk.choices[0].delta
+                content = getattr(delta, "content", None)
+                if content:
+                    yield content
+            logger.info(f"  [LLM Stream] Success with provider '{name}'!")
+            return  # Success, exit generator
+        except Exception as e:
+            import traceback
+            logger.error(f"  [LLM Stream] ERROR trying provider '{name}' ({base_url} {model}): {e}")
+            logger.error(traceback.format_exc())
+            continue  # try next provider
+
+    logger.error("  [LLM Stream] ❌ All configured LLM providers failed. Falling back to plain context.")
+    # Plain context fallback (no LLM available)
+    fallback_text = (
+        "⚠️ AI service temporarily unavailable.\n\n"
+        "**Relevant content from your documents:**\n\n"
+        + system_prompt[system_prompt.find("REFERENCE CONTEXT"):system_prompt.find("━━━", 300)][:800]
+    )
+    yield fallback_text

@@ -1,52 +1,52 @@
-import { AlertCircle, Lightbulb, TrendingUp, Bug } from "lucide-react";
+import { AlertCircle, Lightbulb, TrendingUp, Bug, Clock, Zap } from "lucide-react";
 
-interface InsightItem {
-  icon: "alert" | "lightbulb" | "trending" | "bug";
+interface APIInsight {
+  type: string;
   title: string;
   description: string;
-  type: "warning" | "tip" | "positive" | "issue";
+  frequency: number;
 }
 
 interface AIBehavioralInsightsProps {
-  insights?: InsightItem[];
+  insights?: APIInsight[];
 }
 
-const iconMap = {
-  alert: AlertCircle,
-  lightbulb: Lightbulb,
-  trending: TrendingUp,
-  bug: Bug,
+const typeToIcon: Record<string, any> = {
+  guessing: Zap,
+  time_pressure: Clock,
+  repeated_error: AlertCircle,
+  conceptual_gap: Bug,
+  formula_misuse: Lightbulb,
 };
 
-const colorMap = {
-  warning: { bg: "bg-orange-500/5", border: "border-orange-500/20", icon: "text-orange-400" },
-  tip: { bg: "bg-blue-500/5", border: "border-blue-500/20", icon: "text-blue-400" },
-  positive: { bg: "bg-green-500/5", border: "border-green-500/20", icon: "text-green-400" },
-  issue: { bg: "bg-red-500/5", border: "border-red-500/20", icon: "text-red-400" },
+const typeToColor: Record<string, { bg: string; border: string; icon: string }> = {
+  guessing: { bg: "bg-orange-500/5", border: "border-orange-500/20", icon: "text-orange-400" },
+  time_pressure: { bg: "bg-blue-500/5", border: "border-blue-500/20", icon: "text-blue-400" },
+  repeated_error: { bg: "bg-red-500/5", border: "border-red-500/20", icon: "text-red-400" },
+  conceptual_gap: { bg: "bg-red-500/5", border: "border-red-500/20", icon: "text-red-400" },
+  formula_misuse: { bg: "bg-amber-500/5", border: "border-amber-500/20", icon: "text-amber-400" },
 };
+
+const defaultColors = { bg: "bg-violet-500/5", border: "border-violet-500/20", icon: "text-violet-400" };
 
 export default function AIBehavioralInsights({
-  insights = [
-    {
-      icon: "alert",
-      title: "You rush on formula-based questions",
-      description: "— slow down by ~1s for better accuracy.",
-      type: "warning",
-    },
-    {
-      icon: "lightbulb",
-      title: "Strong pattern: you miss sign conventions",
-      description: "in vector/field problems.",
-      type: "tip",
-    },
-    {
-      icon: "trending",
-      title: "Performance improves after a 2-min break.",
-      description: "Take one now?",
-      type: "positive",
-    },
-  ],
+  insights = [],
 }: AIBehavioralInsightsProps) {
+  if (insights.length === 0) {
+    return (
+      <div className="px-4 py-4 border-b border-white/10">
+        <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest mb-3">
+          🧠 AI Behavioral Insights
+        </h3>
+        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02]">
+          <p className="text-[10px] text-white/40 leading-relaxed">
+            Practice more questions to unlock AI-powered behavioral insights about your learning patterns.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="px-4 py-4 border-b border-white/10">
       <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest mb-3">
@@ -55,8 +55,8 @@ export default function AIBehavioralInsights({
 
       <div className="space-y-2">
         {insights.map((insight, idx) => {
-          const Icon = iconMap[insight.icon];
-          const colors = colorMap[insight.type];
+          const Icon = typeToIcon[insight.type] || TrendingUp;
+          const colors = typeToColor[insight.type] || defaultColors;
 
           return (
             <div

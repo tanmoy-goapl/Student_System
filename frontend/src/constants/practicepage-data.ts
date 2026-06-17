@@ -17,6 +17,7 @@ export interface Subject {
   icon: string;
   color: string;
   weakAreas?: string[];
+  topics?: string[];
   isExpanded?: boolean;
 }
 
@@ -100,6 +101,7 @@ export interface Subject {
   icon: string;
   color: string;
   weakAreas?: string[];
+  topics?: string[];
   isExpanded?: boolean;
 }
 
