@@ -13,7 +13,7 @@ const priorityConfig = {
   HIGH: {
     label: 'High Priority',
     icon: '▲',
-    iconColor: 'text-red-400',
+    iconColor: 'text-red-500',
     borderColor: 'border-red-500/20',
     bgColor: 'bg-red-500/5',
     labelColor: 'text-red-400',
