@@ -11388,3 +11388,51 @@ Active Volunteer |Umeed - A Drop of Hope May 24 - Oct 24 EXTRA CURRICULAR ACTIVI
 2026-06-16 13:27:39,592 - INFO -   [LLM Stream] Trying provider 'GPT-4o-mini' at http://10.10.90.94:2026/v1 using model gpt-4o-mini...
 2026-06-16 13:27:48,710 - INFO -   [LLM Stream] Success with provider 'GPT-4o-mini'!
 2026-06-16 14:01:05,462 - INFO - [PracticeEngine] Returning cached topics hierarchy for student 3
+2026-06-17 06:20:27,138 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 404 - {'error': {'message': 'The model `gpt-oss-120b` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+2026-06-17 06:20:37,540 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 06:20:37,540 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 06:20:44,661 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 404 - {'error': {'message': 'The model `gpt-oss-120b` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+2026-06-17 06:20:55,050 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 06:20:55,050 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 06:30:50,476 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 404 - {'error': {'message': 'The model `gpt-oss-120b` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+2026-06-17 06:31:00,742 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 06:31:00,742 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 06:31:04,821 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 404 - {'error': {'message': 'The model `gpt-oss-120b` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+2026-06-17 06:31:15,132 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 06:31:15,132 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 06:50:39,587 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 404 - {'error': {'message': 'The model `gpt-oss-120b` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+2026-06-17 06:50:49,914 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 06:50:49,914 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 06:50:53,497 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 404 - {'error': {'message': 'The model `gpt-oss-120b` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+2026-06-17 06:51:03,794 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 06:51:03,797 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 07:14:30,309 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 404 - {'error': {'message': 'The model `gpt-oss-120b` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+2026-06-17 07:14:40,711 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 07:14:40,712 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 07:14:41,612 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 404 - {'error': {'message': 'The model `gpt-oss-120b` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+2026-06-17 07:14:51,972 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 07:14:51,972 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 07:16:09,411 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 404 - {'error': {'message': 'The model `gpt-oss-120b` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+2026-06-17 07:16:19,722 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 07:16:19,722 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 07:16:21,770 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 404 - {'error': {'message': 'The model `gpt-oss-120b` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+2026-06-17 07:16:31,932 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 07:16:31,932 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 07:25:28,233 - INFO - [Practice] Extracting topics for student_id=3
+2026-06-17 07:26:00,511 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-06-17 07:26:10,844 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-06-17 07:26:10,845 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-06-17 07:27:58,646 - INFO - [Practice] Extracting topics for student_id=3
+2026-06-17 07:28:55,246 - INFO - [PracticeEngine] Returning cached topics hierarchy for student 3
+2026-06-17 07:28:55,423 - INFO - [PracticeEngine] Returning cached topics hierarchy for student 3
+2026-06-17 07:31:03,706 - INFO - [PracticeEngine] Returning cached topics hierarchy for student 3
+2026-06-17 07:31:23,862 - INFO - [PracticeEngine] Returning cached topics hierarchy for student 3
+2026-06-17 07:34:43,321 - INFO - [Practice] Starting session: mode=topic, topic=Frontend Development, difficulty=easy
+2026-06-17 07:47:32,457 - INFO - [PracticeEngine] Returning cached topics hierarchy for student 4
+2026-06-17 07:47:55,256 - INFO - [Practice] Starting session: mode=topic, topic=Page Replacement Algorithms, difficulty=easy
+2026-06-17 07:49:32,080 - INFO - [Practice] Starting session: mode=topic, topic=Operating System Components, difficulty=easy
+2026-06-17 07:50:59,976 - INFO - [Practice] Starting session: mode=topic, topic=Page Replacement Algorithms, difficulty=easy
+2026-06-17 07:52:37,685 - INFO - [PracticeEngine] Returning cached topics hierarchy for student 3
+2026-06-17 07:52:37,774 - INFO - [PracticeEngine] Returning cached topics hierarchy for student 3
+2026-06-17 07:56:07,913 - INFO - [PracticeEngine] Returning cached topics hierarchy for student 3
+2026-06-17 07:56:07,957 - INFO - [PracticeEngine] Returning cached topics hierarchy for student 3

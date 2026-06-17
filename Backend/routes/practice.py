@@ -33,6 +33,7 @@ from services.practice_engine import (
     detect_behavioral_patterns,
     get_stored_insights,
     get_session_stats,
+    update_user_performance,
 )
 
 logger = logging.getLogger("chatbot")
@@ -228,6 +229,14 @@ def submit_answer(session_id: int, req: SubmitAnswerRequest, db: Session = Depen
         is_correct=is_correct,
         db=db,
         subject=question.subtopic,
+    )
+    
+    # Update lifetime user performance
+    update_user_performance(
+        student_id=session.student_id,
+        is_correct=is_correct,
+        time_spent=req.time_spent,
+        db=db,
     )
 
     # Get updated session stats

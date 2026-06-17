@@ -19,7 +19,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
   const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("mixed");
-  const [questionCount, setQuestionCount] = useState<number>(5);
+  const [questionCount, setQuestionCount] = useState<number>(10);
 
   // Get student ID from localStorage
   const getStudentId = (): number | undefined => {

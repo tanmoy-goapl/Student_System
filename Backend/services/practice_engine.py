@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from datetime import datetime
 from typing import Optional
@@ -71,7 +72,7 @@ def _practice_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 2
                 ],
                 max_tokens=max_tokens,
                 temperature=0.3,
-                timeout=10,
+                timeout=120,
             )
             return resp.choices[0].message.content
         except Exception as e:
@@ -82,7 +83,43 @@ def _practice_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 2
     return ""
 
 
-_TOPICS_CACHE = {}
+CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "topics_cache.json")
+
+def load_topics_cache():
+    if os.path.exists(CACHE_FILE):
+        try:
+            with open(CACHE_FILE, "r") as f:
+                data = json.load(f)
+                # Key is saved as string: "user_id,(doc1, doc2)" -> convert back to tuple
+                cache = {}
+                for k, v in data.items():
+                    # Parse key tuple safely
+                    parts = k.strip("()").split(", ")
+                    student_id = int(parts[0])
+                    if len(parts) > 1 and parts[1].strip():
+                        # handles tuple of doc IDs
+                        doc_ids = tuple(int(x.strip("(),")) for x in parts[1:] if x.strip("(),"))
+                    else:
+                        doc_ids = ()
+                    cache[(student_id, doc_ids)] = v
+                return cache
+        except Exception as e:
+            logger.error(f"[PracticeEngine] Failed to load topics cache from disk: {e}")
+    return {}
+
+def save_topics_cache(cache):
+    try:
+        data = {}
+        for k, v in cache.items():
+            # Convert tuple key to string key
+            key_str = f"({k[0]}, {', '.join(str(x) for x in k[1])})"
+            data[key_str] = v
+        with open(CACHE_FILE, "w") as f:
+            json.dump(data, f)
+    except Exception as e:
+        logger.error(f"[PracticeEngine] Failed to save topics cache to disk: {e}")
+
+_TOPICS_CACHE = load_topics_cache()
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -161,6 +198,7 @@ Return ONLY valid JSON in this exact format, no markdown fencing:
             parsed = json.loads(json_match.group())
             if "subjects" in parsed:
                 _TOPICS_CACHE[cache_key] = parsed
+                save_topics_cache(_TOPICS_CACHE)
                 return parsed
     except (json.JSONDecodeError, AttributeError) as e:
         logger.error(f"[PracticeEngine] Failed to parse topic extraction: {e}")
@@ -366,6 +404,62 @@ def update_topic_performance(
     perf.accuracy = (perf.correct_count / perf.total_attempts) * 100 if perf.total_attempts > 0 else 0
     perf.current_difficulty = get_adaptive_difficulty(student_id, topic, db)
     perf.mastery_level = get_mastery_level(perf.accuracy, perf.total_attempts)
+    perf.last_practiced = datetime.utcnow()
+
+    db.commit()
+    db.refresh(perf)
+    return perf
+
+
+def update_user_performance(
+    student_id: int,
+    is_correct: bool,
+    time_spent: int,
+    db: Session,
+):
+    """Update global lifetime user performance stats after an answer."""
+    from practice_models import UserPerformance
+    
+    perf = (
+        db.query(UserPerformance)
+        .filter(UserPerformance.student_id == student_id)
+        .first()
+    )
+
+    if not perf:
+        perf = UserPerformance(
+            student_id=student_id,
+            total_questions_attempted=0,
+            total_correct_answers=0,
+            lifetime_accuracy=0.0,
+            total_points=0,
+            current_streak=0,
+            longest_streak=0,
+            total_time_seconds=0,
+        )
+        db.add(perf)
+
+    perf.total_questions_attempted += 1
+    perf.total_time_seconds += (time_spent or 0)
+    
+    if is_correct:
+        perf.total_correct_answers += 1
+        perf.current_streak += 1
+        if perf.current_streak > perf.longest_streak:
+            perf.longest_streak = perf.current_streak
+            
+        # Add points: e.g., 15 for a generic correct answer
+        perf.total_points += 15
+        
+        # Streak bonus
+        if perf.current_streak >= 5:
+            perf.total_points += 10
+    else:
+        perf.current_streak = 0
+
+    if perf.total_questions_attempted > 0:
+        perf.lifetime_accuracy = (perf.total_correct_answers / perf.total_questions_attempted) * 100
+        
     perf.last_practiced = datetime.utcnow()
 
     db.commit()

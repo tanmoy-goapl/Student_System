@@ -98,3 +98,27 @@ class BehavioralInsight(Base):
 
     # Relationships
     student = relationship("User", backref="behavioral_insights")
+
+
+# ─────────────────────────────────────────────
+# User Performance (Lifetime Stats)
+# ─────────────────────────────────────────────
+class UserPerformance(Base):
+    __tablename__ = "user_performance"
+
+    id               = Column(Integer, primary_key=True, index=True)
+    student_id       = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    
+    total_questions_attempted = Column(Integer, default=0)
+    total_correct_answers     = Column(Integer, default=0)
+    lifetime_accuracy         = Column(Float, default=0.0)      # 0.0 – 100.0
+    total_points              = Column(Integer, default=0)
+    
+    current_streak            = Column(Integer, default=0)
+    longest_streak            = Column(Integer, default=0)
+    
+    total_time_seconds        = Column(Integer, default=0)
+    last_practiced            = Column(DateTime, nullable=True)
+
+    # Relationships
+    student = relationship("User", backref="lifetime_performance")

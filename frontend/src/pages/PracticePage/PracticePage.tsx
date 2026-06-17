@@ -67,7 +67,7 @@ export default function PracticePage({
     const [sessionComplete, setSessionComplete] = useState(false);
     const [aiQuery, setAiQuery] = useState("");
     const [showAIHelp, setShowAIHelp] = useState(false);
-    const [totalQuestions, setTotalQuestions] = useState(5);
+    const [totalQuestions, setTotalQuestions] = useState(10);
 
     // Timer
     const timerRef = useRef<number>(0);

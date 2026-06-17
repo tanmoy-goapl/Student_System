@@ -14,11 +14,11 @@ def create_default_users():
     db = SessionLocal()
     try:
         # Ensure default student exists (and reset password)
-        student = db.query(User).filter(User.email == "student@example.com").first()
+        student = db.query(User).filter(User.email == "student@gmail.com").first()
         if not student:
             student = User(
                 name="Student User",
-                email="student@example.com",
+                email="student@gmail.com",
                 password_hash=hash_password("student123"),
                 role="student",
             )
@@ -51,7 +51,7 @@ def create_default_users():
 
         db.commit()
         print("Default logins:")
-        print("   student@example.com / student123")
+        print("   student@gmail.com   / student123")
         print("   admin@example.com   / admin123")
     except Exception as e:
         print(f"❌ Error: {e}")
