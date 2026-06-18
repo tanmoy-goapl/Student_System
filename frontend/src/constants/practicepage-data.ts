@@ -19,6 +19,7 @@ export interface Subject {
   weakAreas?: string[];
   topics?: string[];
   isExpanded?: boolean;
+  section?: string;
 }
 
 export interface SessionStats {
@@ -103,6 +104,7 @@ export interface Subject {
   weakAreas?: string[];
   topics?: string[];
   isExpanded?: boolean;
+  section?: string;
 }
 
 export const SUBJECTS: Subject[] = [

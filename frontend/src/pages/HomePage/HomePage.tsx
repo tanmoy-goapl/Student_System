@@ -15,7 +15,8 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await getHomepageData();
+        const studentId = localStorage.getItem("user_id") || undefined;
+        const response = await getHomepageData(studentId);
         setData(response);
       } catch (error) {
         console.error("Failed to load homepage data:", error);

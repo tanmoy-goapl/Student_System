@@ -24,7 +24,7 @@ export default function DifficultySelector({
             transition-all duration-200 border
             ${
               selectedDifficulty === difficulty.value
-                ? "bg-blue-500/20 border-blue-500/40 text-white"
+                ? "bg-[#5B5FFF]/20 border-[#5B5FFF]/40 text-white"
                 : "bg-white/5 border-white/10 text-white/60 hover:border-white/20"
             }
           `}

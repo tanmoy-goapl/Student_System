@@ -24,11 +24,11 @@ export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarP
         components: {
           Radio: {
             buttonBg: "#000000",
-            buttonCheckedBg: "#1C398E66",
+            buttonCheckedBg: "#5B5FFF33",
             buttonColor: "#9CA3AF",
             buttonSolidCheckedColor: "#ffffff",
-            buttonSolidCheckedBg: "#165EFC",
-            buttonSolidCheckedHoverBg: "#1C398E66",
+            buttonSolidCheckedBg: "#5B5FFF",
+            buttonSolidCheckedHoverBg: "#4c4fdb",
             colorBorder: "transparent",
             fontSize: 10,
           },

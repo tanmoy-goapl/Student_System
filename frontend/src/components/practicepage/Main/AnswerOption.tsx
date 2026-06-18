@@ -32,7 +32,7 @@ export default function AnswerOption({
             : showIncorrect
               ? "bg-red-500/10 border-red-500/50"
               : isSelected && !isAnswered
-                ? "bg-blue-500/10 border-blue-500/50"
+                ? "bg-[#5B5FFF]/10 border-[#5B5FFF]/50"
                 : "bg-slate-800/30 border-slate-700/50 hover:border-slate-600/50 hover:bg-slate-800/50"
         }
       `}
@@ -48,7 +48,7 @@ export default function AnswerOption({
               : showIncorrect
                 ? "bg-red-500/20 text-red-400"
                 : isSelected && !isAnswered
-                  ? "bg-blue-500/20 text-blue-400"
+                  ? "bg-[#5B5FFF]/20 text-[#8F93FF]"
                   : "bg-slate-700/30 text-slate-400"
           }
         `}

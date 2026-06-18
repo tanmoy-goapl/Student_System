@@ -66,11 +66,11 @@ export default function SubjectSection({
         `}
       >
         {subject.topics?.map((topic) => {
-          const topicKey = `${categoryId}-${subject.id}-${topic.id}`;
+          const topicKey = topic.id;
 
           return (
             <TopicItem
-              key={topicKey}
+              key={`${categoryId}-${subject.id}-${topic.id}`}
               topic={topic}
               topicId={topicKey}
               selected={

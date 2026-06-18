@@ -15,7 +15,7 @@ import json
 import logging
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 from models import Document
 from practice_models import (
     PracticeSession, PracticeQuestion,
-    TopicPerformance, BehavioralInsight,
+    TopicPerformance, BehavioralInsight, LearningContent
 )
 from chroma_store import query_chunks
 from config import (
@@ -205,6 +205,114 @@ Return ONLY valid JSON in this exact format, no markdown fencing:
         logger.error(f"[PracticeEngine] Raw response: {response[:500]}")
 
     return {"subjects": []}
+
+def generate_learning_content(student_id: int, topic: str, db: Session) -> dict:
+    """
+    Generate learning content for a specific topic, returning Notes and Revision JSON.
+    Uses ChromaDB if document context exists, otherwise uses general knowledge.
+    Caches the generated content in the database.
+    """
+    # 1. Check Cache
+    cached = db.query(LearningContent).filter(
+        LearningContent.student_id == student_id,
+        LearningContent.topic == topic
+    ).first()
+    
+    if cached:
+        return {
+            "notesResponse": cached.content,
+            "revision": cached.revision
+        }
+
+    # 2. Retrieve relevant chunks from the student's documents
+    search_query = topic
+    docs = db.query(Document).filter(Document.student_id == student_id).all()
+    if not docs:
+        context = "(No documents uploaded — use general knowledge for a college level curriculum)"
+    else:
+        doc_ids = [d.id for d in docs]
+        results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
+        if results and results.get("documents") and results["documents"][0]:
+            context = "\n\n".join(results["documents"][0])
+        else:
+            context = "(No relevant content found in documents — use general knowledge for a college level curriculum)"
+
+    system_prompt = """You are an expert AI tutor creating a comprehensive study guide for a college student.
+Given the topic and context, generate a structured explanation using ONLY valid JSON.
+
+Your output must follow this strict JSON format:
+{
+    "notes": [
+        {"type": "heading", "text": "Main Concept"},
+        {"type": "paragraph", "text": "Detailed explanation..."},
+        {"type": "highlight", "variant": "constructive", "title": "Key Rule", "text": "Important rule..."},
+        {"type": "code_block", "language": "python", "title": "Example", "code": "print('hello')"},
+        {"type": "note", "text": "A brief side note"}
+    ],
+    "revision": {
+        "title": "Quick Revision",
+        "points": [
+            {"id": 1, "text": "First key point to remember"},
+            {"id": 2, "text": "Second key point to remember"}
+        ]
+    }
+}
+
+RULES:
+- `notes` array must use types: 'heading', 'paragraph', 'highlight' (variant: 'constructive' or 'destructive'), 'code_block' (include 'language', 'title', 'code'), or 'note'.
+- Explain the topic clearly, using the context if provided.
+- `revision` should have 3-5 concise bullet points.
+- Do not use markdown fencing (e.g. ```json). Just return the raw JSON object.
+"""
+
+    user_prompt = f"Topic: {topic}\n\nContext:\n{context}\n\nGenerate the study guide JSON."
+
+    response = _practice_llm_call(system_prompt, user_prompt, max_tokens=2500)
+
+    # Fallback default if parsing fails
+    default_content = [
+        {"type": "heading", "text": topic},
+        {"type": "paragraph", "text": "Content could not be generated. Please try again later."}
+    ]
+    default_revision = {
+        "title": "Quick Revision",
+        "points": [{"id": 1, "text": "Review this topic later."}]
+    }
+
+    notes_response = default_content
+    revision_response = default_revision
+
+    if response:
+        try:
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if json_match:
+                parsed = json.loads(json_match.group())
+                if "notes" in parsed:
+                    notes_response = parsed["notes"]
+                if "revision" in parsed:
+                    revision_response = parsed["revision"]
+        except (json.JSONDecodeError, AttributeError) as e:
+            logger.error(f"[PracticeEngine] Failed to parse learning content for topic '{topic}': {e}")
+            logger.error(f"[PracticeEngine] Raw response: {response[:500]}")
+
+    # 3. Save to cache
+    new_cache = LearningContent(
+        student_id=student_id,
+        topic=topic,
+        content=notes_response,
+        revision=revision_response
+    )
+    db.add(new_cache)
+    try:
+        db.commit()
+    except Exception as e:
+        logger.error(f"[PracticeEngine] Failed to save learning content cache: {e}")
+        db.rollback()
+
+    return {
+        "notesResponse": notes_response,
+        "revision": revision_response
+    }
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -411,60 +519,84 @@ def update_topic_performance(
     return perf
 
 
-def update_user_performance(
-    student_id: int,
-    is_correct: bool,
-    time_spent: int,
-    db: Session,
-):
-    """Update global lifetime user performance stats after an answer."""
-    from practice_models import UserPerformance
+def finalize_session_history(session, db: Session):
+    """Save session to QuizHistory and update UserPerformance after session completes."""
+    from practice_models import UserPerformance, QuizHistory, PracticeQuestion
     
-    perf = (
-        db.query(UserPerformance)
-        .filter(UserPerformance.student_id == student_id)
-        .first()
+    questions = db.query(PracticeQuestion).filter(PracticeQuestion.session_id == session.id).all()
+    attempted = sum(1 for q in questions if q.student_answer is not None)
+    correct = sum(1 for q in questions if q.is_correct)
+    time_spent = sum(q.time_spent_seconds or 0 for q in questions)
+    
+    score_percentage = (correct / attempted * 100) if attempted > 0 else 0.0
+    points_earned = correct * 10
+    
+    # 1. Create QuizHistory
+    history = QuizHistory(
+        student_id=session.student_id,
+        session_id=session.id,
+        topic=session.topic or "General",
+        questions_attempted=attempted,
+        correct_answers=correct,
+        score_percentage=score_percentage,
+        points_earned=points_earned,
+        time_spent=time_spent
     )
-
+    db.add(history)
+    
+    # 2. Update UserPerformance
+    perf = db.query(UserPerformance).filter(UserPerformance.student_id == session.student_id).first()
     if not perf:
         perf = UserPerformance(
-            student_id=student_id,
+            student_id=session.student_id,
             total_questions_attempted=0,
             total_correct_answers=0,
             lifetime_accuracy=0.0,
             total_points=0,
+            topics_covered=0,
+            badges_earned=0,
             current_streak=0,
             longest_streak=0,
-            total_time_seconds=0,
+            total_time_seconds=0
         )
         db.add(perf)
-
-    perf.total_questions_attempted += 1
-    perf.total_time_seconds += (time_spent or 0)
-    
-    if is_correct:
-        perf.total_correct_answers += 1
-        perf.current_streak += 1
-        if perf.current_streak > perf.longest_streak:
-            perf.longest_streak = perf.current_streak
-            
-        # Add points: e.g., 15 for a generic correct answer
-        perf.total_points += 15
         
-        # Streak bonus
-        if perf.current_streak >= 5:
-            perf.total_points += 10
-    else:
-        perf.current_streak = 0
-
+    perf.total_questions_attempted += attempted
+    perf.total_correct_answers += correct
+    perf.total_time_seconds += time_spent
+    perf.total_points += points_earned
+    
     if perf.total_questions_attempted > 0:
         perf.lifetime_accuracy = (perf.total_correct_answers / perf.total_questions_attempted) * 100
         
     perf.last_practiced = datetime.utcnow()
-
+    
     db.commit()
-    db.refresh(perf)
-    return perf
+    
+    # Recalculate streak (consecutive days with at least one completed session)
+    # Get distinct days from QuizHistory
+    histories = db.query(QuizHistory.created_at).filter(QuizHistory.student_id == session.student_id).order_by(QuizHistory.created_at.desc()).all()
+    days = sorted(list(set(h.created_at.date() for h in histories)), reverse=True)
+    
+    streak = 0
+    current_date = datetime.utcnow().date()
+    # Check if they practiced today or yesterday to start the streak count
+    if days and (days[0] == current_date or days[0] == current_date - timedelta(days=1)):
+        for i, d in enumerate(days):
+            if d == current_date - timedelta(days=i) or (days[0] != current_date and d == current_date - timedelta(days=i+1)):
+                streak += 1
+            else:
+                break
+    
+    perf.current_streak = streak
+    if streak > perf.longest_streak:
+        perf.longest_streak = streak
+        
+    # Recalculate topics covered (unique topics successfully attempted / attempted)
+    unique_topics = db.query(QuizHistory.topic).filter(QuizHistory.student_id == session.student_id).distinct().count()
+    perf.topics_covered = unique_topics
+    
+    db.commit()
 
 
 # ═════════════════════════════════════════════════════════════════════════════

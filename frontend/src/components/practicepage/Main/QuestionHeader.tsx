@@ -22,7 +22,7 @@ export default function QuestionHeader({
 
           {/* Badge Group */}
           <div className="flex items-center gap-2">
-            <span className="px-2 py-1 bg-blue-500/20 border border-blue-500/40 rounded-lg text-[0.65rem] font-semibold text-blue-300">
+            <span className="px-2 py-1 bg-[#5B5FFF]/10 border border-[#5B5FFF]/30 rounded-lg text-[0.65rem] font-semibold text-[#8F93FF]">
               {question.category}
             </span>
             <span className="px-2 py-1 bg-slate-700/40 border border-slate-600/40 rounded-lg text-[0.65rem] font-medium text-slate-300">

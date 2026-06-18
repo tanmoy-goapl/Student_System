@@ -28,7 +28,7 @@ export default function ActionButtons({
             flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200
             ${
               canProceed
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:scale-105 active:scale-95"
+                ? "bg-[#5B5FFF] hover:bg-[#4c4fdb] text-white hover:shadow-lg hover:scale-105 active:scale-95 shadow-indigo-500/15 border border-[#7276ff]/20"
                 : "bg-slate-700/50 text-slate-500 cursor-not-allowed"
             }
           `}
@@ -43,7 +43,7 @@ export default function ActionButtons({
             flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200
             ${
               selectedAnswer
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:scale-105 active:scale-95"
+                ? "bg-[#5B5FFF] hover:bg-[#4c4fdb] text-white hover:shadow-lg hover:scale-105 active:scale-95 shadow-indigo-500/15 border border-[#7276ff]/20"
                 : "bg-slate-700/50 text-slate-500 cursor-not-allowed"
             }
           `}

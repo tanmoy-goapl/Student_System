@@ -24,7 +24,7 @@ def init_db():
     from models import User, Document  # removed DocumentChunk
     from practice_models import (      # Adaptive Learning Engine tables
         PracticeSession, PracticeQuestion,
-        TopicPerformance, BehavioralInsight,
+        TopicPerformance, BehavioralInsight, CustomTopic, LearningContent,
     )
     Base.metadata.create_all(bind=engine)
     

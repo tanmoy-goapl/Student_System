@@ -191,8 +191,9 @@ export interface HomepageDataResponse {
   aiAlerts: any[];
 }
 
-export async function getHomepageData(): Promise<HomepageDataResponse> {
-  return request<HomepageDataResponse>("/api/homepage/data", {
+export async function getHomepageData(studentId?: string | number): Promise<HomepageDataResponse> {
+  const url = studentId ? `/api/homepage/data?student_id=${studentId}` : "/api/homepage/data";
+  return request<HomepageDataResponse>(url, {
     method: "GET",
   });
 }
@@ -372,10 +373,38 @@ export interface LearningDataResponse {
   headerResponse: any;
   learningAssistantResponse: any;
   rightSidebarData: any;
+  selectedTopic: string;
 }
 
-export async function getLearningData(): Promise<LearningDataResponse> {
-  return request<LearningDataResponse>("/api/learning/data", {
+export async function getLearningData(topic?: string, studentId?: number): Promise<LearningDataResponse> {
+  let url = "/api/learning/data";
+  const params = new URLSearchParams();
+  if (topic) params.append("topic", topic);
+  if (studentId) params.append("student_id", studentId.toString());
+  
+  const q = params.toString();
+  if (q) url += `?${q}`;
+  
+  return request<LearningDataResponse>(url, {
+    method: "GET",
+  });
+}
+
+export interface LearningContentResponse {
+  notesResponse: any;
+  revision: any;
+}
+
+export async function getLearningContent(topic?: string, studentId?: number): Promise<LearningContentResponse> {
+  let url = "/api/learning/content";
+  const params = new URLSearchParams();
+  if (topic) params.append("topic", topic);
+  if (studentId) params.append("student_id", studentId.toString());
+  
+  const q = params.toString();
+  if (q) url += `?${q}`;
+  
+  return request<LearningContentResponse>(url, {
     method: "GET",
   });
 }

@@ -1,4 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from database import get_db
+import copy
 
 router = APIRouter(prefix="/homepage", tags=["homepage"])
 
@@ -179,8 +182,96 @@ HOMEPAGE_DATA = {
 }
 
 @router.get("/data")
-async def get_homepage_data():
-    return HOMEPAGE_DATA
+async def get_homepage_data(student_id: int | None = None, db: Session = Depends(get_db)):
+    from practice_models import UserPerformance
+    data = copy.deepcopy(HOMEPAGE_DATA)
+    if student_id:
+        perf = db.query(UserPerformance).filter(UserPerformance.student_id == student_id).first()
+        
+        accuracy = round(perf.lifetime_accuracy) if perf else 0
+        streak = perf.current_streak if perf else 0
+        badges = perf.badges_earned if perf else 0
+
+        # Query distinct topics practiced by this student
+        from practice_models import QuizHistory, CustomTopic
+        from services.practice_engine import extract_topics_from_documents
+        import json, os
+        
+        # 1. Get subjects & their topics (Always load both curriculum and document topics if present)
+        topics_data = extract_topics_from_documents(student_id, db)
+        subj_list = []
+        
+        if topics_data and topics_data.get("subjects"):
+            for s in topics_data.get("subjects", []):
+                subj_list.append({
+                    "title": s["name"],
+                    "topics": [t["name"] for t in s.get("topics", [])]
+                })
+        
+        # Load 8-semester curriculum
+        config_path = os.path.join(
+            os.path.dirname(__file__), "..", "config", "default_curriculum.json"
+        )
+        try:
+            with open(config_path, "r") as f:
+                curriculum_data = json.load(f)
+            for sem in curriculum_data.get("semesters", []):
+                subj_list.append({
+                    "title": sem["title"],
+                    "topics": sem.get("topics", [])
+                })
+        except Exception:
+            pass  # No fallback if file fails
+        
+        # Merge custom topics
+        custom_topics = db.query(CustomTopic).filter(CustomTopic.student_id == student_id).all()
+        for ct in custom_topics:
+            matched = False
+            for s in subj_list:
+                if s["title"].lower() == ct.subject_name.lower():
+                    if ct.topic_name not in s["topics"]:
+                        s["topics"].append(ct.topic_name)
+                    matched = True
+                    break
+            if not matched:
+                subj_list.append({
+                    "title": ct.subject_name,
+                    "topics": [ct.topic_name]
+                })
+
+        quiz_topics = db.query(QuizHistory.topic).filter(QuizHistory.student_id == student_id).distinct().all()
+        practiced_set = {t[0] for t in quiz_topics if t[0]}
+
+        total_topics_available = sum(len(s["topics"]) for s in subj_list)
+        total_topics_practiced = len(practiced_set)
+
+        breakdown_parts = []
+        for s in subj_list:
+            practiced_in_subj = sum(1 for t in s["topics"] if t in practiced_set)
+            if practiced_in_subj > 0:
+                short_name = s["title"]
+                # Abbreviate semester titles
+                if short_name.startswith("Semester"):
+                    short_name = f"Sem {short_name.split()[-1]}"
+                breakdown_parts.append(f"{short_name}: {practiced_in_subj}")
+
+        breakdown_str = " · ".join(breakdown_parts[:4])
+        
+        for snap in data.get("performanceSnapshots", []):
+            if snap["id"] == "overall-accuracy":
+                snap["value"] = f"{accuracy}%"
+                snap["subtitle"] = "Lifetime accuracy"
+            elif snap["id"] == "study-streak":
+                snap["value"] = f"{streak} Days"
+                snap["subtitle"] = f"Personal best: {perf.longest_streak if perf else 0} days"
+            elif snap["id"] == "topics-covered":
+                snap["value"] = f"{total_topics_practiced} / {total_topics_available}"
+                snap["subtitle"] = breakdown_str if breakdown_str else "No topics practiced yet"
+            elif snap["id"] == "badges-earned":
+                snap["value"] = f"{badges}"
+                snap["subtitle"] = "Keep practicing to earn more"
+                
+    return data
 
 AI_ACTIONS = [
     {

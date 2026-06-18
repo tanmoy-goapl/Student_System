@@ -11,6 +11,8 @@ Endpoints for the adaptive learning engine:
 from __future__ import annotations
 
 import logging
+import json
+import os
 from datetime import datetime
 from typing import Optional
 
@@ -21,7 +23,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from practice_models import (
     PracticeSession, PracticeQuestion,
-    TopicPerformance, BehavioralInsight,
+    TopicPerformance, BehavioralInsight, CustomTopic,
 )
 from services.practice_engine import (
     extract_topics_from_documents,
@@ -33,7 +35,7 @@ from services.practice_engine import (
     detect_behavioral_patterns,
     get_stored_insights,
     get_session_stats,
-    update_user_performance,
+    finalize_session_history,
 )
 
 logger = logging.getLogger("chatbot")
@@ -44,6 +46,11 @@ router = APIRouter(prefix="/practice", tags=["practice"])
 # ═════════════════════════════════════════════════════════════════════════════
 #  SCHEMAS
 # ═════════════════════════════════════════════════════════════════════════════
+
+class AddCustomTopicRequest(BaseModel):
+    student_id: int
+    topic_name: str
+    subject_name: Optional[str] = "General Topics"
 
 class StartSessionRequest(BaseModel):
     student_id: int
@@ -91,6 +98,30 @@ def get_topics(student_id: int, db: Session = Depends(get_db)):
                 topic["total_attempts"] = 0
 
     return topics_data
+
+
+@router.post("/custom-topics")
+def add_custom_topic(req: AddCustomTopicRequest, db: Session = Depends(get_db)):
+    """Save a user-selected general/custom topic to the database."""
+    existing = (
+        db.query(CustomTopic)
+        .filter(CustomTopic.student_id == req.student_id)
+        .filter(CustomTopic.topic_name == req.topic_name)
+        .filter(CustomTopic.subject_name == req.subject_name)
+        .first()
+    )
+    if existing:
+        return {"status": "success", "message": "Topic already added", "id": existing.id}
+    
+    custom_topic = CustomTopic(
+        student_id=req.student_id,
+        topic_name=req.topic_name,
+        subject_name=req.subject_name
+    )
+    db.add(custom_topic)
+    db.commit()
+    db.refresh(custom_topic)
+    return {"status": "success", "message": "Topic added successfully", "id": custom_topic.id}
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -230,15 +261,6 @@ def submit_answer(session_id: int, req: SubmitAnswerRequest, db: Session = Depen
         db=db,
         subject=question.subtopic,
     )
-    
-    # Update lifetime user performance
-    update_user_performance(
-        student_id=session.student_id,
-        is_correct=is_correct,
-        time_spent=req.time_spent,
-        db=db,
-    )
-
     # Get updated session stats
     stats = get_session_stats(session, db)
 
@@ -284,9 +306,14 @@ def next_batch(session_id: int, db: Session = Depends(get_db)):
     remaining = session.total_questions - existing_count
     if remaining <= 0:
         # End session
-        session.is_active = False
-        session.ended_at = datetime.utcnow()
-        db.commit()
+        if session.is_active:
+            session.is_active = False
+            session.ended_at = datetime.utcnow()
+            
+            # Finalize session (QuizHistory & UserPerformance)
+            finalize_session_history(session, db)
+            
+            db.commit()
         return {"questions": [], "session_complete": True, "stats": get_session_stats(session, db)}
 
     gen_count = min(remaining, 5)
@@ -421,10 +448,17 @@ async def get_practice_data(student_id: Optional[int] = None, db: Session = Depe
         {"label": "Hard", "value": "hard"},
     ]
 
-    # Dynamic subjects from documents
+    # ── Topic Priority Order ──
+    # 1. Document-derived topics (if user has uploaded documents)
+    # 2. Custom topics (merged into whichever source is active)
+    # 3. Default 8-semester curriculum (fallback when no documents)
+
     subjects = []
+    has_documents = False
+    colors = ["#a78bfa", "#60a5fa", "#14b8a6", "#f97316", "#ec4899", "#84cc16", "#f43f5e", "#6366f1"]
+    perf_map = {}
+
     if student_id:
-        topics_data = extract_topics_from_documents(student_id, db)
         performances = (
             db.query(TopicPerformance)
             .filter(TopicPerformance.student_id == student_id)
@@ -432,180 +466,108 @@ async def get_practice_data(student_id: Optional[int] = None, db: Session = Depe
         )
         perf_map = {p.topic: p for p in performances}
 
-        colors = ["#a78bfa", "#60a5fa", "#14b8a6", "#f97316", "#ec4899", "#84cc16", "#f43f5e", "#6366f1"]
+        # ── PRIORITY 1: Document-derived topics ──
+        topics_data = extract_topics_from_documents(student_id, db)
+        if topics_data and topics_data.get("subjects"):
+            has_documents = True
 
-        for i, subj in enumerate(topics_data.get("subjects", [])):
-            topic_names = []
-            for t in subj.get("topics", []):
-                perf = perf_map.get(t["name"])
-                topic_names.append(t["name"])
+            for i, subj in enumerate(topics_data.get("subjects", [])):
+                topic_names = [t["name"] for t in subj.get("topics", [])]
 
+                weak_areas = []
+                for t_name in topic_names:
+                    p = perf_map.get(t_name)
+                    if p and p.mastery_level in ("weak", "medium"):
+                        weak_areas.append(t_name)
+                    elif not p:
+                        weak_areas.append(t_name)  # untested = weak
+
+                subjects.append({
+                    "id": subj["name"].lower().replace(" ", "-"),
+                    "title": subj["name"],
+                    "iconName": "Book",
+                    "color": colors[i % len(colors)],
+                    "weakAreas": weak_areas,
+                    "topics": topic_names,
+                    "isExpanded": i == 0,
+                    "section": "documents",
+                })
+
+    # ── PRIORITY 3: Default 8-semester curriculum (Always loaded now) ──
+    config_path = os.path.join(
+        os.path.dirname(__file__), "..", "config", "default_curriculum.json"
+    )
+    try:
+        with open(config_path, "r") as f:
+            curriculum_data = json.load(f)
+
+        for i, sem in enumerate(curriculum_data.get("semesters", [])):
             weak_areas = []
-            for t_name in topic_names:
-                p = perf_map.get(t_name)
-                if p and p.mastery_level in ("weak", "medium"):
-                    weak_areas.append(t_name)
-                elif not p:
-                    weak_areas.append(t_name)  # untested = weak
+            if student_id:
+                for t_name in sem.get("topics", []):
+                    p = perf_map.get(t_name)
+                    if p and p.mastery_level in ("weak", "medium"):
+                        weak_areas.append(t_name)
+                    elif not p:
+                        weak_areas.append(t_name)
 
             subjects.append({
-                "id": subj["name"].lower().replace(" ", "-"),
-                "title": subj["name"],
-                "iconName": "Book",
-                "color": colors[i % len(colors)],
+                "id": sem["id"],
+                "title": sem["title"],
+                "iconName": sem.get("iconName", "Book"),
+                "color": sem.get("color", colors[i % len(colors)]),
                 "weakAreas": weak_areas,
-                "topics": topic_names,
-                "isExpanded": i == 0,
+                "topics": sem.get("topics", []),
+                "isExpanded": not has_documents and i == 0,
+                "section": "curriculum",
             })
+    except Exception as e:
+        logger.error(f"Failed to load default curriculum: {e}")
 
-    if not subjects:
-        # Fallback to default subjects if no documents are uploaded or extraction fails
-        subjects = [
-            {
-                "id": "physics",
-                "title": "Physics",
-                "iconName": "Atom",
-                "color": "#a78bfa",
-                "weakAreas": ["Electrostatics", "Ray Optics", "Rotational Motion"],
-                "topics": [
-                    "Units and Measurements",
-                    "Kinematics",
-                    "Laws of Motion",
-                    "Work, Energy and Power",
-                    "Rotational Motion",
-                    "Gravitation",
-                    "Mechanical Properties of Solids",
-                    "Mechanical Properties of Fluids",
-                    "Thermal Properties of Matter",
-                    "Thermodynamics",
-                    "Kinetic Theory of Gases",
-                    "Oscillations",
-                    "Waves",
-                    "Electrostatics",
-                    "Current Electricity",
-                    "Magnetic Effects of Current",
-                    "Magnetism and Matter",
-                    "Electromagnetic Induction",
-                    "Alternating Current",
-                    "Electromagnetic Waves",
-                    "Ray Optics",
-                    "Wave Optics",
-                    "Dual Nature of Matter and Radiation",
-                    "Atoms and Nuclei",
-                    "Semiconductor Electronics",
-                    "Communication Systems"
-                ],
-                "isExpanded": True,
-            },
-            {
-                "id": "chemistry",
-                "title": "Chemistry",
-                "iconName": "FlaskConical",
-                "color": "#60a5fa",
-                "weakAreas": ["General Organic Chemistry", "Chemical Kinetics"],
-                "topics": [
-                    "Mole Concept",
-                    "Structure of Atom",
-                    "Classification of Elements & Periodicity",
-                    "Chemical Bonding & Molecular Structure",
-                    "States of Matter",
-                    "Thermodynamics",
-                    "Equilibrium",
-                    "Redox Reactions",
-                    "Hydrogen",
-                    "s-Block Elements",
-                    "p-Block Elements",
-                    "d- and f-Block Elements",
-                    "Coordination Compounds",
-                    "Environmental Chemistry",
-                    "General Organic Chemistry",
-                    "Hydrocarbons",
-                    "Haloalkanes and Haloarenes",
-                    "Alcohols, Phenols and Ethers",
-                    "Aldehydes, Ketones and Carboxylic Acids",
-                    "Organic Compounds Containing Nitrogen",
-                    "Biomolecules",
-                    "Polymers",
-                    "Chemistry in Everyday Life",
-                    "Principles Related to Practical Chemistry",
-                    "Chemical Kinetics",
-                    "Electrochemistry",
-                    "Surface Chemistry",
-                    "Metallurgy"
-                ],
-                "isExpanded": False,
-            },
-            {
-                "id": "mathematics",
-                "title": "Mathematics",
-                "iconName": "Calculator",
-                "color": "#14b8a6",
-                "weakAreas": ["Calculus", "Probability"],
-                "topics": [
-                    "Sets, Relations and Functions",
-                    "Trigonometric Functions",
-                    "Inverse Trigonometric Functions",
-                    "Principle of Mathematical Induction",
-                    "Complex Numbers and Quadratic Equations",
-                    "Linear Inequalities",
-                    "Permutations and Combinations",
-                    "Binomial Theorem",
-                    "Sequences and Series",
-                    "Straight Lines",
-                    "Conic Sections",
-                    "Three Dimensional Geometry",
-                    "Limits and Derivatives",
-                    "Mathematical Reasoning",
-                    "Statistics",
-                    "Probability",
-                    "Matrices",
-                    "Determinants",
-                    "Continuity and Differentiability",
-                    "Application of Derivatives",
-                    "Integrals",
-                    "Application of Integrals",
-                    "Differential Equations",
-                    "Vector Algebra"
-                ],
-                "isExpanded": False,
-            },
-            {
-                "id": "biology",
-                "title": "Biology",
-                "iconName": "Dna",
-                "color": "#f97316",
-                "weakAreas": ["Genetics", "Biotechnology"],
-                "topics": ["Genetics", "Human Physiology", "Plant Physiology", "Cell Biology", "Biotechnology", "Ecology"],
-                "isExpanded": False,
-            },
-            {
-                "id": "computer-science",
-                "title": "Computer Science",
-                "iconName": "Monitor",
-                "color": "#ec4899",
-                "weakAreas": ["Operating Systems", "Machine Learning"],
-                "topics": ["Operating Systems", "Web Development", "Algorithms", "Data Structures", "Machine Learning", "Database Systems", "Computer Networks"],
-                "isExpanded": False,
-            },
-            {
-                "id": "history",
-                "title": "History",
-                "iconName": "Library",
-                "color": "#f43f5e",
-                "weakAreas": ["World War II"],
-                "topics": ["World War I", "World War II", "Ancient Civilizations", "Medieval Europe", "Modern History", "Cold War"],
-                "isExpanded": False,
-            },
-            {
-                "id": "economics",
-                "title": "Economics",
-                "iconName": "TrendingUp",
-                "color": "#84cc16",
-                "weakAreas": ["Macroeconomics"],
-                "topics": ["Microeconomics", "Macroeconomics", "International Trade", "Public Finance", "Development Economics"],
-                "isExpanded": False,
-            }
-        ]
+    # ── PRIORITY 2: Custom topics (merged into active list) ──
+    if student_id:
+        custom_topics = (
+            db.query(CustomTopic)
+            .filter(CustomTopic.student_id == student_id)
+            .all()
+        )
+
+        for ct in custom_topics:
+            # Try to find a matching subject to merge into
+            subj_match = next(
+                (s for s in subjects if s["title"].lower() == ct.subject_name.lower()),
+                None,
+            )
+            if subj_match:
+                if ct.topic_name not in subj_match["topics"]:
+                    subj_match["topics"].append(ct.topic_name)
+                    p = perf_map.get(ct.topic_name)
+                    if not p or p.mastery_level in ("weak", "medium"):
+                        if ct.topic_name not in subj_match["weakAreas"]:
+                            subj_match["weakAreas"].append(ct.topic_name)
+            else:
+                # Create a new subject category for orphan custom topics
+                # Group all custom topics under the same subject_name together
+                existing_custom = next(
+                    (s for s in subjects if s["id"] == ct.subject_name.lower().replace(" ", "-")),
+                    None,
+                )
+                if existing_custom:
+                    if ct.topic_name not in existing_custom["topics"]:
+                        existing_custom["topics"].append(ct.topic_name)
+                else:
+                    p = perf_map.get(ct.topic_name)
+                    is_weak = not p or p.mastery_level in ("weak", "medium")
+                    subjects.append({
+                        "id": ct.subject_name.lower().replace(" ", "-"),
+                        "title": ct.subject_name,
+                        "iconName": "Folder",
+                        "color": colors[len(subjects) % len(colors)],
+                        "weakAreas": [ct.topic_name] if is_weak else [],
+                        "topics": [ct.topic_name],
+                        "isExpanded": False,
+                        "section": "documents" if has_documents else "curriculum",
+                    })
 
     # Session stats from DB
     session_stats = {"attempted": 0, "accuracy": 0, "time": "0m", "progress": 0, "total": 0}

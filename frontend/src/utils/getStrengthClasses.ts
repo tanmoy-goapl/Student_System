@@ -10,8 +10,8 @@ export function getStrengthClasses(strength: string) {
         case 'medium':
             return {
                 card:
-                    'border-amber-500/20 bg-gradient-to-r from-amber-500/10 to-transparent',
-                badge: 'bg-amber-500/15 text-amber-400',
+                    'border-fuchsia-500/20 bg-gradient-to-r from-fuchsia-500/10 to-transparent',
+                badge: 'bg-fuchsia-500/15 text-fuchsia-400',
             };
 
         case 'strong':

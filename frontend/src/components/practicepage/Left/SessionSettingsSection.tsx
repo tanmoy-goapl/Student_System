@@ -1,6 +1,6 @@
 // SessionSettingsSection.tsx
 
-import { Switch } from "antd";
+import { Switch, ConfigProvider } from "antd";
 
 import { Difficulty } from "@/constants/practicepage-data";
 import DifficultySelector from "./DifficultySelector";
@@ -80,10 +80,24 @@ export default function SessionSettingsSection({
           </span>
         </div>
 
-        <Switch
-          defaultChecked
-          size="small"
-        />
+        <ConfigProvider
+          theme={{
+            token: {
+              colorPrimary: "#5B5FFF",
+            },
+            components: {
+              Switch: {
+                colorPrimary: "#5B5FFF",
+                colorPrimaryHover: "#4c4fdb",
+              },
+            },
+          }}
+        >
+          <Switch
+            defaultChecked
+            size="small"
+          />
+        </ConfigProvider>
       </div>
     </div>
   );

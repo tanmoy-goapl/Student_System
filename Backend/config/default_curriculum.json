@@ -1,0 +1,116 @@
+{
+  "semesters": [
+    {
+      "id": "semester-1",
+      "title": "Semester 1",
+      "iconName": "GraduationCap",
+      "color": "#a78bfa",
+      "weakAreas": [],
+      "topics": [
+        "Programming Fundamentals",
+        "Engineering Mathematics I",
+        "Digital Logic",
+        "Communication Skills",
+        "Environmental Studies"
+      ]
+    },
+    {
+      "id": "semester-2",
+      "title": "Semester 2",
+      "iconName": "BookOpen",
+      "color": "#60a5fa",
+      "weakAreas": [],
+      "topics": [
+        "Object-Oriented Programming",
+        "Data Structures",
+        "Engineering Mathematics II",
+        "Computer Organization",
+        "Engineering Physics"
+      ]
+    },
+    {
+      "id": "semester-3",
+      "title": "Semester 3",
+      "iconName": "Database",
+      "color": "#14b8a6",
+      "weakAreas": [],
+      "topics": [
+        "Database Management Systems",
+        "Operating Systems",
+        "Discrete Mathematics",
+        "Software Engineering",
+        "Java Programming"
+      ]
+    },
+    {
+      "id": "semester-4",
+      "title": "Semester 4",
+      "iconName": "Network",
+      "color": "#f97316",
+      "weakAreas": [],
+      "topics": [
+        "Computer Networks",
+        "Design and Analysis of Algorithms",
+        "Web Development",
+        "Probability and Statistics",
+        "Theory of Computation"
+      ]
+    },
+    {
+      "id": "semester-5",
+      "title": "Semester 5",
+      "iconName": "Cpu",
+      "color": "#ec4899",
+      "weakAreas": [],
+      "topics": [
+        "Machine Learning",
+        "Information Security",
+        "Compiler Design",
+        "Distributed Systems",
+        "Data Analytics"
+      ]
+    },
+    {
+      "id": "semester-6",
+      "title": "Semester 6",
+      "iconName": "Cloud",
+      "color": "#84cc16",
+      "weakAreas": [],
+      "topics": [
+        "Artificial Intelligence",
+        "Cloud Computing",
+        "Data Mining",
+        "Mobile Application Development",
+        "Internet of Things"
+      ]
+    },
+    {
+      "id": "semester-7",
+      "title": "Semester 7",
+      "iconName": "Shield",
+      "color": "#f43f5e",
+      "weakAreas": [],
+      "topics": [
+        "System Design",
+        "Blockchain Technology",
+        "Big Data Analytics",
+        "Cybersecurity",
+        "Natural Language Processing"
+      ]
+    },
+    {
+      "id": "semester-8",
+      "title": "Semester 8",
+      "iconName": "Briefcase",
+      "color": "#6366f1",
+      "weakAreas": [],
+      "topics": [
+        "Project Management",
+        "Professional Ethics",
+        "Deep Learning",
+        "Quantum Computing",
+        "Robotics"
+      ]
+    }
+  ]
+}

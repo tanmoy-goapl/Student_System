@@ -70,11 +70,11 @@ export function LearningActions({
   onAddRevision,
 }: LearningActionsProps) {
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0F1117] p-5 shadow-2xl space-y-4">
+    <div className="border-t border-white/10 pt-6 mt-6 pb-2 space-y-4">
       <div className="flex items-center gap-2">
-        <File className="h-4 w-4 text-amber-100" />
+        <File className="h-4 w-4 text-indigo-400" />
 
-        <h2 className="text-sm text-amber-50">
+        <h2 className="text-sm font-semibold text-white">
           {title}
         </h2>
       </div>

@@ -46,10 +46,6 @@ export default function AppLayout({
  
   const sidebarRoutes: SidebarRoute[] = [
     {
-      match: "/learning",
-      component: <LearningSidebar />,
-    },
-    {
       match: "/performance",
       component: <PerformanceSidebar />,
     },
@@ -79,7 +75,7 @@ export default function AppLayout({
       {!isLogin && <Navbar />}
  
       {/* Everything right of the main sidebar */}
-      <div className={`flex flex-1 ${!isLogin ? "ml-14" : ""}`}>
+      <div className={`flex flex-1 min-w-0 ${!isLogin ? "pl-14" : ""}`}>
  
         {/* Secondary Sidebar (learning, practice, performance) */}
         {!isLogin && activeSidebar && (
@@ -89,7 +85,7 @@ export default function AppLayout({
         )}
  
         {/* Main content column */}
-        <div className="flex flex-col flex-1 h-screen overflow-hidden">
+        <div className="flex flex-col flex-1 h-screen overflow-hidden min-w-0">
  
           {/* TopBar — sticky, shrink-0 */}
           {!isLogin && (
@@ -99,9 +95,9 @@ export default function AppLayout({
           )}
  
           {/* Main content area with right sidebar */}
-          <div className="flex flex-1 min-h-0 overflow-hidden">
+          <div className="flex flex-1 min-w-0 min-h-0 overflow-hidden">
             {/* Page content */}
-            <main className="flex-1 overflow-auto purple-scrollbar">
+            <main className="flex-1 min-w-0 overflow-auto purple-scrollbar">
               {children}
             </main>
  

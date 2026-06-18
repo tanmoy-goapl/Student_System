@@ -114,6 +114,9 @@ class UserPerformance(Base):
     lifetime_accuracy         = Column(Float, default=0.0)      # 0.0 – 100.0
     total_points              = Column(Integer, default=0)
     
+    topics_covered            = Column(Integer, default=0)
+    badges_earned             = Column(Integer, default=0)
+    
     current_streak            = Column(Integer, default=0)
     longest_streak            = Column(Integer, default=0)
     
@@ -122,3 +125,58 @@ class UserPerformance(Base):
 
     # Relationships
     student = relationship("User", backref="lifetime_performance")
+
+
+# ─────────────────────────────────────────────
+# Quiz History (Session level history)
+# ─────────────────────────────────────────────
+class QuizHistory(Base):
+    __tablename__ = "quiz_history"
+
+    id                  = Column(Integer, primary_key=True, index=True)
+    student_id          = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    session_id          = Column(Integer, ForeignKey("practice_sessions.id"), nullable=True)
+    topic               = Column(String, nullable=False)
+    questions_attempted = Column(Integer, default=0)
+    correct_answers     = Column(Integer, default=0)
+    score_percentage    = Column(Float, default=0.0)
+    points_earned       = Column(Integer, default=0)
+    time_spent          = Column(Integer, default=0)
+    created_at          = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    student = relationship("User", backref="quiz_history")
+    session = relationship("PracticeSession")
+
+
+# ─────────────────────────────────────────────
+# Custom Topics (Manually added general topics)
+# ─────────────────────────────────────────────
+class CustomTopic(Base):
+    __tablename__ = "custom_topics"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    student_id   = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    topic_name   = Column(String, nullable=False)
+    subject_name = Column(String, default="General Topics")
+    created_at   = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    student = relationship("User", backref="custom_topics")
+
+
+# ─────────────────────────────────────────────
+# Learning Content (Cached LLM explanations)
+# ─────────────────────────────────────────────
+class LearningContent(Base):
+    __tablename__ = "learning_content"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    student_id   = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    topic        = Column(String, nullable=False, index=True)
+    content      = Column(JSON, nullable=False)   # The 'notesResponse' JSON block
+    revision     = Column(JSON, nullable=True)    # The 'revision' JSON block
+    created_at   = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    student = relationship("User", backref="learning_contents")

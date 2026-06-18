@@ -276,8 +276,8 @@ export default function PracticePage({
                 <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto">
                     <div className="flex-1 flex items-center justify-center px-6 py-4">
                         <div className="text-center space-y-6 max-w-lg">
-                            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-violet-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center border border-white/10">
-                                <svg className="w-10 h-10 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-[#5B5FFF]/20 to-indigo-500/20 rounded-2xl flex items-center justify-center border border-white/10">
+                                <svg className="w-10 h-10 text-[#8F93FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                                 </svg>
                             </div>
@@ -287,8 +287,8 @@ export default function PracticePage({
                                 AI-powered quiz questions from your uploaded documents.
                             </p>
                             {isLoading && (
-                                <div className="flex items-center justify-center gap-3 text-violet-400">
-                                    <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                                <div className="flex items-center justify-center gap-3 text-[#8F93FF]">
+                                    <div className="w-5 h-5 border-2 border-[#5B5FFF] border-t-transparent rounded-full animate-spin" />
                                     <span className="text-sm">Analyzing your documents and generating questions...</span>
                                 </div>
                             )}
@@ -303,7 +303,7 @@ export default function PracticePage({
                 <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto">
                     <div className="flex-1 flex items-center justify-center px-6 py-4">
                         <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-8 max-w-md text-center space-y-6 w-full">
-                            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 rounded-full flex items-center justify-center">
+                            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500/20 to-[#5B5FFF]/20 rounded-full flex items-center justify-center">
                                 <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -323,7 +323,7 @@ export default function PracticePage({
                                     <div className="text-xs text-slate-400">Correct</div>
                                 </div>
                                 <div className="bg-slate-700/50 rounded-xl p-3">
-                                    <div className="text-2xl font-bold text-violet-400">{liveStats.streak}</div>
+                                    <div className="text-2xl font-bold text-[#8F93FF]">{liveStats.streak}</div>
                                     <div className="text-xs text-slate-400">Best Streak</div>
                                 </div>
                             </div>
@@ -334,7 +334,7 @@ export default function PracticePage({
                                     setQuestions([]);
                                     setCurrentQuestionIndex(0);
                                 }}
-                                className="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
+                                className="w-full py-3 bg-[#5B5FFF] hover:bg-[#4c4fdb] text-white rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-indigo-500/20 border border-[#7276ff]/20"
                             >
                                 Start New Session
                             </button>
@@ -349,7 +349,7 @@ export default function PracticePage({
                 <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto">
                     <div className="flex-1 flex items-center justify-center px-6 py-4">
                         <div className="text-center space-y-4">
-                            <div className="w-12 h-12 mx-auto border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                            <div className="w-12 h-12 mx-auto border-3 border-[#5B5FFF] border-t-transparent rounded-full animate-spin" />
                             <h3 className="text-lg font-semibold text-white">Generating Questions...</h3>
                             <p className="text-slate-400 text-sm">AI is analyzing your documents and crafting personalized questions</p>
                         </div>
@@ -393,7 +393,7 @@ export default function PracticePage({
                 text: opt.text,
                 isCorrect: answerResult ? opt.id === answerResult.correct_answer : false,
             })),
-            progressColor: "bg-gradient-to-r from-emerald-500 via-cyan-500 to-red-500",
+            progressColor: "bg-gradient-to-r from-emerald-500 via-[#5B5FFF] to-red-500",
         };
 
         return (
@@ -405,8 +405,8 @@ export default function PracticePage({
                     <div className="flex items-center gap-2 px-4">
                         <span className="text-xs text-slate-500">⏱️ {formatTime(elapsedTime)}</span>
                         {isGenerating && (
-                            <span className="text-xs text-violet-400 flex items-center gap-1">
-                                <div className="w-3 h-3 border border-violet-400 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-xs text-[#8F93FF] flex items-center gap-1">
+                                <div className="w-3 h-3 border border-[#5B5FFF] border-t-transparent rounded-full animate-spin" />
                                 Loading next batch...
                             </span>
                         )}

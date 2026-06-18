@@ -42,7 +42,7 @@ export default function SessionInfoSection({
           </div>
           <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-[#5B5FFF] to-[#7C3AED] transition-all duration-300"
               style={{
                 width: `${(stats.progress / stats.total) * 100}%`,
               }}

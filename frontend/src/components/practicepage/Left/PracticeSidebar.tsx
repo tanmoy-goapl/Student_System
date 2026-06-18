@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PracticeModeSection from "./PracticeModeSection";
 import TopicSelectorSection from "./TopicSelectorSection";
 import SessionSettingsSection from "./SessionSettingsSection";
 import SessionInfoSection from "./SessionInfoSection";
+import AddGeneralTopicModal from "./AddGeneralTopicModal";
 import { getPracticeData, PracticeDataResponse } from "@/lib/api";
+import { Plus } from "lucide-react";
 
 interface PracticeSidebarProps {
   onStartSession?: (mode: string, topic?: string, difficulty?: string, questionCount?: number) => void;
@@ -18,8 +20,9 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
   const [selectedMode, setSelectedMode] = useState<string>("topic");
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
   const [selectedTopic, setSelectedTopic] = useState<string>("");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("mixed");
-  const [questionCount, setQuestionCount] = useState<number>(10);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("easy");
+  const [questionCount, setQuestionCount] = useState<number>(2);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Get student ID from localStorage
   const getStudentId = (): number | undefined => {
@@ -30,30 +33,48 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
     return undefined;
   };
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setIsLoading(true);
-        const studentId = getStudentId();
-        const response = await getPracticeData(studentId);
-        setData(response);
+  const loadPracticeData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const studentId = getStudentId();
+      const response = await getPracticeData(studentId);
+      setData(response);
 
-        // Auto-expand first subject and select first topic
-        if (response.subjects && response.subjects.length > 0) {
-          setExpandedSubjects({ [response.subjects[0].id]: true });
-          const firstTopics = response.subjects[0].topics || response.subjects[0].weakAreas;
-          if (firstTopics && firstTopics.length > 0) {
-            setSelectedTopic(firstTopics[0]);
+      // Auto-expand only document subjects and select first topic if none is selected
+      if (response.subjects && response.subjects.length > 0) {
+        setExpandedSubjects((prev) => {
+          const docExpanded: Record<string, boolean> = {};
+          response.subjects.forEach((subj) => {
+            if (subj.section === "documents") {
+              docExpanded[subj.id] = true;
+            }
+          });
+          return {
+            ...docExpanded,
+            ...prev
+          };
+        });
+
+        setSelectedTopic((prev) => {
+          if (!prev) {
+            const firstTopics = response.subjects[0].topics || response.subjects[0].weakAreas;
+            if (firstTopics && firstTopics.length > 0) {
+              return firstTopics[0];
+            }
           }
-        }
-      } catch (error) {
-        // Failed to load — will show empty state
-      } finally {
-        setIsLoading(false);
+          return prev;
+        });
       }
+    } catch (error) {
+      // Failed to load — will show empty state
+    } finally {
+      setIsLoading(false);
     }
-    fetchData();
   }, []);
+
+  useEffect(() => {
+    loadPracticeData();
+  }, [loadPracticeData]);
 
   const toggleSubject = (subjectId: string) => {
     setExpandedSubjects((prev) => ({
@@ -101,16 +122,25 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
               setSelectedMode("topic");
             }}
             onToggleSubject={toggleSubject}
+            onAddTopicClick={() => setIsAddModalOpen(true)}
           />
         ) : (
           <div className="p-4">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-              Topics
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Topics
+              </h3>
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="text-white/40 hover:text-white transition-colors p-1 hover:bg-white/5 rounded-md animate-pulse"
+                title="Add General Topic"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
             <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5">
               <p className="text-xs text-slate-400 leading-relaxed">
-                📄 Upload study documents to auto-extract topics for practice.
-                The AI will analyze your materials and create personalized quizzes.
+                📄 Upload study documents or click the <span className="font-semibold text-white">+</span> button above to choose general topics to practice.
               </p>
             </div>
           </div>
@@ -129,9 +159,9 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
         <div className="p-4">
           <button
             onClick={handleStartPractice}
-            className="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-white rounded-xl font-medium text-sm 
-                       hover:opacity-90 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed
-                       shadow-lg shadow-violet-500/20"
+            className="w-full py-3 bg-[#5B5FFF] hover:bg-[#4c4fdb] text-white rounded-xl font-semibold text-sm 
+                       transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]
+                       shadow-lg shadow-indigo-500/20 border border-[#7276ff]/20"
           >
             Start Practice
           </button>
@@ -142,6 +172,13 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
           <SessionInfoSection stats={data.sessionStats} />
         )}
       </div>
+
+      {/* Add Topic Modal */}
+      <AddGeneralTopicModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={loadPracticeData}
+      />
     </div>
   );
 }
