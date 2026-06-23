@@ -3,6 +3,7 @@
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
 import TopBar from "./navbar/TopBar";
+import { Suspense } from "react";
 import LearningSidebar from "./learningpage/LearningSidebar";
 import PracticeSidebar from "./practicepage/Left/PracticeSidebar";
 import PerformanceSidebar from "./performancepage/Left/PerformanceSidebar";
@@ -89,8 +90,10 @@ export default function AppLayout({
  
           {/* TopBar — sticky, shrink-0 */}
           {!isLogin && (
-            <header className="sticky top-0 z-40 h-16 shrink-0 border-b border-white/10 bg-[#020617] flex items-center">
-              <TopBar rightOpen={rightOpen} onRightOpenChange={setRightOpen} />
+            <header className="sticky top-0 z-40 h-16 shrink-0 border-b border-white/5 bg-slate-950/70 backdrop-blur-md flex items-center">
+              <Suspense fallback={<div className="h-full w-full bg-[#020617]" />}>
+                <TopBar rightOpen={rightOpen} onRightOpenChange={setRightOpen} />
+              </Suspense>
             </header>
           )}
  

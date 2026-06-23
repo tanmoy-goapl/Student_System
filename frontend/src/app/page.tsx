@@ -1,3 +1,5 @@
-import HomePage from "@/pages/HomePage/HomePage";
+import { redirect } from "next/navigation";
 
-export default HomePage;
+export default function Root() {
+  redirect("/courses");
+}

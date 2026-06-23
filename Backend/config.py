@@ -10,10 +10,10 @@ if not DATABASE_URL:
 
 # ── LLM configuration ─────────────────────────────────────
 
-# Cloud GPT-4o-mini (proxy)
-GPT_API_KEY:  str = os.getenv("GPT4O_MINI_API_KEY", "")
-GPT_BASE_URL: str = os.getenv("GPT4O_MINI_BASE_URL", "")
-GPT_MODEL:    str = os.getenv("GPT_MODEL", "gpt-4o-mini")
+# Cloud GPT or Local API
+GPT_API_KEY:  str = os.getenv("OPENAI_API_KEY", os.getenv("GPT4O_MINI_API_KEY", ""))
+GPT_BASE_URL: str = os.getenv("OPENAI_API_BASE_URL", os.getenv("GPT4O_MINI_BASE_URL", ""))
+GPT_MODEL:    str = os.getenv("LLM_NAME", os.getenv("GPT_MODEL", "gpt-4o-mini"))
 
 # On‑premise Llama (uses OpenAI‑compatible Red Hat AI endpoint)
 # Supports both REDHATAI_* and LLAMA_* env var names for flexibility

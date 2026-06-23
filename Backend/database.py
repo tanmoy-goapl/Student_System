@@ -7,7 +7,7 @@ connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 engine = create_engine(
     DATABASE_URL,
     connect_args=connect_args,
-    echo=True,
+    echo=False,
     future=True
 )
 
@@ -26,6 +26,7 @@ def init_db():
         PracticeSession, PracticeQuestion,
         TopicPerformance, BehavioralInsight, CustomTopic, LearningContent,
     )
+    from roadmap_models import UserGoal, LearningRoadmap, DailyTask
     Base.metadata.create_all(bind=engine)
     
     # Run automatic column migrations
@@ -37,6 +38,14 @@ def init_db():
             conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS title VARCHAR;"))
             conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS pages INTEGER;"))
             conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS document_format VARCHAR;"))
+            
+            # DailyTask roadmap additions
+            conn.execute(text("ALTER TABLE daily_tasks ADD COLUMN IF NOT EXISTS week_number INTEGER DEFAULT 1;"))
+            conn.execute(text("ALTER TABLE daily_tasks ADD COLUMN IF NOT EXISTS day_number INTEGER;"))
+            conn.execute(text("ALTER TABLE daily_tasks ADD COLUMN IF NOT EXISTS subtopics JSON DEFAULT '[]';"))
+            
+            # LearningContent additions
+            conn.execute(text("ALTER TABLE learning_content ADD COLUMN IF NOT EXISTS subject VARCHAR;"))
     except Exception as e:
         print("Database schema migration notice/error:", e)
 

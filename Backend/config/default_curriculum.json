@@ -1,4 +1,5 @@
 {
+  "current_semester": 3,
   "semesters": [
     {
       "id": "semester-1",
@@ -6,13 +7,55 @@
       "iconName": "GraduationCap",
       "color": "#a78bfa",
       "weakAreas": [],
-      "topics": [
-        "Programming Fundamentals",
-        "Engineering Mathematics I",
-        "Digital Logic",
-        "Communication Skills",
-        "Environmental Studies"
-      ]
+      "subjects": {
+        "Programming Fundamentals": [
+          "Variables & Types",
+          "Control Flow",
+          "Functions",
+          "Arrays & Strings",
+          "Pointers & Memory",
+          "Recursion",
+          "Trees & Graphs",
+          "Sorting",
+          "Searching",
+          "Dynamic Programming"
+        ],
+        "Engineering Mathematics I": [
+          "Set Theory",
+          "Logic",
+          "Functions & Relations",
+          "Calculus Basics",
+          "Linear Algebra",
+          "Combinatorics",
+          "Graph Theory",
+          "Probability",
+          "Statistics"
+        ],
+        "Digital Logic": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Communication Skills": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Environmental Studies": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ]
+      }
     },
     {
       "id": "semester-2",
@@ -20,13 +63,59 @@
       "iconName": "BookOpen",
       "color": "#60a5fa",
       "weakAreas": [],
-      "topics": [
-        "Object-Oriented Programming",
-        "Data Structures",
-        "Engineering Mathematics II",
-        "Computer Organization",
-        "Engineering Physics"
-      ]
+      "subjects": {
+        "Object-Oriented Programming": [
+          "Variables & Types",
+          "Control Flow",
+          "Functions",
+          "Arrays & Strings",
+          "Pointers & Memory",
+          "Recursion",
+          "Trees & Graphs",
+          "Sorting",
+          "Searching",
+          "Dynamic Programming"
+        ],
+        "Data Structures": [
+          "Variables & Types",
+          "Control Flow",
+          "Functions",
+          "Arrays & Strings",
+          "Pointers & Memory",
+          "Recursion",
+          "Trees & Graphs",
+          "Sorting",
+          "Searching",
+          "Dynamic Programming"
+        ],
+        "Engineering Mathematics II": [
+          "Set Theory",
+          "Logic",
+          "Functions & Relations",
+          "Calculus Basics",
+          "Linear Algebra",
+          "Combinatorics",
+          "Graph Theory",
+          "Probability",
+          "Statistics"
+        ],
+        "Computer Organization": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Engineering Physics": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ]
+      }
     },
     {
       "id": "semester-3",
@@ -34,13 +123,57 @@
       "iconName": "Database",
       "color": "#14b8a6",
       "weakAreas": [],
-      "topics": [
-        "Database Management Systems",
-        "Operating Systems",
-        "Discrete Mathematics",
-        "Software Engineering",
-        "Java Programming"
-      ]
+      "subjects": {
+        "Database Management Systems": [
+          "Relational Model",
+          "SQL Basics",
+          "Normalization",
+          "Transactions",
+          "Concurrency Control",
+          "Indexing",
+          "NoSQL"
+        ],
+        "Operating Systems": [
+          "Processes",
+          "Threads",
+          "Scheduling",
+          "Memory Management",
+          "File Systems",
+          "Deadlocks",
+          "Virtualization"
+        ],
+        "Discrete Mathematics": [
+          "Set Theory",
+          "Logic",
+          "Functions & Relations",
+          "Calculus Basics",
+          "Linear Algebra",
+          "Combinatorics",
+          "Graph Theory",
+          "Probability",
+          "Statistics"
+        ],
+        "Software Engineering": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Java Programming": [
+          "Variables & Types",
+          "Control Flow",
+          "Functions",
+          "Arrays & Strings",
+          "Pointers & Memory",
+          "Recursion",
+          "Trees & Graphs",
+          "Sorting",
+          "Searching",
+          "Dynamic Programming"
+        ]
+      }
     },
     {
       "id": "semester-4",
@@ -48,13 +181,57 @@
       "iconName": "Network",
       "color": "#f97316",
       "weakAreas": [],
-      "topics": [
-        "Computer Networks",
-        "Design and Analysis of Algorithms",
-        "Web Development",
-        "Probability and Statistics",
-        "Theory of Computation"
-      ]
+      "subjects": {
+        "Computer Networks": [
+          "OSI Model",
+          "TCP/IP",
+          "Routing",
+          "Switching",
+          "Network Security",
+          "Application Layer",
+          "Transport Layer"
+        ],
+        "Design and Analysis of Algorithms": [
+          "Variables & Types",
+          "Control Flow",
+          "Functions",
+          "Arrays & Strings",
+          "Pointers & Memory",
+          "Recursion",
+          "Trees & Graphs",
+          "Sorting",
+          "Searching",
+          "Dynamic Programming"
+        ],
+        "Web Development": [
+          "HTML/CSS",
+          "JavaScript",
+          "Frontend Frameworks",
+          "Backend Basics",
+          "REST APIs",
+          "Authentication",
+          "Deployment"
+        ],
+        "Probability and Statistics": [
+          "Set Theory",
+          "Logic",
+          "Functions & Relations",
+          "Calculus Basics",
+          "Linear Algebra",
+          "Combinatorics",
+          "Graph Theory",
+          "Probability",
+          "Statistics"
+        ],
+        "Theory of Computation": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ]
+      }
     },
     {
       "id": "semester-5",
@@ -62,13 +239,49 @@
       "iconName": "Cpu",
       "color": "#ec4899",
       "weakAreas": [],
-      "topics": [
-        "Machine Learning",
-        "Information Security",
-        "Compiler Design",
-        "Distributed Systems",
-        "Data Analytics"
-      ]
+      "subjects": {
+        "Machine Learning": [
+          "Supervised Learning",
+          "Unsupervised Learning",
+          "Neural Networks",
+          "Optimization",
+          "Evaluation Metrics",
+          "Natural Language Processing",
+          "Computer Vision"
+        ],
+        "Information Security": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Compiler Design": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Distributed Systems": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Data Analytics": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ]
+      }
     },
     {
       "id": "semester-6",
@@ -76,13 +289,49 @@
       "iconName": "Cloud",
       "color": "#84cc16",
       "weakAreas": [],
-      "topics": [
-        "Artificial Intelligence",
-        "Cloud Computing",
-        "Data Mining",
-        "Mobile Application Development",
-        "Internet of Things"
-      ]
+      "subjects": {
+        "Artificial Intelligence": [
+          "Supervised Learning",
+          "Unsupervised Learning",
+          "Neural Networks",
+          "Optimization",
+          "Evaluation Metrics",
+          "Natural Language Processing",
+          "Computer Vision"
+        ],
+        "Cloud Computing": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Data Mining": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Mobile Application Development": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Internet of Things": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ]
+      }
     },
     {
       "id": "semester-7",
@@ -90,13 +339,48 @@
       "iconName": "Shield",
       "color": "#f43f5e",
       "weakAreas": [],
-      "topics": [
-        "System Design",
-        "Blockchain Technology",
-        "Big Data Analytics",
-        "Cybersecurity",
-        "Natural Language Processing"
-      ]
+      "subjects": {
+        "System Design": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Blockchain Technology": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Big Data Analytics": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Cybersecurity": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Natural Language Processing": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ]
+      }
     },
     {
       "id": "semester-8",
@@ -104,13 +388,49 @@
       "iconName": "Briefcase",
       "color": "#6366f1",
       "weakAreas": [],
-      "topics": [
-        "Project Management",
-        "Professional Ethics",
-        "Deep Learning",
-        "Quantum Computing",
-        "Robotics"
-      ]
+      "subjects": {
+        "Project Management": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Professional Ethics": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Deep Learning": [
+          "Supervised Learning",
+          "Unsupervised Learning",
+          "Neural Networks",
+          "Optimization",
+          "Evaluation Metrics",
+          "Natural Language Processing",
+          "Computer Vision"
+        ],
+        "Quantum Computing": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ],
+        "Robotics": [
+          "Introduction & Fundamentals",
+          "Core Concepts",
+          "Advanced Techniques",
+          "Practical Applications",
+          "Case Studies",
+          "Review & Assessment"
+        ]
+      }
     }
   ]
 }

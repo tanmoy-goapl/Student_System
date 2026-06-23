@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001";
 
@@ -18,6 +20,36 @@ export async function GET(req: NextRequest) {
       cache: "no-store",
     });
     const data = await response.json();
+
+    // Fallback: manually map semesters from the local curriculum file if the backend didn't provide them
+    try {
+      if (data && data.subjects) {
+        const configPath = path.join(process.cwd(), "..", "Backend", "config", "default_curriculum.json");
+        if (fs.existsSync(configPath)) {
+          const currStr = fs.readFileSync(configPath, "utf-8");
+          const currData = JSON.parse(currStr);
+          const semesterMap: Record<string, string> = {};
+          
+          for (const sem of (currData.semesters || [])) {
+            if (sem.subjects) {
+              for (const subjectName of Object.keys(sem.subjects)) {
+                semesterMap[subjectName] = sem.title;
+              }
+            }
+          }
+          
+          data.subjects = data.subjects.map((s: any) => {
+             if (!s.semester && s.title && semesterMap[s.title]) {
+                 s.semester = semesterMap[s.title];
+             }
+             return s;
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to map semesters in Next.js backend:", e);
+    }
+
     return NextResponse.json(data, { status: response.status });
   } catch {
     return NextResponse.json(

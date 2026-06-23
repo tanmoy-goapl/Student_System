@@ -173,6 +173,7 @@ class LearningContent(Base):
 
     id           = Column(Integer, primary_key=True, index=True)
     student_id   = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    subject      = Column(String, nullable=True, index=True)
     topic        = Column(String, nullable=False, index=True)
     content      = Column(JSON, nullable=False)   # The 'notesResponse' JSON block
     revision     = Column(JSON, nullable=True)    # The 'revision' JSON block

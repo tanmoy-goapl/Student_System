@@ -9,20 +9,32 @@ import AddGeneralTopicModal from "./AddGeneralTopicModal";
 import { getPracticeData, PracticeDataResponse } from "@/lib/api";
 import { Plus } from "lucide-react";
 
+import { useSearchParams } from "next/navigation";
+
 interface PracticeSidebarProps {
   onStartSession?: (mode: string, topic?: string, difficulty?: string, questionCount?: number) => void;
 }
 
 export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps) {
+  const searchParams = useSearchParams();
+  const topicParam = searchParams?.get("topic");
+  const source = searchParams?.get("source") || "courses";
+
   const [data, setData] = useState<PracticeDataResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedMode, setSelectedMode] = useState<string>("topic");
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
-  const [selectedTopic, setSelectedTopic] = useState<string>("");
+  const [selectedTopic, setSelectedTopic] = useState<string>(topicParam || "");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("easy");
   const [questionCount, setQuestionCount] = useState<number>(2);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (topicParam) {
+      setSelectedTopic(topicParam);
+    }
+  }, [topicParam]);
 
   // Get student ID from localStorage
   const getStudentId = (): number | undefined => {
@@ -45,7 +57,9 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
         setExpandedSubjects((prev) => {
           const docExpanded: Record<string, boolean> = {};
           response.subjects.forEach((subj) => {
-            if (subj.section === "documents") {
+            const activeTopic = topicParam || (response.subjects && response.subjects.length > 0 && (response.subjects[0].topics?.[0] || response.subjects[0].weakAreas?.[0])) || "";
+            const hasSelectedTopic = subj.topics?.includes(activeTopic) || subj.weakAreas?.includes(activeTopic);
+            if (hasSelectedTopic) {
               docExpanded[subj.id] = true;
             }
           });
@@ -98,8 +112,13 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
     );
   }
 
-  // No documents uploaded — show guidance
-  const hasSubjects = data && data.subjects && data.subjects.length > 0;
+  // Filter subjects based on source
+  const filteredSubjects = data?.subjects?.filter((subj) => {
+    if (source === "personal") return subj.section === "documents" || subj.section === "roadmap";
+    return subj.section === "curriculum";
+  }) || [];
+
+  const hasSubjects = filteredSubjects.length > 0;
 
   return (
     <div className="bg-[#131826] w-[20vw] h-screen flex flex-col text-white">
@@ -114,7 +133,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
         {/* Topic Selector Section */}
         {hasSubjects ? (
           <TopicSelectorSection
-            subjects={data!.subjects}
+            subjects={filteredSubjects}
             expandedSubjects={expandedSubjects}
             selectedTopic={selectedTopic}
             onSelectTopic={(topic) => {

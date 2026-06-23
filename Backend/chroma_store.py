@@ -57,12 +57,17 @@ def upsert_chunks(document_id: int, chunks: list[str]):
 
     embeddings = get_embeddings(chunks)
 
-    collection.upsert(
-        ids=ids,
-        documents=chunks,
-        metadatas=metadatas,
-        embeddings=embeddings,   # ✅ add this
-    )
+    upsert_kwargs = {
+        "ids": ids,
+        "documents": chunks,
+        "metadatas": metadatas,
+    }
+    
+    # Only use custom embeddings if they are properly generated
+    if embeddings and len(embeddings) > 0 and len(embeddings[0]) > 0:
+        upsert_kwargs["embeddings"] = embeddings
+
+    collection.upsert(**upsert_kwargs)
 
 def query_chunks(query: str, top_k: int = 5, allowed_doc_ids: list[int] = None):
     collection = get_collection()
@@ -73,17 +78,6 @@ def query_chunks(query: str, top_k: int = 5, allowed_doc_ids: list[int] = None):
     embeddings = get_embeddings([query])
     print(f"[DEBUG] raw embeddings returned: {str(embeddings)[:200]}")
 
-    # Validate embedding is a non-empty float vector
-    if (
-        not embeddings
-        or not embeddings[0]
-        or not isinstance(embeddings[0], (list, tuple))
-        or len(embeddings[0]) == 0
-    ):
-        print("❌ Embedding is empty — cannot query ChromaDB")
-        return {"documents": [[]], "metadatas": [[]]}
-
-    query_embedding = embeddings[0]
     n = min(top_k, count)
 
     where_filter = None
@@ -95,11 +89,19 @@ def query_chunks(query: str, top_k: int = 5, allowed_doc_ids: list[int] = None):
         else:
             where_filter = {"document_id": {"$in": allowed_doc_ids}}
 
-    return collection.query(
-        query_embeddings=[query_embedding],
-        n_results=n,
-        where=where_filter,
-    )
+    query_kwargs = {
+        "n_results": n,
+        "where": where_filter,
+    }
+
+    # Validate embedding is a non-empty float vector
+    if embeddings and embeddings[0] and isinstance(embeddings[0], (list, tuple)) and len(embeddings[0]) > 0:
+        query_kwargs["query_embeddings"] = [embeddings[0]]
+    else:
+        print("⚠️ Embedding is empty — falling back to query_texts")
+        query_kwargs["query_texts"] = [query]
+
+    return collection.query(**query_kwargs)
 
 def delete_document_chunks(document_id: int):
     collection = get_collection()

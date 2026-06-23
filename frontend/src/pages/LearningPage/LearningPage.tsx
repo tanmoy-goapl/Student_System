@@ -9,7 +9,7 @@ import { RelatedConcepts } from "@/components/learningpage/RelatedConcepts";
 import { Sidebar } from "@/components/learningpage/Sidebar/Sidebar";
 import LearningSidebar from "@/components/learningpage/LearningSidebar";
 import { useState, useEffect } from "react";
-import { getLearningData, getLearningContent, LearningDataResponse } from "@/lib/api";
+import { getLearningData, getLearningContent, completeTopic, LearningDataResponse } from "@/lib/api";
 import {
   Lightbulb,
   FlaskConical,
@@ -23,6 +23,8 @@ import {
   Zap,
   Eye,
   MessageCircle,
+  CheckCircle,
+  ArrowLeft,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, any> = {
@@ -40,15 +42,20 @@ const ICON_MAP: Record<string, any> = {
   MessageCircle,
 };
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export default function LearningPage() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const topic = searchParams?.get("topic") || undefined;
+    const subject = searchParams?.get("subject") || undefined;
+    const source = searchParams?.get("source") || "courses";
     
     const [data, setData] = useState<LearningDataResponse | null>(null);
     const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
     const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+    const [isMarkingRead, setIsMarkingRead] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
  
     const getStudentId = (): number => {
         if (typeof window !== "undefined") {
@@ -60,13 +67,15 @@ export default function LearningPage() {
 
     useEffect(() => {
         async function fetchData() {
-            setData(null); // Show loading state
             try {
                 const studentId = getStudentId();
-                const response = await getLearningData(topic, studentId);
+                const roadmapId = searchParams?.get("roadmap_id") ? parseInt(searchParams.get("roadmap_id") as string) : undefined;
+                
+                // Pass source argument to strictly filter out roadmaps when on courses tab
+                const response = await getLearningData(topic, studentId, subject, roadmapId, source);
                 setData(response);
                 
-                const contentResponse = await getLearningContent(response.selectedTopic || topic, studentId);
+                const contentResponse = await getLearningContent(response.selectedTopic || topic, studentId, subject);
                 setData(prev => {
                     if (!prev) return prev;
                     return {
@@ -75,7 +84,7 @@ export default function LearningPage() {
                         learningAssistantResponse: {
                             ...prev.learningAssistantResponse,
                             data: {
-                                ...prev.learningAssistantResponse.data,
+                                ...prev.learningAssistantResponse?.data,
                                 revision: contentResponse.revision
                             }
                         }
@@ -86,7 +95,7 @@ export default function LearningPage() {
             }
         }
         fetchData();
-    }, [topic]);
+    }, [topic, subject, source, refreshKey]);
 
     const handleSuggestionClick = (id: string) => {
         setSelectedSuggestion(id);
@@ -97,28 +106,56 @@ export default function LearningPage() {
         setSelectedDocument(id);
         console.log("Document clicked:", id);
     };
+
+    const handleMarkAsRead = async () => {
+        if (!data?.selectedTopic) return;
+        
+        setIsMarkingRead(true);
+        try {
+            const studentId = getStudentId();
+            const res = await completeTopic(studentId, data.selectedTopic, "learning");
+            if (res.success) {
+                console.log("Topic marked as complete");
+                setRefreshKey(prev => prev + 1);
+            }
+        } catch (error) {
+            console.error("Failed to mark topic as complete:", error);
+        } finally {
+            setIsMarkingRead(false);
+        }
+    };
  
     if (!data) {
         return (
-            <div className="flex gap-2 min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 px-6 py-4 space-y-4 animate-pulse">
-                <div className="flex-1 space-y-4">
-                    <div className="h-24 bg-white/5 rounded-xl"></div>
-                    <div className="h-64 bg-white/5 rounded-xl"></div>
-                </div>
-                <div className="w-[20vw] bg-white/5 rounded-xl"></div>
+            <div className="flex w-full h-[calc(100vh-4rem)] items-center justify-center bg-slate-950">
+                <div className="text-white">Loading...</div>
             </div>
         );
     }
 
-    // Map the string iconNames to actual Lucide components for the children
-    const quickActions = data.learningAssistantResponse?.data?.actions?.map((a: any) => ({
-        ...a,
-        icon: ICON_MAP[a.iconName] || FileText
-    })) || [];
+    const quickActions = [
+        ...(data.learningAssistantResponse?.data?.actions?.map((action: any) => ({
+            ...action,
+            icon: ICON_MAP[action.iconName] || FileText
+        })) || []),
+        {
+            id: "mark_as_read",
+            icon: CheckCircle,
+            label: isMarkingRead ? "Marking..." : "Mark as Read",
+            onClick: handleMarkAsRead,
+            primary: true,
+            variant: "primary"
+        }
+    ];
 
-    const learningActions = data.learningAssistantResponse?.data?.learningActions?.map((a: any) => ({
-        ...a,
-        icon: ICON_MAP[a.iconName] || FileText
+    const learningActions = data.learningAssistantResponse?.data?.learningActions?.map((action: any) => ({
+        ...action,
+        icon: ICON_MAP[action.iconName] || FileText,
+        onClick: action.id === "practice_topic" ? () => {
+            if (data?.selectedTopic) {
+                window.location.href = `/practice?topic=${encodeURIComponent(data.selectedTopic)}`;
+            }
+        } : undefined
     })) || [];
 
     const rightSidebarData = {
@@ -147,19 +184,26 @@ export default function LearningPage() {
 
             <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto purple-scrollbar">
                 <div className="flex-1 space-y-4 px-6 py-4 w-full">
-                    <Header data={data.headerResponse.data} />
+                    <Header data={data.headerResponse?.data} />
                     <NotesCard notesResponse={data.notesResponse} />
                     <QuickActions
                         actions={quickActions}
                     />
                     <RelatedConcepts
-                        concepts={data.learningAssistantResponse.data.relatedConcepts}
+                        concepts={data.learningAssistantResponse?.data?.relatedConcepts || []}
                     />
                     <QuickRevisionCard
-                        title={data.learningAssistantResponse.data.revision.title}
-                        points={data.learningAssistantResponse.data.revision.points}
+                        title={data.learningAssistantResponse?.data?.revision?.title || ""}
+                        points={data.learningAssistantResponse?.data?.revision?.points || []}
                     />
-                    <LearningActions actions={learningActions} />
+                    <LearningActions 
+                        actions={learningActions} 
+                        onActionClick={(id) => {
+                            if (id === "practice_topic" && data?.selectedTopic) {
+                                window.location.href = `/practice?topic=${encodeURIComponent(data.selectedTopic)}&source=${source}`;
+                            }
+                        }}
+                    />
                 </div>
             </div>
 

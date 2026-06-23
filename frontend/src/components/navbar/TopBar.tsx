@@ -1,11 +1,8 @@
 "use client";
 
-import { ConfigProvider, Radio } from "antd";
-import { NotificationOutlined, SearchOutlined } from "@ant-design/icons";
-import { User, PanelRightOpen, PanelRightClose } from "lucide-react";
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import { MODEL_MODE } from "@/constants/homepage-data";
+import { User, PanelRightOpen, PanelRightClose, BarChart3, Bell, Search } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface TopBarProps {
   rightOpen?: boolean;
@@ -13,94 +10,119 @@ interface TopBarProps {
 }
 
 export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarProps) {
-  const [selectedMode, setSelectedMode] = useState("explain");
   const pathname = usePathname();
-  const isHomePage = pathname === "/";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isHomePage = pathname === "/" || pathname === "/courses" || pathname === "/personal";
   const isChatPage = pathname?.startsWith("/chat");
 
+  const sourceParam = searchParams?.get("source");
+
+  let selectedMode = "courses";
+  if (pathname?.startsWith("/personal") || sourceParam === "personal") {
+    selectedMode = "personal";
+  } else if (pathname?.startsWith("/courses") || pathname === "/" || sourceParam === "courses") {
+    selectedMode = "courses";
+  }
+
   return (
-    <ConfigProvider
-      theme={{
-        components: {
-          Radio: {
-            buttonBg: "#000000",
-            buttonCheckedBg: "#5B5FFF33",
-            buttonColor: "#9CA3AF",
-            buttonSolidCheckedColor: "#ffffff",
-            buttonSolidCheckedBg: "#5B5FFF",
-            buttonSolidCheckedHoverBg: "#4c4fdb",
-            colorBorder: "transparent",
-            fontSize: 10,
-          },
-        },
-      }}
-    >
-      <div className="flex-1 mentor-navbar h-full">
-        <div className="flex items-center justify-between px-6 py-4 h-full">
-          {/* LEFT: Mode toggle (centered) */}
-          <div className="flex-1 flex justify-center">
-            <Radio.Group
-              optionType="button"
-              buttonStyle="solid"
-              value={selectedMode}
-              onChange={(e) => setSelectedMode(e.target.value)}
-            >
-              {MODEL_MODE.map((mode) => (
-                <Radio.Button
-                  key={mode.value}
-                  value={mode.value}
-                  className="px-5 text-center"
-                >
-                  {mode.label}
-                </Radio.Button>
-              ))}
-            </Radio.Group>
-          </div>
-
-          {/* CENTER: Search bar (only on home page) */}
-          {isHomePage && (
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-1 mx-6">
-              <button
-                type="button"
-                className="text-gray-400 hover:text-white transition"
-              >
-                <SearchOutlined size={12} />
-              </button>
-
-              <input
-                className="flex-1 bg-transparent text-xs text-white placeholder:text-white/25 focus:outline-none"
-                placeholder="Search or Ask AI…"
-              />
-            </div>
-          )}
-
-          {/* RIGHT: Icons + Insights button */}
-          <div className="flex items-center gap-4">
-            <NotificationOutlined className="text-lg cursor-pointer hover:text-blue-500 transition" />
-
-            <User className="w-5 h-5 cursor-pointer hover:text-blue-500 transition" />
-
-            {/* Insights button — only on chat page */}
-            {isChatPage && (
-              <button
-                onClick={() => onRightOpenChange?.(!rightOpen)}
-                title={rightOpen ? "Close insights panel" : "Open insights panel"}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all
-                  ${rightOpen
-                    ? "bg-blue-500/20 border-blue-500/40 text-blue-300"
-                    : "bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10"
-                  }`}
-              >
-                {rightOpen
-                  ? <PanelRightClose size={14} />
-                  : <PanelRightOpen size={14} />
-                }
-                <span className="hidden sm:inline">{rightOpen ? "Close" : "Insights"}</span>
-              </button>
-            )}
-          </div>
+    <div className="w-full h-full flex items-center justify-between px-6">
+      {/* LEFT: Mode toggle (sliding pill selector) */}
+      <div className="flex-shrink-0">
+        <div className="relative flex items-center bg-slate-900/60 border border-white/5 p-1 rounded-full w-52 h-9 shadow-inner select-none">
+          {/* Sliding indicator */}
+          <div
+            className={`absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/10 transition-all duration-300 ease-out ${
+              selectedMode === "courses" ? "left-1 w-[96px]" : "left-[104px] w-[96px]"
+            }`}
+          />
+          {/* Buttons */}
+          <button
+            onClick={() => router.push("/courses")}
+            className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
+              selectedMode === "courses" ? "text-white" : "text-white/40 hover:text-white/70"
+            }`}
+          >
+            Courses
+          </button>
+          <button
+            onClick={() => router.push("/personal")}
+            className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
+              selectedMode === "personal" ? "text-white" : "text-white/40 hover:text-white/70"
+            }`}
+          >
+            Personal
+          </button>
         </div>
       </div>
-    </ConfigProvider>
+
+      {/* CENTER: Primary-focus Search bar (only on home page) */}
+      <div className="flex-1 max-w-sm mx-8">
+        {isHomePage && (
+          <div className="relative group">
+            <div className="flex items-center gap-2.5 bg-slate-900/40 border border-white/5 hover:border-white/10 rounded-xl px-3.5 py-1.5 transition-all duration-200 focus-within:border-blue-500/40 focus-within:bg-slate-900/70 focus-within:ring-2 focus-within:ring-blue-500/10 focus-within:shadow-[0_0_12px_rgba(59,130,246,0.08)]">
+              <Search className="w-3.5 h-3.5 text-white/30 group-focus-within:text-blue-400 transition-colors duration-200" />
+              <input
+                className="flex-1 bg-transparent text-xs text-white placeholder:text-white/20 focus:outline-none"
+                placeholder="Search or Ask AI…"
+              />
+              <div className="flex items-center gap-0.5 pointer-events-none select-none">
+                <span className="text-[9px] font-semibold text-white/25 bg-white/5 border border-white/5 px-1 py-0.5 rounded">⌘</span>
+                <span className="text-[9px] font-semibold text-white/25 bg-white/5 border border-white/5 px-1 py-0.5 rounded">K</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* RIGHT: Action Icons */}
+      <div className="flex-shrink-0 flex items-center gap-3">
+        <Link href="/analytics" className="group relative">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/0 border border-transparent hover:bg-white/5 hover:border-white/5 hover:scale-105 active:scale-95 transition-all duration-200">
+            <BarChart3 className="w-4 h-4 text-white/50 group-hover:text-white transition-colors duration-200" />
+          </div>
+          {/* Tooltip */}
+          <span className="pointer-events-none absolute top-full right-0 mt-2 z-[60] px-2 py-1 rounded-md bg-slate-950 border border-white/5 shadow-xl text-white text-[10px] font-medium whitespace-nowrap opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
+            Analytics
+          </span>
+        </Link>
+
+        <button className="group relative">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/0 border border-transparent hover:bg-white/5 hover:border-white/5 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer">
+            <Bell className="w-4 h-4 text-white/50 group-hover:text-white transition-colors duration-200" />
+          </div>
+          {/* Tooltip */}
+          <span className="pointer-events-none absolute top-full right-0 mt-2 z-[60] px-2 py-1 rounded-md bg-slate-950 border border-white/5 shadow-xl text-white text-[10px] font-medium whitespace-nowrap opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
+            Notifications
+          </span>
+        </button>
+
+        <Link href="/profile" className="group relative">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/0 border border-transparent hover:bg-white/5 hover:border-white/5 hover:scale-105 active:scale-95 transition-all duration-200">
+            <User className="w-4 h-4 text-white/50 group-hover:text-white transition-colors duration-200" />
+          </div>
+          {/* Tooltip */}
+          <span className="pointer-events-none absolute top-full right-0 mt-2 z-[60] px-2 py-1 rounded-md bg-slate-950 border border-white/5 shadow-xl text-white text-[10px] font-medium whitespace-nowrap opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
+            Profile
+          </span>
+        </Link>
+
+        {/* Insights button — only on chat page */}
+        {isChatPage && (
+          <button
+            onClick={() => onRightOpenChange?.(!rightOpen)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95
+              ${rightOpen
+                ? "bg-blue-600/20 border-blue-500/40 text-blue-200 shadow-[0_0_12px_rgba(59,130,246,0.15)]"
+                : "bg-slate-900/60 border-white/5 text-white/50 hover:text-white hover:bg-white/5 hover:border-white/10"
+              }`}
+          >
+            {rightOpen ? <PanelRightClose size={13} /> : <PanelRightOpen size={13} />}
+            <span className="hidden sm:inline">{rightOpen ? "Close" : "Insights"}</span>
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
+

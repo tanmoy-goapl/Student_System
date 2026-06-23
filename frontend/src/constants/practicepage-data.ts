@@ -20,6 +20,7 @@ export interface Subject {
   topics?: string[];
   isExpanded?: boolean;
   section?: string;
+  semester?: string;
 }
 
 export interface SessionStats {
@@ -105,6 +106,7 @@ export interface Subject {
   topics?: string[];
   isExpanded?: boolean;
   section?: string;
+  semester?: string;
 }
 
 export const SUBJECTS: Subject[] = [

@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging
 import json
 import os
+import re
 from datetime import datetime
 from typing import Optional
 
@@ -71,10 +72,30 @@ class SubmitAnswerRequest(BaseModel):
 
 @router.get("/topics/{student_id}")
 def get_topics(student_id: int, db: Session = Depends(get_db)):
-    """Extract topics from student's uploaded documents."""
+    """Extract topics from student's uploaded documents or curriculum."""
     logger.info(f"[Practice] Extracting topics for student_id={student_id}")
 
-    topics_data = extract_topics_from_documents(student_id, db)
+    # Load default curriculum structure
+    topics_data = {"subjects": []}
+    try:
+        with open("config/subject_topics.json", "r") as f:
+            curriculum_data = json.load(f)
+            
+        current_sem_num = curriculum_data.get("current_semester", 3)
+        
+        for sem in curriculum_data.get("semesters", []):
+            sem_num_match = re.search(r'semester-(\d+)', sem["id"])
+            sem_num = int(sem_num_match.group(1)) if sem_num_match else 1
+            
+            if sem_num == current_sem_num:
+                for course in sem.get("courses", []):
+                    subject_info = {
+                        "name": course["name"],
+                        "topics": [{"name": t} for t in course.get("topics", [])]
+                    }
+                    topics_data["subjects"].append(subject_info)
+    except Exception as e:
+        logger.error(f"[Practice] Error loading curriculum topics: {e}")
 
     # Enrich with performance data
     performances = (
@@ -493,7 +514,47 @@ async def get_practice_data(student_id: Optional[int] = None, db: Session = Depe
                     "section": "documents",
                 })
 
-    # ── PRIORITY 3: Default 8-semester curriculum (Always loaded now) ──
+    # ── PRIORITY 1.5: Roadmaps ──
+    from roadmap_models import LearningRoadmap, DailyTask
+    from sqlalchemy import desc
+    if student_id:
+        roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == student_id).order_by(desc(LearningRoadmap.created_at)).first()
+        if roadmap:
+            all_tasks = db.query(DailyTask).filter(DailyTask.roadmap_id == roadmap.id).all()
+            weeks = {}
+            for t in all_tasks:
+                wn = t.week_number or 1
+                if wn not in weeks:
+                    weeks[wn] = []
+                weeks[wn].append(t)
+            
+            for wn in sorted(weeks.keys()):
+                topics_list = []
+                weeks[wn].sort(key=lambda x: x.day_number or 0)
+                weak_areas = []
+                for t in weeks[wn]:
+                    t_name = t.topic
+                    if not t_name: continue
+                    topics_list.append(t_name)
+                    p = perf_map.get(t_name)
+                    if p and p.mastery_level in ("weak", "medium"):
+                        weak_areas.append(t_name)
+                    elif not p:
+                        weak_areas.append(t_name)
+                        
+                if topics_list:
+                    subjects.append({
+                        "id": f"roadmap-week-{wn}",
+                        "title": f"Week {wn} Roadmap",
+                        "iconName": "Map",
+                        "color": colors[(wn + len(subjects)) % len(colors)],
+                        "weakAreas": weak_areas,
+                        "topics": topics_list,
+                        "isExpanded": wn == 1 and not has_documents,
+                        "section": "roadmap",
+                    })
+
+    # ── PRIORITY 3: Default curriculum ──
     config_path = os.path.join(
         os.path.dirname(__file__), "..", "config", "default_curriculum.json"
     )
@@ -501,26 +562,36 @@ async def get_practice_data(student_id: Optional[int] = None, db: Session = Depe
         with open(config_path, "r") as f:
             curriculum_data = json.load(f)
 
-        for i, sem in enumerate(curriculum_data.get("semesters", [])):
-            weak_areas = []
-            if student_id:
-                for t_name in sem.get("topics", []):
-                    p = perf_map.get(t_name)
-                    if p and p.mastery_level in ("weak", "medium"):
-                        weak_areas.append(t_name)
-                    elif not p:
-                        weak_areas.append(t_name)
+        current_sem_num = curriculum_data.get("current_semester", 3)
 
-            subjects.append({
-                "id": sem["id"],
-                "title": sem["title"],
-                "iconName": sem.get("iconName", "Book"),
-                "color": sem.get("color", colors[i % len(colors)]),
-                "weakAreas": weak_areas,
-                "topics": sem.get("topics", []),
-                "isExpanded": not has_documents and i == 0,
-                "section": "curriculum",
-            })
+        for i, sem in enumerate(curriculum_data.get("semesters", [])):
+            sem_num_match = re.search(r'semester-(\d+)', sem["id"])
+            sem_num = int(sem_num_match.group(1)) if sem_num_match else 1
+            
+            if sem_num != current_sem_num:
+                continue
+
+            for subject_name, topics_list in sem.get("subjects", {}).items():
+                weak_areas = []
+                if student_id:
+                    for t_name in topics_list:
+                        p = perf_map.get(t_name)
+                        if p and p.mastery_level in ("weak", "medium"):
+                            weak_areas.append(t_name)
+                        elif not p:
+                            weak_areas.append(t_name)
+
+                subjects.append({
+                    "id": subject_name.lower().replace(" ", "-"),
+                    "title": subject_name,
+                    "iconName": sem.get("iconName", "Book"),
+                    "color": sem.get("color", colors[i % len(colors)]),
+                    "weakAreas": weak_areas,
+                    "topics": topics_list,
+                    "isExpanded": not has_documents,
+                    "section": "curriculum",
+                    "semester": sem.get("title"),
+                })
     except Exception as e:
         logger.error(f"Failed to load default curriculum: {e}")
 

@@ -1,0 +1,71 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+2 0 obj
+<< >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [ 4 0 R ] /Count 1 >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 3 0 R /Resources << /Font << /F1 6 0 R /F2 7 0 R /F3 8 0 R >> >> /MediaBox [ 0 0 595 842 ] /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 810 >>
+stream
+BT
+/F1 14 Tf
+50 780 Td
+(Indraprastha Institute of Information Technology, Delhi) Tj
+0 -20 Td
+/F2 12 Tf
+(IIIT-Delhi - Department of Computer Science & Engineering) Tj
+0 -25 Td
+/F1 11 Tf
+(Java Programming - Unit Notes) Tj
+0 -20 Td
+/F2 9 Tf
+(Course Resource Package) Tj
+0 -30 Td
+/F3 10 Tf
+(IIIT-Delhi CSE102 Lecture Notes:) Tj
+0 -18 Td
+(- JVM compiles source .java to .class bytecode which is interpreted.) Tj
+0 -18 Td
+(- Polymorphism: resolved at runtime \(overriding\) vs compile-time \(overloading\).) Tj
+0 -18 Td
+(- Interface methods are public abstract by default; java 8 introduced default methods.) Tj
+0 -18 Td
+(- Generics ensure type safety at compile time \(type erasure removes them at runtime\).) Tj
+0 -18 Td
+(- Lambda Expressions provide inline implementation of functional interfaces.) Tj
+0 -18 Td
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>
+endobj
+8 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000079 00000 n 
+0000000138 00000 n 
+0000000286 00000 n 
+0000001147 00000 n 
+0000001222 00000 n 
+0000001300 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+1370
+%%EOF

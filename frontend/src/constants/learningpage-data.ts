@@ -8,6 +8,8 @@ export type StrengthType = "weak" | "medium" | "strong" | "neutral";
 export interface TopicItem {
   id: string;
   title: string;
+  locked?: boolean;
+  subtopics?: string[];
 }
 
 export interface SubjectItem {
@@ -15,6 +17,7 @@ export interface SubjectItem {
   title: string;
   color: string;
   topics?: TopicItem[];
+  locked?: boolean;
 }
 
 export interface CategoryItem {

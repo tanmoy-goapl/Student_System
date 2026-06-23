@@ -1,7 +1,5 @@
 import { CategoryItem } from "@/constants/learningpage-data";
-import { getStrengthClasses } from "@/utils/getStrengthClasses";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import RemarkBadge from "./RemarkBadge";
 import SubjectSection from "./SubjectSection";
 
 interface CategorySectionProps {
@@ -9,7 +7,7 @@ interface CategorySectionProps {
   expanded: boolean;
   expandedSubjects: Record<string, boolean>;
   selectedTopicId: string;
-  onSelectTopic: (id: string) => void;
+  onSelectTopic: (id: string, subjectId?: string) => void;
   onToggleCategory: (id: string) => void;
   onToggleSubject: (id: string) => void;
 }
@@ -23,9 +21,6 @@ export default function CategorySection({
   onToggleCategory,
   onToggleSubject,
 }: CategorySectionProps) {
-  const categoryStyles = getStrengthClasses(
-    category.remark
-  );
 
   return (
     <div className="mb-2">
@@ -38,9 +33,7 @@ export default function CategorySection({
           px-3 py-2 rounded-xl
           transition-all duration-200
           ${
-            expanded
-              ? "bg-[#4A4FD9]"
-              : "hover:bg-[#1a1a1a]"
+            "hover:bg-[#1a1a1a]"
           }
         `}
       >
@@ -48,11 +41,6 @@ export default function CategorySection({
           <span className="font-medium text-[0.7rem]">
             {category.title}
           </span>
-
-          <RemarkBadge
-            remark={category.remark}
-            styles={categoryStyles}
-          />
         </div>
 
         {expanded ? (
@@ -67,7 +55,7 @@ export default function CategorySection({
           overflow-hidden transition-all duration-300
           ${
             expanded
-              ? "max-h-[1000px] opacity-100 mt-1"
+              ? "max-h-[5000px] opacity-100 mt-1"
               : "max-h-0 opacity-0"
           }
         `}

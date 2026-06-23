@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import glob
 import re
 from datetime import datetime, timedelta
 from typing import Optional
@@ -60,6 +61,7 @@ def _practice_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 2
         add_gpt(); add_llama()
 
     for name, api_key, base_url, model in configs:
+        last_error = "No configurations available"
         try:
             from openai import OpenAI
             client = OpenAI(api_key=api_key, base_url=base_url)
@@ -74,13 +76,18 @@ def _practice_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 2
                 temperature=0.3,
                 timeout=120,
             )
-            return resp.choices[0].message.content
+            content = resp.choices[0].message.content
+            if not content:
+                finish_reason = resp.choices[0].finish_reason if resp.choices else "unknown"
+                raise Exception(f"Provider returned empty content. Finish reason: {finish_reason}")
+            return content
         except Exception as e:
             logger.error(f"[PracticeEngine] LLM '{name}' failed: {e}")
+            last_error = str(e)
             continue
 
     logger.error("[PracticeEngine] All LLM providers failed!")
-    return ""
+    return f"ERROR: {last_error}"
 
 
 CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "topics_cache.json")
@@ -136,10 +143,67 @@ def extract_topics_from_documents(student_id: int, db: Session) -> dict:
         return {"subjects": []}
 
     doc_ids = sorted([d.id for d in docs])
-    cache_key = (student_id, tuple(doc_ids))
-    if cache_key in _TOPICS_CACHE:
-        logger.info(f"[PracticeEngine] Returning cached topics hierarchy for student {student_id}")
-        return _TOPICS_CACHE[cache_key]
+    cache_key = str(student_id) + "_" + "_".join(map(str, doc_ids))
+    
+    cache_file = "data/topics_cache.json"
+    import os, json
+    
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, "r") as f:
+                disk_cache = json.load(f)
+                if cache_key in disk_cache:
+                    return disk_cache[cache_key]
+        except Exception:
+            pass
+
+    # If it's not cached, doing an LLM call here blocks the entire page load!
+    # Return a placeholder and let it generate next time or in background
+    import threading
+    def generate_and_save():
+        try:
+            doc_names = {d.id: d.filename for d in docs}
+            all_text_snippets = []
+            for doc in docs:
+                results = query_chunks("overview summary topics chapters", top_k=5, allowed_doc_ids=[doc.id])
+                if results and results.get("documents") and results["documents"][0]:
+                    for chunk_text in results["documents"][0]:
+                        all_text_snippets.append(f"[{doc.filename}]: {chunk_text[:500]}")
+            if not all_text_snippets:
+                return
+            combined_context = "\n\n".join(all_text_snippets[:20])
+            system_prompt = """You are an educational content analyzer.
+Given document excerpts from a student's study materials, extract a structured hierarchy of subjects, topics, and subtopics.
+RULES:
+- Identify the subject
+- Identify major topics
+- Identify subtopics
+- Estimate difficulty and importance
+Return ONLY valid JSON.
+{"subjects": [{"name":"Subject", "topics":[{"name":"Topic", "subtopics":[], "difficulty":"medium", "importance":"high"}]}]}"""
+            user_prompt = f"Analyze these document excerpts and extract the educational topic structure:\n\n{combined_context}"
+            response = _practice_llm_call(system_prompt, user_prompt, max_tokens=2048)
+            if response:
+                import re
+                json_match = re.search(r"\\{.*\\}", response, re.DOTALL)
+                if json_match:
+                    data = json.loads(json_match.group(0))
+                    
+                    # Save to disk cache
+                    disk_cache = {}
+                    if os.path.exists(cache_file):
+                        with open(cache_file, "r") as f:
+                            disk_cache = json.load(f)
+                    disk_cache[cache_key] = data
+                    os.makedirs("data", exist_ok=True)
+                    with open(cache_file, "w") as f:
+                        json.dump(disk_cache, f)
+        except Exception as e:
+            logger.error(f"Background topic extraction failed: {e}")
+
+    threading.Thread(target=generate_and_save).start()
+    
+    return {"subjects": [{"name": "Processing Documents...", "topics": [{"name": "Check back later", "subtopics": []}]}]}
 
     doc_names = {d.id: d.filename for d in docs}
 
@@ -206,7 +270,7 @@ Return ONLY valid JSON in this exact format, no markdown fencing:
 
     return {"subjects": []}
 
-def generate_learning_content(student_id: int, topic: str, db: Session) -> dict:
+def generate_learning_content(student_id: int, topic: str, db: Session, subject: Optional[str] = None) -> dict:
     """
     Generate learning content for a specific topic, returning Notes and Revision JSON.
     Uses ChromaDB if document context exists, otherwise uses general knowledge.
@@ -215,6 +279,7 @@ def generate_learning_content(student_id: int, topic: str, db: Session) -> dict:
     # 1. Check Cache
     cached = db.query(LearningContent).filter(
         LearningContent.student_id == student_id,
+        LearningContent.subject == subject,
         LearningContent.topic == topic
     ).first()
     
@@ -224,55 +289,115 @@ def generate_learning_content(student_id: int, topic: str, db: Session) -> dict:
             "revision": cached.revision
         }
 
-    # 2. Retrieve relevant chunks from the student's documents
-    search_query = topic
-    docs = db.query(Document).filter(Document.student_id == student_id).all()
-    if not docs:
-        context = "(No documents uploaded — use general knowledge for a college level curriculum)"
-    else:
-        doc_ids = [d.id for d in docs]
-        results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
-        if results and results.get("documents") and results["documents"][0]:
-            context = "\n\n".join(results["documents"][0])
-        else:
-            context = "(No relevant content found in documents — use general knowledge for a college level curriculum)"
+    # Fetch specific subtopics from curriculum if available
+    subtopics_str = ""
+    is_curriculum_subject = False
+    if subject:
+        try:
+            with open("config/subject_topics.json", "r") as f:
+                subject_topics = json.load(f)
+                
+            if subject in subject_topics:
+                is_curriculum_subject = True
+        except Exception as e:
+            logger.error(f"[PracticeEngine] Failed to load subject_topics: {e}")
 
-    system_prompt = """You are an expert AI tutor creating a comprehensive study guide for a college student.
-Given the topic and context, generate a structured explanation using ONLY valid JSON.
+    # Retrieve relevant chunks from the student's documents
+    if is_curriculum_subject:
+        # Prevent document poisoning by skipping semantic search for predefined curriculum topics
+        context = "(Curriculum topic — use highly rigorous general knowledge for a college level curriculum)"
+    else:
+        search_query = f"{subject} {topic}" if subject else topic
+        docs = db.query(Document).filter(Document.student_id == student_id).all()
+        if not docs:
+            context = "(No documents uploaded — use general knowledge for a college level curriculum)"
+        else:
+            doc_ids = [d.id for d in docs]
+            try:
+                results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
+                if results and results.get("documents") and results["documents"][0]:
+                    context = "\n\n".join(results["documents"][0])
+                else:
+                    context = "(No relevant content found in documents — use general knowledge for a college level curriculum)"
+            except Exception as e:
+                logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
+                context = "(Document search failed due to database error — use general knowledge for a college level curriculum)"
+
+    extra_instructions = ""
+    if subject == "Programming Fundamentals":
+        extra_instructions += "\nGenerate notes ONLY within the context of Programming Fundamentals.\n"
+        extra_instructions += "Do NOT discuss Operating Systems concepts such as processes, threads, synchronization, semaphores, deadlocks, scheduling, memory management, segmentation, or paging.\n"
+        if topic == "Conditional Statements":
+            extra_instructions += "Allowed concepts: if, if-else, nested if, switch-case, comparison operators, logical operators, decision making.\n"
+        elif topic == "Functions":
+            extra_instructions += "Allowed concepts: function definition, function call, parameters, return values, scope, recursion, basic programming functions.\n"
+        elif topic == "Input Output Operations":
+            extra_instructions += "Allowed concepts: printf, scanf, standard streams, reading, writing, formatting strings.\n"
+
+    system_prompt = """You are teaching a first-year B.Tech CSE student.
+Given the topic and context, generate a concise and high-yield technical study guide using ONLY valid JSON. Keep it punchy and fast to read.
 
 Your output must follow this strict JSON format:
 {
     "notes": [
-        {"type": "heading", "text": "Main Concept"},
-        {"type": "paragraph", "text": "Detailed explanation..."},
-        {"type": "highlight", "variant": "constructive", "title": "Key Rule", "text": "Important rule..."},
-        {"type": "code_block", "language": "python", "title": "Example", "code": "print('hello')"},
-        {"type": "note", "text": "A brief side note"}
+        {"type": "heading", "text": "Advanced Concept / Deep Dive"},
+        {"type": "paragraph", "text": "In-depth technical explanation, covering edge cases, under-the-hood workings, and performance implications..."},
+        {"type": "highlight", "variant": "constructive", "title": "Interview Pro-Tip", "text": "Crucial detail often asked in interviews..."},
+        {"type": "code_block", "language": "python", "title": "Complex Implementation", "code": "def complex_algo(): pass"},
+        {"type": "note", "text": "Advanced side note or historical context"}
     ],
     "revision": {
-        "title": "Quick Revision",
+        "title": "Interview Cheat Sheet",
         "points": [
-            {"id": 1, "text": "First key point to remember"},
-            {"id": 2, "text": "Second key point to remember"}
+            {"id": 1, "text": "Advanced point 1"},
+            {"id": 2, "text": "Advanced point 2"}
         ]
     }
 }
 
 RULES:
 - `notes` array must use types: 'heading', 'paragraph', 'highlight' (variant: 'constructive' or 'destructive'), 'code_block' (include 'language', 'title', 'code'), or 'note'.
-- Explain the topic clearly, using the context if provided.
-- `revision` should have 3-5 concise bullet points.
+- The content MUST be technically deep but CONCISE. Limit the entire `notes` array to EXACTLY 4 highly-impactful sections. Do NOT generate long walls of text.
+- NEVER generate basic, high-level, or "kidish" overviews. Assume the reader is preparing for a Senior or top-tier placement.
+- Generate content ONLY within the context of the provided subject.
+- `revision` should have exactly 3 hard-hitting, concise bullet points.
 - Do not use markdown fencing (e.g. ```json). Just return the raw JSON object.
 """
 
-    user_prompt = f"Topic: {topic}\n\nContext:\n{context}\n\nGenerate the study guide JSON."
+    context_str = f"Subject / Context: {subject or 'General Computer Science'}\n"
+    user_prompt = f"SUBJECT:\n{subject}\n\nTOPIC:\n{topic}\n\nCONTEXT:\n{context_str}{context}\n\n{subtopics_str}Generate the study guide JSON.\nIMPORTANT: Only use the CONTEXT if it strictly belongs to the SUBJECT ({subject}). If the context is about a different subject (e.g., Operating Systems), IGNORE the context entirely and use your general knowledge.\n{extra_instructions}"
 
-    response = _practice_llm_call(system_prompt, user_prompt, max_tokens=2500)
+    logger.info(f"--- LLM PROMPT (Subject: {subject}, Topic: {topic}) ---")
+    logger.info(f"SYSTEM PROMPT:\n{system_prompt}")
+    logger.info(f"USER PROMPT:\n{user_prompt}")
+    logger.info(f"-------------------------------------------------------")
+
+    max_retries = 2
+    response = ""
+    for attempt in range(max_retries):
+        response = _practice_llm_call(system_prompt, user_prompt, max_tokens=6000)
+        
+        # Step 4: Content Validation
+        if subject == "Programming Fundamentals":
+            forbidden_words = [
+                "semaphore", "deadlock", "thread", "process", "synchronization", 
+                "mutex", "conditional variable", "operating system", "segmentation",
+                "paging", "memory allocation", "page table", "segment table"
+            ]
+            resp_lower = response.lower()
+            found_forbidden = [w for w in forbidden_words if w in resp_lower]
+            
+            if found_forbidden:
+                logger.warning(f"Validation failed on attempt {attempt+1}. Found OS terminology: {found_forbidden}. Regenerating...")
+                continue
+                
+        break
 
     # Fallback default if parsing fails
+    error_reason = "LLM returned empty response" if not response else f"JSON parsing failed. Raw response: {response[:300]}"
     default_content = [
         {"type": "heading", "text": topic},
-        {"type": "paragraph", "text": "Content could not be generated. Please try again later."}
+        {"type": "paragraph", "text": f"Content could not be generated. Debug info: {error_reason}"}
     ]
     default_revision = {
         "title": "Quick Revision",
@@ -295,19 +420,21 @@ RULES:
             logger.error(f"[PracticeEngine] Failed to parse learning content for topic '{topic}': {e}")
             logger.error(f"[PracticeEngine] Raw response: {response[:500]}")
 
-    # 3. Save to cache
-    new_cache = LearningContent(
-        student_id=student_id,
-        topic=topic,
-        content=notes_response,
-        revision=revision_response
-    )
-    db.add(new_cache)
-    try:
-        db.commit()
-    except Exception as e:
-        logger.error(f"[PracticeEngine] Failed to save learning content cache: {e}")
-        db.rollback()
+    # 3. Save to cache only if successful
+    if "could not be generated" not in str(notes_response):
+        new_cache = LearningContent(
+            student_id=student_id,
+            subject=subject,
+            topic=topic,
+            content=notes_response,
+            revision=revision_response
+        )
+        db.add(new_cache)
+        try:
+            db.commit()
+        except Exception as e:
+            logger.error(f"[PracticeEngine] Failed to save learning content cache: {e}")
+            db.rollback()
 
     return {
         "notesResponse": notes_response,
@@ -466,11 +593,11 @@ def get_adaptive_difficulty(student_id: int, topic: str, db: Session) -> str:
 
 def get_mastery_level(accuracy: float, total_attempts: int) -> str:
     """Calculate mastery level from accuracy and attempt count."""
-    if total_attempts < 3:
+    if total_attempts < 2:
         return "weak"
     if accuracy < 50:
         return "weak"
-    elif accuracy < 75:
+    elif accuracy < 85:
         return "medium"
     else:
         return "strong"
@@ -496,14 +623,70 @@ def update_topic_performance(
     )
 
     if not perf:
+        # Try to find the correct subject for this topic from curriculum
+        resolved_subject = subject
+        try:
+            import json, os
+            
+            # Check subject_topics.json first (highest priority)
+            subject_topics_path = os.path.join(os.path.dirname(__file__), "..", "config", "subject_topics.json")
+            if os.path.exists(subject_topics_path):
+                with open(subject_topics_path, "r") as f:
+                    subject_topics = json.load(f)
+                for subj_name, topics_list in subject_topics.items():
+                    if topic in topics_list:
+                        resolved_subject = subj_name
+                        break
+            
+            # If not found, check default_curriculum.json
+            if resolved_subject == subject:
+                config_path = os.path.join(os.path.dirname(__file__), "..", "config", "default_curriculum.json")
+                with open(config_path, "r") as f:
+                    curriculum_data = json.load(f)
+                for sem in curriculum_data.get("semesters", []):
+                    for subj_name, topics_list in sem.get("subjects", {}).items():
+                        if topic in topics_list:
+                            resolved_subject = subj_name
+                            break
+        except Exception as e:
+            pass
+
         perf = TopicPerformance(
             student_id=student_id,
             topic=topic,
-            subject=subject,
+            subject=resolved_subject,
             total_attempts=0,
             correct_count=0,
         )
         db.add(perf)
+    else:
+        # If perf exists but has wrong subject (like a subtopic), fix it
+        try:
+            import json, os
+            subject_topics_path = os.path.join(os.path.dirname(__file__), "..", "config", "subject_topics.json")
+            found_subject = None
+            if os.path.exists(subject_topics_path):
+                with open(subject_topics_path, "r") as f:
+                    subject_topics = json.load(f)
+                for subj_name, topics_list in subject_topics.items():
+                    if topic in topics_list:
+                        found_subject = subj_name
+                        break
+            
+            if not found_subject:
+                config_path = os.path.join(os.path.dirname(__file__), "..", "config", "default_curriculum.json")
+                with open(config_path, "r") as f:
+                    curriculum_data = json.load(f)
+                for sem in curriculum_data.get("semesters", []):
+                    for subj_name, topics_list in sem.get("subjects", {}).items():
+                        if topic in topics_list:
+                            found_subject = subj_name
+                            break
+            
+            if found_subject and perf.subject != found_subject:
+                perf.subject = found_subject
+        except Exception:
+            pass
 
     perf.total_attempts += 1
     if is_correct:
@@ -516,6 +699,9 @@ def update_topic_performance(
 
     db.commit()
     db.refresh(perf)
+    
+    logger.info(f"PERFORMANCE UPDATED | Topic: {topic} | Accuracy: {perf.accuracy}% | Attempts: {perf.total_attempts} | Mastery Level: {perf.mastery_level}")
+    
     return perf
 
 
@@ -597,6 +783,31 @@ def finalize_session_history(session, db: Session):
     perf.topics_covered = unique_topics
     
     db.commit()
+
+    # Auto-complete Roadmap Task if accuracy >= 75%
+    if score_percentage >= 75.0:
+        from roadmap_models import LearningRoadmap, DailyTask
+        from sqlalchemy import desc
+        roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == session.student_id).order_by(desc(LearningRoadmap.created_at)).first()
+        if roadmap:
+            task = db.query(DailyTask).filter(
+                DailyTask.roadmap_id == roadmap.id,
+                DailyTask.topic == session.topic,
+                DailyTask.task_type == "quiz",
+                DailyTask.status != "completed"
+            ).first()
+            
+            if task:
+                task.status = "completed"
+                task.completed_at = datetime.utcnow()
+                db.commit()
+                
+                # Recalculate progress
+                all_tasks = db.query(DailyTask).filter(DailyTask.roadmap_id == roadmap.id).all()
+                if all_tasks:
+                    completed_count = sum(1 for t in all_tasks if t.status == "completed")
+                    roadmap.overall_progress = (completed_count / len(all_tasks)) * 100
+                    db.commit()
 
 
 # ═════════════════════════════════════════════════════════════════════════════

@@ -1,6 +1,7 @@
 import { Subject } from "@/constants/practicepage-data";
 import SubjectAccordion from "./SubjectAccordion";
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { useState } from "react";
 
 interface TopicSelectorSectionProps {
   subjects: Subject[];
@@ -30,6 +31,20 @@ export default function TopicSelectorSection({
   const curriculumSubjects = subjects.filter(
     (s) => s.section === "curriculum" || !s.section
   );
+  const roadmapSubjects = subjects.filter((s) => s.section === "roadmap");
+
+  const [expandedSemesters, setExpandedSemesters] = useState<Record<string, boolean>>({});
+
+  const toggleSemester = (sem: string) => {
+    setExpandedSemesters((prev) => ({ ...prev, [sem]: !prev[sem] }));
+  };
+
+  const groupedCurriculum = curriculumSubjects.reduce((acc, subj) => {
+    const sem = subj.semester || "Other Topics";
+    if (!acc[sem]) acc[sem] = [];
+    acc[sem].push(subj);
+    return acc;
+  }, {} as Record<string, Subject[]>);
 
   return (
     <div className="px-4 py-4 border-b border-white/10">
@@ -47,6 +62,26 @@ export default function TopicSelectorSection({
       </div>
 
       <div className="space-y-4">
+        {roadmapSubjects.length > 0 && (
+          <div>
+            <h4 className="text-xs font-bold text-amber-400/95 mb-2 px-1 tracking-wide uppercase">
+              Your Personalized Roadmap
+            </h4>
+            <div className="space-y-1">
+              {roadmapSubjects.map((subject) => (
+                <SubjectAccordion
+                  key={subject.id}
+                  subject={subject}
+                  isExpanded={expandedSubjects[subject.id] || false}
+                  selectedTopic={selectedTopic}
+                  onSelectTopic={onSelectTopic}
+                  onToggle={() => onToggleSubject(subject.id)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {documentSubjects.length > 0 && (
           <div>
             <h4 className="text-xs font-bold text-violet-400/95 mb-2 px-1 tracking-wide uppercase">
@@ -67,23 +102,46 @@ export default function TopicSelectorSection({
           </div>
         )}
 
-        <div>
-          <h4 className="text-xs font-bold text-blue-400/95 mb-2 px-1 tracking-wide uppercase">
-            Your Course Curriculum
-          </h4>
-          <div className="space-y-1">
-            {curriculumSubjects.map((subject) => (
-              <SubjectAccordion
-                key={subject.id}
-                subject={subject}
-                isExpanded={expandedSubjects[subject.id] || false}
-                selectedTopic={selectedTopic}
-                onSelectTopic={onSelectTopic}
-                onToggle={() => onToggleSubject(subject.id)}
-              />
-            ))}
+        {curriculumSubjects.length > 0 && (
+          <div>
+            <h4 className="text-xs font-bold text-blue-400/95 mb-2 px-1 tracking-wide uppercase">
+              Your Course Curriculum
+            </h4>
+            <div className="space-y-2">
+              {Object.entries(groupedCurriculum).map(([semesterName, semSubjects]) => (
+                <div key={semesterName} className="border border-white/5 rounded-xl overflow-hidden bg-white/[0.02]">
+                  <button
+                    onClick={() => toggleSemester(semesterName)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-blue-300/90">{semesterName}</span>
+                    </div>
+                    {expandedSemesters[semesterName] ? (
+                      <ChevronDown size={14} className="text-white/40" />
+                    ) : (
+                      <ChevronRight size={14} className="text-white/40" />
+                    )}
+                  </button>
+                  {expandedSemesters[semesterName] && (
+                    <div className="p-1.5 space-y-1 bg-black/10">
+                      {semSubjects.map((subject) => (
+                        <SubjectAccordion
+                          key={subject.id}
+                          subject={subject}
+                          isExpanded={expandedSubjects[subject.id] || false}
+                          selectedTopic={selectedTopic}
+                          onSelectTopic={onSelectTopic}
+                          onToggle={() => onToggleSubject(subject.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

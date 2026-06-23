@@ -2,18 +2,19 @@ import { useState, useEffect } from "react";
 import CategorySection from "./CategorySection";
 import { getLearningData, LearningDataResponse } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 
 export default function LearningSidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const topicParam = searchParams?.get("topic");
+  const currentRoadmapId = searchParams?.get("roadmap_id") || "";
+  const source = searchParams?.get("source") || "courses";
 
   const [data, setData] = useState<LearningDataResponse | null>(null);
+  const [roadmaps, setRoadmaps] = useState<any[]>([]);
   const [expandedCategories, setExpandedCategories] =
-    useState<Record<string, boolean>>({
-      curriculum: false,
-      documents: true,
-    });
+    useState<Record<string, boolean>>({});
 
   const [expandedSubjects, setExpandedSubjects] =
     useState<Record<string, boolean>>({});
@@ -25,27 +26,63 @@ export default function LearningSidebar() {
   useEffect(() => {
     if (topicParam) {
       setSelectedTopicId(topicParam);
+    } else if (data?.selectedTopic) {
+      setSelectedTopicId(data.selectedTopic);
     }
-  }, [topicParam]);
+  }, [topicParam, data?.selectedTopic]);
 
   useEffect(() => {
     if (data && data.sidebarData) {
+      setExpandedCategories((prev) => {
+        const catExpanded: Record<string, boolean> = {};
+        const currentTopic = data.selectedTopic || topicParam;
+        
+        data.sidebarData.forEach((category: any) => {
+          let hasSelectedTopic = false;
+          if (category.subjects) {
+            hasSelectedTopic = category.subjects.some((subj: any) =>
+              subj.topics?.some(
+                (t: any) =>
+                  t.id === currentTopic ||
+                  t.subtopics?.includes(currentTopic)
+              )
+            );
+          } else if (category.topics) {
+            hasSelectedTopic = category.topics.some(
+              (t: any) =>
+                t.id === currentTopic ||
+                t.subtopics?.includes(currentTopic)
+            );
+          }
+          if (hasSelectedTopic) {
+            catExpanded[category.id] = true;
+          }
+        });
+        return catExpanded;
+      });
+
       setExpandedSubjects((prev) => {
         const docExpanded: Record<string, boolean> = {};
+        const currentTopic = data.selectedTopic || topicParam;
+        
         data.sidebarData.forEach((category: any) => {
-          if (category.id === "documents" && category.subjects) {
+          if (category.subjects) {
             category.subjects.forEach((subj: any) => {
-              docExpanded[subj.id] = true;
+              const hasSelectedTopic = subj.topics?.some(
+                (t: any) =>
+                  t.id === currentTopic ||
+                  t.subtopics?.includes(currentTopic)
+              );
+              if (hasSelectedTopic) {
+                docExpanded[subj.id] = true;
+              }
             });
           }
         });
-        return {
-          ...docExpanded,
-          ...prev
-        };
+        return docExpanded;
       });
     }
-  }, [data]);
+  }, [data, topicParam]);
 
   const getStudentId = (): number => {
     if (typeof window !== "undefined") {
@@ -58,14 +95,31 @@ export default function LearningSidebar() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await getLearningData(topicParam || undefined, getStudentId());
+        const roadmapId = currentRoadmapId ? parseInt(currentRoadmapId) : undefined;
+        const response = await getLearningData(topicParam || undefined, getStudentId(), undefined, roadmapId, source);
         setData(response);
-      } catch (error) {
-        console.error("Failed to load learning data:", error);
+      } catch (err) {
+        console.error("Failed to load learning data:", err);
       }
     }
     fetchData();
-  }, [topicParam]);
+  }, [topicParam, currentRoadmapId, source]);
+
+  useEffect(() => {
+    async function fetchUserRoadmaps() {
+      try {
+        const studentId = getStudentId();
+        const res = await fetch(`/api/roadmap/all/${studentId}`);
+        const result = await res.json();
+        if (result.success) {
+          setRoadmaps(result.roadmaps);
+        }
+      } catch (e) {
+        console.error("Failed to fetch roadmaps:", e);
+      }
+    }
+    fetchUserRoadmaps();
+  }, []);
 
   const toggleCategory = (id: string) => {
     setExpandedCategories((prev) => ({
@@ -92,11 +146,34 @@ export default function LearningSidebar() {
 
   return (
     <div className="bg-[#131826] w-[20vw] h-full flex flex-col">
-      <div className="py-4 px-4 shrink-0">
-        <h2 className="text-[0.6rem] text-left uppercase tracking-[0.22em] pt-2 pb-3 text-white/55">
+      <div className="py-4 px-4 shrink-0 space-y-3 border-b border-white/20 pb-4">
+        <h2 className="text-[0.6rem] text-left uppercase tracking-[0.22em] text-white/55">
           Topic Navigator
         </h2>
-        <div className="pb-4 flex justify-start border-b border-white/20">
+
+        {roadmaps.length > 0 && (
+          <div className="relative">
+            <select 
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 pr-8 text-xs text-white appearance-none focus:outline-none focus:border-blue-500/50 cursor-pointer"
+              value={currentRoadmapId}
+              onChange={(e) => {
+                const id = e.target.value;
+                const query = id ? `roadmap_id=${id}` : "";
+                router.push(`/learning?${query}`);
+              }}
+            >
+              <option value="" className="bg-slate-900">All Topics (No Roadmap)</option>
+              {roadmaps.map(rm => (
+                <option key={rm.id} value={rm.id} className="bg-slate-900">{rm.title}</option>
+              ))}
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <ChevronDown className="w-4 h-4 text-white/50" />
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-start">
           <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-4 py-2 w-full">
             <input
               className="flex-1 w-full bg-transparent text-xs text-white placeholder:text-white/25 focus:outline-none"
@@ -106,17 +183,27 @@ export default function LearningSidebar() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto purple-scrollbar text-white px-4 py-2 scrollbar-thin scrollbar-thumb-white/10">
-        {data.sidebarData.map((category: any) => (
+      <div className="flex-1 overflow-y-auto purple-scrollbar">
+        {data?.sidebarData
+          ?.filter((category: any) => {
+            if (source === "personal") {
+              return category.id === "roadmap" || category.id === "documents";
+            } else {
+              return category.id === "curriculum";
+            }
+          })
+          .map((category: any) => (
           <CategorySection
             key={category.id}
             category={category}
-            expanded={expandedCategories[category.id]}
+            expanded={expandedCategories[category.id] || false}
             expandedSubjects={expandedSubjects}
             selectedTopicId={selectedTopicId}
-            onSelectTopic={(id) => {
+            onSelectTopic={(id, subjectId) => {
               setSelectedTopicId(id);
-              router.push(`/learning?topic=${encodeURIComponent(id)}`);
+              const query = currentRoadmapId ? `&roadmap_id=${currentRoadmapId}` : "";
+              const subjQuery = subjectId ? `&subject=${encodeURIComponent(subjectId)}` : "";
+              router.push(`/learning?topic=${encodeURIComponent(id)}${subjQuery}${query}&source=${source}`);
             }}
             onToggleCategory={toggleCategory}
             onToggleSubject={toggleSubject}

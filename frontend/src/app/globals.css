@@ -60,6 +60,7 @@ body {
 /* Chrome / Edge / Safari */
 .purple-scrollbar::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 .purple-scrollbar::-webkit-scrollbar-track {
@@ -73,12 +74,22 @@ body {
 
 .purple-scrollbar::-webkit-scrollbar-thumb {
   background: linear-gradient(
-    to bottom,
+    to bottom right,
     rgba(124, 92, 255, 0.5),
     rgba(91, 95, 255, 0.25)
   );
 
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 

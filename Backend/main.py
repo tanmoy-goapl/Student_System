@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -5,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from config import ALLOWED_ORIGINS
 from routes import auth, upload, chat, settings, performance
-from routes import homepage, career, practice, learning, documents, chat_sidebar
+from routes import homepage, career, practice, learning, documents, chat_sidebar, roadmap, courses, analytics
 from database import init_db
 
 
@@ -40,6 +42,10 @@ app.include_router(career.router, tags=["career"])
 app.include_router(practice.router, tags=["practice"])
 app.include_router(learning.router, tags=["learning"])
 app.include_router(chat_sidebar.router, tags=["chat-sidebar"])
+app.include_router(roadmap.router, tags=["roadmap"])
+app.include_router(courses.router, tags=["courses"])
+app.include_router(analytics.router, tags=["analytics"])
+
 
 
 @app.get("/")
@@ -58,3 +64,4 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
+ 

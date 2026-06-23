@@ -194,19 +194,29 @@ async def get_homepage_data(student_id: int | None = None, db: Session = Depends
 
         # Query distinct topics practiced by this student
         from practice_models import QuizHistory, CustomTopic
-        from services.practice_engine import extract_topics_from_documents
         import json, os
         
-        # 1. Get subjects & their topics (Always load both curriculum and document topics if present)
-        topics_data = extract_topics_from_documents(student_id, db)
+        # Fast path: only use curriculum + custom topics + DB quiz history.
+        # Skip the slow LLM-based extract_topics_from_documents call on page load.
         subj_list = []
         
-        if topics_data and topics_data.get("subjects"):
-            for s in topics_data.get("subjects", []):
-                subj_list.append({
-                    "title": s["name"],
-                    "topics": [t["name"] for t in s.get("topics", [])]
-                })
+        # Try to load from the on-disk topics cache file (written by practice_engine)
+        cache_path = os.path.join(os.path.dirname(__file__), "..", "services", "topics_cache.json")
+        try:
+            if os.path.exists(cache_path) and os.path.getsize(cache_path) > 2:
+                with open(cache_path, "r") as f:
+                    cache_data = json.load(f)
+                # Find cached entry for this student
+                for key, val in cache_data.items():
+                    if val and val.get("subjects"):
+                        for s in val["subjects"]:
+                            subj_list.append({
+                                "title": s["name"],
+                                "topics": [t["name"] for t in s.get("topics", [])]
+                            })
+                        break  # Use first available cache entry
+        except Exception:
+            pass
         
         # Load 8-semester curriculum
         config_path = os.path.join(

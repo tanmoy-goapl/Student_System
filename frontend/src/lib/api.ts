@@ -230,12 +230,15 @@ export interface PracticeDataResponse {
   sampleQuestions: any[];
 }
 
-export async function getPracticeData(studentId?: number): Promise<PracticeDataResponse> {
-  const url = studentId ? `/api/practice/data?student_id=${studentId}` : "/api/practice/data";
-  return request<PracticeDataResponse>(url, {
-    method: "GET",
-  });
-}
+export const getPracticeData = async (studentId?: number): Promise<PracticeDataResponse> => {
+    const timestamp = new Date().getTime();
+    const url = studentId 
+      ? `/api/practice/data?student_id=${studentId}&_t=${timestamp}` 
+      : `/api/practice/data?_t=${timestamp}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error("Failed to load practice data");
+    return res.json();
+};
 
 // -- Practice Session --
 
@@ -374,13 +377,17 @@ export interface LearningDataResponse {
   learningAssistantResponse: any;
   rightSidebarData: any;
   selectedTopic: string;
+  quickActions?: any[];
 }
 
-export async function getLearningData(topic?: string, studentId?: number): Promise<LearningDataResponse> {
+export async function getLearningData(topic?: string, studentId?: number, subject?: string, roadmapId?: number, source?: string): Promise<LearningDataResponse> {
   let url = "/api/learning/data";
   const params = new URLSearchParams();
   if (topic) params.append("topic", topic);
   if (studentId) params.append("student_id", studentId.toString());
+  if (subject) params.append("subject", subject);
+  if (roadmapId) params.append("roadmap_id", roadmapId.toString());
+  if (source) params.append("source", source);
   
   const q = params.toString();
   if (q) url += `?${q}`;
@@ -395,11 +402,12 @@ export interface LearningContentResponse {
   revision: any;
 }
 
-export async function getLearningContent(topic?: string, studentId?: number): Promise<LearningContentResponse> {
+export async function getLearningContent(topic?: string, studentId?: number, subject?: string): Promise<LearningContentResponse> {
   let url = "/api/learning/content";
   const params = new URLSearchParams();
   if (topic) params.append("topic", topic);
   if (studentId) params.append("student_id", studentId.toString());
+  if (subject) params.append("subject", subject);
   
   const q = params.toString();
   if (q) url += `?${q}`;
@@ -479,3 +487,15 @@ export async function deleteDocument(documentId: string): Promise<void> {
   });
 }
 
+// -- Topic Completion --
+export async function completeTopic(
+  studentId: number,
+  topic: string,
+  taskType: "learning" | "quiz"
+): Promise<{ success: boolean; message: string; already_completed?: boolean }> {
+  return request("/api/roadmap/complete_topic", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ student_id: studentId, topic, task_type: taskType }),
+  });
+}
