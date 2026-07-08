@@ -4,13 +4,12 @@ import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
 import TopBar from "./navbar/TopBar";
 import { Suspense } from "react";
-import LearningSidebar from "./learningpage/LearningSidebar";
-import PracticeSidebar from "./practicepage/Left/PracticeSidebar";
 import PerformanceSidebar from "./performancepage/Left/PerformanceSidebar";
 import RightSidebar from "@/components/RightSidebar";
  
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
  
 interface SidebarRoute {
   match: string;
@@ -28,22 +27,34 @@ export default function AppLayout({
  
   const isLogin = pathname === "/login";
  
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { role, loading } = useAuth();
   const [rightOpen, setRightOpen] = useState(false);
  
   useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    const role = localStorage.getItem("role");
-    const authenticated = !!userId && !!role;
+    if (loading) return;
  
-    setIsAuthenticated(authenticated);
-    setLoading(false);
- 
-    if (!authenticated && !isLogin) {
+    if (!role && !isLogin) {
       router.replace(`/login?next=${pathname}`);
+      return;
     }
-  }, [pathname, isLogin, router]);
+
+    // Strict Route Guards
+    if (role && !isLogin && pathname) {
+      if (role === "admin") {
+        if (["/courses", "/personal", "/learning", "/practice", "/roadmap", "/performance"].some(r => pathname.startsWith(r))) {
+          window.location.href = "/admin";
+        }
+      } else if (role === "student") {
+        if (["/professor", "/admin", "/professors", "/departments"].some(r => pathname.startsWith(r))) {
+          window.location.href = "/courses";
+        }
+      } else if (role === "professor") {
+        if (["/courses", "/personal", "/learning", "/practice", "/roadmap", "/analytics", "/documents", "/performance"].some(r => pathname.startsWith(r))) {
+          window.location.href = "/professor";
+        }
+      }
+    }
+  }, [pathname, isLogin, router, role, loading]);
  
   const sidebarRoutes: SidebarRoute[] = [
     {
@@ -58,13 +69,7 @@ export default function AppLayout({
     )?.component;
   }, [pathname]);
  
-  if (loading) {
-    return (
-      <Loader fullScreen text="Loading..." />
-    );
-  }
- 
-  if (!isAuthenticated && !isLogin) {
+  if (loading || (!role && !isLogin)) {
     return (
       <Loader fullScreen text="Loading..." />
     );

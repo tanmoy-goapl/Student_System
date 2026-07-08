@@ -4,11 +4,19 @@ import { useState, useEffect, useRef } from "react";
 import ChatHistorySidebar from "@/components/ChatHistorySidebar";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
-import { Paperclip, Send } from "lucide-react";
+import { Paperclip, Send, Square, CheckCircle2, ChevronRight, Activity, CalendarDays } from "lucide-react";
 import RightSidebar from "@/components/RightSidebar";
 import { getChatSidebarData } from "@/lib/api";
+import Link from "next/link";
 
-type Message = { role: string; content: string; created_at?: string | null };
+type Message = { 
+  role: string; 
+  content: string; 
+  created_at?: string | null;
+  intent?: string;
+  roadmap_metadata?: { title: string; duration: string; weeks: number; tasks: number };
+  suggest_roadmap?: boolean;
+};
 
 function getStoredUser() {
   const id = parseInt(localStorage.getItem("user_id") || "0", 10);
@@ -24,11 +32,14 @@ export default function ChatPage() {
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [streamStatus, setStreamStatus] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState("");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [resetNext, setResetNext] = useState(false);
   const [user, setUser] = useState<{ id: number; role: string; name: string } | null>(null);
   const [roleSuggestions, setRoleSuggestions] = useState<any>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -63,8 +74,12 @@ export default function ChatPage() {
     setQuestion("");
     localStorage.removeItem("chat_input");
     setLoading(true);
+    setIsStreaming(true);
 
     try {
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -74,6 +89,7 @@ export default function ChatPage() {
           role: user.role,
           reset: resetNext,
         }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -94,6 +110,9 @@ export default function ChatPage() {
       const decoder = new TextDecoder();
       let done = false;
       let assistantAnswer = "";
+      let finalIntent = "";
+      let finalMetadata = null;
+      let finalSuggest = false;
       let buffer = "";
 
       while (!done) {
@@ -112,6 +131,9 @@ export default function ChatPage() {
               if (parsed.error) {
                 throw new Error(parsed.error);
               }
+              if (parsed.status !== undefined) {
+                setStreamStatus(parsed.status);
+              }
               if (parsed.content) {
                 assistantAnswer += parsed.content;
                 setHistory(prev => {
@@ -125,6 +147,15 @@ export default function ChatPage() {
                   return copy;
                 });
               }
+              if (parsed.intent) {
+                finalIntent = parsed.intent;
+              }
+              if (parsed.roadmap_metadata) {
+                finalMetadata = parsed.roadmap_metadata;
+              }
+              if (parsed.suggest_roadmap) {
+                finalSuggest = true;
+              }
             } catch (err) {
               console.error("Error parsing stream line:", err);
             }
@@ -132,16 +163,45 @@ export default function ChatPage() {
         }
       }
 
-      if (!assistantAnswer) {
+      // Final state updates
+      setHistory(prev => {
+        const copy = [...prev];
+        if (copy.length > 0) {
+          copy[copy.length - 1] = {
+            ...copy[copy.length - 1],
+            content: assistantAnswer,
+            intent: finalIntent,
+            roadmap_metadata: finalMetadata,
+            suggest_roadmap: finalSuggest,
+          };
+        }
+        return copy;
+      });
+
+      if (!assistantAnswer && !finalMetadata) {
         setError("No response received. Please try again.");
         setHistory(prev => prev.slice(0, -1));
       }
     } catch (err: any) {
-      setError(err.message || "Failed to get answer. Please try again.");
-      setHistory(prev => prev.slice(0, -1));
+      if (err.name === 'AbortError') {
+        // Handle stop gracefully
+        setStreamStatus("");
+      } else {
+        setError(err.message || "Failed to get answer. Please try again.");
+        setHistory(prev => prev.slice(0, -1));
+      }
     } finally {
       setLoading(false);
+      setStreamStatus("");
+      setIsStreaming(false);
+      abortControllerRef.current = null;
       if (resetNext) setResetNext(false);
+    }
+  };
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
   };
 
@@ -227,12 +287,22 @@ export default function ChatPage() {
             </div>
           )}
 
-          {history.map((msg, i) => <ChatBubble key={i} msg={msg} />)}
+          {history.map((msg, i) => <ChatBubble key={i} msg={msg} onAsk={(q) => { setQuestion(q); setTimeout(() => document.getElementById("chat-send-btn")?.click(), 50); }} />)}
 
-          {loading && (
+          {loading && !streamStatus && (
             <div className="flex items-center gap-2">
               <Avatar initials="AI" />
               <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl rounded-bl-none px-4 py-3">
+                <TypingDots />
+              </div>
+            </div>
+          )}
+          
+          {streamStatus && (
+            <div className="flex items-center gap-2 animate-in fade-in duration-300">
+              <Avatar initials="AI" />
+              <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl rounded-bl-none px-4 py-3 flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-blue-300">{streamStatus}</span>
                 <TypingDots />
               </div>
             </div>
@@ -260,16 +330,27 @@ export default function ChatPage() {
               placeholder="Ask about your marks, study plan, feedback…"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !loading && !e.shiftKey && handleAsk()}
-              disabled={loading || !user?.id}
+              onKeyDown={(e) => e.key === "Enter" && !isStreaming && !e.shiftKey && handleAsk()}
+              disabled={isStreaming || !user?.id}
             />
-            <button
-              onClick={handleAsk}
-              disabled={loading || !question.trim() || !user?.id}
-              className="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-500 text-white hover:bg-blue-600 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-            >
-              <Send size={16} />
-            </button>
+            {isStreaming ? (
+              <button
+                onClick={handleStop}
+                className="w-9 h-9 flex items-center justify-center rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white active:scale-95 transition-all"
+                title="Stop Generation"
+              >
+                <Square size={14} fill="currentColor" />
+              </button>
+            ) : (
+              <button
+                id="chat-send-btn"
+                onClick={handleAsk}
+                disabled={!question.trim() || !user?.id}
+                className="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-500 text-white hover:bg-blue-600 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                <Send size={16} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -277,8 +358,13 @@ export default function ChatPage() {
   );
 }
 
-function ChatBubble({ msg }: { msg: Message }) {
+function ChatBubble({ msg, onAsk }: { msg: Message, onAsk?: (q: string) => void }) {
   const isUser = msg.role === "user";
+  
+  if (!isUser && !msg.content && !msg.roadmap_metadata) {
+    return null;
+  }
+  
   return (
     <div className={`flex items-end gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       {isUser ? <UserAvatar /> : <Avatar initials="AI" />}
@@ -300,6 +386,53 @@ function ChatBubble({ msg }: { msg: Message }) {
         >
           {msg.content}
         </ReactMarkdown>
+
+        {/* Custom Success Card for Roadmap Creation */}
+        {msg.intent === "ROADMAP_CREATION" && msg.roadmap_metadata && (
+          <div className="mt-4 bg-[#0a0f1e]/80 border border-blue-500/20 rounded-xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-xl shadow-blue-500/5">
+            <div className="flex items-center gap-2 text-emerald-400 mb-1">
+              <CheckCircle2 className="w-5 h-5" />
+              <span className="font-bold">Roadmap Created</span>
+            </div>
+            
+            <h4 className="text-white font-semibold text-lg">{msg.roadmap_metadata.title}</h4>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white/5 rounded-lg p-2.5 flex items-center gap-3">
+                <CalendarDays className="w-4 h-4 text-blue-400" />
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Duration</p>
+                  <p className="text-sm text-white font-medium">{msg.roadmap_metadata.duration}</p>
+                </div>
+              </div>
+              <div className="bg-white/5 rounded-lg p-2.5 flex items-center gap-3">
+                <Activity className="w-4 h-4 text-indigo-400" />
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Curriculum</p>
+                  <p className="text-sm text-white font-medium">{msg.roadmap_metadata.weeks} Milestones, {msg.roadmap_metadata.tasks} tasks</p>
+                </div>
+              </div>
+            </div>
+
+            <Link href="/roadmap" className="mt-2 flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm py-2.5 rounded-lg transition-colors group">
+              Open Personal Dashboard
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        )}
+
+        {/* Suggestion CTA */}
+        {msg.suggest_roadmap && onAsk && (
+          <div className="mt-4 pt-3 border-t border-white/10 animate-in fade-in duration-500">
+            <button 
+              onClick={() => onAsk("Create a personalized roadmap for this.")}
+              className="px-4 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white transition-all rounded-lg text-sm font-medium flex items-center gap-2"
+            >
+              <CalendarDays size={16} />
+              Create Roadmap
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

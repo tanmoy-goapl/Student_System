@@ -65,28 +65,86 @@ def _roadmap_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 80
     logger.error("[RoadmapEngine] All configured LLM providers failed.")
     return ""
 
-def generate_roadmap_from_llm(goal: str, deadline: str, document_context: str = "") -> dict:
-    
-    system_prompt = "You are a helpful JSON-generating assistant for educational roadmaps."
-    
-    user_prompt = f"""
-    You are an expert AI personalized mentor for a B.Tech CSE student.
-    Your task is to generate a structured weekly learning roadmap based on the user's goal.
-    
-    USER GOAL: {goal}
-    DEADLINE / TIMEFRAME: {deadline}
-    
-    OPTIONAL CONTEXT (Resume/Marksheet/Syllabus):
-    {document_context if document_context else "No additional documents provided."}
-    
-    CRITICAL INSTRUCTION FOR PLACEMENT/INTERNSHIP GOALS:
-    If the goal involves placements, internships, or job preparation, the roadmap MUST be highly rigorous. Do NOT generate generic "overview" or "basics" topics. Instead, include advanced Data Structures & Algorithms (Leetcode Medium/Hard patterns), System Design principles, deep-dive technical interview topics, and complex project building. The daily tasks should reflect the difficulty of top-tier tech company interviews.
 
-    Based on this, create a concise, logical, week-by-week learning roadmap.
-    CRITICAL PERFORMANCE LIMITATION: To keep the response fast, generate a MAXIMUM of 4 weeks. If the timeframe is longer, condense the entire plan into 4 high-yield milestone weeks.
-    For each week, provide exactly 3 achievable, technically deep learning units (Days).
+def _balance_json(s: str) -> str:
+    """Balances JSON brackets/braces and closes open strings if cut off."""
+    start_idx = s.find('{')
+    if start_idx == -1:
+        return s
+    s = s[start_idx:]
+    import re
     
-    Output strictly in the following JSON format without Markdown formatting or code blocks:
+    # Fix unquoted keys (e.g. {title: "A"} -> {"title": "A"})
+    s = re.sub(r'([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:', r'\1"\2":', s)
+    
+    # Remove single-line comments (// ...) safely (only at start of line or after spaces to avoid breaking URLs)
+    s = re.sub(r'(?m)^\s*//.*$', '', s)
+    
+    # Remove trailing commas that appear at the very end before cut-off
+    s = re.sub(r',\s*$', '', s)
+    # Remove trailing commas before closing braces/brackets
+    s = re.sub(r',\s*([\]}])', r'\1', s)
+    
+    stack = []
+    in_string = False
+    escape = False
+    for char in s:
+        if escape:
+            escape = False
+            continue
+        if char == '\\':
+            escape = True
+            continue
+        if char == '"':
+            in_string = not in_string
+            continue
+            
+        if not in_string:
+            if char == '{':
+                stack.append('}')
+            elif char == '[':
+                stack.append(']')
+            elif char in '}]':
+                if stack and stack[-1] == char:
+                    stack.pop()
+                    
+    if in_string:
+        s += '"'
+        
+    while stack:
+        s += stack.pop()
+        
+    return s
+
+def generate_roadmap_from_llm(goal: str, duration: str, document_context: str = "") -> dict:
+    """
+    Calls the configured LLM to generate a personalized roadmap JSON.
+    """
+    # Convert days to weeks for the week-by-week curriculum generator
+    duration_lower = duration.lower()
+    if "day" in duration_lower:
+        # Extract number of days
+        days_match = re.search(r'\d+', duration_lower)
+        if days_match:
+            days = int(days_match.group(0))
+            # 5 days of study = 1 week milestone
+            weeks = max(1, (days + 4) // 5)
+            duration = f"{weeks} weeks"
+
+    system_prompt = f"""You are an expert curriculum designer. The user wants to learn "{goal}" over "{duration}".
+    
+    If the goal involves placements, internships, or job preparation, the roadmap MUST be highly rigorous. Do NOT generate generic "overview" or "basics" topics. Instead, include advanced Data Structures & Algorithms, System Design principles, and complex project building.
+    
+    Based on this, create a concise, logical, week-by-week learning roadmap.
+    You MUST generate exactly the number of weeks specified in the requested duration (e.g., if duration is "8 weeks", you must generate exactly 8 weeks; if duration is "10 weeks", you must generate exactly 10 weeks). If no specific duration or date is provided by the user, default to generating exactly 6 weeks.
+    For each week, provide exactly 5 achievable, technically deep learning units (Days).
+    
+    Output strictly in the following JSON format without Markdown formatting or code blocks.
+    CRITICAL JSON RULES:
+    1. DO NOT add any comments (// or /*).
+    2. ALL keys MUST be enclosed in double quotes (").
+    3. Use ONLY double quotes ("), never single quotes (').
+    
     {{
         "title": "A catchy title for this roadmap",
         "weeks": [
@@ -94,20 +152,16 @@ def generate_roadmap_from_llm(goal: str, deadline: str, document_context: str = 
                 "week_number": 1,
                 "focus_area": "Introduction and Basics",
                 "days": [
-                    {{"day_number": 1, "topic": "Day 1: HTML Basics", "description": "Read about HTML structure and semantics", "subtopics": ["HTML Structure", "Common Tags", "Semantic HTML"]}},
-                    {{"day_number": 2, "topic": "Day 2: Forms and Tables", "description": "Learn about creating forms and tables", "subtopics": ["Forms", "Input Types", "Tables"]}}
-                ]
-            }},
-            {{
-                "week_number": 2,
-                "focus_area": "Intermediate Concepts",
-                "days": [
-                    {{"day_number": 1, "topic": "Day 1: Advanced Concepts", "description": "Dive deep into advanced concepts", "subtopics": ["Concept 1", "Concept 2"]}}
+                    {{"day_number": 1, "topic": "Day 1: HTML Basics", "description": "Read about HTML structure", "subtopics": ["HTML Structure", "Common Tags"]}},
+                    {{"day_number": 2, "topic": "Day 2: Forms and Tables", "description": "Learn about forms", "subtopics": ["Forms", "Input Types"]}}
                 ]
             }}
         ]
     }}
     """
+    
+    # Send a prompt to ask to be concise so we don't hit 8000 tokens easily
+    user_prompt = f"Goal: {goal}\nDuration: {duration}\nKeep descriptions very brief to ensure you generate the complete JSON."
     
     content = _roadmap_llm_call(system_prompt, user_prompt)
     
@@ -127,15 +181,12 @@ def generate_roadmap_from_llm(goal: str, deadline: str, document_context: str = 
             content_str = content_str[:-3]
         content_str = content_str.strip()
 
-        # Find the outermost curly braces to extract raw JSON
-        start_idx = content_str.find('{')
-        end_idx = content_str.rfind('}')
-        if start_idx != -1 and end_idx != -1:
-            content_str = content_str[start_idx:end_idx + 1]
+        # Robustly balance and repair JSON cutoffs
+        content_str = _balance_json(content_str)
 
         return json.loads(content_str)
     except Exception as e:
-        logger.error(f"[RoadmapEngine] Failed to parse LLM JSON: {e}")
+        logger.error(f"[RoadmapEngine] Failed to parse LLM JSON: {e}\nRAW CONTENT:\n{content}")
         return _fallback_roadmap(f"Parse Error: {str(e)}")
 
 

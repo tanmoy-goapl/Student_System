@@ -38,7 +38,7 @@ export default function RoadmapPage() {
 
   const handleTaskClick = (topic: string) => {
     const roadmapId = searchParams?.get("roadmap_id");
-    const query = roadmapId ? `&roadmap_id=${roadmapId}&source=personal` : "?source=personal";
+    const query = roadmapId ? `&roadmap_id=${roadmapId}&source=personal` : "&source=personal";
     router.push(`/learning?topic=${encodeURIComponent(topic)}${query}`);
   };
 
@@ -171,7 +171,9 @@ export default function RoadmapPage() {
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.location.href = `/practice?topic=${encodeURIComponent(dayItem.topic)}`;
+                                const rId = searchParams?.get("roadmap_id");
+                                const q = rId ? `&roadmap_id=${rId}&source=personal` : "&source=personal";
+                                window.location.href = `/practice?topic=${encodeURIComponent(dayItem.topic)}${q}`;
                               }}
                               className="px-3 py-1.5 text-xs font-semibold text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-md border border-indigo-500/20 transition-colors flex items-center gap-1.5"
                             >

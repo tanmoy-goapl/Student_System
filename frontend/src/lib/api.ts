@@ -79,11 +79,56 @@ export async function uploadDocument(
   const form = new FormData();
   form.append("student_id", String(studentId));
   form.append("file", file);
-  form.append("readable_by", readableBy);   // ← ADD THIS
+  form.append("readable_by", readableBy);
   return request<UploadResponse>("/api/upload", { method: "POST", body: form });
 }
 
 // -- Chat --
+
+export async function updateDailyGoal(userId: number, pointsToAdd: number, subjectName: string) {
+    return request<any>("/api/settings/daily-goal", {
+        method: "POST",
+        body: JSON.stringify({ user_id: userId, points: pointsToAdd, subject: subjectName })
+    });
+}
+
+// -- Classroom Curriculum API --
+
+export async function uploadClassCurriculum(classId: number, file: File, userId: number) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("user_id", userId.toString());
+    
+    const res = await fetch(`/api/classroom/${classId}/curriculum/upload`, {
+        method: "POST",
+        body: formData,
+    });
+    
+    if (!res.ok) throw new Error("Upload failed");
+    return res.json();
+}
+
+export async function getClassCurriculum(classId: number, userId: number) {
+    return request<any>(`/api/classroom/${classId}/curriculum?user_id=${userId}`, {
+        method: "GET",
+    });
+}
+
+export async function regenerateClassCurriculum(classId: number, userId: number) {
+    return request<any>(`/api/classroom/${classId}/curriculum/regenerate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId })
+    });
+}
+
+export async function updateClassCurriculum(classId: number, curriculumData: any, userId: number) {
+    return request<any>(`/api/classroom/${classId}/curriculum`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, curriculum: curriculumData })
+    });
+}
 
 export async function askQuestion(body: ChatRequest): Promise<ChatResponse> {
   return request<ChatResponse>("/api/chat", {
@@ -125,8 +170,9 @@ export interface AIActionCardResponse {
   cardClassName: string;
 }
 
-export async function getAIActions(): Promise<AIActionCardResponse[]> {
-  return request<AIActionCardResponse[]>("/api/cards", {
+export async function getAIActions(studentId?: string | number): Promise<AIActionCardResponse[]> {
+  const url = studentId ? `/api/cards?student_id=${studentId}` : "/api/cards";
+  return request<AIActionCardResponse[]>(url, {
     method: "GET",
   });
 }
@@ -141,8 +187,9 @@ export interface PerformanceSidebarResponse {
   readiness: { subject: string; value: number }[];
 }
 
-export async function getPerformanceSidebar(): Promise<PerformanceSidebarResponse> {
-  return request<PerformanceSidebarResponse>("/api/performance/sidebar", {
+export async function getPerformanceSidebar(studentId?: string | number): Promise<PerformanceSidebarResponse> {
+  const url = studentId ? `/api/performance/sidebar?student_id=${studentId}` : "/api/performance/sidebar";
+  return request<PerformanceSidebarResponse>(url, {
     method: "GET",
   });
 }
@@ -174,8 +221,9 @@ export interface PerformanceMainResponse {
   };
 }
 
-export async function getPerformanceMain(): Promise<PerformanceMainResponse> {
-  return request<PerformanceMainResponse>("/api/performance/main", {
+export async function getPerformanceMain(studentId?: string | number): Promise<PerformanceMainResponse> {
+  const url = studentId ? `/api/performance/main?student_id=${studentId}` : "/api/performance/main";
+  return request<PerformanceMainResponse>(url, {
     method: "GET",
   });
 }
@@ -189,6 +237,21 @@ export interface HomepageDataResponse {
   studyPlan: any;
   performanceSnapshots: any[];
   aiAlerts: any[];
+  aiBehavioralInsights?: any[];
+  dashboard_health?: string;
+  revisionQueue?: any[];
+  pending_dues?: {
+    total: number;
+    revision_due: number;
+    quiz_due: number;
+    reasons?: string[];
+  };
+  todays_focus?: {
+    topic: string;
+    reason: string;
+    confidence: number;
+    estimated_time: number;
+  };
 }
 
 export async function getHomepageData(studentId?: string | number): Promise<HomepageDataResponse> {
@@ -230,11 +293,14 @@ export interface PracticeDataResponse {
   sampleQuestions: any[];
 }
 
-export const getPracticeData = async (studentId?: number): Promise<PracticeDataResponse> => {
+export const getPracticeData = async (studentId?: number, classId?: number): Promise<PracticeDataResponse> => {
     const timestamp = new Date().getTime();
-    const url = studentId 
-      ? `/api/practice/data?student_id=${studentId}&_t=${timestamp}` 
-      : `/api/practice/data?_t=${timestamp}`;
+    const params = new URLSearchParams();
+    if (studentId) params.append("student_id", studentId.toString());
+    if (classId) params.append("class_id", classId.toString());
+    params.append("_t", timestamp.toString());
+    
+    const url = `/api/practice/data?${params.toString()}`;
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error("Failed to load practice data");
     return res.json();
@@ -335,6 +401,111 @@ export async function getSessionStatus(sessionId: number): Promise<any> {
 
 // -- Practice Topics & Performance --
 
+export async function fetchDocumentAnalytics(
+  docId: string
+) {
+  return request<{
+    success: boolean;
+    data: any;
+  }>(`/api/documents/analytics?doc_id=${docId}`, {
+    method: "GET",
+  });
+}
+
+// ------------------------------------------------------------------
+// CLASSROOM
+// ------------------------------------------------------------------
+
+export async function createClass(data: { name: string; course_code: string; professor_id: number }) {
+  return request<{
+    success: boolean;
+    class_id: number;
+    code: string;
+    course_code: string;
+    name: string;
+  }>("/api/classroom/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function joinClass(data: { code: string; student_id: number }) {
+  return request<{
+    success: boolean;
+    class_id: number;
+    name: string;
+    message?: string;
+  }>("/api/classroom/join", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getMyClasses(userId: number) {
+  return request<{
+    success: boolean;
+    role: string;
+    classes: any[];
+  }>(`/api/classroom/my_classes/${userId}`, {
+    method: "GET",
+  });
+}
+
+export async function getClassDetails(classId: number, userId: number) {
+  return request<{
+    success: boolean;
+    class_id: number;
+    name: string;
+    code: string;
+    professor_name: string;
+    student_count: number;
+    created_at: string;
+  }>(`/api/classroom/${classId}?user_id=${userId}`, {
+    method: "GET",
+  });
+}
+
+export async function uploadClassResource(classId: number, file: File, title: string, type: string, userId: number) {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("title", title);
+  form.append("type", type);
+  form.append("user_id", String(userId));
+  
+  return request<{
+    success: boolean;
+    resource?: {
+      id: number;
+      title: string;
+      type: string;
+    };
+  }>(`/api/classroom/${classId}/resources/upload`, {
+    method: "POST",
+    body: form,
+  });
+}
+
+export async function getClassResources(classId: number, userId: number) {
+  return request<{
+    success: boolean;
+    resources: any[];
+  }>(`/api/classroom/${classId}/resources?user_id=${userId}`, {
+    method: "GET",
+  });
+}
+
+export async function deleteClassResource(resourceId: number, userId: number) {
+  return request<{
+    success: boolean;
+  }>(`/api/classroom/resource/${resourceId}?user_id=${userId}`, {
+    method: "DELETE",
+  });
+}
+
+
+
 export async function getStudentTopics(studentId: number): Promise<any> {
   return request<any>(`/api/practice/topics/${studentId}`, {
     method: "GET",
@@ -349,9 +520,7 @@ export interface PracticePerformanceResponse {
     topic: string;
     subject: string;
     accuracy: number;
-    total_attempts: number;
-    mastery_level: string;
-    current_difficulty: string;
+    reason?: string;
   }[];
   insights: {
     type: string;
@@ -360,6 +529,18 @@ export interface PracticePerformanceResponse {
     frequency: number;
   }[];
   topic_performances: any[];
+  adaptive_engine?: {
+    recommended_difficulty: string;
+    study_pace: string;
+    focus_topic: string;
+    last_active: string;
+  };
+  suggested_next?: {
+    title: string;
+    topic: string;
+    reason: string;
+    action_url: string;
+  }[];
 }
 
 export async function getStudentPerformance(studentId: number): Promise<PracticePerformanceResponse> {
@@ -380,7 +561,7 @@ export interface LearningDataResponse {
   quickActions?: any[];
 }
 
-export async function getLearningData(topic?: string, studentId?: number, subject?: string, roadmapId?: number, source?: string): Promise<LearningDataResponse> {
+export async function getLearningData(topic?: string, studentId?: number, subject?: string, roadmapId?: number, source?: string, classId?: number): Promise<LearningDataResponse> {
   let url = "/api/learning/data";
   const params = new URLSearchParams();
   if (topic) params.append("topic", topic);
@@ -388,6 +569,7 @@ export async function getLearningData(topic?: string, studentId?: number, subjec
   if (subject) params.append("subject", subject);
   if (roadmapId) params.append("roadmap_id", roadmapId.toString());
   if (source) params.append("source", source);
+  if (classId) params.append("class_id", classId.toString());
   
   const q = params.toString();
   if (q) url += `?${q}`;
@@ -414,6 +596,89 @@ export async function getLearningContent(topic?: string, studentId?: number, sub
   
   return request<LearningContentResponse>(url, {
     method: "GET",
+  });
+}
+
+export async function streamLearningContent(
+  topic: string, 
+  studentId: number, 
+  subject?: string, 
+  onChunk?: (text: string) => void
+): Promise<string> {
+  let url = "/api/learning/stream_content";
+  const params = new URLSearchParams();
+  params.append("topic", topic);
+  params.append("student_id", studentId.toString());
+  if (subject) params.append("subject", subject);
+  
+  const q = params.toString();
+  if (q) url += `?${q}`;
+  
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers
+  });
+
+  if (!response.body) throw new Error("ReadableStream not yet supported in this browser.");
+  
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    fullText += chunk;
+    if (onChunk) onChunk(fullText);
+  }
+  
+  return fullText;
+}
+
+export async function explainSimpler(studentId: number, topicName: string, topicContent?: string): Promise<any> {
+  return request<any>("/api/learning/explain", {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId, topic_name: topicName, topic_content: topicContent }),
+  });
+}
+
+export async function giveExamples(studentId: number, topicName: string, topicContent?: string): Promise<any> {
+  return request<any>("/api/learning/examples", {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId, topic_name: topicName, topic_content: topicContent }),
+  });
+}
+
+export async function summarizeTopic(studentId: number, topicName: string, topicContent?: string): Promise<any> {
+  return request<any>("/api/learning/summarize", {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId, topic_name: topicName, topic_content: topicContent }),
+  });
+}
+
+export async function getCheatSheet(studentId: number, topicName: string, topicContent?: string): Promise<any> {
+  return request<any>("/api/learning/cheatsheet", {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId, topic_name: topicName, topic_content: topicContent }),
+  });
+}
+
+export async function saveNotes(studentId: number, topicName: string, generatedNotes: string): Promise<any> {
+  return request<any>("/api/learning/save-notes", {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId, topic_name: topicName, generated_notes: generatedNotes }),
+  });
+}
+
+export async function addToRevision(studentId: number, topicName: string, priority: string = "high"): Promise<any> {
+  return request<any>("/api/learning/revision", {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId, topic_name: topicName, priority }),
   });
 }
 

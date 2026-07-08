@@ -21,6 +21,8 @@ class User(Base):
 
     # Relationships
     documents = relationship("Document", back_populates="student", cascade="all, delete-orphan")
+    created_classes = relationship("Classroom", back_populates="professor", cascade="all, delete-orphan")
+    joined_classes = relationship("StudentClass", back_populates="student", cascade="all, delete-orphan")
 
 
 # ─────────────────────────────────────────────

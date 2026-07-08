@@ -10,4 +10,7 @@ export const actionVariants = {
 
   amber:
     'border-amber-400/30 bg-amber-500/15 text-amber-300 hover:bg-amber-500/20',
+
+  green:
+    'border-emerald-400/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/20',
 };

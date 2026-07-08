@@ -10,9 +10,16 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const studentId = searchParams.get("student_id");
-    const url = studentId
-      ? `${BACKEND_URL}/practice/data?student_id=${studentId}`
-      : `${BACKEND_URL}/practice/data`;
+    const classId = searchParams.get("class_id");
+    
+    let url = `${BACKEND_URL}/practice/data`;
+    const backendParams = new URLSearchParams();
+    if (studentId) backendParams.append("student_id", studentId);
+    if (classId) backendParams.append("class_id", classId);
+    
+    if (backendParams.toString()) {
+      url += `?${backendParams.toString()}`;
+    }
 
     const response = await fetch(url, {
       method: "GET",

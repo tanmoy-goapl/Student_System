@@ -13,13 +13,25 @@ from practice_models import TopicPerformance
 router = APIRouter(prefix="/courses", tags=["courses"])
 logger = logging.getLogger("chatbot")
 
+from services.analytics_engine import (
+    get_topic_status,
+    calculate_topic_metrics,
+    calculate_subject_metrics,
+    calculate_student_metrics,
+    get_student_subjects
+)
+
 def _load_curriculum():
-    with open("config/default_curriculum.json", "r") as f:
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    p = os.path.join(base_dir, "config", "default_curriculum.json")
+    with open(p, "r") as f:
         return json.load(f)
 
 def _load_subject_topics():
     try:
-        with open("config/subject_topics.json", "r") as f:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        p = os.path.join(base_dir, "config", "subject_topics.json")
+        with open(p, "r") as f:
             return json.load(f)
     except Exception as e:
         logger.error(f"Failed to load subject_topics: {e}")
@@ -27,7 +39,9 @@ def _load_subject_topics():
 
 def _load_subject_resources():
     try:
-        with open("config/subject_resources.json", "r") as f:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        p = os.path.join(base_dir, "config", "subject_resources.json")
+        with open(p, "r") as f:
             return json.load(f)
     except Exception as e:
         logger.error(f"Failed to load subject_resources: {e}")
@@ -66,40 +80,58 @@ def get_courses_data(student_id: int, db: Session = Depends(get_db)):
             "subjects": []
         }
         
-        subjects = sem.get("subjects", {})
-        for subject_name, topics in subjects.items():
-            subject_topics = _load_subject_topics()
-            
-            # Use curated topics if available, else fallback to the generic array from default_curriculum
-            actual_topics = subject_topics.get(subject_name, topics)
-            total_topics = len(actual_topics)
-            subject_perf = perf_map.get(subject_name, [])
-            
-            completed_count = 0
-            for p in subject_perf:
-                if p.accuracy >= 70 and p.total_attempts >= 2:
-                    completed_count += 1
-
-            current_topic = actual_topics[0] if actual_topics else ""
-            for topic_name in actual_topics:
-                t_perf = next((p for p in subject_perf if p.topic == topic_name), None)
-                if not t_perf or not (t_perf.accuracy >= 70 and t_perf.total_attempts >= 2):
-                    current_topic = topic_name
-                    break
-            
-            if len(subject_perf) > 0:
-                accuracy = sum(p.accuracy for p in subject_perf) / len(subject_perf)
-            else:
-                accuracy = 0
+        # 1. Load dynamic subjects first
+        dynamic_subjects_list = []
+        dynamic_subjects_names = set()
+        
+        sem_num_match = re.search(r'semester-(\d+)', sem["id"])
+        sem_num = int(sem_num_match.group(1)) if sem_num_match else 1
+        
+        if sem_num == current_semester_num:
+            try:
+                from classroom_models import StudentClass, ClassCurriculum
+                enrolled_classes = db.query(StudentClass).filter(StudentClass.student_id == student_id).all()
+                class_ids = [c.class_id for c in enrolled_classes]
+                if class_ids:
+                    curriculums = db.query(ClassCurriculum).filter(ClassCurriculum.class_id.in_(class_ids)).all()
+                    for curr in curriculums:
+                        if curr.curriculum_json and "units" in curr.curriculum_json:
+                            subject_name = curr.subject_name or f"Class {curr.class_id}"
+                            dynamic_subjects_names.add(subject_name)
+                            
+                            actual_topics = []
+                            for unit in curr.curriculum_json["units"]:
+                                actual_topics.extend(unit.get("topics", []))
+                            
+                            subject_perf = perf_map.get(subject_name, [])
+                            
+                            metrics = calculate_subject_metrics(student_id, subject_name, db)
+                            
+                            current_topic = actual_topics[0] if actual_topics else ""
+                            for topic_name in actual_topics:
+                                t_perf = next((p for p in subject_perf if p.topic == topic_name), None)
+                                t_metrics = calculate_topic_metrics(t_perf)
+                                if t_metrics["status"] != "STRONG":
+                                    current_topic = topic_name
+                                    break
+                                
+                            dynamic_subjects_list.append({
+                                "name": subject_name,
+                                "topics_mastered": metrics["mastered_topics"],
+                                "topics_completed": metrics["mastered_topics"],
+                                "total_topics": metrics["total_topics"],
+                                "progress": metrics["progress"],
+                                "accuracy": metrics["average_accuracy"],
+                                "confidence": metrics.get("average_confidence", 0.0),
+                                "exposure": metrics.get("exposure", 0.0),
+                                "current_topic": current_topic,
+                                "subject_health": metrics["health"]
+                            })
+            except Exception as e:
+                logger.error(f"Failed to inject class curriculums: {e}")
                 
-            sem_data["subjects"].append({
-                "name": subject_name,
-                "topics_completed": completed_count,
-                "total_topics": total_topics,
-                "accuracy": round(accuracy, 1),
-                "current_topic": current_topic
-            })
-            
+        # Add dynamic subjects to the top of the list
+        sem_data["subjects"].extend(dynamic_subjects_list)
         response_semesters.append(sem_data)
         
     return {
@@ -124,92 +156,76 @@ def get_subject_data(subject_name: str, student_id: int, db: Session = Depends(g
         subjects = sem.get("subjects", {})
         if subject_name in subjects:
             subject_topics = _load_subject_topics()
-            # Use curated topics if available, else fallback to the generic array
             predefined_topics = subject_topics.get(subject_name, subjects[subject_name])
             found = True
             break
             
     if not found:
-        # If subject is entirely missing, still check subject_topics as a fallback
         subject_topics = _load_subject_topics()
         if subject_name in subject_topics:
             predefined_topics = subject_topics[subject_name]
         else:
-            raise HTTPException(status_code=404, detail="Subject not found in curriculum")
+            from classroom_models import ClassCurriculum, StudentClass
+            enrolled_classes = db.query(StudentClass).filter(StudentClass.student_id == student_id).all()
+            class_ids = [c.class_id for c in enrolled_classes]
+            
+            curr = db.query(ClassCurriculum).filter(
+                ClassCurriculum.subject_name == subject_name,
+                ClassCurriculum.class_id.in_(class_ids)
+            ).first()
+            
+            if curr and curr.curriculum_json and "units" in curr.curriculum_json:
+                predefined_topics = []
+                for unit in curr.curriculum_json["units"]:
+                    predefined_topics.extend(unit.get("topics", []))
+            else:
+                raise HTTPException(status_code=404, detail="Subject not found in curriculum")
         
     # Query performances for this subject
-    performances = db.query(TopicPerformance).filter(
-        TopicPerformance.student_id == student_id,
-        TopicPerformance.subject == subject_name
-    ).all()
+    if predefined_topics:
+        performances = db.query(TopicPerformance).filter(
+            TopicPerformance.student_id == student_id,
+            TopicPerformance.topic.in_(predefined_topics)
+        ).all()
+    else:
+        performances = []
     
     perf_dict = {p.topic: p for p in performances}
+    logger.info(f"DEBUG2 predefined_topics: {predefined_topics}")
+    logger.info(f"DEBUG2 performances keys: {list(perf_dict.keys())}")
+    logger.info(f"DEBUG2 matched perfs: {[perf_dict.get(t) for t in predefined_topics if perf_dict.get(t)]}")
+
+    subject_metrics = calculate_subject_metrics(student_id, subject_name, db)
     
     topics_data = []
-    completed_count = 0
-    total_accuracy = 0
-    attempted_count = 0
-    
     found_unfinished = False
 
     for topic in predefined_topics:
         perf = perf_dict.get(topic)
+        metrics = calculate_topic_metrics(perf)
+        is_completed = (metrics["status"] == "STRONG")
         
-        status = "Not Started"
-        is_completed = False
-        
-        if perf:
-            is_mastered = perf.accuracy >= 85 and str(perf.mastery_level).lower() == "strong"
-            is_completed_only = perf.accuracy >= 70 and perf.total_attempts >= 2
-            
-            if is_mastered:
-                status = "Mastered"
-                is_completed = True
-                completed_count += 1
-            elif is_completed_only:
-                status = "Completed"
-                is_completed = True
-                completed_count += 1
-            else:
-                status = "In Progress"
-                
-            total_accuracy += perf.accuracy
-            attempted_count += 1
+        topic_data = {
+            "id": topic,
+            "title": topic,
+            "status": metrics["status"],
+            "accuracy": metrics["accuracy"],
+            "confidence": metrics.get("confidence", 0.0),
+            "sessions": metrics["sessions"],
+            "questions_attempted": metrics["questions_attempted"],
+            "last_studied": metrics["last_practiced_at"].isoformat() if metrics.get("last_practiced_at") else None,
+            "difficulty": "Medium",
+            "estimated_hours": 2,
+        }
             
         is_next_unfinished = False
         if not is_completed and not found_unfinished:
             is_next_unfinished = True
             found_unfinished = True
-
-        if perf:
-            topic_data = {
-                "id": topic,
-                "title": topic,
-                "status": status,
-                "accuracy": perf.accuracy,
-                "attempts": perf.total_attempts,
-                "last_studied": perf.last_practiced.isoformat() if perf.last_practiced else None,
-                "difficulty": "Medium",
-                "estimated_hours": 2,
-                "is_next_unfinished": is_next_unfinished
-            }
-        else:
-            topic_data = {
-                "id": topic,
-                "title": topic,
-                "status": "Not Started",
-                "accuracy": 0,
-                "attempts": 0,
-                "last_studied": None,
-                "difficulty": "Medium",
-                "estimated_hours": 2,
-                "is_next_unfinished": is_next_unfinished
-            }
+            
+        topic_data["is_next_unfinished"] = is_next_unfinished
         topics_data.append(topic_data)
             
-    overall_accuracy = round(total_accuracy / attempted_count, 1) if attempted_count > 0 else 0
-    
-    # Load resources
     resources_dict = _load_subject_resources()
     resources_list = resources_dict.get(subject_name, resources_dict.get("default", []))
     
@@ -217,10 +233,69 @@ def get_subject_data(subject_name: str, student_id: int, db: Session = Depends(g
         "success": True,
         "subject": subject_name,
         "progress": {
-            "completed": completed_count,
-            "total": len(predefined_topics),
-            "accuracy": overall_accuracy
+            "topics_total": subject_metrics["total_topics"],
+            "topics_mastered": subject_metrics["mastered_topics"],
+            "topics_strong": subject_metrics["mastered_topics"],
+            "topics_learning": subject_metrics["learning_topics"],
+            "topics_weak": subject_metrics["weak_topics"],
+            "topics_not_started": subject_metrics["not_started_topics"],
+            "progress": subject_metrics["progress"],
+            "exposure": subject_metrics.get("exposure", 0.0),
+            "accuracy": subject_metrics["average_accuracy"],
+            "confidence": subject_metrics.get("average_confidence", 0.0),
+            "subject_health": subject_metrics["health"]
         },
         "topics": topics_data,
         "resources": resources_list
+    }
+
+@router.get("/analytics/{student_id}")
+def get_analytics(student_id: int, db: Session = Depends(get_db)):
+    stats = calculate_student_metrics(student_id, db)
+    subjects = get_student_subjects(student_id, db)
+    
+    mastered_topics = 0
+    strong_topics = 0
+    learning_topics = 0
+    weak_topics = 0
+    not_started_topics = 0
+    
+    for subj in subjects:
+        m = calculate_subject_metrics(student_id, subj, db)
+        mastered_topics += m["mastered_topics"]
+        strong_topics += m["mastered_topics"]
+        learning_topics += m["learning_topics"]
+        weak_topics += m["weak_topics"]
+        not_started_topics += m["not_started_topics"]
+        
+    return {
+        "overall_accuracy": stats["overall_accuracy"],
+        "overall_progress": stats["overall_progress"],
+        "mastered_topics": mastered_topics,
+        "strong_topics": strong_topics,
+        "learning_topics": learning_topics,
+        "weak_topics": weak_topics,
+        "not_started_topics": not_started_topics
+    }
+
+@router.get("/subject/{subject_name}/progress/{student_id}")
+def get_subject_progress(subject_name: str, student_id: int, db: Session = Depends(get_db)):
+    data = get_subject_data(subject_name, student_id, db)
+    if "progress" in data:
+        return data["progress"]
+    return data
+
+@router.get("/topic/{topic_name}/progress/{student_id}")
+def get_topic_progress(topic_name: str, student_id: int, db: Session = Depends(get_db)):
+    perf = db.query(TopicPerformance).filter(
+        TopicPerformance.student_id == student_id,
+        TopicPerformance.topic == topic_name
+    ).first()
+    
+    metrics = calculate_topic_metrics(perf)
+    return {
+        "sessions": metrics["sessions"],
+        "questions_attempted": metrics["questions_attempted"],
+        "accuracy": metrics["accuracy"],
+        "status": metrics["status"]
     }

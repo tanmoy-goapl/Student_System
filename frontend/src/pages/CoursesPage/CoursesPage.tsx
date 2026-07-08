@@ -30,7 +30,11 @@ export default function CoursesPage() {
       
       {data ? (
         <>
-          <PrepDashboardHero examOverview={data.examOverview} mentorCard={data.mentorCard} />
+          <PrepDashboardHero 
+            examOverview={data.examOverview} 
+            pending_dues={data.pending_dues} 
+            todays_focus={data.todays_focus} 
+          />
           <CourseDashboard />
           <div className="grid grid-cols-1 gap-4">
             <StudyPlanCard studyPlan={data.studyPlan} />

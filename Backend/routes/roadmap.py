@@ -41,50 +41,73 @@ class GenerateRoadmapReq(BaseModel):
     student_id: int
     goal_id: int
 
+from fastapi import BackgroundTasks
+from database import SessionLocal
+
+def background_generate_roadmap(student_id: int, goal_id: int):
+    db = SessionLocal()
+    try:
+        goal = db.query(UserGoal).filter(UserGoal.id == goal_id).first()
+        if not goal:
+            return
+            
+        if goal.deadline:
+            delta = goal.deadline - datetime.utcnow()
+            weeks = max(1, delta.days // 7)
+            duration_str = f"{weeks} weeks"
+        else:
+            duration_str = "6 weeks" # Default if no deadline
+            
+        roadmap_json = generate_roadmap_from_llm(goal.title, duration_str, "")
+        
+        roadmap = LearningRoadmap(
+            student_id=student_id,
+            goal_id=goal.id,
+            title=roadmap_json.get("title", f"Roadmap for {goal.title}"),
+            roadmap_data=roadmap_json
+        )
+        db.add(roadmap)
+        db.commit()
+        db.refresh(roadmap)
+        
+        for week in roadmap_json.get("weeks", []):
+            week_num = week.get("week_number", 1)
+            for day in week.get("days", []):
+                dt = DailyTask(
+                    roadmap_id=roadmap.id,
+                    task_type="learning",
+                    topic=day.get("topic", f"Day {day.get('day_number', 1)}"),
+                    description=day.get("description", ""),
+                    assigned_date=datetime.utcnow(),
+                    week_number=week_num,
+                    day_number=day.get("day_number", 1),
+                    subtopics=day.get("subtopics", [])
+                )
+                db.add(dt)
+        db.commit()
+        
+        goal.status = "active"
+        db.commit()
+    except Exception as e:
+        import logging
+        logging.error(f"Background roadmap generation failed: {e}")
+        goal.status = "failed"
+        db.commit()
+    finally:
+        db.close()
+
 @router.post("/generate")
-def generate_roadmap(req: GenerateRoadmapReq, db: Session = Depends(get_db)):
+def generate_roadmap(req: GenerateRoadmapReq, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     goal = db.query(UserGoal).filter(UserGoal.id == req.goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
         
-    # TODO: Fetch documents for context if available
-    document_context = ""
-    
-    deadline_str = goal.deadline.strftime("%Y-%m-%d") if goal.deadline else "No strict deadline"
-    
-    roadmap_json = generate_roadmap_from_llm(goal.title, deadline_str, document_context)
-    
-    roadmap = LearningRoadmap(
-        student_id=req.student_id,
-        goal_id=goal.id,
-        title=roadmap_json.get("title", f"Roadmap for {goal.title}"),
-        roadmap_data=roadmap_json
-    )
-    db.add(roadmap)
-    db.commit()
-    db.refresh(roadmap)
-    
-    # Generate daily tasks
-    tasks = []
-    for week in roadmap_json.get("weeks", []):
-        week_num = week.get("week_number", 1)
-        for day in week.get("days", []):
-            dt = DailyTask(
-                roadmap_id=roadmap.id,
-                task_type="learning",  # Defaulting to learning as it encompasses the whole day unit
-                topic=day.get("topic", f"Day {day.get('day_number', 1)}"),
-                description=day.get("description", ""),
-                assigned_date=datetime.utcnow(), # Simplified for phase 1
-                week_number=week_num,
-                day_number=day.get("day_number", 1),
-                subtopics=day.get("subtopics", [])
-            )
-            db.add(dt)
-            tasks.append(dt)
-            
+    goal.status = "generating"
     db.commit()
     
-    return {"success": True, "roadmap": roadmap}
+    background_tasks.add_task(background_generate_roadmap, req.student_id, goal.id)
+    
+    return {"success": True, "message": "Roadmap is being generated in the background."}
 
 @router.get("/current/{student_id}")
 def get_current_roadmap(student_id: int, roadmap_id: Optional[int] = None, db: Session = Depends(get_db)):
@@ -96,8 +119,11 @@ def get_current_roadmap(student_id: int, roadmap_id: Optional[int] = None, db: S
         roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == student_id).order_by(desc(LearningRoadmap.created_at)).first()
         
     if not roadmap:
+        # Check if there is a goal currently being generated
+        latest_goal = db.query(UserGoal).filter(UserGoal.student_id == student_id).order_by(desc(UserGoal.created_at)).first()
+        if latest_goal and latest_goal.status == "generating":
+            return {"success": True, "generating": True, "goal_title": latest_goal.title}
         return {"success": False, "message": "No roadmap found"}
-        
     all_tasks = db.query(DailyTask).filter(DailyTask.roadmap_id == roadmap.id).all()
     
     active_week = 1
@@ -147,6 +173,7 @@ def complete_topic(req: CompleteTopicRequest, db: Session = Depends(get_db)):
         
     # Find the task matching the topic directly or as a subtopic
     task = None
+    is_subtopic = False
     all_tasks = db.query(DailyTask).filter(
         DailyTask.roadmap_id == roadmap.id
     ).all()
@@ -158,6 +185,7 @@ def complete_topic(req: CompleteTopicRequest, db: Session = Depends(get_db)):
         if t.subtopics and isinstance(t.subtopics, list):
             if any(req.topic.lower().strip() == st.lower().strip() for st in t.subtopics):
                 task = t
+                is_subtopic = True
                 break
                 
     if not task:
@@ -166,6 +194,33 @@ def complete_topic(req: CompleteTopicRequest, db: Session = Depends(get_db)):
         logging.getLogger(__name__).warning(f"[complete_topic] Task not found for topic: '{req.topic}'. Available: {available}")
         return {"success": False, "message": "Task not found"}
         
+    from practice_models import TopicPerformance
+    perf = db.query(TopicPerformance).filter_by(student_id=req.student_id, topic=req.topic).first()
+    if not perf:
+        perf = TopicPerformance(
+            student_id=req.student_id,
+            topic=req.topic,
+            sessions=0,
+            questions_attempted=0,
+            accuracy=0.0,
+            current_difficulty="Beginner",
+            status="NOT_STARTED"
+        )
+        db.add(perf)
+        db.commit()
+
+    if is_subtopic:
+        # Check if all subtopics are completed
+        all_completed = True
+        for st in task.subtopics:
+            st_perf = db.query(TopicPerformance).filter_by(student_id=req.student_id, topic=st).first()
+            if not st_perf:
+                all_completed = False
+                break
+        
+        if not all_completed:
+            return {"success": True, "message": f"Subtopic {req.topic} marked as read"}
+
     if task.status == "completed":
         return {"success": True, "message": "Task was already completed", "already_completed": True}
         
@@ -225,8 +280,22 @@ def get_all_roadmaps(student_id: int, db: Session = Depends(get_db)):
         })
         
     # Sort roadmaps: Active first, then Paused/Other, then Completed
-    # Since we only defined Active and Completed above, it'll just put Active first.
     result.sort(key=lambda x: 0 if x["status"] == "Active" else (2 if x["status"] == "Completed" else 1))
+    
+    # Prepend generating goals
+    generating_goals = db.query(UserGoal).filter(UserGoal.student_id == student_id, UserGoal.status == "generating").all()
+    for g in generating_goals:
+        goal_type = g.goal_type.replace("_", " ").title()
+        result.insert(0, {
+            "id": f"gen_{g.id}",
+            "title": g.title,
+            "goal_type": goal_type,
+            "overall_progress": 0,
+            "current_week": 1,
+            "current_day": 1,
+            "pending_tasks": 0,
+            "status": "Generating"
+        })
         
     return {"success": True, "roadmaps": result}
 

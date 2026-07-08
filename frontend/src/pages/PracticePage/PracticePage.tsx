@@ -19,7 +19,7 @@ import {
     type PracticePerformanceResponse,
 } from "@/lib/api";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 
 export interface PracticePageProps {
     onAnswerSubmit?: (
@@ -150,7 +150,7 @@ export default function PracticePage({
             setSessionTopic(response.topic);
             setSessionDifficulty(response.difficulty);
             setQuestions(response.questions);
-            setTotalQuestions(response.total_questions);
+            setTotalQuestions(response.total_questions || (response.questions ? response.questions.length : 5));
             setCurrentQuestionIndex(0);
             setSelectedAnswer(null);
             setAnswered(false);
@@ -166,6 +166,15 @@ export default function PracticePage({
             setIsGenerating(false);
         }
     };
+    
+    // Auto-start practice session if topic query param is present on mount
+    useEffect(() => {
+        const topicParam = searchParams?.get("topic");
+        const modeParam = searchParams?.get("mode") || "topic";
+        if (topicParam) {
+            handleStartSession(modeParam, topicParam);
+        }
+    }, [searchParams]);
 
     // Submit answer
     const handleSubmitAnswer = async () => {
@@ -414,8 +423,9 @@ export default function PracticePage({
                     <QuestionHeader question={questionForComponents} />
                     <QuestionContent question={questionForComponents} />
 
-                    <div className="flex items-center gap-2 px-4">
-                        <span className="text-xs text-slate-500">⏱️ {formatTime(elapsedTime)}</span>
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-800/40 border border-slate-700/50 rounded-lg w-fit mx-4">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="text-xs font-mono text-slate-300">{formatTime(elapsedTime)}</span>
                         {isGenerating && (
                             <span className="text-xs text-violet-400 flex items-center gap-1">
                                 <div className="w-3 h-3 border border-violet-400 border-t-transparent rounded-full animate-spin" />
@@ -487,6 +497,8 @@ export default function PracticePage({
                     pointsEarned={liveStats.points}
                     weakTopics={performance?.weak_topics}
                     insights={performance?.insights}
+                    adaptiveEngine={performance?.adaptive_engine}
+                    suggestedNext={performance?.suggested_next}
                 />
             </div>
         </div>

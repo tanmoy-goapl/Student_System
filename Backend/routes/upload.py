@@ -200,6 +200,10 @@ async def upload_file(
         # Store ONLY in Chroma
         try:
             upsert_chunks(doc.id, chunks_to_store)
+            
+            # Immediately trigger background topic extraction
+            from services.practice_engine import extract_topics_from_documents
+            extract_topics_from_documents(actual_student_id, db)
         except Exception as e:
             print("Chroma error:", e)
 

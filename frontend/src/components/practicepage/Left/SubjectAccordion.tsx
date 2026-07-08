@@ -79,13 +79,13 @@ export default function SubjectAccordion({
         `}
       >
         <div className="px-3 pb-2 space-y-1.5">
-          {(subject.topics || []).map((area) => {
+          {(subject.topics || []).map((area, index) => {
             const isSelected = selectedTopic === area;
             const isWeak = (subject.weakAreas || []).includes(area);
 
             return (
               <button
-                key={area}
+                key={`${area}-${index}`}
                 onClick={() => onSelectTopic(area)}
                 className={`
                   w-full flex items-center justify-between

@@ -53,16 +53,16 @@ export function Header({
 }: LearningSectionHeaderProps) {
   return (
     <div className="w-full overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-r from-[#17152b] via-[#14142a] to-[#10111d] p-6 shadow-2xl">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between w-full">
+      <div className="flex flex-wrap gap-6 items-center justify-between w-full">
         {/* LEFT */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-[250px] sm:min-w-[300px]">
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <Badge>{data.category}</Badge>
 
             <Badge variant="danger">{data.status}</Badge>
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight break-words whitespace-normal">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight">
             {data.title}
           </h1>
 
@@ -70,7 +70,7 @@ export function Header({
         </div>
 
         {/* RIGHT */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {data.stats.map((stat) => (
             <StatCard
               key={stat.label}

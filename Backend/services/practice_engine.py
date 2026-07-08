@@ -60,8 +60,8 @@ def _practice_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 2
     else:
         add_gpt(); add_llama()
 
+    last_error = "No configurations available"
     for name, api_key, base_url, model in configs:
-        last_error = "No configurations available"
         try:
             from openai import OpenAI
             client = OpenAI(api_key=api_key, base_url=base_url)
@@ -74,7 +74,7 @@ def _practice_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 2
                 ],
                 max_tokens=max_tokens,
                 temperature=0.3,
-                timeout=120,
+                timeout=45,
             )
             content = resp.choices[0].message.content
             if not content:
@@ -133,6 +133,170 @@ _TOPICS_CACHE = load_topics_cache()
 #  DOCUMENT → TOPIC EXTRACTION
 # ═════════════════════════════════════════════════════════════════════════════
 
+def register_topics_in_db(student_id: int, data: dict, db: Session):
+    """Synchronizes extracted subjects/topics/subtopics into SQL CustomTopic & TopicPerformance."""
+    try:
+        from practice_models import CustomTopic, TopicPerformance
+        from models import Document
+        
+        # 1. Fetch all currently active document subjects
+        docs = db.query(Document).filter(Document.student_id == student_id).all()
+        active_doc_subjects = set(d.subject for d in docs if d.subject)
+        
+        # 2. Extract current topics structure from the new data
+        current_subject_topics = {}
+        for subj in data.get("subjects", []):
+            subject_name = subj.get("name", "Document Subject")
+            if subject_name not in current_subject_topics:
+                current_subject_topics[subject_name] = set()
+            for topic in subj.get("topics", []):
+                topic_name = topic.get("name")
+                if topic_name:
+                    current_subject_topics[subject_name].add(topic_name)
+                    
+        # 3. Clean up CustomTopic entries for deleted subjects
+        if active_doc_subjects:
+            db.query(CustomTopic).filter(
+                CustomTopic.student_id == student_id,
+                CustomTopic.subject_name != "General Topics",
+                ~CustomTopic.subject_name.in_(list(active_doc_subjects))
+            ).delete(synchronize_session=False)
+        else:
+            db.query(CustomTopic).filter(
+                CustomTopic.student_id == student_id,
+                CustomTopic.subject_name != "General Topics"
+            ).delete(synchronize_session=False)
+        
+        # Clean up CustomTopic entries for existing subjects but deleted topics
+        for subject_name, valid_topics in current_subject_topics.items():
+            if valid_topics:
+                db.query(CustomTopic).filter(
+                    CustomTopic.student_id == student_id,
+                    CustomTopic.subject_name == subject_name,
+                    ~CustomTopic.topic_name.in_(list(valid_topics))
+                ).delete(synchronize_session=False)
+            else:
+                db.query(CustomTopic).filter(
+                    CustomTopic.student_id == student_id,
+                    CustomTopic.subject_name == subject_name
+                ).delete(synchronize_session=False)
+            
+        # 4. Clean up TopicPerformance entries for deleted subjects
+        # Do not delete core, document-based, dynamic class, or static semester curriculum subjects!
+        from classroom_models import StudentClass, ClassCurriculum
+        enrolled = db.query(StudentClass).filter(StudentClass.student_id == student_id).all()
+        c_ids = [c.class_id for c in enrolled]
+        dynamic_subjects = set()
+        if c_ids:
+            curriculums = db.query(ClassCurriculum).filter(ClassCurriculum.class_id.in_(c_ids)).all()
+            for c in curriculums:
+                if c.subject_name:
+                    dynamic_subjects.add(c.subject_name)
+                    
+        static_subjects = set()
+        try:
+            config_path = os.path.join(os.path.dirname(__file__), "..", "config", "default_curriculum.json")
+            if os.path.exists(config_path):
+                with open(config_path, "r") as f:
+                    curr_data = json.load(f)
+                current_sem_num = curr_data.get("current_semester", 3)
+                current_sem_data = next(
+                    (sem for sem in curr_data.get("semesters", []) if sem.get("id") == f"semester-{current_sem_num}"),
+                    None
+                )
+                if current_sem_data:
+                    for subj_name in current_sem_data.get("subjects", {}).keys():
+                        static_subjects.add(subj_name)
+        except Exception:
+            pass
+
+        core_subjects = {"Computer Science", "Engineering Mathematics", "General Aptitude", "General Topics"}
+        valid_subjects = list(active_doc_subjects) + list(core_subjects) + list(dynamic_subjects) + list(static_subjects)
+        
+        # Support case-insensitive/variant name matching in SQLite
+        # CRITICAL: Never delete TopicPerformance records that have actual quiz data!
+        db.query(TopicPerformance).filter(
+            TopicPerformance.student_id == student_id,
+            ~TopicPerformance.subject.in_(valid_subjects),
+            TopicPerformance.questions_attempted == 0
+        ).delete(synchronize_session=False)
+        
+        # Clean up TopicPerformance entries for existing subjects but deleted topics
+        # Only clean up entries that have NO quiz data (questions_attempted == 0)
+        for subject_name, valid_topics in current_subject_topics.items():
+            if valid_topics:
+                db.query(TopicPerformance).filter(
+                    TopicPerformance.student_id == student_id,
+                    TopicPerformance.subject == subject_name,
+                    ~TopicPerformance.topic.in_(list(valid_topics)),
+                    TopicPerformance.questions_attempted == 0
+                ).delete(synchronize_session=False)
+            else:
+                db.query(TopicPerformance).filter(
+                    TopicPerformance.student_id == student_id,
+                    TopicPerformance.subject == subject_name,
+                    TopicPerformance.questions_attempted == 0
+                ).delete(synchronize_session=False)
+            
+        # 5. Add new topics
+        for subject_name, topics in current_subject_topics.items():
+            for topic_name in topics:
+                # Add as CustomTopic
+                existing_ct = db.query(CustomTopic).filter(
+                    CustomTopic.student_id == student_id,
+                    CustomTopic.topic_name == topic_name,
+                    CustomTopic.subject_name == subject_name
+                ).first()
+                if not existing_ct:
+                    new_ct = CustomTopic(
+                        student_id=student_id,
+                        topic_name=topic_name,
+                        subject_name=subject_name
+                    )
+                    db.add(new_ct)
+
+                # Add TopicPerformance entry
+                existing_tp = db.query(TopicPerformance).filter(
+                    TopicPerformance.student_id == student_id,
+                    TopicPerformance.topic == topic_name
+                ).first()
+                if not existing_tp:
+                    from practice_models import PracticeQuestion, PracticeSession
+                    history_qs = db.query(PracticeQuestion).join(PracticeSession).filter(
+                        PracticeSession.student_id == student_id,
+                        PracticeQuestion.topic == topic_name,
+                        PracticeQuestion.is_correct.isnot(None)
+                    ).all()
+                    
+                    attempted = len(history_qs)
+                    correct = sum(1 for q in history_qs if q.is_correct)
+                    accuracy = (correct / attempted * 100) if attempted > 0 else 0.0
+                    
+                    sessions_count = db.query(PracticeSession.id).join(PracticeQuestion).filter(
+                        PracticeSession.student_id == student_id,
+                        PracticeQuestion.topic == topic_name,
+                        PracticeQuestion.is_correct.isnot(None)
+                    ).distinct().count()
+                    
+                    status = get_topic_status(sessions_count, attempted, accuracy)
+                    
+                    new_tp = TopicPerformance(
+                        student_id=student_id,
+                        subject=subject_name,
+                        topic=topic_name,
+                        sessions=sessions_count,
+                        questions_attempted=attempted,
+                        correct_answers=correct,
+                        accuracy=accuracy,
+                        status=status
+                    )
+                    db.add(new_tp)
+        db.commit()
+        logger.info(f"[PracticeEngine] Synchronized document custom topics for student {student_id}")
+    except Exception as db_err:
+        logger.error(f"[PracticeEngine] Failed to synchronize topics in db: {db_err}")
+        db.rollback()
+
 def extract_topics_from_documents(student_id: int, db: Session) -> dict:
     """
     Query all of a student's document chunks from ChromaDB and use LLM
@@ -153,7 +317,9 @@ def extract_topics_from_documents(student_id: int, db: Session) -> dict:
             with open(cache_file, "r") as f:
                 disk_cache = json.load(f)
                 if cache_key in disk_cache:
-                    return disk_cache[cache_key]
+                    cached_data = disk_cache[cache_key]
+                    register_topics_in_db(student_id, cached_data, db)
+                    return cached_data
         except Exception:
             pass
 
@@ -185,19 +351,30 @@ Return ONLY valid JSON.
             response = _practice_llm_call(system_prompt, user_prompt, max_tokens=2048)
             if response:
                 import re
-                json_match = re.search(r"\\{.*\\}", response, re.DOTALL)
+                json_match = re.search(r"\{.*\}", response, re.DOTALL)
                 if json_match:
                     data = json.loads(json_match.group(0))
                     
                     # Save to disk cache
                     disk_cache = {}
                     if os.path.exists(cache_file):
-                        with open(cache_file, "r") as f:
-                            disk_cache = json.load(f)
+                        try:
+                            with open(cache_file, "r") as f:
+                                disk_cache = json.load(f)
+                        except Exception:
+                            pass
                     disk_cache[cache_key] = data
                     os.makedirs("data", exist_ok=True)
                     with open(cache_file, "w") as f:
                         json.dump(disk_cache, f)
+
+                    # Insert CustomTopic and pre-generate TopicPerformance entries
+                    from database import SessionLocal
+                    bg_db = SessionLocal()
+                    try:
+                        register_topics_in_db(student_id, data, bg_db)
+                    finally:
+                        bg_db.close()
         except Exception as e:
             logger.error(f"Background topic extraction failed: {e}")
 
@@ -294,7 +471,9 @@ def generate_learning_content(student_id: int, topic: str, db: Session, subject:
     is_curriculum_subject = False
     if subject:
         try:
-            with open("config/subject_topics.json", "r") as f:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            p = os.path.join(base_dir, "config", "subject_topics.json")
+            with open(p, "r") as f:
                 subject_topics = json.load(f)
                 
             if subject in subject_topics:
@@ -335,37 +514,36 @@ def generate_learning_content(student_id: int, topic: str, db: Session, subject:
             extra_instructions += "Allowed concepts: printf, scanf, standard streams, reading, writing, formatting strings.\n"
 
     system_prompt = """You are teaching a first-year B.Tech CSE student.
-Given the topic and context, generate a concise and high-yield technical study guide using ONLY valid JSON. Keep it punchy and fast to read.
+Given the topic and context, generate a concise and high-yield technical study guide in MARKDOWN format. Keep it punchy and fast to read.
 
-Your output must follow this strict JSON format:
+Format your output exactly like this:
+
+# [Topic Title]
+[Content in markdown...]
+
+---REVISION---
 {
-    "notes": [
-        {"type": "heading", "text": "Advanced Concept / Deep Dive"},
-        {"type": "paragraph", "text": "In-depth technical explanation, covering edge cases, under-the-hood workings, and performance implications..."},
-        {"type": "highlight", "variant": "constructive", "title": "Interview Pro-Tip", "text": "Crucial detail often asked in interviews..."},
-        {"type": "code_block", "language": "python", "title": "Complex Implementation", "code": "def complex_algo(): pass"},
-        {"type": "note", "text": "Advanced side note or historical context"}
-    ],
-    "revision": {
-        "title": "Interview Cheat Sheet",
-        "points": [
-            {"id": 1, "text": "Advanced point 1"},
-            {"id": 2, "text": "Advanced point 2"}
-        ]
-    }
+    "title": "Interview Cheat Sheet",
+    "points": [
+        {"id": 1, "text": "Advanced point 1"},
+        {"id": 2, "text": "Advanced point 2"},
+        {"id": 3, "text": "Advanced point 3"}
+    ]
 }
 
 RULES:
-- `notes` array must use types: 'heading', 'paragraph', 'highlight' (variant: 'constructive' or 'destructive'), 'code_block' (include 'language', 'title', 'code'), or 'note'.
-- The content MUST be technically deep but CONCISE. Limit the entire `notes` array to EXACTLY 4 highly-impactful sections. Do NOT generate long walls of text.
+- The markdown content MUST be technically deep but CONCISE. Limit the markdown to EXACTLY 4 highly-impactful sections. Do NOT generate long walls of text.
 - NEVER generate basic, high-level, or "kidish" overviews. Assume the reader is preparing for a Senior or top-tier placement.
 - Generate content ONLY within the context of the provided subject.
-- `revision` should have exactly 3 hard-hitting, concise bullet points.
-- Do not use markdown fencing (e.g. ```json). Just return the raw JSON object.
+- The revision JSON MUST have exactly 3 hard-hitting, concise bullet points and MUST be placed after the ---REVISION--- separator.
+- Do not use markdown fencing around the JSON block.
+- NEVER use emoji numbers or icon blocks (like 1️⃣, 2️⃣, 3️⃣, 4️⃣) for headings or lists. Always use plain numbers (e.g. 1., 2., 3., 4.).
+- NEVER output raw markdown tables (using | columns). Present comparisons or grids using structured text or bullet points.
+- NEVER output LaTeX mathematical formatting (like \(...\), \[...\], \mathcal, \mathbb, \rightarrow, \sum, etc.). Express all math, symbols, functions, and formulas in simple plain text (e.g. "R(h) = (1/N) * sum(L(...))", "y", "theta", "R^d -> Y") so it is immediately readable as standard text.
 """
 
     context_str = f"Subject / Context: {subject or 'General Computer Science'}\n"
-    user_prompt = f"SUBJECT:\n{subject}\n\nTOPIC:\n{topic}\n\nCONTEXT:\n{context_str}{context}\n\n{subtopics_str}Generate the study guide JSON.\nIMPORTANT: Only use the CONTEXT if it strictly belongs to the SUBJECT ({subject}). If the context is about a different subject (e.g., Operating Systems), IGNORE the context entirely and use your general knowledge.\n{extra_instructions}"
+    user_prompt = f"SUBJECT:\n{subject}\n\nTOPIC:\n{topic}\n\nCONTEXT:\n{context_str}{context}\n\n{subtopics_str}Generate the study guide and revision JSON.\nIMPORTANT: Only use the CONTEXT if it strictly belongs to the SUBJECT ({subject}). If the context is about a different subject (e.g., Operating Systems), IGNORE the context entirely and use your general knowledge.\n{extra_instructions}"
 
     logger.info(f"--- LLM PROMPT (Subject: {subject}, Topic: {topic}) ---")
     logger.info(f"SYSTEM PROMPT:\n{system_prompt}")
@@ -404,42 +582,188 @@ RULES:
         "points": [{"id": 1, "text": "Review this topic later."}]
     }
 
-    notes_response = default_content
-    revision_response = default_revision
+    try:
+        if not response:
+            raise Exception("Empty response")
+            
+        response_str = response.strip()
+        if response_str.startswith("```json"):
+            response_str = response_str[7:]
+        elif response_str.startswith("```"):
+            response_str = response_str[3:]
+        if response_str.endswith("```"):
+            response_str = response_str[:-3]
+            
+        parsed = json.loads(response_str)
+        return {
+            "notesResponse": parsed.get("notes", default_content),
+            "revision": parsed.get("revision", default_revision)
+        }
+    except Exception as e:
+        logger.error(f"[PracticeEngine] Failed to parse learning content JSON: {e}\nRaw Response:\n{response}")
+        return {
+            "notesResponse": default_content,
+            "revision": default_revision
+        }
 
-    if response:
+def stream_learning_content(student_id: int, topic: str, db: Session, subject: Optional[str] = None):
+    """
+    Stream learning content for a specific topic in Markdown, returning chunks.
+    Yields chunks of the study guide, and at the end, the revision JSON block.
+    """
+    # Fetch specific subtopics from curriculum if available
+    subtopics_str = ""
+    is_curriculum_subject = False
+    if subject:
         try:
-            json_match = re.search(r'\{[\s\S]*\}', response)
-            if json_match:
-                parsed = json.loads(json_match.group())
-                if "notes" in parsed:
-                    notes_response = parsed["notes"]
-                if "revision" in parsed:
-                    revision_response = parsed["revision"]
-        except (json.JSONDecodeError, AttributeError) as e:
-            logger.error(f"[PracticeEngine] Failed to parse learning content for topic '{topic}': {e}")
-            logger.error(f"[PracticeEngine] Raw response: {response[:500]}")
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            p = os.path.join(base_dir, "config", "subject_topics.json")
+            with open(p, "r") as f:
+                subject_topics = json.load(f)
+                
+            if subject in subject_topics:
+                is_curriculum_subject = True
+        except Exception as e:
+            logger.error(f"[PracticeEngine] Failed to load subject_topics: {e}")
 
-    # 3. Save to cache only if successful
-    if "could not be generated" not in str(notes_response):
+    # Retrieve relevant chunks from the student's documents
+    context = ""
+    if is_curriculum_subject:
+        context = "(Curriculum topic — use highly rigorous general knowledge for a college level curriculum)"
+    else:
+        search_query = f"{subject} {topic}" if subject else topic
+        docs = db.query(Document).filter(Document.student_id == student_id).all()
+        if not docs:
+            context = "(No documents uploaded — use general knowledge for a college level curriculum)"
+        else:
+            doc_ids = [d.id for d in docs]
+            try:
+                results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
+                if results and results.get("documents") and results["documents"][0]:
+                    context = "\n\n".join(results["documents"][0])
+                else:
+                    context = "(No relevant content found in documents — use general knowledge for a college level curriculum)"
+            except Exception as e:
+                logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
+                context = "(Document search failed due to database error — use general knowledge for a college level curriculum)"
+
+    extra_instructions = ""
+    if subject == "Programming Fundamentals":
+        extra_instructions += "\nGenerate notes ONLY within the context of Programming Fundamentals.\n"
+        extra_instructions += "Do NOT discuss Operating Systems concepts such as processes, threads, synchronization, semaphores, deadlocks, scheduling, memory management, segmentation, or paging.\n"
+
+    system_prompt = """You are teaching a first-year B.Tech CSE student.
+Given the topic and context, generate a concise and high-yield technical study guide in MARKDOWN format. Keep it punchy and fast to read.
+
+Format your output exactly like this:
+
+# [Topic Title]
+[Content in markdown...]
+
+---REVISION---
+{
+    "title": "Interview Cheat Sheet",
+    "points": [
+        {"id": 1, "text": "Advanced point 1"},
+        {"id": 2, "text": "Advanced point 2"},
+        {"id": 3, "text": "Advanced point 3"}
+    ]
+}
+
+RULES:
+- The markdown content MUST be technically deep but CONCISE. Limit the markdown to EXACTLY 4 highly-impactful sections. Do NOT generate long walls of text.
+- NEVER generate basic, high-level, or "kidish" overviews. Assume the reader is preparing for a Senior or top-tier placement.
+- Generate content ONLY within the context of the provided subject.
+- The revision JSON MUST have exactly 3 hard-hitting, concise bullet points and MUST be placed after the ---REVISION--- separator.
+- Do not use markdown fencing around the JSON block.
+- NEVER use emoji numbers or icon blocks (like 1️⃣, 2️⃣, 3️⃣, 4️⃣) for headings or lists. Always use plain numbers (e.g. 1., 2., 3., 4.).
+- NEVER output raw markdown tables (using | columns). Present comparisons or grids using structured text or bullet points.
+- NEVER output LaTeX mathematical formatting (like \(...\), \[...\], \mathcal, \mathbb, \rightarrow, \sum, etc.). Express all math, symbols, functions, and formulas in simple plain text (e.g. "R(h) = (1/N) * sum(L(...))", "y", "theta", "R^d -> Y") so it is immediately readable as standard text.
+"""
+
+    context_str = f"Subject / Context: {subject or 'General Computer Science'}\n"
+    user_prompt = f"SUBJECT:\n{subject}\n\nTOPIC:\n{topic}\n\nCONTEXT:\n{context_str}{context}\n\n{subtopics_str}Generate the study guide and revision JSON.\nIMPORTANT: Only use the CONTEXT if it strictly belongs to the SUBJECT ({subject}). If the context is about a different subject (e.g., Operating Systems), IGNORE the context entirely and use your general knowledge.\n{extra_instructions}"
+
+    logger.info(f"--- LLM PROMPT (Subject: {subject}, Topic: {topic}) ---")
+    
+    # We use a custom generator to yield chunks and capture the full response to cache it
+    full_response = ""
+    for chunk in _practice_llm_stream(system_prompt, user_prompt, max_tokens=6000):
+        full_response += chunk
+        yield chunk
+        
+    # Save to cache after streaming completes
+    try:
+        parts = full_response.split("---REVISION---")
+        markdown_content = parts[0].strip()
+        revision_data = {"title": "Quick Revision", "points": [{"id": 1, "text": "Review this topic later."}]}
+        if len(parts) > 1:
+            import json
+            try:
+                revision_data = json.loads(parts[1].strip())
+            except:
+                pass
+                
+        from practice_models import LearningContent
         new_cache = LearningContent(
             student_id=student_id,
             subject=subject,
             topic=topic,
-            content=notes_response,
-            revision=revision_response
+            content=markdown_content,
+            revision=revision_data
         )
         db.add(new_cache)
-        try:
-            db.commit()
-        except Exception as e:
-            logger.error(f"[PracticeEngine] Failed to save learning content cache: {e}")
-            db.rollback()
+        db.commit()
+    except Exception as e:
+        logger.error(f"[PracticeEngine] Failed to cache streamed content: {e}")
 
-    return {
-        "notesResponse": notes_response,
-        "revision": revision_response
-    }
+def _practice_llm_stream(system_prompt: str, user_prompt: str, max_tokens: int = 2048):
+    """Call the LLM and yield chunks of the response."""
+    provider = get_provider()
+    configs = []
+
+    def add_gpt():
+        if GPT_API_KEY and GPT_BASE_URL:
+            configs.append(("GPT-4o-mini", GPT_API_KEY, GPT_BASE_URL, GPT_MODEL))
+
+    def add_llama():
+        if LLAMA_API_KEY and LLAMA_BASE_URL:
+            configs.append(("Llama", LLAMA_API_KEY or GPT_API_KEY, LLAMA_BASE_URL, LLAMA_MODEL))
+
+    if provider == "gpt4o":
+        add_gpt(); add_llama()
+    elif provider == "llama":
+        add_llama(); add_gpt()
+    else:
+        add_gpt(); add_llama()
+
+    last_error = "No configurations available"
+    for name, api_key, base_url, model in configs:
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key, base_url=base_url)
+
+            resp = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                max_tokens=max_tokens,
+                temperature=0.3,
+                stream=True,
+            )
+            for chunk in resp:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
+            return
+        except Exception as e:
+            logger.error(f"[PracticeEngine] LLM Stream '{name}' failed: {e}")
+            last_error = str(e)
+            continue
+
+    yield f"ERROR: {last_error}"
+
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -580,7 +904,7 @@ def get_adaptive_difficulty(student_id: int, topic: str, db: Session) -> str:
         .first()
     )
 
-    if not perf or perf.total_attempts < 3:
+    if not perf or perf.sessions < 3:
         return "easy"  # start easy for new topics
 
     if perf.accuracy < 50:
@@ -591,16 +915,7 @@ def get_adaptive_difficulty(student_id: int, topic: str, db: Session) -> str:
         return "hard"
 
 
-def get_mastery_level(accuracy: float, total_attempts: int) -> str:
-    """Calculate mastery level from accuracy and attempt count."""
-    if total_attempts < 2:
-        return "weak"
-    if accuracy < 50:
-        return "weak"
-    elif accuracy < 85:
-        return "medium"
-    else:
-        return "strong"
+from services.analytics_engine import get_topic_status
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -612,6 +927,7 @@ def update_topic_performance(
     topic: str,
     is_correct: bool,
     db: Session,
+    session_id: int = None,
     subject: Optional[str] = None,
 ):
     """Update aggregated performance stats for a topic after an answer."""
@@ -651,14 +967,35 @@ def update_topic_performance(
         except Exception as e:
             pass
 
+        # Self-healing: recover historical data from PracticeQuestion table
+        from practice_models import PracticeQuestion, PracticeSession
+        history_qs = db.query(PracticeQuestion).join(PracticeSession).filter(
+            PracticeSession.student_id == student_id,
+            PracticeQuestion.topic == topic,
+            PracticeQuestion.is_correct.isnot(None)
+        ).all()
+        
+        hist_attempted = len(history_qs)
+        hist_correct = sum(1 for q in history_qs if q.is_correct)
+        hist_accuracy = (hist_correct / hist_attempted * 100) if hist_attempted > 0 else 0.0
+        hist_sessions = db.query(PracticeSession.id).join(PracticeQuestion).filter(
+            PracticeSession.student_id == student_id,
+            PracticeQuestion.topic == topic,
+            PracticeQuestion.is_correct.isnot(None)
+        ).distinct().count()
+
         perf = TopicPerformance(
             student_id=student_id,
             topic=topic,
             subject=resolved_subject,
-            total_attempts=0,
-            correct_count=0,
+            sessions=hist_sessions,
+            questions_attempted=hist_attempted,
+            correct_answers=hist_correct,
+            accuracy=hist_accuracy,
         )
         db.add(perf)
+        db.commit()
+        db.refresh(perf)
     else:
         # If perf exists but has wrong subject (like a subtopic), fix it
         try:
@@ -688,19 +1025,30 @@ def update_topic_performance(
         except Exception:
             pass
 
-    perf.total_attempts += 1
+    perf.questions_attempted += 1
     if is_correct:
-        perf.correct_count += 1
+        perf.correct_answers += 1
 
-    perf.accuracy = (perf.correct_count / perf.total_attempts) * 100 if perf.total_attempts > 0 else 0
+    perf.accuracy = (perf.correct_answers / perf.questions_attempted) * 100 if perf.questions_attempted > 0 else 0
     perf.current_difficulty = get_adaptive_difficulty(student_id, topic, db)
-    perf.mastery_level = get_mastery_level(perf.accuracy, perf.total_attempts)
-    perf.last_practiced = datetime.utcnow()
+    
+    if session_id:
+        from practice_models import PracticeQuestion
+        answered_in_session = db.query(PracticeQuestion).filter(
+            PracticeQuestion.session_id == session_id,
+            PracticeQuestion.topic == topic,
+            PracticeQuestion.is_correct.isnot(None)
+        ).count()
+        if answered_in_session == 1:
+            perf.sessions += 1
+
+    perf.status = get_topic_status(perf.sessions, perf.questions_attempted, perf.accuracy)
+    perf.last_practiced_at = datetime.utcnow()
 
     db.commit()
     db.refresh(perf)
     
-    logger.info(f"PERFORMANCE UPDATED | Topic: {topic} | Accuracy: {perf.accuracy}% | Attempts: {perf.total_attempts} | Mastery Level: {perf.mastery_level}")
+    logger.info(f"PERFORMANCE UPDATED | Topic: {topic} | Accuracy: {perf.accuracy}% | Sessions: {perf.sessions} | Status: {perf.status}")
     
     return perf
 
@@ -819,7 +1167,7 @@ def get_weak_topics(student_id: int, db: Session) -> list[dict]:
     perfs = (
         db.query(TopicPerformance)
         .filter(TopicPerformance.student_id == student_id)
-        .filter(TopicPerformance.total_attempts >= 1)
+        .filter(TopicPerformance.sessions >= 1)
         .order_by(TopicPerformance.accuracy.asc())
         .all()
     )
@@ -829,8 +1177,8 @@ def get_weak_topics(student_id: int, db: Session) -> list[dict]:
             "topic": p.topic,
             "subject": p.subject or "General",
             "accuracy": round(p.accuracy, 1),
-            "total_attempts": p.total_attempts,
-            "mastery_level": p.mastery_level,
+            "sessions": p.sessions,
+            "status": p.status,
             "current_difficulty": p.current_difficulty,
         }
         for p in perfs

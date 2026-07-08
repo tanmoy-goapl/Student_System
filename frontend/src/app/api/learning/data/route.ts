@@ -11,12 +11,16 @@ export async function GET(request: Request) {
     const studentId = searchParams.get("student_id");
     const subject = searchParams.get("subject");
     const source = searchParams.get("source");
+    const roadmapId = searchParams.get("roadmap_id");
+    const classId = searchParams.get("class_id");
     let url = `${BACKEND_URL}/learning/data`;
     const backendParams = new URLSearchParams();
     if (topic) backendParams.append("topic", topic);
     if (studentId) backendParams.append("student_id", studentId);
     if (subject) backendParams.append("subject", subject);
     if (source) backendParams.append("source", source);
+    if (roadmapId) backendParams.append("roadmap_id", roadmapId);
+    if (classId) backendParams.append("class_id", classId);
     
     const q = backendParams.toString();
     if (q) url += `?${q}`;

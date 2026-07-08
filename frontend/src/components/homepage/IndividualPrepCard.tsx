@@ -1,4 +1,12 @@
-import { IndividualPrepCardProps } from "./PrepDashboardHero";
+export interface IndividualPrepCardProps {
+  stat: {
+    title: string;
+    value: string | number;
+    subtitle: string;
+    icon: any;
+    iconClassName: string;
+  };
+}
 
 export default function IndividualPrepCard({ stat }: IndividualPrepCardProps) {
   const Icon = stat.icon;

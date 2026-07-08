@@ -24,7 +24,6 @@ export default function LoginScreen({ onLoginSuccess, redirectAfterLogin = "/pro
   const [copied, setCopied] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const nextPath = redirectAfterLogin;
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -64,6 +63,16 @@ export default function LoginScreen({ onLoginSuccess, redirectAfterLogin = "/pro
         localStorage.setItem("user_name", derived);
       }
       localStorage.setItem("user_email", res.email || email);
+
+      // Force useAuth hooks to re-evaluate localStorage across the app
+      window.dispatchEvent(new Event("storage"));
+
+      let nextPath = redirectAfterLogin;
+      if (!nextPath || nextPath === "/" || nextPath === "/courses") {
+        nextPath = res.role === "admin" ? "/admin" :
+                   res.role === "professor" ? "/professor" :
+                   "/courses";
+      }
 
       onLoginSuccess?.();
       router.push(nextPath);
@@ -331,20 +340,20 @@ export default function LoginScreen({ onLoginSuccess, redirectAfterLogin = "/pro
           <p className="mt-2 flex items-center gap-2">
             Student →
             <span className="flex items-center gap-1 font-mono text-slate-400">
-              student@gmail.com
+              keshav@gmail.com
               <button
                 className="text-slate-400 hover:text-white transition"
-                onClick={() => handleCopy("student@gmail.com", "student-email")}
+                onClick={() => handleCopy("keshav@gmail.com", "student-email")}
               >
                 {copied === "student-email" ? <Check size={12} /> : <Copy size={12} />}
               </button>
             </span>
             /
             <span className="flex items-center gap-1 font-mono">
-              student123
+              keshav123
               <button
                 className="text-slate-400 hover:text-white transition"
-                onClick={() => handleCopy("student123", "student-pass")}
+                onClick={() => handleCopy("keshav123", "student-pass")}
               >
                 {copied === "student-pass" ? <Check size={12} /> : <Copy size={12} />}
               </button>

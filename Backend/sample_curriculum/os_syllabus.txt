@@ -1,0 +1,37 @@
+Course Code: CS301
+Course Name: Operating Systems
+Semester: Fall 2026
+
+Course Objectives:
+Understand the core concepts of Operating Systems, concurrency, and memory management.
+
+Course Content:
+
+UNIT 1: Processes
+- Process Concept
+- PCB
+- Process States
+
+UNIT 2: Scheduling
+- FCFS
+- SJF
+- Round Robin
+
+UNIT 3: Memory Management
+- Paging
+- Segmentation
+- Virtual Memory
+
+UNIT 4: Deadlocks
+- Deadlock Characterization
+- Banker's Algorithm
+- Prevention
+
+UNIT 5: File Systems
+- File Concept
+- Access Methods
+- Directory Structure
+
+Suggested Books:
+- Primary Textbook: Silberschatz, Galvin, Gagne - Operating System Concepts
+- Reference Book: Andrew S. Tanenbaum - Modern Operating Systems

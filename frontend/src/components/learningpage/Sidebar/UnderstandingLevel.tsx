@@ -34,17 +34,18 @@ interface UnderstandingLevelProps {
 }
 
 export function UnderstandingLevel({ data }: UnderstandingLevelProps) {
+  const statusUpper = data.status.toUpperCase();
   const statusColor =
-    data.status === "weak"
+    statusUpper === "WEAK"
       ? "text-red-400"
-      : data.status === "medium"
+      : (statusUpper === "LEARNING" || statusUpper === "NOT_STARTED")
         ? "text-amber-400"
         : "text-green-400";
 
   const statusBgColor =
-    data.status === "weak"
+    statusUpper === "WEAK"
       ? "bg-red-500/10 border-red-500/30"
-      : data.status === "medium"
+      : (statusUpper === "LEARNING" || statusUpper === "NOT_STARTED")
         ? "bg-amber-500/10 border-amber-500/30"
         : "bg-green-500/10 border-green-500/30";
 
@@ -56,13 +57,20 @@ export function UnderstandingLevel({ data }: UnderstandingLevelProps) {
 
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-xs text-slate-500 mb-1">This Topic</p>
-          <p 
-            className="text-3xl font-bold"
-            style={{ color: statusColor }}
-          >
-            {data.mainPercentage}%
-          </p>
+          <p className="text-xs text-slate-500 mb-1">Accuracy</p>
+          <div className="flex flex-col">
+            <p 
+              className="text-3xl font-bold"
+              style={{ color: statusColor }}
+            >
+              {data.mainPercentage}%
+            </p>
+            {data.confidence !== undefined && (
+              <p className="text-xs text-indigo-400 mt-1 font-medium">
+                Confidence: {data.confidence}%
+              </p>
+            )}
+          </div>
         </div>
 
         <div

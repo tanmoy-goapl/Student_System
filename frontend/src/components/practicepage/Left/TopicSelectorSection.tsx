@@ -35,6 +35,17 @@ export default function TopicSelectorSection({
 
   const [expandedSemesters, setExpandedSemesters] = useState<Record<string, boolean>>({});
 
+  useState(() => {
+    // Hook to auto-expand semesters when component mounts
+    const initial: Record<string, boolean> = {};
+    subjects.forEach((s) => {
+      if (s.semester) {
+        initial[s.semester] = true;
+      }
+    });
+    setExpandedSemesters(initial);
+  });
+
   const toggleSemester = (sem: string) => {
     setExpandedSemesters((prev) => ({ ...prev, [sem]: !prev[sem] }));
   };

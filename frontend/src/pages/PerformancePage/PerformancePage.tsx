@@ -15,17 +15,26 @@ export default function PerformancePage() {
     const [aiQuery, setAiQuery] = useState("");
     const [mainData, setMainData] = useState<PerformanceMainResponse | null>(null);
 
+    const getStudentId = (): number => {
+        if (typeof window !== "undefined") {
+            const id = localStorage.getItem("user_id");
+            return id ? parseInt(id, 10) : 3;
+        }
+        return 3;
+    };
+    const studentId = getStudentId();
+
     useEffect(() => {
         async function fetchMainData() {
             try {
-                const data = await getPerformanceMain();
+                const data = await getPerformanceMain(studentId);
                 setMainData(data);
             } catch (error) {
                 console.error("Failed to load performance main data:", error);
             }
         }
         fetchMainData();
-    }, []);
+    }, [studentId]);
 
     const handleAIHelp = (query: string) => {
         console.log(query)
@@ -63,7 +72,7 @@ export default function PerformancePage() {
             </div>
 
             <div className="w-[20vw]">
-                <PerformanceSidebar/>
+                <PerformanceSidebar studentId={studentId}/>
             </div>
         </div>
     );

@@ -67,7 +67,8 @@ export default function AIActions() {
 
     async function fetchActions() {
       try {
-        const data: AIActionCardResponse[] = await getAIActions();
+        const studentId = localStorage.getItem("user_id") || undefined;
+        const data: AIActionCardResponse[] = await getAIActions(studentId);
 
         if (!cancelled && data && Array.isArray(data)) {
           // Map backend response (iconName string) to frontend format (icon component)

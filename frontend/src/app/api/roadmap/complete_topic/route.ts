@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const API_URL = process.env.API_URL || "http://10.10.90.95:8001";
+    const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001";
     
-    const response = await fetch(`${API_URL}/api/roadmap/complete_topic`, {
+    const response = await fetch(`${BACKEND_URL}/api/roadmap/complete_topic`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

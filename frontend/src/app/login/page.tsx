@@ -6,8 +6,8 @@ import LoginScreen from "@/components/login/LoginScreen";
 
 function LoginWithNextQuery() {
   const searchParams = useSearchParams();
-  const next = searchParams?.get("next") ?? "/profile";
-  return <LoginScreen redirectAfterLogin={next} />;
+  const next = searchParams?.get("next");
+  return <LoginScreen redirectAfterLogin={next || undefined} />;
 }
 
 export default function LoginRoutePage() {

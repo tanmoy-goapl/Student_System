@@ -52,6 +52,14 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
       const response = await getPracticeData(studentId);
       setData(response);
 
+      // Select dynamic recommended mode
+      if (response.practiceModes && response.practiceModes.length > 0) {
+        const currentMode = response.practiceModes.find((m: any) => m.isCurrent);
+        if (currentMode) {
+          setSelectedMode(currentMode.id);
+        }
+      }
+
       // Auto-expand only document subjects and select first topic if none is selected
       if (response.subjects && response.subjects.length > 0) {
         setExpandedSubjects((prev) => {
@@ -59,7 +67,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
           response.subjects.forEach((subj) => {
             const activeTopic = topicParam || (response.subjects && response.subjects.length > 0 && (response.subjects[0].topics?.[0] || response.subjects[0].weakAreas?.[0])) || "";
             const hasSelectedTopic = subj.topics?.includes(activeTopic) || subj.weakAreas?.includes(activeTopic);
-            if (hasSelectedTopic) {
+            if (hasSelectedTopic || subj.isExpanded) {
               docExpanded[subj.id] = true;
             }
           });
@@ -115,7 +123,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
   // Filter subjects based on source
   const filteredSubjects = data?.subjects?.filter((subj) => {
     if (source === "personal") return subj.section === "documents" || subj.section === "roadmap";
-    return subj.section === "curriculum";
+    return subj.section === "curriculum" || subj.section === "documents";
   }) || [];
 
   const hasSubjects = filteredSubjects.length > 0;

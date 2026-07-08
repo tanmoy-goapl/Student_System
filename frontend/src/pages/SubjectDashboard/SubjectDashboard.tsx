@@ -10,9 +10,12 @@ import Loader from '@/components/Loader';
 
 interface TopicData {
   title: string;
-  status: 'Not Started' | 'In Progress' | 'Completed' | 'Mastered';
+  status: 'NOT_STARTED' | 'WEAK' | 'LEARNING' | 'STRONG';
   accuracy: number;
-  attempts: number;
+  confidence?: number;
+  exposure?: number;
+  sessions: number;
+  questions_attempted: number;
   last_studied: string | null;
   difficulty?: string;
   estimated_hours?: number;
@@ -20,9 +23,17 @@ interface TopicData {
 }
 
 interface SubjectProgress {
-  completed: number;
-  total: number;
+  topics_total: number;
+  topics_mastered: number;
+  topics_strong: number;
+  topics_learning: number;
+  topics_weak: number;
+  topics_not_started: number;
+  progress: number;
+  exposure?: number;
   accuracy: number;
+  confidence?: number;
+  subject_health: string;
 }
 
 interface ResourceData {
@@ -76,31 +87,31 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
 
   if (loading) return <Loader fullScreen text="Loading Subject Data..." />;
 
-  const progressPercentage = progress && progress.total > 0 
-    ? Math.round((progress.completed / progress.total) * 100) 
-    : 0;
+  const progressPercentage = progress ? progress.progress : 0;
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Mastered': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
-      case 'Completed': return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
-      case 'In Progress': return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
+      case 'STRONG': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
+      case 'LEARNING': return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
+      case 'WEAK': return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
+      case 'NOT_STARTED': return 'text-slate-400 bg-white/5 border-white/10';
       default: return 'text-slate-400 bg-white/5 border-white/10';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Mastered': return <Trophy className="w-4 h-4" />;
-      case 'Completed': return <CheckCircle2 className="w-4 h-4" />;
-      case 'In Progress': return <Clock className="w-4 h-4" />;
+      case 'STRONG': return <Trophy className="w-4 h-4" />;
+      case 'LEARNING': return <CheckCircle2 className="w-4 h-4" />;
+      case 'WEAK': return <AlertTriangle className="w-4 h-4" />;
+      case 'NOT_STARTED': return <BookOpen className="w-4 h-4" />;
       default: return <BookOpen className="w-4 h-4" />;
     }
   };
 
   // Analytics tab calculations
-  const weakTopics = topics.filter(t => t.attempts > 0 && t.accuracy < 70);
-  const remainingTopics = topics.filter(t => t.status !== 'Completed' && t.status !== 'Mastered');
+  const weakTopics = topics.filter(t => t.status === 'WEAK');
+  const remainingTopics = topics.filter(t => t.status !== 'STRONG');
 
   return (
     <div className="min-h-screen p-8 max-w-5xl mx-auto space-y-8">
@@ -135,11 +146,11 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
                 <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">Progress</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-indigo-400">{progress.completed} <span className="text-lg text-slate-500">/ {progress.total}</span></div>
-                <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">Completed</div>
+                <div className="text-3xl font-bold text-indigo-400">{progress.topics_mastered} <span className="text-lg text-slate-500">/ {progress.topics_total}</span></div>
+                <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">Mastered</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-rose-400">{progress.total - progress.completed}</div>
+                <div className="text-3xl font-bold text-rose-400">{progress.topics_total - progress.topics_mastered}</div>
                 <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">Remaining</div>
               </div>
               <div className="text-center">
@@ -209,7 +220,7 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
                     </div>
                   </div>
 
-                  <div className="mt-auto grid grid-cols-3 gap-2 border-t border-white/10 pt-4">
+                  <div className="mt-auto grid grid-cols-5 gap-2 border-t border-white/10 pt-4">
                     <div>
                       <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Difficulty</div>
                       <div className={`text-[11px] font-medium px-1.5 py-0.5 rounded-sm inline-block ${topic.difficulty === 'Hard' ? 'text-red-400 bg-red-400/10' : topic.difficulty === 'Medium' ? 'text-amber-400 bg-amber-400/10' : 'text-emerald-400 bg-emerald-400/10'}`}>
@@ -218,13 +229,23 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
                     </div>
                     <div>
                       <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Accuracy</div>
-                      <div className={`text-sm font-bold ${topic.accuracy >= 70 ? 'text-emerald-400' : topic.accuracy > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
-                        {topic.accuracy > 0 ? `${topic.accuracy}%` : '-'}
+                      <div className={`text-sm font-bold ${topic.accuracy >= 85 ? 'text-emerald-400' : topic.accuracy >= 50 ? 'text-amber-400' : 'text-slate-400'}`}>
+                        {topic.accuracy !== undefined ? `${topic.accuracy}%` : '0%'}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Attempts</div>
-                      <div className="text-sm font-bold text-white">{topic.attempts > 0 ? topic.attempts : '-'}</div>
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Confidence</div>
+                      <div className="text-sm font-bold text-indigo-400">
+                        {topic.confidence !== undefined ? `${topic.confidence}%` : '0%'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Sessions</div>
+                      <div className="text-sm font-bold text-white">{topic.sessions !== undefined ? topic.sessions : '0'}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Questions</div>
+                      <div className="text-sm font-bold text-white">{topic.questions_attempted !== undefined ? topic.questions_attempted : '0'}</div>
                     </div>
                   </div>
 
@@ -250,7 +271,7 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
             </h2>
 
             {/* Top row metrics cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
                 <div className="flex justify-between items-start">
                   <span className="text-sm text-slate-400 font-medium">Progress</span>
@@ -258,6 +279,15 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
                 </div>
                 <div className="text-3xl font-bold text-white mt-2">{progressPercentage}%</div>
                 <p className="text-xs text-slate-500 mt-1">Syllabus completion</p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                <div className="flex justify-between items-start">
+                  <span className="text-sm text-slate-400 font-medium">Exposure</span>
+                  <BookOpen className="w-5 h-5 text-teal-400" />
+                </div>
+                <div className="text-3xl font-bold text-teal-400 mt-2">{progress?.exposure || 0}%</div>
+                <p className="text-xs text-slate-500 mt-1">Syllabus attempted</p>
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
@@ -271,20 +301,29 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
 
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
                 <div className="flex justify-between items-start">
-                  <span className="text-sm text-slate-400 font-medium">Topics Remaining</span>
-                  <Clock className="w-5 h-5 text-amber-400" />
+                  <span className="text-sm text-slate-400 font-medium">Confidence</span>
+                  <Award className="w-5 h-5 text-indigo-400" />
                 </div>
-                <div className="text-3xl font-bold text-white mt-2">{remainingTopics.length}</div>
-                <p className="text-xs text-slate-500 mt-1">Out of {topics.length} total</p>
+                <div className="text-3xl font-bold text-indigo-400 mt-2">{progress?.confidence || 0}%</div>
+                <p className="text-xs text-slate-500 mt-1">Reliability score</p>
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
                 <div className="flex justify-between items-start">
-                  <span className="text-sm text-slate-400 font-medium">Weak Topics</span>
+                  <span className="text-sm text-slate-400 font-medium">Remaining</span>
+                  <Clock className="w-5 h-5 text-amber-400" />
+                </div>
+                <div className="text-3xl font-bold text-white mt-2">{remainingTopics.length}</div>
+                <p className="text-xs text-slate-500 mt-1">Out of {topics.length}</p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                <div className="flex justify-between items-start">
+                  <span className="text-sm text-slate-400 font-medium">Weak</span>
                   <AlertTriangle className="w-5 h-5 text-rose-400" />
                 </div>
                 <div className="text-3xl font-bold text-rose-400 mt-2">{weakTopics.length}</div>
-                <p className="text-xs text-slate-500 mt-1">Need focus & practice</p>
+                <p className="text-xs text-slate-500 mt-1">Need practice</p>
               </div>
             </div>
 
@@ -305,7 +344,7 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
                         <span className="text-sm text-white font-medium truncate pr-4">{topic.title}</span>
                         <div className="text-right shrink-0">
                           <span className="text-xs text-rose-400 font-semibold">{topic.accuracy}% accuracy</span>
-                          <span className="text-[10px] text-slate-500 block">{topic.attempts} attempts</span>
+                          <span className="text-[10px] text-slate-500 block">{topic.sessions} sessions</span>
                         </div>
                       </div>
                     ))}

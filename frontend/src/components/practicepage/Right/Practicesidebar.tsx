@@ -18,8 +18,7 @@ interface PracticeSidebarProps {
     topic: string;
     subject: string;
     accuracy: number;
-    total_attempts: number;
-    mastery_level: string;
+    reason?: string;
   }[];
   insights?: {
     type: string;
@@ -27,6 +26,8 @@ interface PracticeSidebarProps {
     description: string;
     frequency: number;
   }[];
+  adaptiveEngine?: any;
+  suggestedNext?: any[];
 
   // Callbacks
   onContinuePractice?: () => void;
@@ -41,6 +42,8 @@ export default function PracticeSidebar({
   pointsEarned = 0,
   weakTopics,
   insights,
+  adaptiveEngine,
+  suggestedNext = [],
   onContinuePractice,
   onReviewMistakes,
   onGoToLearning,
@@ -60,38 +63,13 @@ export default function PracticeSidebar({
 
         <WeakTopics topics={weakTopics} />
 
-        <AdaptiveEngine />
+        <AdaptiveEngine config={adaptiveEngine} />
       </div>
 
       {/* Sticky Bottom Section */}
       <div className="flex-shrink-0 border-t border-white/10 bg-gradient-to-t from-slate-950 to-transparent">
         <SuggestedNext
-          actions={[
-            {
-              id: "continue",
-              title: "Continue Practice",
-              subtitle: "(4 more in session)",
-              icon: "play",
-              color: "blue",
-              action: onContinuePractice || (() => { }),
-            },
-            {
-              id: "mistakes",
-              title: "Review Mistakes",
-              subtitle: "(3 errors this session)",
-              icon: "refresh",
-              color: "red",
-              action: onReviewMistakes || (() => { }),
-            },
-            {
-              id: "learning",
-              title: "Go to Learning",
-              subtitle: "(Wave Optics theory)",
-              icon: "book",
-              color: "amber",
-              action: onGoToLearning || (() => { }),
-            },
-          ]}
+          actions={suggestedNext}
         />
       </div>
 

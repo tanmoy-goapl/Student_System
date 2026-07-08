@@ -57,16 +57,12 @@ export default function DocumentsPage() {
                 if (activeWorkspace === '1') return doc.category === 'Studies';
                 if (activeWorkspace === '2') return doc.category === 'Resume & Interview';
                 if (activeWorkspace === '3') return doc.category === 'Personal Learning';
-                const subjectMap: Record<string, string[]> = {
-                    '1-1': ['Physics'],
-                    '1-2': ['Chemistry'],
-                    '1-3': ['Maths'],
-                    '2-1': ['Resume'],
-                    '2-2': ['Interview'],
-                };
-                const allowed = subjectMap[activeWorkspace];
-                if (!allowed) return true;
-                return allowed.some((s) => (doc.subject || '').toLowerCase().includes(s.toLowerCase()));
+                
+                if (activeWorkspace.includes('::')) {
+                    const [catId, subjectName] = activeWorkspace.split('::');
+                    return (doc.subject || '').toLowerCase() === subjectName.toLowerCase();
+                }
+                return true;
             })();
 
             return matchesType && matchesSearch && matchesWorkspace;

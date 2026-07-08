@@ -1,0 +1,53 @@
+import { NextRequest, NextResponse } from "next/server";
+
+const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001";
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ class_id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const { class_id } = resolvedParams;
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("user_id");
+    
+    if (!userId) {
+      return NextResponse.json({ success: false, error: "Missing user_id" }, { status: 400 });
+    }
+
+    const response = await fetch(`${BACKEND_URL}/classroom/${class_id}/curriculum?user_id=${userId}`);
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: "Backend request failed" }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ class_id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const { class_id } = resolvedParams;
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("user_id");
+    
+    if (!userId) {
+      return NextResponse.json({ success: false, error: "Missing user_id" }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const response = await fetch(`${BACKEND_URL}/classroom/${class_id}/curriculum?user_id=${userId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: "Backend request failed" }, { status: 500 });
+  }
+}

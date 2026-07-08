@@ -13,6 +13,30 @@ from roadmap_models import LearningRoadmap, DailyTask
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
+from services.analytics_engine import (
+    calculate_topic_metrics,
+    calculate_subject_metrics,
+    calculate_student_metrics,
+    get_student_subjects
+)
+
+@router.get("/debug/{student_id}")
+def debug_analytics(student_id: int, db: Session = Depends(get_db)):
+    all_topics = db.query(TopicPerformance).filter(TopicPerformance.student_id == student_id).all()
+    result = []
+    for t in all_topics:
+        metrics = calculate_topic_metrics(t)
+        result.append({
+            "topic": t.topic,
+            "subject": t.subject,
+            "sessions": t.sessions,
+            "questions_attempted": t.questions_attempted,
+            "correct_answers": t.correct_answers,
+            "accuracy": round(t.accuracy, 1),
+            "status": metrics["status"]
+        })
+    return result
+
 @router.get("/data/{student_id}")
 async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
     # Verify user exists
@@ -26,27 +50,23 @@ async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
     # 2. TopicPerformance
     all_topics = db.query(TopicPerformance).filter(TopicPerformance.student_id == student_id).all()
     
+    student_stats = calculate_student_metrics(student_id, db)
+    subjects = get_student_subjects(student_id, db)
+    
     completed_topics_count = 0
-    mastered_topics_count = 0
+    mastered_topics_count = student_stats["mastered_topics"]
     
     weak_topics = []
     medium_topics = []
     strong_topics = []
     
     for t in all_topics:
-        # User defined rules:
-        # Completed: (accuracy >= 70 AND attempts >= 2) OR mastery_level == "strong"
-        # Mastered: accuracy >= 85 AND mastery_level == "strong"
-        
-        from services.practice_engine import get_mastery_level
-        actual_mastery = get_mastery_level(t.accuracy, t.total_attempts)
-        is_completed = (t.accuracy >= 70 and t.total_attempts >= 2) or (actual_mastery == "strong")
-        is_mastered = (t.accuracy >= 85 and actual_mastery == "strong")
+        metrics = calculate_topic_metrics(t)
+        status = metrics["status"]
+        is_completed = (t.sessions >= 1) or (status == "STRONG")
         
         if is_completed:
             completed_topics_count += 1
-        if is_mastered:
-            mastered_topics_count += 1
             
         # Weakness analysis (User rules: < 50% Weak, 50-75% Medium, > 75% Strong)
         if t.accuracy < 50:
@@ -119,10 +139,10 @@ async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
     # Topics completed this week
     topics_completed_this_week = 0
     for t in all_topics:
-        if t.last_practiced and t.last_practiced >= seven_days_ago:
-            from services.practice_engine import get_mastery_level
-            actual_mastery = get_mastery_level(t.accuracy, t.total_attempts)
-            if (t.accuracy >= 70 and t.total_attempts >= 2) or (actual_mastery == "strong"):
+        if t.last_practiced_at and t.last_practiced_at >= seven_days_ago:
+            metrics = calculate_topic_metrics(t)
+            status = metrics["status"]
+            if (t.sessions >= 1) or (status == "STRONG"):
                 topics_completed_this_week += 1
 
     learning_velocity = {
@@ -163,49 +183,18 @@ async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
         })
 
     # 6. Subject Performance
-    # Total topics comes from subject_topics.json
-    subject_topics_path = os.path.join(
-        os.path.dirname(__file__), "..", "config", "subject_topics.json"
-    )
-    subject_topics = {}
-    try:
-        with open(subject_topics_path, "r") as f:
-            subject_topics = json.load(f)
-    except Exception:
-        pass
-
-    subject_stats = {}
-    for t in all_topics:
-        if not t.subject:
-            continue
-        if t.subject not in subject_stats:
-            subject_stats[t.subject] = {"completed": 0, "total_acc": 0, "count": 0}
-            
-        subject_stats[t.subject]["total_acc"] += t.accuracy
-        subject_stats[t.subject]["count"] += 1
-        
-        from services.practice_engine import get_mastery_level
-        actual_mastery = get_mastery_level(t.accuracy, t.total_attempts)
-        is_completed = (t.accuracy >= 70 and t.total_attempts >= 2) or (actual_mastery == "strong")
-        if is_completed:
-            subject_stats[t.subject]["completed"] += 1
-
     subject_performance = []
-    for subj_name, stats in subject_stats.items():
-        total_topics = len(subject_topics.get(subj_name, []))
-        if total_topics == 0:
-            total_topics = max(stats["count"], 1)
-            
-        progress = (stats["completed"] / total_topics * 100) if total_topics > 0 else 0
-        avg_acc = stats["total_acc"] / stats["count"] if stats["count"] > 0 else 0
-        
+    for subj in subjects:
+        metrics = calculate_subject_metrics(student_id, subj, db)
         subject_performance.append({
-            "subject": subj_name,
-            "progress": round(progress),
-            "completedTopics": stats["completed"],
-            "remainingTopics": max(total_topics - stats["completed"], 0),
-            "totalTopics": total_topics,
-            "averageAccuracy": round(avg_acc)
+            "subject": subj,
+            "progress": metrics["progress"],
+            "completedTopics": metrics["mastered_topics"],
+            "remainingTopics": max(metrics["total_topics"] - metrics["mastered_topics"], 0),
+            "totalTopics": metrics["total_topics"],
+            "averageAccuracy": metrics["average_accuracy"],
+            "averageConfidence": metrics.get("average_confidence", 0.0),
+            "exposure": metrics.get("exposure", 0.0)
         })
 
     # 7. Recommendations
@@ -228,7 +217,9 @@ async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
     return {
         "overview": {
             "currentStreak": up.current_streak if up else 0,
-            "averageAccuracy": round(up.lifetime_accuracy) if up else 0,
+            "averageAccuracy": student_stats["overall_accuracy"],
+            "averageConfidence": student_stats.get("overall_confidence", 0.0),
+            "exposure": student_stats.get("overall_exposure", 0.0),
             "totalQuizAttempts": up.total_questions_attempted if up else 0,
             "topicsCompleted": completed_topics_count,
             "masteredTopics": mastered_topics_count,

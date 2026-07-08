@@ -10,9 +10,9 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 STATIC_DOCUMENTS = [
     {
         "id": "1",
-        "name": "Quantum Physics Notes.pdf",
+        "name": "Operating System Lecture Notes.pdf",
         "type": "PDF",
-        "subject": "Physics",
+        "subject": "Operating system",
         "subjectColor": "blue",
         "pages": 42,
         "sizeMB": 3.2,
@@ -22,9 +22,9 @@ STATIC_DOCUMENTS = [
     },
     {
         "id": "2",
-        "name": "Calculus Textbook Ch1-5.pdf",
+        "name": "Machine Learning Introduction.pdf",
         "type": "PDF",
-        "subject": "Maths",
+        "subject": "Machine learning",
         "subjectColor": "emerald",
         "pages": 118,
         "sizeMB": 12.4,
@@ -34,22 +34,22 @@ STATIC_DOCUMENTS = [
     },
     {
         "id": "3",
-        "name": "Chemistry Lab Reports.doc",
+        "name": "AI Concept Guide.doc",
         "type": "DOC",
-        "subject": "Chemistry",
+        "subject": "AI",
         "subjectColor": "amber",
         "pages": 24,
         "sizeMB": 1.8,
         "uploadedAt": "5 days ago",
-        "status": "processing",
+        "status": "ready",
         "category": "Studies"
     },
     {
         "id": "4",
-        "name": "Wave Mechanics Overview.pdf",
+        "name": "Data Structures Handbook.pdf",
         "type": "PDF",
-        "subject": "Physics",
-        "subjectColor": "blue",
+        "subject": "Data Structures and Algorithms",
+        "subjectColor": "violet",
         "pages": 31,
         "sizeMB": 2.6,
         "uploadedAt": "1 week ago",
@@ -82,9 +82,9 @@ STATIC_DOCUMENTS = [
     },
     {
         "id": "7",
-        "name": "Thermodynamics Cheat Sheet.txt",
+        "name": "Computer Networks Summary.txt",
         "type": "TXT",
-        "subject": "Physics",
+        "subject": "Computer Networks",
         "subjectColor": "blue",
         "pages": 4,
         "sizeMB": 0.1,
@@ -94,10 +94,10 @@ STATIC_DOCUMENTS = [
     },
     {
         "id": "8",
-        "name": "Organic Chemistry Reactions.pdf",
+        "name": "Machine Learning Reference.pdf",
         "type": "PDF",
-        "subject": "Chemistry",
-        "subjectColor": "amber",
+        "subject": "Machine learning",
+        "subjectColor": "emerald",
         "pages": 38,
         "sizeMB": 5.7,
         "uploadedAt": "3 weeks ago",
@@ -118,7 +118,7 @@ def to_ui_doc(doc: Document) -> dict:
         elif ext in (".doc", ".docx"):
             doc_type = "DOC"
         
-    subject_val = doc.subject or "Personal"
+    subject_val = doc.subject or "General"
     subject_lower = subject_val.lower()
     if "physics" in subject_lower:
         color = "blue"
@@ -173,50 +173,50 @@ async def get_documents_data(student_id: int = 1, db: Session = Depends(get_db))
     # Recalculate KPIs
     total_docs = len(combined_docs)
     unique_subjects = len(set(d["subject"].lower() for d in combined_docs if d.get("subject")))
-    processing_count = sum(1 for d in combined_docs if d.get("status") == "processing")
-    ready_count = sum(1 for d in combined_docs if d.get("status") == "ready")
     
     kpis = [
         {"id": "1", "value": str(total_docs), "label": "Total Documents", "color": "blue", "iconType": "docs"},
         {"id": "2", "value": str(unique_subjects), "label": "Subjects", "color": "violet", "iconType": "subjects"},
     ]
     
-    # Recalculate workspaces/folders count
-    studies_physics = sum(1 for d in combined_docs if d.get("category") == "Studies" and "physics" in d.get("subject", "").lower())
-    studies_chemistry = sum(1 for d in combined_docs if d.get("category") == "Studies" and "chemistry" in d.get("subject", "").lower())
-    studies_maths = sum(1 for d in combined_docs if d.get("category") == "Studies" and "math" in d.get("subject", "").lower())
-    total_studies = studies_physics + studies_chemistry + studies_maths
+    # Recalculate workspaces dynamically
+    from collections import defaultdict
+    category_counts = defaultdict(int)
+    category_subject_counts = defaultdict(lambda: defaultdict(int))
     
-    total_resume_interview = sum(1 for d in combined_docs if d.get("category") == "Resume & Interview")
-    resume_docs = sum(1 for d in combined_docs if d.get("category") == "Resume & Interview" and "resume" in d.get("subject", "").lower())
-    interview_docs = sum(1 for d in combined_docs if d.get("category") == "Resume & Interview" and "interview" in d.get("subject", "").lower())
-    total_personal = sum(1 for d in combined_docs if d.get("category") == "Personal Learning")
-    
+    for d in combined_docs:
+        cat = d.get("category") or "Personal Learning"
+        subj = d.get("subject") or "General"
+        category_counts[cat] += 1
+        category_subject_counts[cat][subj] += 1
+        
     workspaces = [
         {
             "id": "1",
             "name": "Studies",
-            "count": total_studies,
+            "count": category_counts["Studies"],
             "children": [
-                {"id": "1-1", "name": "Physics", "count": studies_physics},
-                {"id": "1-2", "name": "Chemistry", "count": studies_chemistry},
-                {"id": "1-3", "name": "Maths", "count": studies_maths},
+                {"id": f"1::{subj}", "name": subj, "count": count}
+                for subj, count in sorted(category_subject_counts["Studies"].items())
             ],
         },
         {
             "id": "2",
             "name": "Resume & Interview",
-            "count": total_resume_interview,
+            "count": category_counts["Resume & Interview"],
             "children": [
-                {"id": "2-1", "name": "Resume", "count": resume_docs},
-                {"id": "2-2", "name": "Interview", "count": interview_docs},
+                {"id": f"2::{subj}", "name": subj, "count": count}
+                for subj, count in sorted(category_subject_counts["Resume & Interview"].items())
             ],
         },
         {
             "id": "3",
             "name": "Personal Learning",
-            "count": total_personal,
-            "children": [],
+            "count": category_counts["Personal Learning"],
+            "children": [
+                {"id": f"3::{subj}", "name": subj, "count": count}
+                for subj, count in sorted(category_subject_counts["Personal Learning"].items())
+            ],
         },
     ]
     
@@ -249,6 +249,15 @@ def delete_document(document_id: int, db: Session = Depends(get_db)):
             print(f"Error deleting file from disk: {e}")
             
     # 3. Delete from Postgres database
+    student_id = doc.student_id
     db.delete(doc)
     db.commit()
+    
+    # 4. Trigger topic synchronization to cleanup topics of deleted document
+    try:
+        from services.practice_engine import extract_topics_from_documents
+        extract_topics_from_documents(student_id, db)
+    except Exception as sync_err:
+        print(f"Error synchronizing topics after deletion: {sync_err}")
+        
     return {"message": "Document deleted successfully"}

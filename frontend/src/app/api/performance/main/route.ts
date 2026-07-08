@@ -4,9 +4,15 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const response = await fetch(`${BACKEND_URL}/performance/main`, {
+    const { searchParams } = new URL(request.url);
+    const studentId = searchParams.get("student_id");
+    let url = `${BACKEND_URL}/performance/main`;
+    if (studentId) {
+      url += `?student_id=${studentId}`;
+    }
+    const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",

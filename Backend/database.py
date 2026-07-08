@@ -24,9 +24,10 @@ def init_db():
     from models import User, Document  # removed DocumentChunk
     from practice_models import (      # Adaptive Learning Engine tables
         PracticeSession, PracticeQuestion,
-        TopicPerformance, BehavioralInsight, CustomTopic, LearningContent,
+        TopicPerformance, BehavioralInsight, CustomTopic, LearningContent, UserNote
     )
     from roadmap_models import UserGoal, LearningRoadmap, DailyTask
+    from classroom_models import Classroom, StudentClass, ClassResource, ClassCurriculum
     Base.metadata.create_all(bind=engine)
     
     # Run automatic column migrations

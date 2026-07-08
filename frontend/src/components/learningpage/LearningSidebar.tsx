@@ -189,7 +189,7 @@ export default function LearningSidebar() {
             if (source === "personal") {
               return category.id === "roadmap" || category.id === "documents";
             } else {
-              return category.id === "curriculum";
+              return category.id === "curriculum" || category.id === "current" || category.id === "history" || category.id === "class" || category.id === "documents";
             }
           })
           .map((category: any) => (

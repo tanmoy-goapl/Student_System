@@ -8,7 +8,8 @@ export interface SkillMetric {
 
 export interface UnderstandingLevelData {
   mainPercentage: number;
-  status: "weak" | "medium" | "strong";
+  status: string;
+  confidence?: number;
   skillBreakdown: SkillMetric[];
   baselineText: string;
 }

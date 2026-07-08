@@ -87,7 +87,8 @@ export interface QuickAction {
   id: string;
   label: string;
   icon: React.ElementType;
-  variant: 'primary' | 'cyan' | 'purple' | 'amber';
+  variant: 'primary' | 'cyan' | 'purple' | 'amber' | 'green';
+  onClick?: (id: string) => void;
 }
 
 export interface RelatedConcept {

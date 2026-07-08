@@ -21,7 +21,7 @@ function QuickActionButton({
 
     return (
         <button
-            onClick={() => onClick?.(action.id)}
+            onClick={() => action.onClick ? action.onClick(action.id) : onClick?.(action.id)}
             className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-xs transition-all duration-200 ${actionVariants[action.variant]}`}
         >
             <Icon className="h-4 w-4" />

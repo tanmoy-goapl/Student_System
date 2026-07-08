@@ -40,15 +40,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: student_frontend
-    ports:
-      - "3000:3000"
+    network_mode: "host"
     volumes:
       - ./frontend:/app
     environment:
-      # Tell Next.js API routes how to reach the backend on the host network
-      - BACKEND_URL=http://10.10.90.95:8001
-      # For client-side API requests
-      - NEXT_PUBLIC_BACKEND_URL=http://10.10.90.95:8001
+      # Reach backend directly via host loopback network
+      - BACKEND_URL=http://127.0.0.1:8001
+      - NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8001
 
 volumes:
   postgres_data:

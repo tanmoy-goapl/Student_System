@@ -46,14 +46,20 @@ export default function PersonalDashboard() {
 
   useEffect(() => {
     fetchRoadmaps();
+    const interval = setInterval(() => {
+      fetchRoadmaps();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  const handleContinueRoadmap = (roadmapId: number) => {
+  const handleContinueRoadmap = (roadmapId: number | string) => {
+    if (typeof roadmapId === 'string' && roadmapId.startsWith('gen_')) return;
     router.push(`/roadmap?roadmap_id=${roadmapId}`);
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: number) => {
+  const handleDelete = async (e: React.MouseEvent, id: number | string) => {
     e.stopPropagation();
+    if (typeof id === 'string' && id.startsWith('gen_')) return; // Cannot delete while generating
     if (confirm("Are you sure you want to delete this roadmap?")) {
       try {
         await fetch(`/api/roadmap/delete/${id}`, { method: 'DELETE' });
@@ -88,7 +94,24 @@ export default function PersonalDashboard() {
           ))
         ) : (
           <>
-            {roadmaps.map((rm, index) => (
+            {roadmaps.map((rm, index) => {
+              if (rm.status === 'Generating') {
+                return (
+                  <div
+                    key={rm.id}
+                    className="group flex flex-col justify-center items-center rounded-2xl border border-blue-500/30 bg-[#0f172a] p-5 relative overflow-hidden min-w-[320px] max-w-[320px] shrink-0 snap-start"
+                  >
+                    <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />
+                    <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4" />
+                    <h3 className="text-sm font-semibold text-white text-center truncate w-full px-2" title={rm.title}>
+                      {rm.title}
+                    </h3>
+                    <p className="mt-2 text-xs text-blue-400 text-center">Generating AI Curriculum...</p>
+                  </div>
+                );
+              }
+
+              return (
               <div
                 key={rm.id}
                 onClick={() => handleContinueRoadmap(rm.id)}
@@ -137,7 +160,7 @@ export default function PersonalDashboard() {
                   </button>
                 </div>
               </div>
-            ))}
+            )})}
 
             {/* Create New Roadmap Card */}
             <div

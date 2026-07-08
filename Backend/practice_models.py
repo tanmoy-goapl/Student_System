@@ -25,9 +25,10 @@ class PracticeSession(Base):
     mode            = Column(String, nullable=False, default="topic")      # topic | weakness | exam | revision
     topic           = Column(String, nullable=True)                        # selected topic (null for exam/weakness)
     difficulty      = Column(String, nullable=False, default="mixed")      # easy | medium | hard | mixed
-    total_questions = Column(Integer, default=0)
-    correct_count   = Column(Integer, default=0)
-    started_at      = Column(DateTime, default=datetime.utcnow)
+    question_count  = Column(Integer, default=0)
+    correct_answers = Column(Integer, default=0)
+    accuracy        = Column(Float, default=0.0)
+    created_at      = Column(DateTime, default=datetime.utcnow)
     ended_at        = Column(DateTime, nullable=True)
     is_active       = Column(Boolean, default=True)
 
@@ -71,12 +72,13 @@ class TopicPerformance(Base):
     student_id       = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     subject          = Column(String, nullable=True)
     topic            = Column(String, nullable=False)
-    total_attempts   = Column(Integer, default=0)
-    correct_count    = Column(Integer, default=0)
+    sessions         = Column(Integer, default=0)
+    questions_attempted = Column(Integer, default=0)
+    correct_answers  = Column(Integer, default=0)
     accuracy         = Column(Float, default=0.0)                          # 0.0 – 100.0
     current_difficulty = Column(String, default="medium")                   # easy | medium | hard
-    mastery_level    = Column(String, default="weak")                      # weak | medium | strong
-    last_practiced   = Column(DateTime, nullable=True)
+    status           = Column(String, default="NOT_STARTED")                      
+    last_practiced_at = Column(DateTime, nullable=True)
 
     # Relationships
     student = relationship("User", backref="topic_performances")
@@ -181,3 +183,16 @@ class LearningContent(Base):
 
     # Relationships
     student = relationship("User", backref="learning_contents")
+
+
+class UserNote(Base):
+    __tablename__ = "user_notes"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    student_id   = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    topic        = Column(String, nullable=False, index=True)
+    notes        = Column(Text, nullable=False)
+    created_at   = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    student = relationship("User", backref="user_notes")

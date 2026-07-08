@@ -8,6 +8,8 @@ import StudyPlanCard from "@/components/homepage/StudyPlanCard";
 import WeaknessMapCard from "@/components/homepage/WeaknessMapCard";
 import AIAlertCard from "@/components/homepage/AIAlertCard";
 import TodayMissionCard from "@/components/homepage/TodayMissionCard";
+import AIBehavioralInsights from "@/components/practicepage/Right/AIBehavioralInsights";
+import AIActions from "@/components/homepage/AIActions";
 import { getHomepageData, HomepageDataResponse } from "@/lib/api";
 
 import GoalSetupModal from "@/components/roadmap/GoalSetupModal";
@@ -71,18 +73,66 @@ export default function HomePage() {
 
       {data ? (
         <>
-          <PrepDashboardHero examOverview={data.examOverview} mentorCard={data.mentorCard} />
+          <div className={`rounded-3xl border transition-all duration-500 ${
+            data.dashboard_health === "GREEN" ? "border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.15)]" :
+            data.dashboard_health === "YELLOW" ? "border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.15)]" :
+            "border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.15)]"
+          }`}>
+            <PrepDashboardHero 
+              examOverview={data.examOverview} 
+              pending_dues={data.pending_dues}
+              todays_focus={data.todays_focus}
+            />
+          </div>
+
           <MyRoadmaps />
+
           <div className="grid grid-cols-1 gap-4">
             {roadmap ? (
               <TodayMissionCard tasks={tasks} roadmapTitle={roadmap.title} activeWeek={activeWeek} />
             ) : (
               <StudyPlanCard studyPlan={data.studyPlan} />
             )}
-            {/* <WeaknessMapCard weaknessMap={data.weaknessMap} /> */}
           </div>
+
           <PerformanceSnapshots snapshots={data.performanceSnapshots} />
-          <AIAlertCard alerts={data.aiAlerts} />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <AIAlertCard alerts={data.aiAlerts} />
+              <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-xl hover:bg-slate-900/60 transition-colors">
+                <AIBehavioralInsights insights={data.aiBehavioralInsights || []} />
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Revision Queue */}
+              <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-xl hover:bg-slate-900/60 transition-colors">
+                <h2 className="text-xs uppercase tracking-[0.22em] text-white/55 mb-4">
+                  🔄 AI Revision Queue
+                </h2>
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 purple-scrollbar">
+                  {data.revisionQueue && data.revisionQueue.map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-center p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/10 transition-all">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <h4 className="text-sm font-semibold text-white truncate">{item.topic}</h4>
+                        <p className="text-[10px] text-zinc-400 mt-0.5">{item.subject} · {item.reason}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-xs font-bold text-violet-400">Pri: {item.priority_score}</div>
+                        <div className="text-[9px] text-zinc-500 mt-0.5">{item.days_since_practice}d ago</div>
+                      </div>
+                    </div>
+                  ))}
+                  {(!data.revisionQueue || data.revisionQueue.length === 0) && (
+                    <p className="text-xs text-zinc-500 py-4 text-center">No topics currently in queue. Keep up the good work!</p>
+                  )}
+                </div>
+              </div>
+              
+              <AIActions />
+            </div>
+          </div>
         </>
 
       ) : (

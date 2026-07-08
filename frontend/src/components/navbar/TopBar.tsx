@@ -3,6 +3,7 @@
 import { User, PanelRightOpen, PanelRightClose, BarChart3, Bell, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TopBarProps {
   rightOpen?: boolean;
@@ -25,35 +26,43 @@ export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarP
     selectedMode = "courses";
   }
 
+  const { role } = useAuth();
+
   return (
     <div className="w-full h-full flex items-center justify-between px-6">
-      {/* LEFT: Mode toggle (sliding pill selector) */}
+      {/* LEFT: Mode toggle (sliding pill selector) or Static Title */}
       <div className="flex-shrink-0">
-        <div className="relative flex items-center bg-slate-900/60 border border-white/5 p-1 rounded-full w-52 h-9 shadow-inner select-none">
-          {/* Sliding indicator */}
-          <div
-            className={`absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/10 transition-all duration-300 ease-out ${
-              selectedMode === "courses" ? "left-1 w-[96px]" : "left-[104px] w-[96px]"
-            }`}
-          />
-          {/* Buttons */}
-          <button
-            onClick={() => router.push("/courses")}
-            className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
-              selectedMode === "courses" ? "text-white" : "text-white/40 hover:text-white/70"
-            }`}
-          >
-            Courses
-          </button>
-          <button
-            onClick={() => router.push("/personal")}
-            className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
-              selectedMode === "personal" ? "text-white" : "text-white/40 hover:text-white/70"
-            }`}
-          >
-            Personal
-          </button>
-        </div>
+        {role === "student" ? (
+          <div className="relative flex items-center bg-slate-900/60 border border-white/5 p-1 rounded-full w-52 h-9 shadow-inner select-none">
+            {/* Sliding indicator */}
+            <div
+              className={`absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/10 transition-all duration-300 ease-out ${
+                selectedMode === "courses" ? "left-1 w-[96px]" : "left-[104px] w-[96px]"
+              }`}
+            />
+            {/* Buttons */}
+            <button
+              onClick={() => router.push("/courses")}
+              className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
+                selectedMode === "courses" ? "text-white" : "text-white/40 hover:text-white/70"
+              }`}
+            >
+              Courses
+            </button>
+            <button
+              onClick={() => router.push("/personal")}
+              className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
+                selectedMode === "personal" ? "text-white" : "text-white/40 hover:text-white/70"
+              }`}
+            >
+              Personal
+            </button>
+          </div>
+        ) : role === "professor" ? (
+          <h2 className="text-white font-bold tracking-wider uppercase text-sm ml-2">My Classes</h2>
+        ) : role === "admin" ? (
+          <h2 className="text-white font-bold tracking-wider uppercase text-sm ml-2">Admin Portal</h2>
+        ) : null}
       </div>
 
       {/* CENTER: Primary-focus Search bar (only on home page) */}
@@ -77,7 +86,7 @@ export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarP
 
       {/* RIGHT: Action Icons */}
       <div className="flex-shrink-0 flex items-center gap-3">
-        <Link href="/analytics" className="group relative">
+        <Link href={role === "professor" ? "/professor?tab=analytics" : role === "admin" ? "/admin?tab=analytics" : "/analytics"} className="group relative">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/0 border border-transparent hover:bg-white/5 hover:border-white/5 hover:scale-105 active:scale-95 transition-all duration-200">
             <BarChart3 className="w-4 h-4 text-white/50 group-hover:text-white transition-colors duration-200" />
           </div>

@@ -25,7 +25,7 @@ export default function UploadModal({ isOpen, onClose, onUploadSuccess }: Upload
   // Sync default subjects when category changes
   useEffect(() => {
     if (category === 'Studies') {
-      setSubject('Physics');
+      setSubject('');
     } else if (category === 'Resume & Interview') {
       setSubject('Resume');
     } else {
@@ -67,8 +67,8 @@ export default function UploadModal({ isOpen, onClose, onUploadSuccess }: Upload
     formData.append('category', category);
     
     // Determine subject value
-    const finalSubject = category === 'Personal Learning' ? customSubject.trim() : subject;
-    formData.append('subject', finalSubject || 'Personal');
+    const finalSubject = category === 'Personal Learning' ? customSubject.trim() : subject.trim();
+    formData.append('subject', finalSubject || 'General');
     const userId = localStorage.getItem("user_id") || "1";
     formData.append('student_id', userId);
 
@@ -191,16 +191,14 @@ export default function UploadModal({ isOpen, onClose, onUploadSuccess }: Upload
             {/* Dynamic Subject / Type Selection */}
             {category === 'Studies' && (
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold tracking-wider uppercase text-white/45">Subject</label>
-                <select
+                <label className="text-[10px] font-semibold tracking-wider uppercase text-white/45">Subject / Course Name</label>
+                <input
+                  type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full bg-[#0A0F1D] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500/50 transition"
-                >
-                  <option value="Physics">Physics</option>
-                  <option value="Chemistry">Chemistry</option>
-                  <option value="Maths">Maths</option>
-                </select>
+                  placeholder="e.g. Operating Systems, DBMS"
+                  className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-blue-500/50 transition"
+                />
               </div>
             )}
 

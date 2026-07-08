@@ -31,14 +31,18 @@ const iconMap: Record<string, LucideIcon> = {
     ShieldCheck
 };
 
-export default function PerformanceSidebar() {
+interface PerformanceSidebarProps {
+    studentId?: string | number;
+}
+
+export default function PerformanceSidebar({ studentId }: PerformanceSidebarProps) {
     const [data, setData] = useState<PerformanceSidebarResponse | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await getPerformanceSidebar();
+                const response = await getPerformanceSidebar(studentId);
                 setData(response);
             } catch (error) {
                 console.error("Failed to load performance sidebar data", error);
@@ -47,7 +51,7 @@ export default function PerformanceSidebar() {
             }
         }
         fetchData();
-    }, []);
+    }, [studentId]);
 
     if (loading) {
         return <div className="space-y-6 animate-pulse">

@@ -2,8 +2,7 @@ interface WeakTopic {
   topic: string;
   subject: string;
   accuracy: number;
-  total_attempts?: number;
-  mastery_level?: string;
+  reason?: string;
 }
 
 interface WeakTopicsProps {
@@ -16,7 +15,6 @@ export default function WeakTopics({
   maxTopics = 4,
 }: WeakTopicsProps) {
   const visibleTopics = topics.slice(0, maxTopics);
-  const hasMore = topics.length > maxTopics;
 
   const getAccuracyColor = (accuracy: number) => {
     if (accuracy === 0) return "bg-white/10";
@@ -26,54 +24,48 @@ export default function WeakTopics({
   };
 
   return (
-    <div className="px-4 py-4 border-b border-white/10">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest">
+    <div className="px-4 py-3 border-b border-white/10">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[10px] font-semibold text-white/50 uppercase tracking-widest">
           📍 Weak Topics
         </h3>
         {topics.length > 0 && (
-          <span className="text-[10px] font-medium text-red-400">
-            {maxTopics} topics
+          <span className="text-[9px] font-medium text-red-400">
+            {Math.min(topics.length, maxTopics)} topics
           </span>
         )}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {visibleTopics.map((topic, idx) => (
           <div key={idx} className="group">
-            <div className="flex items-center justify-between mb-1.5">
-              <div>
-                <div className="text-xs font-medium text-white">
+            <div className="flex flex-col mb-1.5 min-w-0">
+              <div className="flex justify-between items-start gap-1">
+                <span className="text-xs font-semibold text-white truncate max-w-[70%]">
                   {topic.topic}
-                </div>
-                <div className="text-[10px] text-white/40">{topic.subject}</div>
-              </div>
-              {topic.accuracy > 0 && (
-                <span className="text-xs font-bold text-red-400">
-                  {topic.accuracy}%
                 </span>
+                <span className="text-[8px] text-white/30 truncate shrink-0">
+                  {topic.subject}
+                </span>
+              </div>
+              {topic.reason && (
+                <div className="text-[9px] text-red-400/90 leading-snug mt-0.5">
+                  {topic.reason}
+                </div>
               )}
             </div>
 
-            {/* Progress Bar */}
-            <div className="h-1.5 bg-white/[0.05] rounded-full overflow-hidden border border-white/5">
+            {/* Progress Bar (representing confidence) */}
+            <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden border border-white/5">
               <div
                 className={`h-full rounded-full transition-all ${getAccuracyColor(
                   topic.accuracy
                 )}`}
-                style={{ width: `${topic.accuracy}%` }}
+                style={{ width: `${topic.accuracy || 10}%` }}
               />
             </div>
           </div>
         ))}
-
-        {hasMore && (
-          <div className="pt-2 border-t border-white/10">
-            <button className="text-[10px] text-blue-400 hover:text-blue-300 font-medium transition-colors">
-              View all {topics.length} weak topics →
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

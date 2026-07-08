@@ -7,13 +7,14 @@ interface Task {
   topic: string;
   description: string;
   status: string;
+  day_number?: number;
 }
 
 export default function TodayMissionCard({ tasks, roadmapTitle, activeWeek }: { tasks: Task[], roadmapTitle: string, activeWeek?: number }) {
   // Use all tasks for the week, sorting chronologically by day number, then learning before quiz
   const todaysTasks = [...tasks].sort((a, b) => {
-    const dayA = parseInt(a.topic.match(/Day\\s*(\\d+)/i)?.[1] || "0");
-    const dayB = parseInt(b.topic.match(/Day\\s*(\\d+)/i)?.[1] || "0");
+    const dayA = a.day_number || parseInt(a.topic.match(/Day\s*(\d+)/i)?.[1] || "0");
+    const dayB = b.day_number || parseInt(b.topic.match(/Day\s*(\d+)/i)?.[1] || "0");
     if (dayA !== dayB) return dayA - dayB;
     return a.task_type === "learning" ? -1 : 1;
   });
