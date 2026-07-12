@@ -453,6 +453,15 @@ export async function getMyClasses(userId: number) {
   });
 }
 
+export async function deleteClassroom(classId: number, userId: number) {
+  return request<{
+    success: boolean;
+    message?: string;
+  }>(`/api/classroom/${classId}?user_id=${userId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function getClassDetails(classId: number, userId: number) {
   return request<{
     success: boolean;

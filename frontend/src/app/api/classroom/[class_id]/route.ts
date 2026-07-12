@@ -23,3 +23,27 @@ export async function GET(
     return NextResponse.json({ success: false, error: "Backend request failed" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ class_id: string }> }
+) {
+  try {
+    const resolvedParams = await params;
+    const { class_id } = resolvedParams;
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("user_id");
+    
+    if (!userId) {
+      return NextResponse.json({ success: false, error: "Missing user_id" }, { status: 400 });
+    }
+
+    const response = await fetch(`${BACKEND_URL}/classroom/delete-classroom/${class_id}?user_id=${userId}`, {
+      method: "DELETE",
+    });
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: "Backend request failed" }, { status: 500 });
+  }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyClasses, createClass, joinClass } from "@/lib/api";
+import { getMyClasses, createClass, joinClass, deleteClassroom } from "@/lib/api";
 import { PlusCircle, LogIn, Users, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
@@ -76,6 +76,24 @@ export default function ClassesPage() {
         }
     };
 
+    const handleDeleteClass = async (classId: number) => {
+        if (!userId) return;
+        setActionLoading(true);
+        try {
+            const res = await deleteClassroom(classId, parseInt(userId, 10));
+            if (res.success) {
+                loadClasses();
+            } else {
+                alert(res.message || "Failed to delete classroom.");
+            }
+        } catch (error) {
+            console.error("Failed to delete classroom:", error);
+            alert("An error occurred while deleting the classroom.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     if (authLoading || loading) {
         return <div className="p-8 text-slate-400">Loading classes...</div>;
     }
@@ -137,6 +155,18 @@ export default function ClassesPage() {
                                                 <span>{cls.student_count}</span>
                                             </div>
                                         </div>
+                                        <button
+                                            onClick={async (e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                if (confirm(`Are you sure you want to delete the class "${cls.name}"?`)) {
+                                                    await handleDeleteClass(cls.id);
+                                                }
+                                            }}
+                                            className="w-full mt-2 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-semibold transition-colors border border-rose-500/20 flex justify-center items-center"
+                                        >
+                                            Delete Class
+                                        </button>
                                     </div>
                                 ) : (
                                     <div className="space-y-3 mt-4">

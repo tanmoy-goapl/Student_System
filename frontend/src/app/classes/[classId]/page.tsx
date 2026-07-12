@@ -51,17 +51,13 @@ export default function ClassDetailsPage() {
     }
 
     const professorTabs = [
-        { id: "students", label: "Students", icon: Users },
         { id: "resources", label: "Resources", icon: FileText },
         { id: "curriculum", label: "Curriculum", icon: ListTree },
-        { id: "analytics", label: "Analytics", icon: BarChart },
     ];
 
     const studentTabs = [
         { id: "curriculum", label: "Learning", icon: ListTree },
         { id: "resources", label: "Resources", icon: FileText },
-        { id: "assignments", label: "Assignments", icon: CheckSquare },
-        { id: "progress", label: "Progress", icon: TrendingUp },
     ];
 
     const tabs = role === "professor" ? professorTabs : studentTabs;

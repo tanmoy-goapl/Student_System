@@ -265,6 +265,33 @@ def delete_class_resource(resource_id: int, user_id: int, db: Session = Depends(
     return {"success": True, "message": "Resource deleted"}
 
 
+@router.delete("/delete-classroom/{class_id}")
+def delete_classroom(class_id: int, user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or user.role != "professor":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+        
+    classroom = db.query(Classroom).filter(Classroom.id == class_id).first()
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+        
+    if classroom.professor_id != user_id:
+        raise HTTPException(status_code=403, detail="Not your classroom")
+        
+    # Delete associated files physically
+    for resource in classroom.resources:
+        if os.path.exists(resource.file_path):
+            try:
+                os.remove(resource.file_path)
+            except Exception as e:
+                pass
+                
+    db.delete(classroom)
+    db.commit()
+    
+    return {"success": True, "message": "Classroom deleted successfully"}
+
+
 @router.get("/resource/download/{resource_id}")
 def download_class_resource(resource_id: int, user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()

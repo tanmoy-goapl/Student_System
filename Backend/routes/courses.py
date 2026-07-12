@@ -18,7 +18,8 @@ from services.analytics_engine import (
     calculate_topic_metrics,
     calculate_subject_metrics,
     calculate_student_metrics,
-    get_student_subjects
+    get_student_subjects,
+    get_predefined_topics
 )
 
 def _load_curriculum():
@@ -143,52 +144,15 @@ def get_courses_data(student_id: int, db: Session = Depends(get_db)):
 @router.get("/subject/{subject_name}/{student_id}")
 def get_subject_data(subject_name: str, student_id: int, db: Session = Depends(get_db)):
     """Fetch predefined topics for a subject and attach individual performance data."""
-    try:
-        default_curr = _load_curriculum()
-    except Exception as e:
-        logger.error(f"Failed to load curriculum: {e}")
-        raise HTTPException(status_code=500, detail="Failed to load curriculum")
-        
-    # Find the subject in the curriculum
-    predefined_topics = []
-    found = False
-    for sem in default_curr.get("semesters", []):
-        subjects = sem.get("subjects", {})
-        if subject_name in subjects:
-            subject_topics = _load_subject_topics()
-            predefined_topics = subject_topics.get(subject_name, subjects[subject_name])
-            found = True
-            break
-            
-    if not found:
-        subject_topics = _load_subject_topics()
-        if subject_name in subject_topics:
-            predefined_topics = subject_topics[subject_name]
-        else:
-            from classroom_models import ClassCurriculum, StudentClass
-            enrolled_classes = db.query(StudentClass).filter(StudentClass.student_id == student_id).all()
-            class_ids = [c.class_id for c in enrolled_classes]
-            
-            curr = db.query(ClassCurriculum).filter(
-                ClassCurriculum.subject_name == subject_name,
-                ClassCurriculum.class_id.in_(class_ids)
-            ).first()
-            
-            if curr and curr.curriculum_json and "units" in curr.curriculum_json:
-                predefined_topics = []
-                for unit in curr.curriculum_json["units"]:
-                    predefined_topics.extend(unit.get("topics", []))
-            else:
-                raise HTTPException(status_code=404, detail="Subject not found in curriculum")
+    predefined_topics = get_predefined_topics(student_id, subject_name, db)
+    if not predefined_topics:
+        raise HTTPException(status_code=404, detail="Subject not found in curriculum")
         
     # Query performances for this subject
-    if predefined_topics:
-        performances = db.query(TopicPerformance).filter(
-            TopicPerformance.student_id == student_id,
-            TopicPerformance.topic.in_(predefined_topics)
-        ).all()
-    else:
-        performances = []
+    performances = db.query(TopicPerformance).filter(
+        TopicPerformance.student_id == student_id,
+        TopicPerformance.topic.in_(predefined_topics)
+    ).all()
     
     perf_dict = {p.topic: p for p in performances}
     logger.info(f"DEBUG2 predefined_topics: {predefined_topics}")

@@ -43,6 +43,7 @@ services:
     network_mode: "host"
     volumes:
       - ./frontend:/app
+    command: ["npm", "run", "dev"]
     environment:
       # Reach backend directly via host loopback network
       - BACKEND_URL=http://127.0.0.1:8001

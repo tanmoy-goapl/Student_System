@@ -14304,3 +14304,296 @@ UnboundLocalError: cannot access local variable 'json' where it is not associate
 2026-07-08 08:51:54,848 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
 2026-07-08 08:51:56,200 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
 2026-07-08 08:52:24,494 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-08 15:53:09,900 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-08 15:53:09,904 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-08 15:53:09,924 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-08 15:53:09,924 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-08 15:53:09,924 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-08 15:53:09,960 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-08 15:53:09,966 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='operating-system'
+2026-07-08 15:53:10,114 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-08 15:53:10,114 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-08 15:53:10,114 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-08 15:53:10,142 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-08 15:53:10,148 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-08 15:53:10,866 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-08 15:53:19,428 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-08 15:53:19,445 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 05:54:50,303 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 05:54:50,362 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 05:54:50,595 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 05:54:50,621 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 05:54:50,627 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 05:54:50,750 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 05:54:50,759 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 05:54:52,907 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 05:54:58,475 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 06:07:27,761 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:07:27,773 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 06:07:27,872 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 06:07:27,874 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 06:07:27,874 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 06:07:27,931 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:07:27,939 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 06:07:31,889 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:07:40,318 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 06:08:02,267 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:08:02,279 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 06:08:02,341 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 06:08:02,342 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 06:08:02,344 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 06:08:02,393 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:08:02,403 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 06:08:06,936 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:08:06,955 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 06:08:08,793 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:08:08,811 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 06:08:09,863 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:08:13,512 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 06:12:40,251 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:12:40,257 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 06:12:40,385 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 06:12:40,385 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 06:12:40,385 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 06:12:40,425 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:12:40,431 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 06:12:42,546 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 06:12:58,346 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 14:03:00,165 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-07-10 14:03:00,166 - INFO - DEBUG2 performances keys: ['OS Design and Implementation', 'System Calls', 'OS Components and Services']
+2026-07-10 14:03:00,166 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x728437f5ebd0>, <practice_models.TopicPerformance object at 0x728437f5f110>, <practice_models.TopicPerformance object at 0x728437f5dcd0>]
+2026-07-10 14:03:07,791 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 14:03:07,795 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 14:03:07,795 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 14:03:07,826 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 14:03:07,839 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-10 14:03:08,082 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 14:03:08,085 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 14:03:08,085 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 14:03:08,169 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 14:03:08,174 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 14:03:12,148 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 14:03:17,595 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 14:03:20,198 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 16:28:04,579 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 16:28:04,688 - INFO - [Practice] Starting session: mode=topic, topic=Coulomb's Law & Vector Forces, difficulty=mixed
+2026-07-10 16:28:19,950 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 16:28:19,952 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 16:28:19,954 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 16:28:19,981 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 16:28:20,004 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 16:28:20,167 - ERROR - [PracticeEngine] Failed to load subject_topics: cannot access local variable 'json' where it is not associated with a value
+2026-07-10 16:28:20,233 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 16:28:20,236 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 16:28:20,237 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 16:28:20,241 - INFO - --- LLM PROMPT (Subject: week-1, Topic: Coulomb's Law & Vector Forces) ---
+2026-07-10 16:28:20,263 - INFO - --- LLM PROMPT (Subject: None, Topic: Coulomb's Law & Vector Forces) ---
+2026-07-10 16:28:20,270 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 16:28:25,823 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 16:28:25,828 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 16:28:26,053 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 16:28:26,053 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 16:28:26,054 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 16:28:32,382 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 16:28:32,503 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 16:28:32,507 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-10 16:28:32,772 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 16:28:32,772 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 16:28:32,772 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 16:28:37,449 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 16:28:37,568 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 16:28:37,573 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 16:28:42,394 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 16:28:47,888 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 16:28:55,231 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 16:28:55,231 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 16:28:55,231 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 16:28:55,252 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 16:28:55,257 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 16:28:55,326 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 16:28:55,331 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-10 16:28:55,451 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-10 16:28:55,451 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-10 16:28:55,451 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-10 16:28:55,489 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-10 16:28:55,494 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-10 16:29:02,988 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-10 16:29:04,980 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 15:26:17,249 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 15:42:50,033 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 15:42:50,043 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-12 15:42:50,203 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 15:42:50,208 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-12 15:42:50,261 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 15:42:50,266 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-12 15:42:50,404 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 15:42:50,409 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-12 15:42:50,691 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 15:42:50,696 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-12 15:42:50,975 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-12 15:42:50,975 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-12 15:42:50,976 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 15:42:50,976 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 15:42:50,976 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 15:42:50,976 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 15:43:01,122 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 15:43:01,336 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 15:43:46,627 - INFO - 
+================================================================================
+2026-07-12 15:43:46,628 - INFO - [2026-07-12T15:43:46.628058] CHATBOT REQUEST RECEIVED (STREAMING)
+2026-07-12 15:43:46,628 - INFO -   Student ID : 3
+2026-07-12 15:43:46,628 - INFO -   Question   : Can you help me study motion.
+2026-07-12 15:43:46,628 - INFO -   Role       : student
+2026-07-12 15:43:46,628 - INFO -   Reset      : False
+2026-07-12 15:43:46,628 - INFO - ================================================================================
+2026-07-12 15:43:46,631 - INFO -   Student Name: Keshav
+2026-07-12 15:43:46,640 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-12 15:43:46,640 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 15:43:46,640 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 15:43:47,934 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 15:43:47,934 - INFO -   Detected Intent: Intent.GENERAL_QUERY
+2026-07-12 15:43:47,934 - INFO - [Search] Searching relevant chunks for student_id=3, question='Can you help me study motion.'
+2026-07-12 15:43:47,936 - INFO - [Search] Student has 1 document(s): ['SE.pdf']
+2026-07-12 15:43:47,936 - INFO - [Search] No specific document mentioned. Performing balanced retrieval across all documents.
+2026-07-12 15:43:47,936 - INFO - [Search] Querying document 'SE.pdf' (ID: 29) for up to 10 chunks...
+2026-07-12 15:43:48,753 - INFO - [Search] Performing global query across all documents for top_10...
+2026-07-12 15:43:49,140 - INFO - [Search] Finished search. Returning 1 chunks after balanced round-robin selection.
+2026-07-12 15:43:49,140 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-12 15:43:49,140 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 15:43:49,140 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 15:43:50,558 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 15:43:50,558 - INFO - Question is UNRELATED to document contents. Forcing GENERAL_QUERY (general LLM).
+2026-07-12 15:43:50,558 - INFO -   Uploaded documents: ['SE.pdf']
+2026-07-12 15:43:50,564 - INFO -   Retrieved 0 chunks from ChromaDB.
+2026-07-12 15:43:50,566 - WARNING - ⚠️ No relevant chunks returned from search. Allowing LLM to answer anyway.
+2026-07-12 15:43:50,566 - INFO -   [LLM Stream] Preferred provider: gpt4o
+2026-07-12 15:43:50,566 - INFO -   [LLM Stream] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 15:43:50,567 - INFO -   [LLM Stream] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 15:44:19,682 - INFO -   [LLM Stream] Success with provider 'gpt-oss-120b'!
+2026-07-12 16:03:24,201 - INFO - DEBUG2 predefined_topics: ['Software Process Models', 'Agile Development', 'Requirements Engineering', 'System Modeling', 'Software Architecture', 'Design Patterns', 'Software Testing', 'Software Maintenance', 'Project Management']
+2026-07-12 16:03:24,201 - INFO - DEBUG2 performances keys: ['Requirements Engineering', 'Software Process Models']
+2026-07-12 16:03:24,201 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7cc010d97a10>, <practice_models.TopicPerformance object at 0x7cc010d95990>]
+2026-07-12 16:03:24,427 - INFO - DEBUG2 predefined_topics: ['Software Process Models', 'Agile Development', 'Requirements Engineering', 'System Modeling', 'Software Architecture', 'Design Patterns', 'Software Testing', 'Software Maintenance', 'Project Management']
+2026-07-12 16:03:24,427 - INFO - DEBUG2 performances keys: ['Requirements Engineering', 'Software Process Models']
+2026-07-12 16:03:24,427 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7cc010d95c10>, <practice_models.TopicPerformance object at 0x7cc010d97010>]
+2026-07-12 16:03:40,414 - INFO - DEBUG2 predefined_topics: ['Time Complexity', 'Space Complexity', 'Big O Notation', 'Arrays', 'Linked Lists', 'Stacks', 'Queues', 'Binary Trees', 'BST', 'Graph Traversal', 'BFS', 'DFS', 'Binary Search', 'Merge Sort', 'Quick Sort', 'Heap Sort', 'Memoization', 'Knapsack', 'LCS', 'DP Problems']
+2026-07-12 16:03:40,414 - INFO - DEBUG2 performances keys: []
+2026-07-12 16:03:40,415 - INFO - DEBUG2 matched perfs: []
+2026-07-12 16:03:40,513 - INFO - DEBUG2 predefined_topics: ['Time Complexity', 'Space Complexity', 'Big O Notation', 'Arrays', 'Linked Lists', 'Stacks', 'Queues', 'Binary Trees', 'BST', 'Graph Traversal', 'BFS', 'DFS', 'Binary Search', 'Merge Sort', 'Quick Sort', 'Heap Sort', 'Memoization', 'Knapsack', 'LCS', 'DP Problems']
+2026-07-12 16:03:40,513 - INFO - DEBUG2 performances keys: []
+2026-07-12 16:03:40,513 - INFO - DEBUG2 matched perfs: []
+2026-07-12 16:03:48,319 - INFO - DEBUG2 predefined_topics: ['Software Process Models', 'Agile Development', 'Requirements Engineering', 'System Modeling', 'Software Architecture', 'Design Patterns', 'Software Testing', 'Software Maintenance', 'Project Management']
+2026-07-12 16:03:48,320 - INFO - DEBUG2 performances keys: ['Requirements Engineering', 'Software Process Models']
+2026-07-12 16:03:48,320 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7cc010d1ab10>, <practice_models.TopicPerformance object at 0x7cc010d1b010>]
+2026-07-12 16:03:48,420 - INFO - DEBUG2 predefined_topics: ['Software Process Models', 'Agile Development', 'Requirements Engineering', 'System Modeling', 'Software Architecture', 'Design Patterns', 'Software Testing', 'Software Maintenance', 'Project Management']
+2026-07-12 16:03:48,420 - INFO - DEBUG2 performances keys: ['Requirements Engineering', 'Software Process Models']
+2026-07-12 16:03:48,420 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7cc010d08190>, <practice_models.TopicPerformance object at 0x7cc010d0ab90>]
+2026-07-12 16:05:16,398 - INFO - DEBUG2 predefined_topics: ['Software Process Models', 'Agile Development', 'Requirements Engineering', 'System Modeling', 'Software Architecture', 'Design Patterns', 'Software Testing', 'Software Maintenance', 'Project Management']
+2026-07-12 16:05:16,399 - INFO - DEBUG2 performances keys: ['Requirements Engineering', 'Software Process Models']
+2026-07-12 16:05:16,399 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7cc010d86550>, <practice_models.TopicPerformance object at 0x7cc010d84fd0>]
+2026-07-12 16:05:16,502 - INFO - DEBUG2 predefined_topics: ['Software Process Models', 'Agile Development', 'Requirements Engineering', 'System Modeling', 'Software Architecture', 'Design Patterns', 'Software Testing', 'Software Maintenance', 'Project Management']
+2026-07-12 16:05:16,503 - INFO - DEBUG2 performances keys: ['Requirements Engineering', 'Software Process Models']
+2026-07-12 16:05:16,503 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7cc010d86290>, <practice_models.TopicPerformance object at 0x7cc010d85590>]
+2026-07-12 16:10:01,018 - INFO - DEBUG2 predefined_topics: ['Waterfall', 'Agile', 'Spiral Model', 'Scrum', 'Requirement Analysis', 'SRS', 'Functional Requirements', 'Non-functional Requirements', 'UML Diagrams', 'Design Patterns', 'Architecture', 'Unit Testing', 'Integration Testing', 'System Testing', 'Risk Management', 'Estimation', 'Version Control', 'DevOps']
+2026-07-12 16:10:01,018 - INFO - DEBUG2 performances keys: []
+2026-07-12 16:10:01,018 - INFO - DEBUG2 matched perfs: []
+2026-07-12 16:10:01,144 - INFO - DEBUG2 predefined_topics: ['Waterfall', 'Agile', 'Spiral Model', 'Scrum', 'Requirement Analysis', 'SRS', 'Functional Requirements', 'Non-functional Requirements', 'UML Diagrams', 'Design Patterns', 'Architecture', 'Unit Testing', 'Integration Testing', 'System Testing', 'Risk Management', 'Estimation', 'Version Control', 'DevOps']
+2026-07-12 16:10:01,144 - INFO - DEBUG2 performances keys: []
+2026-07-12 16:10:01,144 - INFO - DEBUG2 matched perfs: []
+2026-07-12 16:10:37,734 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:10:37,741 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-12 16:10:37,938 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:10:37,946 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-12 16:10:37,965 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:10:37,970 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-12 16:10:38,057 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-12 16:10:38,057 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 16:10:38,057 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 16:10:38,081 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-12 16:10:38,081 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 16:10:38,081 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 16:10:38,095 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:10:38,100 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-12 16:10:38,350 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:10:38,355 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-12 16:10:46,491 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 16:10:47,222 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:10:47,241 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:10:48,770 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 16:16:19,250 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:16:19,255 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='operating-system'
+2026-07-12 16:16:19,272 - INFO - DEBUG2 predefined_topics: ['Waterfall', 'Agile', 'Spiral Model', 'Scrum', 'Requirement Analysis', 'SRS', 'Functional Requirements', 'Non-functional Requirements', 'UML Diagrams', 'Design Patterns', 'Architecture', 'Unit Testing', 'Integration Testing', 'System Testing', 'Risk Management', 'Estimation', 'Version Control', 'DevOps']
+2026-07-12 16:16:19,272 - INFO - DEBUG2 performances keys: []
+2026-07-12 16:16:19,272 - INFO - DEBUG2 matched perfs: []
+2026-07-12 16:18:47,151 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:18:47,156 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='operating-system'
+2026-07-12 16:18:47,164 - INFO - 
+================================================================================
+2026-07-12 16:18:47,164 - INFO - [2026-07-12T16:18:47.164110] CHATBOT REQUEST RECEIVED (STREAMING)
+2026-07-12 16:18:47,164 - INFO -   Student ID : 3
+2026-07-12 16:18:47,164 - INFO -   Question   : Explain OS processes in one sentence.
+2026-07-12 16:18:47,164 - INFO -   Role       : student
+2026-07-12 16:18:47,164 - INFO -   Reset      : False
+2026-07-12 16:18:47,164 - INFO - ================================================================================
+2026-07-12 16:18:47,165 - INFO -   Student Name: Keshav
+2026-07-12 16:18:47,169 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-12 16:18:47,169 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 16:18:47,169 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 16:18:48,002 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 16:18:48,003 - INFO -   Detected Intent: Intent.GENERAL_QUERY
+2026-07-12 16:18:48,003 - INFO - [Search] Searching relevant chunks for student_id=3, question='Explain OS processes in one sentence.'
+2026-07-12 16:18:48,004 - INFO - [Search] Student has 1 document(s): ['SE.pdf']
+2026-07-12 16:18:48,004 - INFO - [Search] Mentioned document(s) detected: ['SE.pdf']
+2026-07-12 16:18:48,699 - INFO - [Search] Finished search. Returning 1 chunks after balanced round-robin selection.
+2026-07-12 16:18:48,699 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-12 16:18:48,699 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 16:18:48,699 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 16:18:50,043 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 16:18:50,044 - INFO - Question is UNRELATED to document contents. Forcing GENERAL_QUERY (general LLM).
+2026-07-12 16:18:50,044 - INFO -   Uploaded documents: ['SE.pdf']
+2026-07-12 16:18:50,048 - INFO -   Retrieved 0 chunks from ChromaDB.
+2026-07-12 16:18:50,050 - WARNING - ⚠️ No relevant chunks returned from search. Allowing LLM to answer anyway.
+2026-07-12 16:18:50,050 - INFO -   [LLM Stream] Preferred provider: gpt4o
+2026-07-12 16:18:50,050 - INFO -   [LLM Stream] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 16:18:50,050 - INFO -   [LLM Stream] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 16:18:52,726 - INFO -   [LLM Stream] Success with provider 'gpt-oss-120b'!
+2026-07-12 16:18:52,746 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:18:52,758 - INFO - DEBUG2 predefined_topics: ['Waterfall', 'Agile', 'Spiral Model', 'Scrum', 'Requirement Analysis', 'SRS', 'Functional Requirements', 'Non-functional Requirements', 'UML Diagrams', 'Design Patterns', 'Architecture', 'Unit Testing', 'Integration Testing', 'System Testing', 'Risk Management', 'Estimation', 'Version Control', 'DevOps']
+2026-07-12 16:18:52,758 - INFO - DEBUG2 performances keys: []
+2026-07-12 16:18:52,758 - INFO - DEBUG2 matched perfs: []
+2026-07-12 16:20:57,088 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:20:57,093 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='operating-system'
+2026-07-12 16:20:57,100 - INFO - 
+================================================================================
+2026-07-12 16:20:57,101 - INFO - [2026-07-12T16:20:57.101117] CHATBOT REQUEST RECEIVED (STREAMING)
+2026-07-12 16:20:57,101 - INFO -   Student ID : 3
+2026-07-12 16:20:57,101 - INFO -   Question   : Explain OS processes in one sentence.
+2026-07-12 16:20:57,101 - INFO -   Role       : student
+2026-07-12 16:20:57,101 - INFO -   Reset      : False
+2026-07-12 16:20:57,101 - INFO - ================================================================================
+2026-07-12 16:20:57,102 - INFO -   Student Name: Keshav
+2026-07-12 16:20:57,105 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-12 16:20:57,105 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 16:20:57,105 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 16:20:57,950 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 16:20:57,950 - INFO -   Detected Intent: Intent.GENERAL_QUERY
+2026-07-12 16:20:57,950 - INFO - [Search] Searching relevant chunks for student_id=3, question='Explain OS processes in one sentence.'
+2026-07-12 16:20:57,952 - INFO - [Search] Student has 1 document(s): ['SE.pdf']
+2026-07-12 16:20:57,952 - INFO - [Search] Mentioned document(s) detected: ['SE.pdf']
+2026-07-12 16:20:57,966 - INFO - [Search] Finished search. Returning 1 chunks after balanced round-robin selection.
+2026-07-12 16:20:57,966 - INFO -   [LLM Call] Preferred provider: gpt4o
+2026-07-12 16:20:57,967 - INFO -   [LLM Call] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 16:20:57,967 - INFO -   [LLM Call] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 16:20:59,215 - INFO -   [LLM Call] Success with provider 'gpt-oss-120b'!
+2026-07-12 16:20:59,215 - INFO - Question is UNRELATED to document contents. Forcing GENERAL_QUERY (general LLM).
+2026-07-12 16:20:59,215 - INFO -   Uploaded documents: ['SE.pdf']
+2026-07-12 16:20:59,218 - INFO -   Retrieved 0 chunks from ChromaDB.
+2026-07-12 16:20:59,220 - WARNING - ⚠️ No relevant chunks returned from search. Allowing LLM to answer anyway.
+2026-07-12 16:20:59,220 - INFO -   [LLM Stream] Preferred provider: gpt4o
+2026-07-12 16:20:59,220 - INFO -   [LLM Stream] Resolved configuration chain: ['gpt-oss-120b', 'Llama']
+2026-07-12 16:20:59,220 - INFO -   [LLM Stream] Trying provider 'gpt-oss-120b' at http://192.168.10.65:8010/v1 using model gpt-oss-120b...
+2026-07-12 16:21:01,758 - INFO -   [LLM Stream] Success with provider 'gpt-oss-120b'!
+2026-07-12 16:21:01,785 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-12 16:21:01,800 - INFO - DEBUG2 predefined_topics: ['Waterfall', 'Agile', 'Spiral Model', 'Scrum', 'Requirement Analysis', 'SRS', 'Functional Requirements', 'Non-functional Requirements', 'UML Diagrams', 'Design Patterns', 'Architecture', 'Unit Testing', 'Integration Testing', 'System Testing', 'Risk Management', 'Estimation', 'Version Control', 'DevOps']
+2026-07-12 16:21:01,800 - INFO - DEBUG2 performances keys: []
+2026-07-12 16:21:01,800 - INFO - DEBUG2 matched perfs: []
