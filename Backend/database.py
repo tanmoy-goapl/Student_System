@@ -39,6 +39,7 @@ def init_db():
             conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS title VARCHAR;"))
             conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS pages INTEGER;"))
             conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS document_format VARCHAR;"))
+            conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS owner_id INTEGER;"))
             
             # DailyTask roadmap additions
             conn.execute(text("ALTER TABLE daily_tasks ADD COLUMN IF NOT EXISTS week_number INTEGER DEFAULT 1;"))
@@ -47,6 +48,10 @@ def init_db():
             
             # LearningContent additions
             conn.execute(text("ALTER TABLE learning_content ADD COLUMN IF NOT EXISTS subject VARCHAR;"))
+            
+            # ChatMessage additions
+            conn.execute(text("ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_id VARCHAR;"))
+            conn.execute(text("ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_title VARCHAR;"))
     except Exception as e:
         print("Database schema migration notice/error:", e)
 

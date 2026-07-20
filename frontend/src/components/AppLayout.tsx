@@ -16,6 +16,9 @@ interface SidebarRoute {
   component: React.ReactNode;
 }
  
+import ProfessorSidebar from "@/professor/components/ProfessorSidebar";
+import AdminSidebar from "@/admin/components/AdminSidebar";
+
 export default function AppLayout({
   children,
 }: {
@@ -69,6 +72,10 @@ export default function AppLayout({
     )?.component;
   }, [pathname]);
  
+  const isProfessorRoute = pathname?.startsWith("/professor");
+  const isAdminRoute = pathname?.startsWith("/admin");
+  const isStudioRoute = isProfessorRoute || isAdminRoute;
+
   if (loading || (!role && !isLogin)) {
     return (
       <Loader fullScreen text="Loading..." />
@@ -78,10 +85,20 @@ export default function AppLayout({
   return (
     <div className="h-screen bg-[#020617] flex overflow-hidden">
       {/* Main sidebar (left) */}
-      {!isLogin && <Navbar />}
+      {!isLogin && !isStudioRoute && (
+        <Suspense fallback={<div className="fixed left-0 top-0 h-screen w-64 z-50 bg-slate-950/70" />}>
+          {role === "admin" ? (
+            <AdminSidebar />
+          ) : role === "professor" ? (
+            <ProfessorSidebar />
+          ) : (
+            <Navbar />
+          )}
+        </Suspense>
+      )}
  
       {/* Everything right of the main sidebar */}
-      <div className={`flex flex-1 min-w-0 ${!isLogin ? "pl-14" : ""}`}>
+      <div className={`flex flex-1 min-w-0 ${!isLogin && !isStudioRoute ? "pl-64" : ""}`}>
  
         {/* Secondary Sidebar (learning, practice, performance) */}
         {!isLogin && activeSidebar && (
@@ -94,7 +111,7 @@ export default function AppLayout({
         <div className="flex flex-col flex-1 h-screen overflow-hidden min-w-0">
  
           {/* TopBar — sticky, shrink-0 */}
-          {!isLogin && (
+          {!isLogin && !isStudioRoute && (
             <header className="sticky top-0 z-40 h-16 shrink-0 border-b border-white/5 bg-slate-950/70 backdrop-blur-md flex items-center">
               <Suspense fallback={<div className="h-full w-full bg-[#020617]" />}>
                 <TopBar rightOpen={rightOpen} onRightOpenChange={setRightOpen} />

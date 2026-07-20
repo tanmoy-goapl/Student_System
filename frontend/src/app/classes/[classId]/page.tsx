@@ -67,7 +67,13 @@ export default function ClassDetailsPage() {
             {/* Header */}
             <div className="shrink-0 border-b border-white/10 p-6 bg-slate-900/50">
                 <button 
-                    onClick={() => router.push("/classes")}
+                    onClick={() => {
+                        if (role === "professor") {
+                            router.push("/professor/classrooms");
+                        } else {
+                            router.push("/classes");
+                        }
+                    }}
                     className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition mb-4"
                 >
                     <ArrowLeft className="w-4 h-4" /> Back to Classes

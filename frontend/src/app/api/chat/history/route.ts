@@ -6,7 +6,11 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001"
 export async function GET(req: NextRequest) {
   try {
     const studentId = req.nextUrl.searchParams.get("student_id");
-    const response = await fetch(`${BACKEND_URL}/chat/history/${studentId}`);
+    const sessionId = req.nextUrl.searchParams.get("session_id");
+    const url = sessionId 
+      ? `${BACKEND_URL}/chat/history/${studentId}?session_id=${sessionId}`
+      : `${BACKEND_URL}/chat/history/${studentId}`;
+    const response = await fetch(url);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
@@ -18,7 +22,11 @@ export async function GET(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const studentId = req.nextUrl.searchParams.get("student_id");
-    const response = await fetch(`${BACKEND_URL}/chat/history/${studentId}`, {
+    const sessionId = req.nextUrl.searchParams.get("session_id");
+    const url = sessionId 
+      ? `${BACKEND_URL}/chat/history/${studentId}?session_id=${sessionId}`
+      : `${BACKEND_URL}/chat/history/${studentId}`;
+    const response = await fetch(url, {
       method: "DELETE",
     });
     const data = await response.json();

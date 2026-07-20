@@ -65,19 +65,29 @@ def search_relevant_chunks(
     student_id: int,
     role: str,
     db: Session,
-    top_k: int = 8
+    top_k: int = 10,
+    allowed_doc_ids: list[int] = None,
+    boost_types: list[str] = None
 ) -> list[dict]:
     logger.info(f"[Search] Searching relevant chunks for student_id={student_id}, question='{question}'")
     
+    if boost_types is None:
+        boost_types = []
+
     # 1. Fetch student's documents from PostgreSQL
-    docs = db.query(Document).filter(Document.student_id == student_id).all()
+    if allowed_doc_ids is not None:
+        docs = db.query(Document).filter(Document.id.in_(allowed_doc_ids)).all()
+    else:
+        docs = db.query(Document).filter(Document.student_id == student_id).all()
+        
     if not docs:
-        logger.info("[Search] No documents found in database for this student.")
+        logger.info("[Search] No documents found in database matching allowed criteria.")
         return []
         
     doc_ids = [d.id for d in docs]
     doc_id_to_name = {d.id: d.filename for d in docs}
-    logger.info(f"[Search] Student has {len(docs)} document(s): {list(doc_id_to_name.values())}")
+    doc_id_to_type = {d.id: d.document_type for d in docs}
+    logger.info(f"[Search] Search matches {len(docs)} document(s): {list(doc_id_to_name.values())}")
     
     # 2. Check if specific document is mentioned
     mentioned_ids = _detect_mentioned_doc(question, docs)
@@ -97,17 +107,9 @@ def search_relevant_chunks(
             res_others = query_chunks(question, top_k=2, allowed_doc_ids=other_ids)
             all_extracted_chunks.extend(_extract_chunks(res_others, doc_id_to_name))
     else:
-        logger.info("[Search] No specific document mentioned. Performing balanced retrieval across all documents.")
-        # Perform per-document queries to ensure each document is represented
-        per_doc_k = max(2, top_k // len(docs))
-        for doc in docs:
-            logger.info(f"[Search] Querying document '{doc.filename}' (ID: {doc.id}) for up to {per_doc_k} chunks...")
-            res_doc = query_chunks(question, top_k=per_doc_k, allowed_doc_ids=[doc.id])
-            all_extracted_chunks.extend(_extract_chunks(res_doc, doc_id_to_name))
-            
-        # Also perform a global query across all student's documents for general relevancy/diversity
-        logger.info(f"[Search] Performing global query across all documents for top_{top_k}...")
-        res_global = query_chunks(question, top_k=top_k, allowed_doc_ids=doc_ids)
+        logger.info("[Search] No specific document mentioned. Performing global semantic search across all accessible documents.")
+        # Perform a single global query for top 40 chunks to rerank later
+        res_global = query_chunks(question, top_k=40, allowed_doc_ids=doc_ids)
         all_extracted_chunks.extend(_extract_chunks(res_global, doc_id_to_name))
         
     # 3. Deduplicate chunks using (document_id, chunk_index)
@@ -119,29 +121,27 @@ def search_relevant_chunks(
             seen_chunks.add(key)
             deduped_chunks.append(chunk)
             
-    # 4. Group chunks by document_id and sort within each group by relevance (distance ascending)
-    by_doc = {}
+    # 4. Score-based reranking with metadata boosts
     for chunk in deduped_chunks:
-        did = chunk["document_id"]
-        if did not in by_doc:
-            by_doc[did] = []
-        by_doc[did].append(chunk)
+        dist = chunk.get("distance", 2.0)
+        similarity = 1.0 - (dist / 2.0)
+        chunk_type = doc_id_to_type.get(chunk["document_id"])
         
-    for did in by_doc:
-        by_doc[did].sort(key=lambda x: x.get("distance", 1.0))
+        # Apply metadata boost
+        boost = 0.02 if chunk_type in boost_types else 0.0
+        final_score = similarity + boost
         
-    # 5. Round-robin selection to ensure balanced representation across all documents
-    final_chunks = []
-    doc_ids_list = list(by_doc.keys())
+        chunk["similarity"] = similarity
+        chunk["boost"] = boost
+        chunk["final_score"] = final_score
+        chunk["distance"] = dist
+        
+    # Sort chunks by final_score descending
+    deduped_chunks.sort(key=lambda x: x.get("final_score", 0.0), reverse=True)
     
-    while len(final_chunks) < top_k and any(by_doc.values()):
-        for did in doc_ids_list:
-            if by_doc[did]:
-                final_chunks.append(by_doc[did].pop(0))
-                if len(final_chunks) >= top_k:
-                    break
+    final_chunks = deduped_chunks[:top_k]
 
-    logger.info(f"[Search] Finished search. Returning {len(final_chunks)} chunks after balanced round-robin selection.")
+    logger.info(f"[Search] Finished search. Returning {len(final_chunks)} chunks after semantic reranking.")
     return final_chunks
 
 def build_rich_context(chunks: list[dict]) -> str:
@@ -157,11 +157,13 @@ def build_rich_context(chunks: list[dict]) -> str:
         
     lines = []
     for doc_name, doc_chunks in grouped.items():
-        lines.append(f"--- DOCUMENT: {doc_name} ---")
         sorted_chunks = sorted(doc_chunks, key=lambda x: x.get("chunk_index", 0))
         for c in sorted_chunks:
-            lines.append(f"[Chunk {c.get('chunk_index', 0)}]:")
-            lines.append(c.get("text", ""))
-        lines.append("")
-        
-    return "\n".join(lines)
+            lines.append(f"[Source: {doc_name}]")
+            lines.append("")
+            lines.append(c.get("text", "").strip())
+            lines.append("")
+            lines.append("-" * 50)
+            lines.append("")
+            
+    return "\n".join(lines).strip()

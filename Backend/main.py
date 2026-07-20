@@ -32,6 +32,21 @@ async def lifespan(app: FastAPI):
     # 1. Classrooms migrations
     run_sql("ALTER TABLE classrooms ADD COLUMN course_code VARCHAR")
 
+    # 1b. Documents metadata migrations
+    run_sql("ALTER TABLE documents ADD COLUMN document_type VARCHAR")
+    run_sql("ALTER TABLE documents ADD COLUMN owner_role VARCHAR")
+    run_sql("ALTER TABLE documents ADD COLUMN visibility VARCHAR")
+    run_sql("ALTER TABLE documents ADD COLUMN tags_json VARCHAR")
+    run_sql("ALTER TABLE documents ADD COLUMN classroom_id INTEGER")
+
+    # Backfill migration for existing documents with NULL document_type
+    run_sql("UPDATE documents SET document_type = 'resume' WHERE document_type IS NULL AND (filename LIKE '%resume%' OR filename LIKE '%cv%' OR filename LIKE '%CV%')")
+    run_sql("UPDATE documents SET document_type = 'marksheet' WHERE document_type IS NULL AND (filename LIKE '%marksheet%' OR filename LIKE '%grade%' OR filename LIKE '%transcript%' OR filename LIKE '%marks%')")
+    run_sql("UPDATE documents SET document_type = 'policy' WHERE document_type IS NULL AND (filename LIKE '%policy%' OR filename LIKE '%handbook%')")
+    run_sql("UPDATE documents SET document_type = 'syllabus' WHERE document_type IS NULL AND filename LIKE '%syllabus%'")
+    run_sql("UPDATE documents SET document_type = 'notes' WHERE document_type IS NULL AND (filename LIKE '%notes%' OR filename LIKE '%lecture%' OR filename LIKE '%slide%')")
+    run_sql("UPDATE documents SET document_type = 'general' WHERE document_type IS NULL")
+
     # 2. Practice sessions migrations
     run_sql("ALTER TABLE practice_sessions RENAME COLUMN total_questions TO question_count")
     run_sql("ALTER TABLE practice_sessions ADD COLUMN question_count INTEGER DEFAULT 0")
@@ -198,6 +213,27 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
     
+    # Auto-seed RAG institutional knowledge base if empty
+    try:
+        # Temporary zip file inspection
+        import zipfile
+        zip_path = "/home/galaxy/Desktop/Student_System/mentorai-documents.zip"
+        log_path = "uploads/extract_log.txt"
+        with open(log_path, "w") as log_f:
+            if os.path.exists(zip_path):
+                log_f.write(f"Zip file found: {zip_path}\n")
+                with zipfile.ZipFile(zip_path, 'r') as zf:
+                    log_f.write("Files in zip:\n")
+                    for name in zf.namelist():
+                        log_f.write(f" - {name}\n")
+            else:
+                log_f.write(f"Zip file not found: {zip_path}\n")
+        
+        from seed_kb import seed_knowledge_base
+        seed_knowledge_base()
+    except Exception as seed_err:
+        print("Lifespan seeding warning:", seed_err)
+
     yield
 
 

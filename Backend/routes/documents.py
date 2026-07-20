@@ -3,108 +3,10 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import Document
 import os
+import json
 from datetime import datetime
 
 router = APIRouter(prefix="/documents", tags=["documents"])
-
-STATIC_DOCUMENTS = [
-    {
-        "id": "1",
-        "name": "Operating System Lecture Notes.pdf",
-        "type": "PDF",
-        "subject": "Operating system",
-        "subjectColor": "blue",
-        "pages": 42,
-        "sizeMB": 3.2,
-        "uploadedAt": "2 days ago",
-        "status": "ready",
-        "category": "Studies"
-    },
-    {
-        "id": "2",
-        "name": "Machine Learning Introduction.pdf",
-        "type": "PDF",
-        "subject": "Machine learning",
-        "subjectColor": "emerald",
-        "pages": 118,
-        "sizeMB": 12.4,
-        "uploadedAt": "3 days ago",
-        "status": "ready",
-        "category": "Studies"
-    },
-    {
-        "id": "3",
-        "name": "AI Concept Guide.doc",
-        "type": "DOC",
-        "subject": "AI",
-        "subjectColor": "amber",
-        "pages": 24,
-        "sizeMB": 1.8,
-        "uploadedAt": "5 days ago",
-        "status": "ready",
-        "category": "Studies"
-    },
-    {
-        "id": "4",
-        "name": "Data Structures Handbook.pdf",
-        "type": "PDF",
-        "subject": "Data Structures and Algorithms",
-        "subjectColor": "violet",
-        "pages": 31,
-        "sizeMB": 2.6,
-        "uploadedAt": "1 week ago",
-        "status": "ready",
-        "category": "Studies"
-    },
-    {
-        "id": "5",
-        "name": "Resume - Software Engineer.pdf",
-        "type": "PDF",
-        "subject": "Resume",
-        "subjectColor": "orange",
-        "pages": 2,
-        "sizeMB": 0.4,
-        "uploadedAt": "1 week ago",
-        "status": "ready",
-        "category": "Resume & Interview"
-    },
-    {
-        "id": "6",
-        "name": "Interview Prep Guide.pdf",
-        "type": "PDF",
-        "subject": "Interview",
-        "subjectColor": "violet",
-        "pages": 56,
-        "sizeMB": 4.1,
-        "uploadedAt": "2 weeks ago",
-        "status": "ready",
-        "category": "Resume & Interview"
-    },
-    {
-        "id": "7",
-        "name": "Computer Networks Summary.txt",
-        "type": "TXT",
-        "subject": "Computer Networks",
-        "subjectColor": "blue",
-        "pages": 4,
-        "sizeMB": 0.1,
-        "uploadedAt": "2 weeks ago",
-        "status": "ready",
-        "category": "Studies"
-    },
-    {
-        "id": "8",
-        "name": "Machine Learning Reference.pdf",
-        "type": "PDF",
-        "subject": "Machine learning",
-        "subjectColor": "emerald",
-        "pages": 38,
-        "sizeMB": 5.7,
-        "uploadedAt": "3 weeks ago",
-        "status": "ready",
-        "category": "Studies"
-    },
-]
 
 def to_ui_doc(doc: Document) -> dict:
     # Use stored document_format, fallback to extension-based detection
@@ -158,17 +60,66 @@ def to_ui_doc(doc: Document) -> dict:
         "sizeMB": size_mb,
         "uploadedAt": time_str,
         "status": "ready",
-        "category": doc.category or "Personal Learning"
+        "category": doc.category or "Personal Learning",
+        "documentType": doc.document_type or "general",
+        "visibility": doc.visibility or "private"
     }
 
 @router.get("/data")
 async def get_documents_data(student_id: int = 1, db: Session = Depends(get_db)):
-    # Fetch user's documents from Postgres
-    db_docs = db.query(Document).filter(Document.student_id == student_id).all()
-    mapped_db_docs = [to_ui_doc(d) for d in db_docs]
+    from models import User
+    user = db.query(User).filter(User.id == student_id).first()
+
+    if user and user.role == "admin":
+        db_docs = db.query(Document).filter(
+            (Document.visibility == "universal") |
+            (Document.visibility == "admin_shared") |
+            (
+                (Document.visibility == "private") &
+                ((Document.owner_id == student_id) | ((Document.owner_id == None) & (Document.student_id == student_id))) &
+                (Document.owner_role == "admin")
+            )
+        ).order_by(Document.uploaded_at.desc()).all()
+    elif user and user.role == "professor":
+        from classroom_models import Classroom
+        teaches = db.query(Classroom).filter(Classroom.professor_id == student_id).all()
+        teach_class_ids = [c.id for c in teaches]
+
+        db_docs = db.query(Document).filter(
+            (Document.visibility == "universal") |
+            (
+                (Document.visibility == "course_shared") &
+                (
+                    (Document.classroom_id.in_(teach_class_ids) if teach_class_ids else False) |
+                    ((Document.owner_id == student_id) | ((Document.owner_id == None) & (Document.student_id == student_id)))
+                )
+            ) |
+            (
+                (Document.visibility == "private") &
+                ((Document.owner_id == student_id) | ((Document.owner_id == None) & (Document.student_id == student_id))) &
+                (Document.owner_role == "professor")
+            )
+        ).order_by(Document.uploaded_at.desc()).all()
+    else:
+        # Fetch student's joined classrooms
+        from classroom_models import StudentClass
+        joined_classes = db.query(StudentClass).filter(StudentClass.student_id == student_id).all()
+        class_ids = [c.class_id for c in joined_classes]
+
+        db_docs = db.query(Document).filter(
+            (Document.visibility == "universal") |
+            (
+                (Document.visibility == "course_shared") &
+                (Document.classroom_id.in_(class_ids) if class_ids else False)
+            ) |
+            (
+                (Document.visibility == "private") &
+                ((Document.owner_id == student_id) | ((Document.owner_id == None) & (Document.student_id == student_id))) &
+                (Document.owner_role == "student")
+            )
+        ).order_by(Document.uploaded_at.desc()).all()
     
-    # Combined documents list
-    combined_docs = STATIC_DOCUMENTS + mapped_db_docs
+    combined_docs = [to_ui_doc(d) for d in db_docs]
     
     # Recalculate KPIs
     total_docs = len(combined_docs)

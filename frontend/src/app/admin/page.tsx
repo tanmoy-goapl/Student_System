@@ -1,6 +1,6 @@
 "use client";
 
-import AdminDashboardPage from "@/app/pages/AdminDashboardPage";
+import AdminDashboardPage from "@/admin/dashboard/AdminDashboardPage";
 
 export default function AdminDashboardRoute() {
   return <AdminDashboardPage />;

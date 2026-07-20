@@ -1,7 +1,0 @@
-Internal Admin Report 2024
-==============================
-Total students enrolled: 450
-Students failing more than 2 subjects: 38
-Average attendance across college: 71%
-Departments under review: Physics, Mathematics
-Budget allocated for remedial classes: 200000

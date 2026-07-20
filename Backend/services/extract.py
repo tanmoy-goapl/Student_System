@@ -21,10 +21,10 @@ from typing import List
 # ── Constants ─────────────────────────────────────────────────────────────────
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tiff", ".tif"}
 
-# Chunk tuning
-CHUNK_TARGET_WORDS = 180    # aim for ~180 words per chunk
-CHUNK_MAX_WORDS    = 280    # hard cap
-CHUNK_OVERLAP_WORDS = 30    # word overlap between consecutive chunks
+# Chunk tuning (Targeting ~500 chars size, ~100 chars overlap)
+CHUNK_TARGET_WORDS = 80     # aim for ~500 chars per chunk
+CHUNK_MAX_WORDS    = 100    # hard cap
+CHUNK_OVERLAP_WORDS = 16    # word overlap between consecutive chunks
 
 
 # ═════════════════════════════════════════════════════════════════════════════

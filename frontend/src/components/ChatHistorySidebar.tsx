@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import Loader from "./Loader";
 
-type HistoryItem = {
-  role: string;
-  content: string;
+type SessionItem = {
+  session_id: string;
+  session_title: string;
   created_at?: string | null;
 };
 
@@ -13,7 +13,8 @@ interface ChatHistorySidebarProps {
   studentId: number | null;
   open: boolean;
   onClose: () => void;
-  onSelectEntry?: (item: HistoryItem) => void;
+  onSelectSession?: (sessionId: string) => void;
+  activeSessionId?: string | null;
 }
 
 const PAGE_SIZE = 10;
@@ -36,41 +37,43 @@ export default function ChatHistorySidebar({
   studentId,
   open,
   onClose,
-  onSelectEntry,
+  onSelectSession,
+  activeSessionId,
 }: ChatHistorySidebarProps) {
-  const [items, setItems] = useState<HistoryItem[]>([]);
+  const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
+  const fetchSessions = async () => {
     if (!studentId || Number.isNaN(studentId)) {
-      setItems([]);
+      setSessions([]);
       return;
     }
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch(`/api/chat/history?student_id=${studentId}`);
-        if (!res.ok) {
-          throw new Error("Failed to load history");
-        }
-        const data = (await res.json()) as HistoryItem[];
-        // show most recent first
-        setItems(data.reverse());
-        setPage(1);
-      } catch (e: any) {
-        setError(e.message || "Failed to load history");
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`/api/chat/sessions?student_id=${studentId}`);
+      if (!res.ok) {
+        throw new Error("Failed to load history sessions");
       }
-    };
-    load();
+      const data = (await res.json()) as SessionItem[];
+      setSessions(data);
+      setPage(1);
+    } catch (e: any) {
+      setError(e.message || "Failed to load history");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchSessions();
+    }
   }, [open, studentId]);
 
   useEffect(() => {
@@ -81,11 +84,9 @@ export default function ChatHistorySidebar({
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return items.filter((i) => i.role === "user");
-    return items.filter(
-      (i) => i.role === "user" && i.content.toLowerCase().includes(q),
-    );
-  }, [items, search]);
+    if (!q) return sessions;
+    return sessions.filter((s) => s.session_title.toLowerCase().includes(q));
+  }, [sessions, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageSafe = Math.min(page, totalPages);
@@ -94,67 +95,67 @@ export default function ChatHistorySidebar({
 
   if (!open) return null;
 
-  const handleDelete = async (item: HistoryItem) => {
-    if (!studentId || Number.isNaN(studentId) || !item.created_at) return;
-    const key = `${item.role}-${item.created_at}-${item.content.slice(0, 20)}`;
+  const handleDelete = async (sessionId: string) => {
+    if (!studentId || Number.isNaN(studentId)) return;
     try {
-      setDeletingKey(key);
-      // Optimistically remove from UI first so the user always sees feedback.
-      setItems((prev) =>
-        prev.filter(
-          (p) =>
-            !(
-              p.role === item.role &&
-              p.created_at === item.created_at &&
-              p.content === item.content
-            )
-        )
-      );
+      setDeletingSessionId(sessionId);
+      // Optimistically remove from UI
+      setSessions((prev) => prev.filter((p) => p.session_id !== sessionId));
 
       const res = await fetch(
-        `/api/chat/history/item?student_id=${studentId}&created_at=${encodeURIComponent(
-          item.created_at
-        )}&role=${encodeURIComponent(item.role)}`,
+        `/api/chat/history?student_id=${studentId}&session_id=${sessionId}`,
         { method: "DELETE" }
       );
       if (!res.ok) {
-        // If backend delete fails, we silently ignore. Item will return only
-        // after a full reload from the server.
-        return;
+        throw new Error("Failed to delete session");
       }
+    } catch (err) {
+      console.error(err);
+      // reload sessions on error to sync back
+      fetchSessions();
     } finally {
-      setDeletingKey(null);
+      setDeletingSessionId(null);
     }
   };
 
   return (
     // Position sidebar just below the sticky navbar so it never overlaps it.
-    <aside className="fixed top-14 bottom-0 left-0 z-20 w-72 bg-white shadow-xl border-r border-gray-200 flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+    <aside className="fixed top-16 bottom-0 left-0 z-50 w-72 bg-[#090D1F] shadow-2xl border-r border-white/5 flex flex-col text-white">
+      <div className="flex items-center justify-between px-4 py-4 border-b border-white/5 bg-[#0b1227]">
         <div className="flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+          <span className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold">
             ⟳
           </span>
-          <h2 className="text-sm font-semibold text-gray-800">Chat History</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Chat History</h2>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600"
+          className="text-slate-400 hover:text-white transition text-sm font-semibold"
           aria-label="Close history"
         >
           ✕
         </button>
       </div>
 
-      <div className="px-3 py-2 border-b border-gray-200">
-        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-3 py-1.5">
-          <span className="text-gray-400 text-sm">🔍</span>
+      <div className="px-3 py-3 border-b border-white/5 bg-[#0a0f21]">
+        <button
+          type="button"
+          onClick={() => {
+            window.dispatchEvent(new Event("new-chat"));
+            onClose();
+          }}
+          className="w-full mb-3 flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold py-2.5 shadow-lg shadow-blue-500/10 transition text-white"
+        >
+          <span>+</span> New Chat
+        </button>
+        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+          <span className="text-slate-400 text-xs">🔍</span>
           <input
             ref={searchInputRef}
             type="text"
             placeholder="Search in history..."
-            className="flex-1 bg-transparent text-xs outline-none"
+            className="flex-1 bg-transparent text-xs outline-none text-white placeholder:text-white/20"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -164,53 +165,56 @@ export default function ChatHistorySidebar({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto purple-scrollbar text-xs">
-        {loading && (
-          <Loader fullScreen text="Loading..." />
+      <div className="flex-1 overflow-y-auto purple-scrollbar text-xs p-2 space-y-1">
+        {loading && sessions.length === 0 && (
+          <div className="py-20 flex justify-center">
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          </div>
         )}
         {error && !loading && (
-          <div className="p-4 text-red-500 text-center">{error}</div>
+          <div className="p-4 text-rose-400 text-center">{error}</div>
         )}
         {!loading && !error && visible.length === 0 && (
-          <div className="p-4 text-gray-400 text-center">
-            No history yet. Start chatting to see it here.
+          <div className="p-8 text-slate-500 text-center">
+            No history yet. Start chatting to see your sessions here.
           </div>
         )}
 
         {visible.map((item, idx) => {
-          const key = `${item.role}-${item.created_at}-${item.content.slice(
-            0,
-            20
-          )}`;
-          const isDeleting = deletingKey === key;
+          const isSelected = activeSessionId === item.session_id;
+          const isDeleting = deletingSessionId === item.session_id;
           return (
             <div
               key={idx}
-              className="group flex items-center justify-between border-b border-gray-100 px-4 py-2 hover:bg-gray-50 cursor-pointer"
+              className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl cursor-pointer transition ${
+                isSelected 
+                  ? "bg-blue-600/10 border border-blue-500/25 text-white" 
+                  : "text-white/60 hover:bg-white/5 hover:text-white border border-transparent"
+              }`}
               onClick={() => {
-                onSelectEntry?.(item);
+                onSelectSession?.(item.session_id);
                 onClose();
               }}
             >
-              <div className="min-w-0">
-                <div className="text-[10px] text-gray-400 mb-1">
+              <div className="min-w-0 flex-1">
+                <div className="text-[9px] text-slate-400 font-semibold mb-0.5">
                   {formatRelativeTime(item.created_at)}
                 </div>
-                <div className="text-gray-800 truncate">{item.content}</div>
+                <div className="text-xs font-semibold truncate leading-snug">{item.session_title}</div>
               </div>
               <button
                 type="button"
-                aria-label="Delete history entry"
-                className="ml-2 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                aria-label="Delete history session"
+                className="ml-2 text-rose-400 hover:text-rose-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDelete(item);
+                  handleDelete(item.session_id);
                 }}
                 disabled={isDeleting}
               >
                 <svg
-                  width="18"
-                  height="18"
+                  width="14"
+                  height="14"
                   viewBox="0 0 24 24"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -236,17 +240,17 @@ export default function ChatHistorySidebar({
         })}
       </div>
 
-      <div className="border-t border-gray-200 px-2 py-2 flex items-center justify-between text-[11px] text-gray-600">
+      <div className="border-t border-white/5 bg-[#0b1227] px-3 py-2 flex items-center justify-between text-[10px] font-bold text-slate-400">
         <button
           type="button"
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={pageSafe === 1}
-          className="px-2 py-1 rounded disabled:opacity-40 hover:bg-gray-100"
+          className="px-2 py-1.5 rounded-lg disabled:opacity-30 hover:bg-white/5 transition"
         >
-          ‹
+          ‹ Prev
         </button>
-        <div className="flex items-center gap-1">
-          <span className="font-semibold text-blue-600">{pageSafe}</span>
+        <div className="flex items-center gap-1 font-semibold">
+          <span className="text-blue-400">{pageSafe}</span>
           <span>/</span>
           <span>{totalPages}</span>
         </div>
@@ -254,12 +258,11 @@ export default function ChatHistorySidebar({
           type="button"
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           disabled={pageSafe === totalPages}
-          className="px-2 py-1 rounded disabled:opacity-40 hover:bg-gray-100"
+          className="px-2 py-1.5 rounded-lg disabled:opacity-30 hover:bg-white/5 transition"
         >
-          ›
+          Next ›
         </button>
       </div>
     </aside>
   );
 }
-

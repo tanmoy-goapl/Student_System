@@ -53,6 +53,12 @@ class Document(Base):
     title            = Column(String, nullable=True)       # user-provided document title
     pages            = Column(Integer, nullable=True)      # page count
     document_format  = Column(String, nullable=True)       # e.g. PDF, DOC, TXT
+    document_type    = Column(String, nullable=True)       # e.g. resume, marksheet, policy, notes, syllabus, general, etc.
+    owner_role       = Column(String, nullable=True)       # student or institution
+    visibility       = Column(String, nullable=True)       # private or institution
+    tags_json        = Column(String, nullable=True)       # serialized JSON tags array
+    classroom_id     = Column(Integer, nullable=True)
+    owner_id         = Column(Integer, nullable=True)
 
 
 # ─────────────────────────────────────────────
@@ -82,6 +88,9 @@ class ChatMessage(Base):
     role       = Column(String, nullable=False)   # "user" | "assistant"
     content    = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    session_id    = Column(String, nullable=True, index=True)
+    session_title = Column(String, nullable=True)
 
     # Relationships
     student = relationship("User", backref="messages")

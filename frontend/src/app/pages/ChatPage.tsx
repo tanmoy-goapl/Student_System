@@ -4,9 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import ChatHistorySidebar from "@/components/ChatHistorySidebar";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
-import { Paperclip, Send, Square, CheckCircle2, ChevronRight, Activity, CalendarDays } from "lucide-react";
+import { Paperclip, Send, Square, CheckCircle2, ChevronRight, Activity, CalendarDays, Sparkles, History, Plus } from "lucide-react";
 import RightSidebar from "@/components/RightSidebar";
-import { getChatSidebarData } from "@/lib/api";
+import { getChatSidebarData, uploadDocument } from "@/lib/api";
 import Link from "next/link";
 
 type Message = { 
@@ -39,12 +39,35 @@ export default function ChatPage() {
   const [resetNext, setResetNext] = useState(false);
   const [user, setUser] = useState<{ id: number; role: string; name: string } | null>(null);
   const [roleSuggestions, setRoleSuggestions] = useState<any>(null);
+  const [fileUploading, setFileUploading] = useState(false);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => { setUser(getStoredUser()); }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`/api/chat/history?student_id=${user.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setHistory(data || []);
+          if (data && data.length > 0 && data[0].session_id) {
+            setActiveSessionId(data[0].session_id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load student chat history:", err);
+      }
+    };
+    fetchHistory();
+  }, [user]);
 
   useEffect(() => {
     getChatSidebarData().then(data => {
@@ -64,6 +87,28 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history, loading]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    setError("");
+    setFileUploading(true);
+    try {
+      const res = await uploadDocument(user.id, file, "owner");
+      setHistory(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `📁 **Uploaded "${res.filename}"** (${res.chunks_created} chunks processed). I have parsed it and added it to my knowledge. You can now ask questions about it!`,
+        },
+      ]);
+    } catch (err: any) {
+      setError(err.message || "Failed to upload document");
+    } finally {
+      setFileUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handleAsk = async () => {
     const q = question.trim();
@@ -88,6 +133,7 @@ export default function ChatPage() {
           question: q,
           role: user.role,
           reset: resetNext,
+          session_id: activeSessionId || undefined,
         }),
         signal: controller.signal,
       });
@@ -113,7 +159,9 @@ export default function ChatPage() {
       let finalIntent = "";
       let finalMetadata = null;
       let finalSuggest = false;
+      let finalSessionId = "";
       let buffer = "";
+      let lastRenderTime = 0;
 
       while (!done) {
         const { value, done: doneReading } = await reader.read();
@@ -136,16 +184,21 @@ export default function ChatPage() {
               }
               if (parsed.content) {
                 assistantAnswer += parsed.content;
-                setHistory(prev => {
-                  const copy = [...prev];
-                  if (copy.length > 0) {
-                    copy[copy.length - 1] = {
-                      ...copy[copy.length - 1],
-                      content: assistantAnswer,
-                    };
-                  }
-                  return copy;
-                });
+                
+                const now = Date.now();
+                if (now - lastRenderTime > 50) {
+                  lastRenderTime = now;
+                  setHistory(prev => {
+                    const copy = [...prev];
+                    if (copy.length > 0) {
+                      copy[copy.length - 1] = {
+                        ...copy[copy.length - 1],
+                        content: assistantAnswer,
+                      };
+                    }
+                    return copy;
+                  });
+                }
               }
               if (parsed.intent) {
                 finalIntent = parsed.intent;
@@ -155,6 +208,9 @@ export default function ChatPage() {
               }
               if (parsed.suggest_roadmap) {
                 finalSuggest = true;
+              }
+              if (parsed.session_id) {
+                finalSessionId = parsed.session_id;
               }
             } catch (err) {
               console.error("Error parsing stream line:", err);
@@ -177,6 +233,10 @@ export default function ChatPage() {
         }
         return copy;
       });
+
+      if (finalSessionId) {
+        setActiveSessionId(finalSessionId);
+      }
 
       if (!assistantAnswer && !finalMetadata) {
         setError("No response received. Please try again.");
@@ -211,6 +271,7 @@ export default function ChatPage() {
       setQuestion("");
       setError("");
       setResetNext(true);
+      setActiveSessionId(null);
     };
 
     window.addEventListener("new-chat", handleNewChat);
@@ -218,6 +279,23 @@ export default function ChatPage() {
       window.removeEventListener("new-chat", handleNewChat);
     };
   }, []);
+
+  const handleSelectSession = async (sessionId: string) => {
+    if (!user?.id) return;
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/chat/history?student_id=${user.id}&session_id=${sessionId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data || []);
+        setActiveSessionId(sessionId);
+      }
+    } catch (err) {
+      console.error("Failed to load session history:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSelectHistoryEntry = async (item: { content: string; created_at?: string | null }) => {
     if (!user?.id) return;
@@ -254,11 +332,40 @@ export default function ChatPage() {
         studentId={user?.id ?? null}
         open={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
-        onSelectEntry={handleSelectHistoryEntry}
+        onSelectSession={handleSelectSession}
+        activeSessionId={activeSessionId}
       />
 
       {/* ── Main chat column ── */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
+        {/* Header */}
+        <header className="h-16 shrink-0 border-b border-white/5 bg-[#050a14]/40 backdrop-blur-md flex items-center justify-between px-6 z-40">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition cursor-pointer"
+              title="Open History"
+            >
+              <History size={16} />
+            </button>
+            <div>
+              <h1 className="text-sm font-bold text-white leading-tight">Chatbot Workspace</h1>
+              <p className="text-[10px] text-slate-400">Interactive session history active</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              window.dispatchEvent(new Event("new-chat"));
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/10 transition cursor-pointer text-white"
+            title="Start New Conversation"
+          >
+            <Plus size={14} className="text-slate-300" />
+            <span>New Chat</span>
+          </button>
+        </header>
+
         {/* Message area */}
         <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto purple-scrollbar p-4 space-y-4">
           {history.length === 0 && !loading && (
@@ -287,11 +394,26 @@ export default function ChatPage() {
             </div>
           )}
 
-          {history.map((msg, i) => <ChatBubble key={i} msg={msg} onAsk={(q) => { setQuestion(q); setTimeout(() => document.getElementById("chat-send-btn")?.click(), 50); }} />)}
+          {history.map((msg, i) => {
+            const isLast = i === history.length - 1;
+            const isGenerating = isStreaming && isLast && msg.role === "assistant";
+            // Hide the last empty assistant bubble if streamStatus is actively displaying a progress message
+            if (isGenerating && !msg.content && streamStatus) {
+              return null;
+            }
+            return (
+              <ChatBubble 
+                key={i} 
+                msg={msg} 
+                isGenerating={isGenerating}
+                onAsk={(q) => { setQuestion(q); setTimeout(() => document.getElementById("chat-send-btn")?.click(), 50); }} 
+              />
+            );
+          })}
 
           {loading && !streamStatus && (
             <div className="flex items-center gap-2">
-              <Avatar initials="AI" />
+              <Avatar initials="AI" isSpinning={true} />
               <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl rounded-bl-none px-4 py-3">
                 <TypingDots />
               </div>
@@ -300,7 +422,7 @@ export default function ChatPage() {
           
           {streamStatus && (
             <div className="flex items-center gap-2 animate-in fade-in duration-300">
-              <Avatar initials="AI" />
+              <Avatar initials="AI" isSpinning={true} />
               <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl rounded-bl-none px-4 py-3 flex flex-col gap-1.5">
                 <span className="text-xs font-medium text-blue-300">{streamStatus}</span>
                 <TypingDots />
@@ -322,8 +444,25 @@ export default function ChatPage() {
         {/* Input bar */}
         <div className="shrink-0 px-6 py-4 bg-[#0a0f1e]/60 backdrop-blur-xl border-t border-white/10">
           <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5">
-            <button type="button" className="text-gray-400 hover:text-white transition">
-              <Paperclip size={18} />
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              accept=".pdf,.txt,.doc,.docx,.png,.jpg,.jpeg,.bmp,.webp,.tiff,.tif,.gif"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={fileUploading || !user?.id}
+              className="text-gray-400 hover:text-white transition disabled:opacity-40"
+              title="Attach Document"
+            >
+              {fileUploading ? (
+                <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Paperclip size={18} />
+              )}
             </button>
             <input
               className="flex-1 bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
@@ -358,10 +497,71 @@ export default function ChatPage() {
   );
 }
 
-function ChatBubble({ msg, onAsk }: { msg: Message, onAsk?: (q: string) => void }) {
+interface TableBlock {
+  type: "markdown" | "table";
+  content: string;
+  tableData?: {
+    headers: string[];
+    rows: string[][];
+  };
+}
+
+function parseMarkdownAndTables(text: string): TableBlock[] {
+  const lines = text.split("\n");
+  const blocks: TableBlock[] = [];
+  let currentMarkdown: string[] = [];
+  
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    const isTableLine = trimmed.startsWith("|") && trimmed.endsWith("|");
+    
+    if (isTableLine && i + 1 < lines.length) {
+      const nextLine = lines[i + 1];
+      const isSeparator = nextLine.trim().startsWith("|") && nextLine.trim().endsWith("|") && 
+                          /^\|[\s\-\|:\+]+\|$/.test(nextLine.trim());
+      
+      if (isSeparator) {
+        if (currentMarkdown.length > 0) {
+          blocks.push({ type: "markdown", content: currentMarkdown.join("\n") });
+          currentMarkdown = [];
+        }
+        
+        const headers = line.split("|").map(s => s.trim()).filter((s, idx, arr) => idx > 0 && idx < arr.length - 1);
+        const rows: string[][] = [];
+        i += 2; // skip header and separator
+        
+        while (i < lines.length && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
+          const rowCells = lines[i].split("|").map(s => s.trim()).filter((s, idx, arr) => idx > 0 && idx < arr.length - 1);
+          rows.push(rowCells);
+          i++;
+        }
+        
+        blocks.push({
+          type: "table",
+          content: "",
+          tableData: { headers, rows }
+        });
+        continue;
+      }
+    }
+    
+    currentMarkdown.push(line);
+    i++;
+  }
+  
+  if (currentMarkdown.length > 0) {
+    blocks.push({ type: "markdown", content: currentMarkdown.join("\n") });
+  }
+  
+  return blocks;
+}
+
+function ChatBubble({ msg, isGenerating, onAsk }: { msg: Message, isGenerating?: boolean, onAsk?: (q: string) => void }) {
   const isUser = msg.role === "user";
   
-  if (!isUser && !msg.content && !msg.roadmap_metadata) {
+  if (!isUser && !msg.content && !msg.roadmap_metadata && !isGenerating) {
     return null;
   }
   
@@ -369,23 +569,61 @@ function ChatBubble({ msg, onAsk }: { msg: Message, onAsk?: (q: string) => void 
     <div className={`flex items-end gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       {isUser ? <UserAvatar /> : <Avatar initials="AI" />}
       <div
-        className={`max-w-[78%] px-4 py-2.5 text-sm border backdrop-blur-md
+        className={`max-w-[78%] px-4 py-2.5 text-sm border backdrop-blur-md whitespace-pre-wrap break-words
           ${isUser
             ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white border-blue-400/20 rounded-2xl rounded-br-none shadow-lg shadow-blue-500/10"
             : "bg-white/5 text-blue-100 border-white/10 rounded-2xl rounded-bl-none"
           }`}
       >
-        <ReactMarkdown
-          components={{
-            h3: ({ children }) => <h3 className="font-semibold text-base mt-2 mb-1 text-white">{children}</h3>,
-            ul: ({ children }) => <ul className="list-disc ml-4 space-y-1 text-blue-200">{children}</ul>,
-            li: ({ children }) => <li className="text-sm">{children}</li>,
-            strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-            p: ({ children }) => <p className="mb-1.5 last:mb-0 text-blue-100">{children}</p>,
-          }}
-        >
-          {msg.content}
-        </ReactMarkdown>
+        {parseMarkdownAndTables(msg.content + (isGenerating ? "▌" : "")).map((block, bIdx) => {
+          if (block.type === "table" && block.tableData) {
+            return (
+              <div key={bIdx} className="overflow-x-auto my-3">
+                <table className="min-w-full border-collapse border border-white/10 text-xs rounded-xl overflow-hidden">
+                  <thead className="bg-white/5">
+                    <tr className="border-b border-white/5">
+                      {block.tableData.headers.map((h, hIdx) => (
+                        <th key={hIdx} className="border border-white/10 px-3 py-2 font-bold text-left text-white">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.tableData.rows.map((row, rIdx) => (
+                      <tr key={rIdx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                        {row.map((cell, cIdx) => (
+                          <td key={cIdx} className="border border-white/10 px-3 py-2 text-blue-200">
+                            <ReactMarkdown
+                              components={{
+                                p: ({ children }) => <span className="text-blue-200">{children}</span>,
+                                strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>
+                              }}
+                            >
+                              {cell}
+                            </ReactMarkdown>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          }
+          return (
+            <ReactMarkdown
+              key={bIdx}
+              components={{
+                h3: ({ children }) => <h3 className="font-semibold text-base mt-2 mb-1 text-white">{children}</h3>,
+                ul: ({ children }) => <ul className="list-disc ml-4 space-y-1 text-blue-200">{children}</ul>,
+                li: ({ children }) => <li className="text-sm">{children}</li>,
+                strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+                p: ({ children }) => <p className="mb-1.5 last:mb-0 text-blue-100">{children}</p>,
+              }}
+            >
+              {block.content}
+            </ReactMarkdown>
+          );
+        })}
 
         {/* Custom Success Card for Roadmap Creation */}
         {msg.intent === "ROADMAP_CREATION" && msg.roadmap_metadata && (
@@ -438,10 +676,10 @@ function ChatBubble({ msg, onAsk }: { msg: Message, onAsk?: (q: string) => void 
   );
 }
 
-function Avatar({ initials }: { initials: string }) {
+function Avatar({ initials, isSpinning = false }: { initials?: string, isSpinning?: boolean }) {
   return (
-    <div className="w-7 h-7 rounded-full bg-blue-900/60 text-blue-200 border border-blue-500/20 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-      {initials}
+    <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shrink-0 shadow-md">
+      <Sparkles className={`w-4 h-4 text-white ${isSpinning ? "animate-spin" : ""}`} />
     </div>
   );
 }

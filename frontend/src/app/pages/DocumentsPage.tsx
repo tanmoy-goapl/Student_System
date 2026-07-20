@@ -41,7 +41,12 @@ export default function DocumentsPage() {
     if (!sid || isNaN(sid)) { setLoading(false); return; }
     try {
       const res = await fetch(`/api/documents?student_id=${sid}`);
-      if (res.ok) setDocs(await res.json());
+      if (res.ok) {
+        const data = (await res.json()) || [];
+        // Sort descending by uploaded_at so newest is on top
+        data.sort((a: DocItem, b: DocItem) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime());
+        setDocs(data);
+      }
     } catch { setError("Failed to load documents"); }
     finally { setLoading(false); }
   };
