@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { UploadCloud } from "lucide-react";
 import { uploadDocument } from "@/lib/api";
-import Loader from "@/components/Loader";
+import { OfflineState, ErrorState, EmptyState, TableSkeleton, LoadingButton } from "@/components/UIStateSystem";
 
 function formatDate(iso: string) {
   const date = new Date(iso);
@@ -85,7 +86,8 @@ export default function DocumentsPage() {
   console.log(previewUrl)
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 relative">
+      <OfflineState />
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-white">Uploaded Documents</h2>
@@ -121,13 +123,15 @@ export default function DocumentsPage() {
             <option value="all">Everyone</option>
           </select>
 
-          <button
-            className="rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:from-blue-500 hover:to-violet-500 disabled:opacity-40"
+          <LoadingButton
+            loading={uploading}
             onClick={handleUpload}
-            disabled={uploading || !file}
+            disabled={!file}
+            loadingText="Uploading..."
+            className="rounded-xl"
           >
-            {uploading ? "Uploading…" : "Upload"}
-          </button>
+            Upload
+          </LoadingButton>
         </div>
 
         {error && (
@@ -141,14 +145,13 @@ export default function DocumentsPage() {
       {/* Table card */}
       <div className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm overflow-hidden">
         {loading ? (
-          <Loader fullScreen text="Loading..." />
+          <TableSkeleton rows={4} cols={4} />
         ) : docs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-500">
-            <svg className="h-10 w-10 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="text-sm">No documents uploaded yet.</p>
-          </div>
+          <EmptyState 
+            title="No documents uploaded yet"
+            description="Upload PDFs, notes, resumes or marksheets to unlock AI-powered learning features."
+            icon={UploadCloud}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full">

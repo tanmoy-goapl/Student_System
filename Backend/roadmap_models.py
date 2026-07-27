@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float, JSON
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float, JSON, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -63,3 +63,21 @@ class DailyTask(Base):
 
     # Relationships
     roadmap = relationship("LearningRoadmap", backref="daily_tasks")
+
+
+class LearnerPreferences(Base):
+    __tablename__ = "learner_preferences"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    goal = Column(String, nullable=True)
+    time_frame = Column(String, nullable=True)
+    proficiency = Column(String, nullable=True)
+    daily_time = Column(String, nullable=True)
+    learning_style = Column(String, nullable=True)
+    use_documents = Column(String, nullable=True)
+    onboarding_active = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    student = relationship("User", backref="preferences")

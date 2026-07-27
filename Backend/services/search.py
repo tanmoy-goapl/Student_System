@@ -67,6 +67,7 @@ def search_relevant_chunks(
     db: Session,
     top_k: int = 10,
     allowed_doc_ids: list[int] = None,
+    mentioned_doc_ids: list[int] = None,
     boost_types: list[str] = None
 ) -> list[dict]:
     logger.info(f"[Search] Searching relevant chunks for student_id={student_id}, question='{question}'")
@@ -89,8 +90,13 @@ def search_relevant_chunks(
     doc_id_to_type = {d.id: d.document_type for d in docs}
     logger.info(f"[Search] Search matches {len(docs)} document(s): {list(doc_id_to_name.values())}")
     
-    # 2. Check if specific document is mentioned
-    mentioned_ids = _detect_mentioned_doc(question, docs)
+    # 2. Use passed mentioned_doc_ids instead of running detection again
+    if mentioned_doc_ids is None:
+        mentioned_doc_ids = []
+    
+    # Filter mentioned_doc_ids to only include those that are actually allowed
+    # (in case allowed_doc_ids was restricted and excluded some of them)
+    mentioned_ids = [did for did in mentioned_doc_ids if did in doc_ids]
     
     all_extracted_chunks = []
     

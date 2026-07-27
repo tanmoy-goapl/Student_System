@@ -109,3 +109,47 @@ def delete_document_chunks(document_id: int):
     collection.delete(
         where={"document_id": document_id}
     )
+
+def get_all_chunks_for_document(document_id: int) -> list[dict]:
+    """Retrieves all chunks for a document ordered by chunk_index."""
+    collection = get_collection()
+    res = collection.get(where={"document_id": document_id})
+    if not res or "documents" not in res or not res["documents"]:
+        return []
+    
+    docs = res["documents"]
+    metas = res.get("metadatas", [])
+    
+    items = []
+    for idx, text in enumerate(docs):
+        meta = metas[idx] if idx < len(metas) else {}
+        chunk_idx = meta.get("chunk_index", 0)
+        items.append({
+            "text": text,
+            "chunk_index": chunk_idx,
+            "document_id": document_id
+        })
+    items.sort(key=lambda x: x["chunk_index"])
+    return items
+
+def get_chunks_by_ids(ids: list[str]) -> list[dict]:
+    """Retrieves chunks by their IDs from ChromaDB."""
+    collection = get_collection()
+    res = collection.get(ids=ids)
+    if not res or "documents" not in res or not res["documents"]:
+        return []
+    
+    docs = res["documents"]
+    metas = res.get("metadatas", [])
+    
+    items = []
+    for idx, text in enumerate(docs):
+        meta = metas[idx] if idx < len(metas) else {}
+        chunk_idx = meta.get("chunk_index", 0)
+        doc_id = meta.get("document_id", 0)
+        items.append({
+            "text": text,
+            "chunk_index": chunk_idx,
+            "document_id": doc_id
+        })
+    return items

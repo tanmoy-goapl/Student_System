@@ -13,6 +13,7 @@ import AIActions from "@/components/homepage/AIActions";
 import { getHomepageData, HomepageDataResponse } from "@/lib/api";
 
 import GoalSetupModal from "@/components/roadmap/GoalSetupModal";
+import { OfflineState, ErrorState, CardSkeleton, ChartSkeleton } from "@/components/UIStateSystem";
 
 export default function HomePage() {
   const [data, setData] = useState<HomepageDataResponse | null>(null);
@@ -20,6 +21,7 @@ export default function HomePage() {
   const [roadmap, setRoadmap] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [activeWeek, setActiveWeek] = useState<number>(1);
+  const [hasError, setHasError] = useState(false);
 
   const fetchRoadmap = async () => {
     try {
@@ -36,22 +38,27 @@ export default function HomePage() {
     }
   };
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const studentId = localStorage.getItem("user_id") || undefined;
-        const response = await getHomepageData(studentId);
-        setData(response);
-      } catch (error) {
-        console.error("Failed to load homepage data:", error);
-      }
+  const fetchData = async () => {
+    try {
+      setHasError(false);
+      const studentId = localStorage.getItem("user_id") || undefined;
+      const response = await getHomepageData(studentId);
+      setData(response);
+    } catch (error) {
+      console.error("Failed to load homepage data:", error);
+      setHasError(true);
     }
+  };
+
+  useEffect(() => {
     fetchData();
     fetchRoadmap();
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-6 space-y-4 overflow-x-hidden w-full">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-6 space-y-4 overflow-x-hidden w-full relative">
+      <OfflineState />
+      
       <div className="flex items-center justify-between">
         <Greeting />
         <button 
@@ -71,7 +78,9 @@ export default function HomePage() {
         }}
       />
 
-      {data ? (
+      {hasError ? (
+        <ErrorState message="Could not load dashboard metrics. Check backend connection." onRetry={fetchData} />
+      ) : data ? (
         <>
           <div className={`rounded-3xl border transition-all duration-500 ${
             data.dashboard_health === "GREEN" ? "border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.15)]" :
@@ -136,12 +145,11 @@ export default function HomePage() {
         </>
 
       ) : (
-        <div className="space-y-4 animate-pulse">
-          <div className="h-48 bg-slate-800 rounded-xl"></div>
-          <div className="h-32 bg-slate-800 rounded-xl"></div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="h-64 bg-slate-800 rounded-xl"></div>
-            <div className="h-64 bg-slate-800 rounded-xl"></div>
+        <div className="space-y-6">
+          <CardSkeleton />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardSkeleton />
+            <ChartSkeleton />
           </div>
         </div>
       )}

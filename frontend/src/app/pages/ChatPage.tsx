@@ -8,6 +8,7 @@ import { Paperclip, Send, Square, CheckCircle2, ChevronRight, Activity, Calendar
 import RightSidebar from "@/components/RightSidebar";
 import { getChatSidebarData, uploadDocument } from "@/lib/api";
 import Link from "next/link";
+import { OfflineState, ChatThinking } from "@/components/UIStateSystem";
 
 type Message = { 
   role: string; 
@@ -16,6 +17,7 @@ type Message = {
   intent?: string;
   roadmap_metadata?: { title: string; duration: string; weeks: number; tasks: number };
   suggest_roadmap?: boolean;
+  options?: string[];
 };
 
 function getStoredUser() {
@@ -84,8 +86,13 @@ export default function ChatPage() {
     localStorage.setItem("chat_input", question);
   }, [question]);
 
+  const scrollThrottleRef = useRef<number>(0);
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const now = Date.now();
+    if (now - scrollThrottleRef.current > 120) {
+      scrollThrottleRef.current = now;
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [history, loading]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,6 +128,10 @@ export default function ChatPage() {
     setLoading(true);
     setIsStreaming(true);
 
+    const t_click = performance.now();
+    console.log(`\n--- NEW REQUEST ---`);
+    console.log(`[Timing] Request started at ${t_click.toFixed(1)}ms`);
+
     try {
       const controller = new AbortController();
       abortControllerRef.current = controller;
@@ -143,6 +154,7 @@ export default function ChatPage() {
         throw new Error(data?.detail || `Error ${res.status}`);
       }
 
+      console.log(`[Timing] Headers received from Next.js proxy: ${(performance.now() - t_click).toFixed(1)}ms`);
       setLoading(false); // remove initial typing dots indicator
 
       const reader = res.body?.getReader();
@@ -160,13 +172,19 @@ export default function ChatPage() {
       let finalMetadata = null;
       let finalSuggest = false;
       let finalSessionId = "";
+      let finalOptions = undefined;
       let buffer = "";
-      let lastRenderTime = 0;
+      let contentStarted = false;
+      let firstChunkReceived = false;
 
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         if (value) {
+          if (!firstChunkReceived) {
+            console.log(`[Timing] Network: First byte received by browser: ${(performance.now() - t_click).toFixed(1)}ms`);
+            firstChunkReceived = true;
+          }
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split("\n");
           buffer = lines.pop() || "";
@@ -183,22 +201,22 @@ export default function ChatPage() {
                 setStreamStatus(parsed.status);
               }
               if (parsed.content) {
-                assistantAnswer += parsed.content;
-                
-                const now = Date.now();
-                if (now - lastRenderTime > 50) {
-                  lastRenderTime = now;
-                  setHistory(prev => {
-                    const copy = [...prev];
-                    if (copy.length > 0) {
-                      copy[copy.length - 1] = {
-                        ...copy[copy.length - 1],
-                        content: assistantAnswer,
-                      };
-                    }
-                    return copy;
-                  });
+                if (!contentStarted) {
+                  console.log(`[Timing] React: First token parsed and state update triggered: ${(performance.now() - t_click).toFixed(1)}ms`);
+                  contentStarted = true;
+                  setStreamStatus("");
                 }
+                assistantAnswer += parsed.content;
+                setHistory(prev => {
+                  const copy = [...prev];
+                  if (copy.length > 0) {
+                    copy[copy.length - 1] = {
+                      ...copy[copy.length - 1],
+                      content: assistantAnswer,
+                    };
+                  }
+                  return copy;
+                });
               }
               if (parsed.intent) {
                 finalIntent = parsed.intent;
@@ -208,6 +226,9 @@ export default function ChatPage() {
               }
               if (parsed.suggest_roadmap) {
                 finalSuggest = true;
+              }
+              if (parsed.options) {
+                finalOptions = parsed.options;
               }
               if (parsed.session_id) {
                 finalSessionId = parsed.session_id;
@@ -229,6 +250,7 @@ export default function ChatPage() {
             intent: finalIntent,
             roadmap_metadata: finalMetadata,
             suggest_roadmap: finalSuggest,
+            options: finalOptions,
           };
         }
         return copy;
@@ -327,7 +349,8 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex w-full h-full overflow-hidden">
+    <div className="flex w-full h-full overflow-hidden relative">
+      <OfflineState />
       <ChatHistorySidebar
         studentId={user?.id ?? null}
         open={isHistoryOpen}
@@ -354,16 +377,33 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              window.dispatchEvent(new Event("new-chat"));
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/10 transition cursor-pointer text-white"
-            title="Start New Conversation"
-          >
-            <Plus size={14} className="text-slate-300" />
-            <span>New Chat</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setQuestion("Update Learning Preferences");
+                setTimeout(() => {
+                  const btn = document.getElementById("chat-send-btn");
+                  if (btn) (btn as HTMLButtonElement).click();
+                }, 50);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-500/20 bg-blue-500/10 text-xs font-semibold hover:border-blue-500/30 hover:bg-blue-500/20 transition cursor-pointer text-blue-300"
+              title="Update Learning Preferences"
+            >
+              <Sparkles size={14} className="text-blue-400 animate-pulse" />
+              <span>Update Preferences</span>
+            </button>
+
+            <button
+              onClick={() => {
+                window.dispatchEvent(new Event("new-chat"));
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/10 transition cursor-pointer text-white"
+              title="Start New Conversation"
+            >
+              <Plus size={14} className="text-slate-300" />
+              <span>New Chat</span>
+            </button>
+          </div>
         </header>
 
         {/* Message area */}
@@ -411,22 +451,10 @@ export default function ChatPage() {
             );
           })}
 
-          {loading && !streamStatus && (
-            <div className="flex items-center gap-2">
-              <Avatar initials="AI" isSpinning={true} />
-              <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl rounded-bl-none px-4 py-3">
-                <TypingDots />
-              </div>
-            </div>
-          )}
-          
-          {streamStatus && (
+          {(loading || streamStatus) && (
             <div className="flex items-center gap-2 animate-in fade-in duration-300">
               <Avatar initials="AI" isSpinning={true} />
-              <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl rounded-bl-none px-4 py-3 flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-blue-300">{streamStatus}</span>
-                <TypingDots />
-              </div>
+              <ChatThinking />
             </div>
           )}
 
@@ -669,6 +697,21 @@ function ChatBubble({ msg, isGenerating, onAsk }: { msg: Message, isGenerating?:
               <CalendarDays size={16} />
               Create Roadmap
             </button>
+          </div>
+        )}
+
+        {/* Quick Reply Options */}
+        {msg.options && msg.options.length > 0 && onAsk && (
+          <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-white/10 animate-in fade-in duration-300">
+            {msg.options.map((opt, optIdx) => (
+              <button
+                key={optIdx}
+                onClick={() => onAsk(opt)}
+                className="px-3.5 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 hover:bg-blue-600 hover:text-white hover:border-blue-500 text-xs font-semibold transition active:scale-95 cursor-pointer"
+              >
+                {opt}
+              </button>
+            ))}
           </div>
         )}
       </div>

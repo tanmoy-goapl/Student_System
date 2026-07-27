@@ -2290,3 +2290,1740 @@ topics • Identify at-risk students Example: Professor uploads Operating System
 2026-07-20 06:06:03,416 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
 2026-07-20 06:06:13,709 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
 2026-07-20 06:06:13,709 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:15:29,422 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 06:15:29,521 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 06:15:29,753 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 06:15:30,426 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 06:15:30,435 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-21 06:15:30,572 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 06:17:12,349 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-21 06:17:12,350 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-21 06:17:48,214 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:17:48,215 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:17:48,293 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:17:51,380 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:17:51,381 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:17:51,487 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:17:51,551 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:17:52,539 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:18:01,067 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:18:01,067 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:18:01,068 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:18:01,068 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:18:01,068 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:18:01,068 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:18:01,069 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:18:01,069 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:18:01,069 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:18:01,070 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:18:04,617 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:18:04,617 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:18:04,618 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:18:04,618 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:18:04,618 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:18:04,619 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:29:11,299 - INFO - CACHE HIT (Fast Return): topic='OS Design and Implementation', subject='operating-system'
+2026-07-21 06:29:11,640 - INFO - CACHE HIT (Fast Return): topic='OS Design and Implementation', subject='operating-system'
+2026-07-21 06:30:53,679 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-21 06:30:53,680 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-21 06:30:53,681 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-21 06:31:03,095 - INFO - 
+================================================================================
+2026-07-21 06:31:03,096 - INFO - [2026-07-21T06:31:03.096102] CHAT REQUEST
+2026-07-21 06:31:03,096 - INFO -   Student ID : 3
+2026-07-21 06:31:03,096 - INFO -   Question   : what should i study according to course overview.
+2026-07-21 06:31:03,096 - INFO -   Role       : student
+2026-07-21 06:31:03,096 - INFO - ================================================================================
+2026-07-21 06:31:03,105 - INFO -   Detected Mode: LEARNING
+2026-07-21 06:31:03,110 - INFO - [Search] Searching relevant chunks for student_id=3, question='what should i study according to course overview.'
+2026-07-21 06:31:03,112 - INFO - [Search] Search matches 10 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf']
+2026-07-21 06:31:03,112 - INFO - [Search] Mentioned document(s) detected: ['Course overview.pdf']
+2026-07-21 06:31:03,168 - INFO - [Search] Finished search. Returning 11 chunks after semantic reranking.
+2026-07-21 06:31:03,168 - INFO -   Retrieved 11 candidate chunks
+2026-07-21 06:31:03,168 - INFO -   Adaptive filter: top_score=0.3672
+2026-07-21 06:31:03,168 - INFO -   Adaptive filter: cutoff=0.2672, kept=4/11
+2026-07-21 06:31:03,168 - INFO -   After adaptive filter: 4 chunks
+2026-07-21 06:31:29,593 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:31:29,620 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:31:33,774 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:31:33,861 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:31:39,516 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:31:39,517 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:31:39,517 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:31:39,517 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:31:43,276 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:31:43,276 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:31:43,277 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:31:43,277 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:31:47,049 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:31:57,496 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:31:57,496 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:32:25,927 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 06:32:36,306 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 06:32:36,307 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 06:34:18,461 - INFO - 
+================================================================================
+2026-07-21 06:34:18,462 - INFO - [2026-07-21T06:34:18.462031] CHAT REQUEST
+2026-07-21 06:34:18,462 - INFO -   Student ID : 3
+2026-07-21 06:34:18,462 - INFO -   Question   : what are the prerequsite of  DESIGN AND ANALYSIS OF DEEP NEURAL NETWORKS
+2026-07-21 06:34:18,462 - INFO -   Role       : student
+2026-07-21 06:34:18,462 - INFO - ================================================================================
+2026-07-21 06:34:18,469 - INFO -   Detected Mode: LEARNING
+2026-07-21 06:34:18,474 - INFO - [Search] Searching relevant chunks for student_id=3, question='what are the prerequsite of  DESIGN AND ANALYSIS OF DEEP NEURAL NETWORKS'
+2026-07-21 06:34:18,476 - INFO - [Search] Search matches 10 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf']
+2026-07-21 06:34:18,476 - INFO - [Search] Mentioned document(s) detected: ['1_Rules_and_Regulations.pdf']
+2026-07-21 06:34:18,563 - INFO - [Search] Finished search. Returning 12 chunks after semantic reranking.
+2026-07-21 06:34:18,564 - INFO -   Retrieved 12 candidate chunks
+2026-07-21 06:34:18,564 - INFO -   Adaptive filter: top_score=0.5256
+2026-07-21 06:34:18,564 - INFO -   Adaptive filter: cutoff=0.4256, kept=2/12
+2026-07-21 06:34:18,564 - INFO -   After adaptive filter: 2 chunks
+2026-07-21 06:36:25,687 - INFO - 
+================================================================================
+2026-07-21 06:36:25,688 - INFO - [2026-07-21T06:36:25.688238] CHAT REQUEST
+2026-07-21 06:36:25,688 - INFO -   Student ID : 3
+2026-07-21 06:36:25,688 - INFO -   Question   : is there module 2 and module 3 only?
+2026-07-21 06:36:25,688 - INFO -   Role       : student
+2026-07-21 06:36:25,688 - INFO - ================================================================================
+2026-07-21 06:36:25,699 - INFO -   Detected Mode: LEARNING
+2026-07-21 06:36:25,705 - INFO - [Search] Searching relevant chunks for student_id=3, question='is there module 2 and module 3 only?'
+2026-07-21 06:36:25,706 - INFO - [Search] Search matches 10 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf']
+2026-07-21 06:36:25,706 - INFO - [Search] Mentioned document(s) detected: ['1_Rules_and_Regulations.pdf']
+2026-07-21 06:36:25,774 - INFO - [Search] Finished search. Returning 12 chunks after semantic reranking.
+2026-07-21 06:36:25,774 - INFO -   Retrieved 12 candidate chunks
+2026-07-21 06:36:25,775 - INFO -   Adaptive filter: top_score=0.2279
+2026-07-21 06:36:25,775 - INFO -   Adaptive filter: cutoff=0.1279, kept=3/12
+2026-07-21 06:36:25,775 - INFO -   After adaptive filter: 3 chunks
+2026-07-21 06:37:39,193 - INFO - 
+================================================================================
+2026-07-21 06:37:39,194 - INFO - [2026-07-21T06:37:39.194125] CHAT REQUEST
+2026-07-21 06:37:39,194 - INFO -   Student ID : 3
+2026-07-21 06:37:39,194 - INFO -   Question   : then why do you tell me only module 2 and 3.
+2026-07-21 06:37:39,194 - INFO -   Role       : student
+2026-07-21 06:37:39,194 - INFO - ================================================================================
+2026-07-21 06:37:39,201 - INFO -   Detected Mode: LEARNING
+2026-07-21 06:37:39,207 - INFO - [Search] Searching relevant chunks for student_id=3, question='then why do you tell me only module 2 and 3.'
+2026-07-21 06:37:39,209 - INFO - [Search] Search matches 10 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf']
+2026-07-21 06:37:39,209 - INFO - [Search] Mentioned document(s) detected: ['1_Rules_and_Regulations.pdf']
+2026-07-21 06:37:39,272 - INFO - [Search] Finished search. Returning 12 chunks after semantic reranking.
+2026-07-21 06:37:39,272 - INFO -   Retrieved 12 candidate chunks
+2026-07-21 06:37:39,272 - INFO -   Adaptive filter: top_score=0.3323
+2026-07-21 06:37:39,273 - INFO -   Adaptive filter: cutoff=0.2323, kept=2/12
+2026-07-21 06:37:39,273 - INFO -   After adaptive filter: 2 chunks
+2026-07-21 06:46:54,521 - INFO - 
+================================================================================
+2026-07-21 06:46:54,522 - INFO - [2026-07-21T06:46:54.522130] CHAT REQUEST
+2026-07-21 06:46:54,522 - INFO -   Student ID : 3
+2026-07-21 06:46:54,522 - INFO -   Question   : give me a study plan again
+2026-07-21 06:46:54,522 - INFO -   Role       : student
+2026-07-21 06:46:54,522 - INFO - ================================================================================
+2026-07-21 06:46:54,536 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-07-21 06:46:54,542 - INFO - [Search] Searching relevant chunks for student_id=3, question='give me a study plan again'
+2026-07-21 06:46:54,543 - INFO - [Search] Search matches 10 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf']
+2026-07-21 06:46:54,543 - INFO - [Search] No specific document mentioned. Performing global semantic search across all accessible documents.
+2026-07-21 06:46:54,862 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 06:46:54,862 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 06:46:54,862 - INFO -   Adaptive filter: top_score=0.4005
+2026-07-21 06:46:54,862 - INFO -   Adaptive filter: cutoff=0.3005, kept=9/40
+2026-07-21 06:46:54,862 - INFO -   After adaptive filter: 8 chunks
+2026-07-21 06:52:36,411 - INFO - 
+================================================================================
+2026-07-21 06:52:36,411 - INFO - [2026-07-21T06:52:36.411535] CHAT REQUEST
+2026-07-21 06:52:36,411 - INFO -   Student ID : 3
+2026-07-21 06:52:36,411 - INFO -   Question   : help me in solving the sample test.
+2026-07-21 06:52:36,411 - INFO -   Role       : student
+2026-07-21 06:52:36,411 - INFO - ================================================================================
+2026-07-21 06:52:36,423 - INFO -   Detected Mode: LEARNING
+2026-07-21 06:52:36,429 - INFO - [Search] Searching relevant chunks for student_id=3, question='help me in solving the sample test.'
+2026-07-21 06:52:36,431 - INFO - [Search] Search matches 10 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf']
+2026-07-21 06:52:36,431 - INFO - [Search] Mentioned document(s) detected: ['Sample test.pdf']
+2026-07-21 06:52:37,423 - INFO - [Search] Finished search. Returning 10 chunks after semantic reranking.
+2026-07-21 06:52:37,423 - INFO -   [Timing] Retrieval: 0.99s
+2026-07-21 06:52:37,423 - INFO -   Retrieved 10 candidate chunks
+2026-07-21 06:52:37,423 - INFO -   Adaptive filter: top_score=0.3116
+2026-07-21 06:52:37,423 - INFO -   Adaptive filter: cutoff=0.2116, kept=2/10
+2026-07-21 06:52:37,424 - INFO -   After adaptive filter: 2 chunks
+2026-07-21 06:52:37,426 - INFO -   [Timing] Prompt Building: 0.00s
+2026-07-21 06:52:42,117 - INFO -   [Timing] Time to First Token: 4.69s
+2026-07-21 06:56:44,404 - INFO -   [Timing] Total Response Time: 247.99s
+2026-07-21 07:10:41,897 - INFO - 
+================================================================================
+2026-07-21 07:10:41,898 - INFO - [2026-07-21T07:10:41.898161] CHAT REQUEST
+2026-07-21 07:10:41,898 - INFO -   Student ID : 3
+2026-07-21 07:10:41,898 - INFO -   Question   : i just want to focus on module 1, help me study it in depth.
+2026-07-21 07:10:41,898 - INFO -   Role       : student
+2026-07-21 07:10:41,898 - INFO - ================================================================================
+2026-07-21 07:10:41,909 - INFO -   Detected Mode: LEARNING
+2026-07-21 07:10:41,910 - INFO -   [Timing] Docs + Mode Detection: 0.008s
+2026-07-21 07:10:41,916 - INFO - [Search] Searching relevant chunks for student_id=3, question='i just want to focus on module 1, help me study it in depth.'
+2026-07-21 07:10:41,917 - INFO - [Search] Search matches 10 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf']
+2026-07-21 07:10:41,918 - INFO - [Search] No specific document mentioned. Performing global semantic search across all accessible documents.
+2026-07-21 07:10:42,615 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 07:10:42,616 - INFO -   [Timing] Retrieval: 0.70s
+2026-07-21 07:10:42,616 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 07:10:42,616 - INFO -   Adaptive filter: top_score=0.3447
+2026-07-21 07:10:42,616 - INFO -   Adaptive filter: cutoff=0.2447, kept=10/40
+2026-07-21 07:10:42,616 - INFO -   After adaptive filter: 5 chunks
+2026-07-21 07:10:42,619 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 07:10:52,024 - INFO -   [Timing] LLM Time-to-First-Token: 9.405s
+2026-07-21 07:10:52,024 - INFO -   [Timing] Total TTFT (user → first token): 10.122s
+2026-07-21 07:15:42,351 - INFO -   [Timing] LLM Streaming Duration: 299.732s
+2026-07-21 07:15:42,352 - INFO -   [Timing] Total Response Time: 300.449s
+2026-07-21 08:51:09,872 - INFO - 
+================================================================================
+2026-07-21 08:51:09,872 - INFO - [2026-07-21T08:51:09.872652] CHAT REQUEST
+2026-07-21 08:51:09,874 - INFO -   Student ID : 3
+2026-07-21 08:51:09,875 - INFO -   Question   : help me study fifo scheduling
+2026-07-21 08:51:09,875 - INFO -   Role       : student
+2026-07-21 08:51:09,875 - INFO - ================================================================================
+2026-07-21 08:51:09,886 - INFO -   [Timing] FastAPI Request started processing at 4900347.184
+2026-07-21 08:51:09,902 - INFO -   Detected Mode: LEARNING
+2026-07-21 08:51:09,903 - INFO -   [Timing] Docs + Mode Detection: 0.016s
+2026-07-21 08:51:09,922 - INFO - [Search] Searching relevant chunks for student_id=3, question='help me study fifo scheduling'
+2026-07-21 08:51:09,926 - INFO - [Search] Search matches 10 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf']
+2026-07-21 08:51:09,927 - INFO - [Search] No specific document mentioned. Performing global semantic search across all accessible documents.
+2026-07-21 08:51:12,335 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 08:51:12,336 - INFO -   [Timing] Retrieval: 2.414s
+2026-07-21 08:51:12,336 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 08:51:12,336 - INFO -   Adaptive filter: top_score=0.3878
+2026-07-21 08:51:12,336 - INFO -   Adaptive filter: cutoff=0.2878, kept=26/40
+2026-07-21 08:51:12,336 - INFO -   After adaptive filter: 5 chunks
+2026-07-21 08:51:12,340 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 08:51:18,949 - INFO -   [Timing] Backend First Token Loop hit: 6.609s since LLM call
+2026-07-21 08:51:18,949 - INFO -   [Timing] Total TTFT (user → first token loop): 9.063s
+2026-07-21 08:54:06,135 - INFO -   [Timing] LLM Streaming Duration: 173.795s
+2026-07-21 08:54:06,135 - INFO -   [Timing] Total Response Time: 176.248s
+2026-07-21 11:06:09,733 - INFO - 
+================================================================================
+2026-07-21 11:06:09,733 - INFO - [2026-07-21T11:06:09.733426] CHAT REQUEST
+2026-07-21 11:06:09,733 - INFO -   Student ID : 2
+2026-07-21 11:06:09,733 - INFO -   Question   : tell me about keshav marks?
+2026-07-21 11:06:09,733 - INFO -   Role       : professor
+2026-07-21 11:06:09,733 - INFO - ================================================================================
+2026-07-21 11:06:09,738 - INFO -   [Timing] FastAPI Request started processing at 4908447.035
+2026-07-21 11:06:09,742 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-21 11:06:09,743 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-21 11:06:09,748 - INFO - [Search] Searching relevant chunks for student_id=2, question='tell me about keshav marks?'
+2026-07-21 11:06:09,749 - INFO - [Search] Search matches 15 document(s): ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '19_20260323_200942_topic_covered_tracking.pdf', 'Course overview.pdf', 'Sample test.pdf', 'Lec-1.pdf', 'Lec-2.pdf', 'keshav_marks.pdf', 'amir_marks.pdf', 'priya_marks.pdf', 'Sunil_Sharma_Resume.pdf']
+2026-07-21 11:06:09,749 - INFO - [Search] Mentioned document(s) detected: ['keshav_marks.pdf', 'amir_marks.pdf', 'priya_marks.pdf']
+2026-07-21 11:06:09,941 - INFO - [Search] Finished search. Returning 15 chunks after semantic reranking.
+2026-07-21 11:06:09,942 - INFO -   [Timing] Retrieval: 0.194s
+2026-07-21 11:06:09,942 - INFO -   Retrieved 15 candidate chunks
+2026-07-21 11:06:09,942 - INFO -   Adaptive filter: top_score=0.2761
+2026-07-21 11:06:09,942 - INFO -   Adaptive filter: cutoff=0.1761, kept=8/15
+2026-07-21 11:06:09,942 - INFO -   After adaptive filter: 5 chunks
+2026-07-21 11:06:09,945 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 11:06:16,880 - INFO -   [Timing] Backend First Token Loop hit: 6.935s since LLM call
+2026-07-21 11:06:16,880 - INFO -   [Timing] Total TTFT (user → first token loop): 7.143s
+2026-07-21 11:06:30,799 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:06:41,294 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:06:41,295 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:06:46,046 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:06:49,477 - INFO -   [Timing] LLM Streaming Duration: 39.532s
+2026-07-21 11:06:49,477 - INFO -   [Timing] Total Response Time: 39.739s
+2026-07-21 11:06:56,264 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:06:56,265 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:07:16,225 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:07:26,584 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:07:26,587 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:07:33,006 - INFO - 
+================================================================================
+2026-07-21 11:07:33,006 - INFO - [2026-07-21T11:07:33.006937] CHAT REQUEST
+2026-07-21 11:07:33,007 - INFO -   Student ID : 2
+2026-07-21 11:07:33,007 - INFO -   Question   : is he eligible for scholarship?
+2026-07-21 11:07:33,007 - INFO -   Role       : professor
+2026-07-21 11:07:33,007 - INFO - ================================================================================
+2026-07-21 11:07:33,010 - INFO -   [Timing] FastAPI Request started processing at 4908530.308
+2026-07-21 11:07:33,014 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-21 11:07:33,014 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-07-21 11:07:33,019 - INFO - [Search] Searching relevant chunks for student_id=2, question='is he eligible for scholarship?'
+2026-07-21 11:07:33,020 - INFO - [Search] Search matches 15 document(s): ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '19_20260323_200942_topic_covered_tracking.pdf', 'Course overview.pdf', 'Sample test.pdf', 'Lec-1.pdf', 'Lec-2.pdf', 'keshav_marks.pdf', 'amir_marks.pdf', 'priya_marks.pdf', 'Sunil_Sharma_Resume.pdf']
+2026-07-21 11:07:33,020 - INFO - [Search] No specific document mentioned. Performing global semantic search across all accessible documents.
+2026-07-21 11:07:33,131 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 11:07:33,132 - INFO -   [Timing] Retrieval: 0.113s
+2026-07-21 11:07:33,132 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 11:07:33,132 - INFO -   Adaptive filter: top_score=0.4447
+2026-07-21 11:07:33,132 - INFO -   Adaptive filter: cutoff=0.3447, kept=8/40
+2026-07-21 11:07:33,133 - INFO -   After adaptive filter: 5 chunks
+2026-07-21 11:07:33,135 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 11:07:35,943 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:07:45,122 - INFO -   [Timing] Backend First Token Loop hit: 11.987s since LLM call
+2026-07-21 11:07:45,122 - INFO -   [Timing] Total TTFT (user → first token loop): 12.112s
+2026-07-21 11:07:46,324 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:07:46,325 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:07:50,264 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:08:00,575 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:08:00,575 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:08:01,315 - INFO -   [Timing] LLM Streaming Duration: 28.180s
+2026-07-21 11:08:01,315 - INFO -   [Timing] Total Response Time: 28.305s
+2026-07-21 11:08:04,982 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:08:15,295 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:08:15,295 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:36:15,391 - INFO - 
+================================================================================
+2026-07-21 11:36:15,391 - INFO - [2026-07-21T11:36:15.391481] CHAT REQUEST
+2026-07-21 11:36:15,391 - INFO -   Student ID : 2
+2026-07-21 11:36:15,391 - INFO -   Question   : in which subject priya needs to improve?
+2026-07-21 11:36:15,391 - INFO -   Role       : professor
+2026-07-21 11:36:15,391 - INFO - ================================================================================
+2026-07-21 11:36:15,396 - INFO -   [Timing] FastAPI Request started processing at 4910252.693
+2026-07-21 11:36:15,402 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-07-21 11:36:15,402 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-07-21 11:36:15,409 - INFO - [Search] Searching relevant chunks for student_id=2, question='in which subject priya needs to improve?'
+2026-07-21 11:36:15,410 - INFO - [Search] Search matches 15 document(s): ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '19_20260323_200942_topic_covered_tracking.pdf', 'Course overview.pdf', 'Sample test.pdf', 'Lec-1.pdf', 'Lec-2.pdf', 'keshav_marks.pdf', 'amir_marks.pdf', 'priya_marks.pdf', 'Sunil_Sharma_Resume.pdf']
+2026-07-21 11:36:15,410 - INFO - [Search] Mentioned document(s) detected: ['priya_marks.pdf']
+2026-07-21 11:36:15,600 - INFO - [Search] Finished search. Returning 6 chunks after semantic reranking.
+2026-07-21 11:36:15,600 - INFO -   [Timing] Retrieval: 0.191s
+2026-07-21 11:36:15,600 - INFO -   Retrieved 6 candidate chunks
+2026-07-21 11:36:15,600 - INFO -   Adaptive filter: top_score=0.4085
+2026-07-21 11:36:15,600 - INFO -   Adaptive filter: cutoff=0.3085, kept=4/6
+2026-07-21 11:36:15,601 - INFO -   After adaptive filter: 4 chunks
+2026-07-21 11:36:15,603 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 11:36:18,071 - INFO -   [Timing] Backend First Token Loop hit: 2.468s since LLM call
+2026-07-21 11:36:18,071 - INFO -   [Timing] Total TTFT (user → first token loop): 2.675s
+2026-07-21 11:36:38,946 - INFO -   [Timing] LLM Streaming Duration: 23.343s
+2026-07-21 11:36:38,947 - INFO -   [Timing] Total Response Time: 23.550s
+2026-07-21 11:41:14,779 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 11:41:14,891 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 11:41:14,911 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-21 11:41:15,212 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 11:41:15,524 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 11:42:56,901 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-21 11:42:56,901 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-21 11:42:58,581 - INFO - 
+================================================================================
+2026-07-21 11:42:58,581 - INFO - [2026-07-21T11:42:58.581628] CHAT REQUEST
+2026-07-21 11:42:58,581 - INFO -   Student ID : 3
+2026-07-21 11:42:58,581 - INFO -   Question   : read my resume, list the things i need to learn to get a job from my college placement.
+2026-07-21 11:42:58,581 - INFO -   Role       : student
+2026-07-21 11:42:58,581 - INFO - ================================================================================
+2026-07-21 11:42:58,584 - INFO -   [Timing] FastAPI Request started processing at 4910655.882
+2026-07-21 11:42:58,588 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-21 11:42:58,588 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-21 11:42:58,593 - INFO - [Search] Searching relevant chunks for student_id=3, question='read my resume, list the things i need to learn to get a job from my college placement.'
+2026-07-21 11:42:58,593 - INFO - [Search] Search matches 5 document(s): ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf']
+2026-07-21 11:42:58,594 - INFO - [Search] Mentioned document(s) detected: ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf']
+2026-07-21 11:42:58,630 - INFO - [Search] Finished search. Returning 38 chunks after semantic reranking.
+2026-07-21 11:42:58,630 - INFO -   [Timing] Retrieval: 0.037s
+2026-07-21 11:42:58,630 - INFO -   Retrieved 38 candidate chunks
+2026-07-21 11:42:58,630 - INFO -   Adaptive filter: top_score=0.4731
+2026-07-21 11:42:58,630 - INFO -   Adaptive filter: cutoff=0.3731, kept=1/38
+2026-07-21 11:42:58,630 - INFO -   After adaptive filter: 1 chunks
+2026-07-21 11:42:58,632 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 11:43:30,010 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:43:30,040 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:43:31,504 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:43:31,540 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:43:31,561 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:43:31,869 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:43:32,278 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:43:38,300 - INFO -   [Timing] Backend First Token Loop hit: 39.668s since LLM call
+2026-07-21 11:43:38,300 - INFO -   [Timing] Total TTFT (user → first token loop): 39.716s
+2026-07-21 11:43:38,301 - INFO -   [Timing] LLM Streaming Duration: 39.669s
+2026-07-21 11:43:38,301 - INFO -   [Timing] Total Response Time: 39.717s
+2026-07-21 11:43:41,298 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:43:41,298 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:43:41,299 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:43:41,299 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:43:44,328 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:43:44,328 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:43:44,328 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:43:44,329 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:43:44,329 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:43:44,329 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:43:44,330 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:43:44,330 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:43:44,330 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:43:44,330 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:44:04,744 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:44:04,757 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 11:44:14,978 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:44:14,978 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:44:14,980 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 11:44:14,980 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 11:45:54,898 - INFO - 
+================================================================================
+2026-07-21 11:45:54,898 - INFO - [2026-07-21T11:45:54.898935] CHAT REQUEST
+2026-07-21 11:45:54,899 - INFO -   Student ID : 3
+2026-07-21 11:45:54,899 - INFO -   Question   : read my resume, list the things i need to learn to get a job from my college placement.
+2026-07-21 11:45:54,899 - INFO -   Role       : student
+2026-07-21 11:45:54,899 - INFO - ================================================================================
+2026-07-21 11:45:54,903 - INFO -   [Timing] FastAPI Request started processing at 4910832.200
+2026-07-21 11:45:54,909 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-21 11:45:54,910 - INFO -   [Timing] Docs + Mode Detection: 0.007s
+2026-07-21 11:45:54,915 - INFO - [Search] Searching relevant chunks for student_id=3, question='read my resume, list the things i need to learn to get a job from my college placement.'
+2026-07-21 11:45:54,916 - INFO - [Search] Search matches 5 document(s): ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf']
+2026-07-21 11:45:54,916 - INFO - [Search] Mentioned document(s) detected: ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf']
+2026-07-21 11:45:55,115 - INFO - [Search] Finished search. Returning 38 chunks after semantic reranking.
+2026-07-21 11:45:55,115 - INFO -   [Timing] Retrieval: 0.200s
+2026-07-21 11:45:55,115 - INFO -   Retrieved 38 candidate chunks
+2026-07-21 11:45:55,115 - INFO -   Adaptive filter: top_score=0.4731
+2026-07-21 11:45:55,115 - INFO -   Adaptive filter: cutoff=0.3731, kept=1/38
+2026-07-21 11:45:55,115 - INFO -   After adaptive filter: 1 chunks
+2026-07-21 11:45:55,117 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 11:46:05,670 - INFO -   [Timing] Backend First Token Loop hit: 10.553s since LLM call
+2026-07-21 11:46:05,670 - INFO -   [Timing] Total TTFT (user → first token loop): 10.768s
+2026-07-21 11:46:24,311 - INFO -   [Timing] LLM Streaming Duration: 29.194s
+2026-07-21 11:46:24,312 - INFO -   [Timing] Total Response Time: 29.409s
+2026-07-21 11:57:06,045 - INFO - 
+================================================================================
+2026-07-21 11:57:06,046 - INFO - [2026-07-21T11:57:06.046323] CHAT REQUEST
+2026-07-21 11:57:06,046 - INFO -   Student ID : 3
+2026-07-21 11:57:06,046 - INFO -   Question   : read my resume, list the things i need to learn to get a job from my college placement.
+2026-07-21 11:57:06,046 - INFO -   Role       : student
+2026-07-21 11:57:06,046 - INFO - ================================================================================
+2026-07-21 11:57:06,054 - INFO -   [Timing] FastAPI Request started processing at 4911503.351
+2026-07-21 11:57:06,068 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-21 11:57:06,068 - INFO -   [Timing] Docs + Mode Detection: 0.013s
+2026-07-21 11:57:06,079 - INFO - [Search] Searching relevant chunks for student_id=3, question='read my resume, list the things i need to learn to get a job from my college placement.'
+2026-07-21 11:57:06,082 - INFO - [Search] Search matches 6 document(s): ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf']
+2026-07-21 11:57:06,082 - INFO - [Search] Mentioned document(s) detected: ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf']
+2026-07-21 11:57:10,270 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 11:57:10,270 - INFO -   [Timing] Retrieval: 4.191s
+2026-07-21 11:57:10,270 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 11:57:10,270 - INFO -   Adaptive filter: top_score=0.4731
+2026-07-21 11:57:10,271 - INFO -   Adaptive filter: cutoff=0.3731, kept=1/40
+2026-07-21 11:57:10,271 - INFO -   After adaptive filter: 1 chunks
+2026-07-21 11:57:10,275 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-07-21 11:57:11,469 - INFO -   [Timing] Backend First Token Loop hit: 1.194s since LLM call
+2026-07-21 11:57:11,469 - INFO -   [Timing] Total TTFT (user → first token loop): 5.415s
+2026-07-21 11:57:15,352 - INFO -   [Timing] LLM Streaming Duration: 5.077s
+2026-07-21 11:57:15,352 - INFO -   [Timing] Total Response Time: 9.298s
+2026-07-21 11:57:28,096 - INFO - 
+================================================================================
+2026-07-21 11:57:28,096 - INFO - [2026-07-21T11:57:28.096652] CHAT REQUEST
+2026-07-21 11:57:28,096 - INFO -   Student ID : 3
+2026-07-21 11:57:28,096 - INFO -   Question   : read my resume, list the things i need to learn to get a job from my college placement.
+2026-07-21 11:57:28,097 - INFO -   Role       : student
+2026-07-21 11:57:28,097 - INFO - ================================================================================
+2026-07-21 11:57:28,100 - INFO -   [Timing] FastAPI Request started processing at 4911525.398
+2026-07-21 11:57:28,105 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-21 11:57:28,106 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-21 11:57:28,113 - INFO - [Search] Searching relevant chunks for student_id=3, question='read my resume, list the things i need to learn to get a job from my college placement.'
+2026-07-21 11:57:28,114 - INFO - [Search] Search matches 6 document(s): ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf']
+2026-07-21 11:57:28,114 - INFO - [Search] Mentioned document(s) detected: ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf']
+2026-07-21 11:57:30,590 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 11:57:30,591 - INFO -   [Timing] Retrieval: 2.478s
+2026-07-21 11:57:30,591 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 11:57:30,592 - INFO -   Adaptive filter: top_score=0.4731
+2026-07-21 11:57:30,592 - INFO -   Adaptive filter: cutoff=0.3731, kept=1/40
+2026-07-21 11:57:30,593 - INFO -   After adaptive filter: 1 chunks
+2026-07-21 11:57:30,597 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-07-21 11:57:32,553 - INFO -   [Timing] Backend First Token Loop hit: 1.955s since LLM call
+2026-07-21 11:57:32,553 - INFO -   [Timing] Total TTFT (user → first token loop): 4.452s
+2026-07-21 11:57:36,465 - INFO -   [Timing] LLM Streaming Duration: 5.868s
+2026-07-21 11:57:36,465 - INFO -   [Timing] Total Response Time: 8.364s
+2026-07-21 11:59:24,356 - INFO - 
+================================================================================
+2026-07-21 11:59:24,356 - INFO - [2026-07-21T11:59:24.356350] CHAT REQUEST
+2026-07-21 11:59:24,356 - INFO -   Student ID : 3
+2026-07-21 11:59:24,356 - INFO -   Question   : can you tell me about my project?
+2026-07-21 11:59:24,356 - INFO -   Role       : student
+2026-07-21 11:59:24,356 - INFO - ================================================================================
+2026-07-21 11:59:24,363 - INFO -   [Timing] FastAPI Request started processing at 4911641.660
+2026-07-21 11:59:24,367 - INFO -   Detected Mode: LEARNING
+2026-07-21 11:59:24,367 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-07-21 11:59:24,373 - INFO - [Search] Searching relevant chunks for student_id=3, question='can you tell me about my project?'
+2026-07-21 11:59:24,374 - INFO - [Search] Search matches 12 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf', 'Lec-1.pdf', 'Lec-2.pdf']
+2026-07-21 11:59:24,375 - INFO - [Search] No specific document mentioned. Performing global semantic search across all accessible documents.
+2026-07-21 11:59:25,523 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 11:59:25,523 - INFO -   [Timing] Retrieval: 1.150s
+2026-07-21 11:59:25,523 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 11:59:25,523 - INFO -   Adaptive filter: top_score=0.2581
+2026-07-21 11:59:25,523 - INFO -   Adaptive filter: cutoff=0.1581, kept=12/40
+2026-07-21 11:59:25,523 - INFO -   After adaptive filter: 5 chunks
+2026-07-21 11:59:25,527 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 11:59:28,774 - INFO -   [Timing] Backend First Token Loop hit: 3.247s since LLM call
+2026-07-21 11:59:28,774 - INFO -   [Timing] Total TTFT (user → first token loop): 4.411s
+2026-07-21 11:59:50,766 - INFO -   [Timing] LLM Streaming Duration: 25.239s
+2026-07-21 11:59:50,766 - INFO -   [Timing] Total Response Time: 26.403s
+2026-07-21 13:09:27,181 - INFO - 
+================================================================================
+2026-07-21 13:09:27,182 - INFO - [2026-07-21T13:09:27.182267] CHAT REQUEST
+2026-07-21 13:09:27,182 - INFO -   Student ID : 3
+2026-07-21 13:09:27,182 - INFO -   Question   : read my resume, list the things i need to learn to get a job from my college placement.
+2026-07-21 13:09:27,182 - INFO -   Role       : student
+2026-07-21 13:09:27,182 - INFO - ================================================================================
+2026-07-21 13:09:27,195 - INFO -   [Timing] FastAPI Request started processing at 4915844.492
+2026-07-21 13:09:27,217 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-21 13:09:27,217 - INFO -   [Timing] Docs + Mode Detection: 0.022s
+2026-07-21 13:09:27,228 - INFO - [Search] Searching relevant chunks for student_id=3, question='read my resume, list the things i need to learn to get a job from my college placement.'
+2026-07-21 13:09:27,231 - INFO - [Search] Search matches 6 document(s): ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf']
+2026-07-21 13:09:27,231 - INFO - [Search] Mentioned document(s) detected: ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf']
+2026-07-21 13:09:29,050 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 13:09:29,051 - INFO -   [Timing] Retrieval: 1.823s
+2026-07-21 13:09:29,051 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 13:09:29,051 - INFO -   Adaptive filter: top_score=0.4731
+2026-07-21 13:09:29,051 - INFO -   Adaptive filter: cutoff=0.3731, kept=1/40
+2026-07-21 13:09:29,052 - INFO -   After adaptive filter: 1 chunks
+2026-07-21 13:09:29,057 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-07-21 13:09:35,423 - INFO -   [Timing] Backend First Token Loop hit: 6.366s since LLM call
+2026-07-21 13:09:35,424 - INFO -   [Timing] Total TTFT (user → first token loop): 8.229s
+2026-07-21 13:09:49,673 - INFO - 
+================================================================================
+2026-07-21 13:09:49,674 - INFO - [2026-07-21T13:09:49.674108] CHAT REQUEST
+2026-07-21 13:09:49,674 - INFO -   Student ID : 3
+2026-07-21 13:09:49,674 - INFO -   Question   : read my resume, list the things i need to learn to get a job from my college placement.
+2026-07-21 13:09:49,674 - INFO -   Role       : student
+2026-07-21 13:09:49,674 - INFO - ================================================================================
+2026-07-21 13:09:49,678 - INFO -   [Timing] FastAPI Request started processing at 4915866.976
+2026-07-21 13:09:49,683 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-21 13:09:49,683 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-21 13:09:49,688 - INFO - [Search] Searching relevant chunks for student_id=3, question='read my resume, list the things i need to learn to get a job from my college placement.'
+2026-07-21 13:09:49,689 - INFO - [Search] Search matches 6 document(s): ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf']
+2026-07-21 13:09:49,689 - INFO - [Search] Mentioned document(s) detected: ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf']
+2026-07-21 13:09:49,751 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 13:09:49,751 - INFO -   [Timing] Retrieval: 0.063s
+2026-07-21 13:09:49,751 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 13:09:49,751 - INFO -   Adaptive filter: top_score=0.4731
+2026-07-21 13:09:49,751 - INFO -   Adaptive filter: cutoff=0.3731, kept=1/40
+2026-07-21 13:09:49,751 - INFO -   After adaptive filter: 1 chunks
+2026-07-21 13:09:49,753 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 13:09:54,749 - INFO -   [Timing] LLM Streaming Duration: 25.692s
+2026-07-21 13:09:54,749 - INFO -   [Timing] Total Response Time: 27.554s
+2026-07-21 13:09:56,926 - INFO -   [Timing] Backend First Token Loop hit: 7.173s since LLM call
+2026-07-21 13:09:56,927 - INFO -   [Timing] Total TTFT (user → first token loop): 7.248s
+2026-07-21 13:10:05,579 - INFO -   [Timing] LLM Streaming Duration: 15.825s
+2026-07-21 13:10:05,582 - INFO -   [Timing] Total Response Time: 15.901s
+2026-07-21 13:15:11,375 - INFO - 
+================================================================================
+2026-07-21 13:15:11,375 - INFO - [2026-07-21T13:15:11.375509] CHAT REQUEST
+2026-07-21 13:15:11,375 - INFO -   Student ID : 3
+2026-07-21 13:15:11,375 - INFO -   Question   : read my resume, list the things i need to learn to get a job from my college placement.
+2026-07-21 13:15:11,375 - INFO -   Role       : student
+2026-07-21 13:15:11,375 - INFO - ================================================================================
+2026-07-21 13:15:11,379 - INFO -   [Timing] FastAPI Request started processing at 4916188.677
+2026-07-21 13:15:11,391 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-21 13:15:11,391 - INFO -   [Timing] Docs + Mode Detection: 0.011s
+2026-07-21 13:15:11,399 - INFO - [Search] Searching relevant chunks for student_id=3, question='read my resume, list the things i need to learn to get a job from my college placement.'
+2026-07-21 13:15:11,401 - INFO - [Search] Search matches 6 document(s): ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf']
+2026-07-21 13:15:11,401 - INFO - [Search] Mentioned document(s) detected: ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf']
+2026-07-21 13:15:12,260 - INFO - [Search] Finished search. Returning 38 chunks after semantic reranking.
+2026-07-21 13:15:12,260 - INFO -   [Timing] Retrieval: 0.861s
+2026-07-21 13:15:12,260 - INFO -   Retrieved 38 candidate chunks
+2026-07-21 13:15:12,260 - INFO -   Adaptive filter: top_score=0.4731
+2026-07-21 13:15:12,260 - INFO -   Adaptive filter: cutoff=0.3731, kept=1/38
+2026-07-21 13:15:12,260 - INFO -   After adaptive filter: 1 chunks
+2026-07-21 13:15:12,266 - INFO -   [Timing] Context + Prompt Building: 0.005s
+2026-07-21 13:15:13,543 - INFO -   [Timing] Backend First Token Loop hit: 1.276s since LLM call
+2026-07-21 13:15:13,543 - INFO -   [Timing] Total TTFT (user → first token loop): 2.163s
+2026-07-21 13:15:17,042 - INFO -   [Timing] LLM Streaming Duration: 4.776s
+2026-07-21 13:15:17,043 - INFO -   [Timing] Total Response Time: 5.663s
+2026-07-21 13:15:27,016 - INFO - 
+================================================================================
+2026-07-21 13:15:27,016 - INFO - [2026-07-21T13:15:27.016781] CHAT REQUEST
+2026-07-21 13:15:27,016 - INFO -   Student ID : 3
+2026-07-21 13:15:27,016 - INFO -   Question   : can you read my cv?
+2026-07-21 13:15:27,016 - INFO -   Role       : student
+2026-07-21 13:15:27,017 - INFO - ================================================================================
+2026-07-21 13:15:27,020 - INFO -   [Timing] FastAPI Request started processing at 4916204.317
+2026-07-21 13:15:27,023 - INFO -   Detected Mode: LEARNING
+2026-07-21 13:15:27,023 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-21 13:15:27,028 - INFO - [Search] Searching relevant chunks for student_id=3, question='can you read my cv?'
+2026-07-21 13:15:27,029 - INFO - [Search] Search matches 12 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf', 'Lec-1.pdf', 'Lec-2.pdf']
+2026-07-21 13:15:27,029 - INFO - [Search] No specific document mentioned. Performing global semantic search across all accessible documents.
+2026-07-21 13:15:27,672 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 13:15:27,673 - INFO -   [Timing] Retrieval: 0.645s
+2026-07-21 13:15:27,673 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 13:15:27,673 - INFO -   Adaptive filter: top_score=0.2828
+2026-07-21 13:15:27,673 - INFO -   Adaptive filter: cutoff=0.1828, kept=22/40
+2026-07-21 13:15:27,673 - INFO -   After adaptive filter: 5 chunks
+2026-07-21 13:15:27,675 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 13:15:28,716 - INFO -   [Timing] Backend First Token Loop hit: 1.041s since LLM call
+2026-07-21 13:15:28,717 - INFO -   [Timing] Total TTFT (user → first token loop): 1.697s
+2026-07-21 13:15:33,771 - INFO -   [Timing] LLM Streaming Duration: 6.096s
+2026-07-21 13:15:33,771 - INFO -   [Timing] Total Response Time: 6.752s
+2026-07-21 13:15:55,370 - INFO - 
+================================================================================
+2026-07-21 13:15:55,370 - INFO - [2026-07-21T13:15:55.370388] CHAT REQUEST
+2026-07-21 13:15:55,370 - INFO -   Student ID : 3
+2026-07-21 13:15:55,370 - INFO -   Question   : can you read regulation policies?
+2026-07-21 13:15:55,370 - INFO -   Role       : student
+2026-07-21 13:15:55,370 - INFO - ================================================================================
+2026-07-21 13:15:55,373 - INFO -   [Timing] FastAPI Request started processing at 4916232.671
+2026-07-21 13:15:55,376 - INFO -   Detected Mode: LEARNING
+2026-07-21 13:15:55,377 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-21 13:15:55,381 - INFO - [Search] Searching relevant chunks for student_id=3, question='can you read regulation policies?'
+2026-07-21 13:15:55,382 - INFO - [Search] Search matches 12 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf', 'Lec-1.pdf', 'Lec-2.pdf']
+2026-07-21 13:15:55,382 - INFO - [Search] No specific document mentioned. Performing global semantic search across all accessible documents.
+2026-07-21 13:15:55,584 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-21 13:15:55,584 - INFO -   [Timing] Retrieval: 0.203s
+2026-07-21 13:15:55,584 - INFO -   Retrieved 40 candidate chunks
+2026-07-21 13:15:55,584 - INFO -   Adaptive filter: top_score=0.3824
+2026-07-21 13:15:55,584 - INFO -   Adaptive filter: cutoff=0.2824, kept=8/40
+2026-07-21 13:15:55,584 - INFO -   After adaptive filter: 5 chunks
+2026-07-21 13:15:55,586 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-21 13:15:57,161 - INFO -   [Timing] Backend First Token Loop hit: 1.574s since LLM call
+2026-07-21 13:15:57,161 - INFO -   [Timing] Total TTFT (user → first token loop): 1.788s
+2026-07-21 13:16:11,951 - INFO -   [Timing] LLM Streaming Duration: 16.365s
+2026-07-21 13:16:11,952 - INFO -   [Timing] Total Response Time: 16.578s
+2026-07-21 13:16:37,058 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 13:16:37,168 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 13:16:37,408 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 13:16:37,414 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-21 13:16:37,430 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 13:16:37,702 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-21 13:18:51,331 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 13:18:53,173 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 13:18:53,740 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 13:18:53,776 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 13:18:53,981 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 13:18:55,648 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 13:18:56,627 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 13:18:57,353 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-21 13:19:01,209 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 13:19:01,209 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 13:19:01,210 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 13:19:01,210 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 13:19:01,211 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 13:19:01,211 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 13:19:04,588 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 13:19:04,589 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 13:19:04,589 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 13:19:04,589 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 13:19:04,590 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 13:19:04,590 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 13:19:08,068 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 13:19:08,070 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-21 13:19:11,828 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-21 13:19:11,828 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-22 09:00:47,708 - INFO - 
+================================================================================
+2026-07-22 09:00:47,710 - INFO - [2026-07-22T09:00:47.710356] CHAT REQUEST
+2026-07-22 09:00:47,710 - INFO -   Student ID : 3
+2026-07-22 09:00:47,710 - INFO -   Question   : Summarize this document: "mentorAI_features_docs.pdf"
+2026-07-22 09:00:47,710 - INFO -   Role       : student
+2026-07-22 09:00:47,710 - INFO - ================================================================================
+2026-07-22 09:00:47,717 - INFO -   [Timing] FastAPI Request started processing at 4987325.015
+2026-07-22 09:00:47,729 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-22 09:00:47,729 - INFO -   [Timing] Docs + Mode Detection: 0.011s
+2026-07-22 09:00:47,745 - INFO -   Using Document Reconstruction mode instead of semantic search.
+2026-07-22 09:00:47,751 - INFO -   Retrieved 0 candidate chunks
+2026-07-22 09:00:47,751 - INFO -   Skipped adaptive filter for document reconstruction. Complete document loaded: 0 chunks.
+2026-07-22 09:01:09,257 - INFO - 
+================================================================================
+2026-07-22 09:01:09,257 - INFO - [2026-07-22T09:01:09.257966] CHAT REQUEST
+2026-07-22 09:01:09,258 - INFO -   Student ID : 3
+2026-07-22 09:01:09,258 - INFO -   Question   : Summarize this document: "2 20260323 201254 Placement Companies Report"
+2026-07-22 09:01:09,258 - INFO -   Role       : student
+2026-07-22 09:01:09,258 - INFO - ================================================================================
+2026-07-22 09:01:09,261 - INFO -   [Timing] FastAPI Request started processing at 4987346.558
+2026-07-22 09:01:09,264 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-22 09:01:09,265 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-22 09:01:09,270 - INFO -   Using Document Reconstruction mode instead of semantic search.
+2026-07-22 09:01:09,270 - INFO -   Retrieved 0 candidate chunks
+2026-07-22 09:01:09,270 - INFO -   Skipped adaptive filter for document reconstruction. Complete document loaded: 0 chunks.
+2026-07-22 09:01:36,345 - INFO - 
+================================================================================
+2026-07-22 09:01:36,346 - INFO - [2026-07-22T09:01:36.346178] CHAT REQUEST
+2026-07-22 09:01:36,346 - INFO -   Student ID : 3
+2026-07-22 09:01:36,346 - INFO -   Question   : can you tell me about placement report?
+2026-07-22 09:01:36,346 - INFO -   Role       : student
+2026-07-22 09:01:36,346 - INFO - ================================================================================
+2026-07-22 09:01:36,349 - INFO -   [Timing] FastAPI Request started processing at 4987373.647
+2026-07-22 09:01:36,353 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-22 09:01:36,353 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-22 09:01:36,358 - INFO - [Search] Searching relevant chunks for student_id=3, question='can you tell me about placement report?'
+2026-07-22 09:01:36,359 - INFO - [Search] Search matches 12 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf', 'Lec-1.pdf', 'Lec-2.pdf']
+2026-07-22 09:01:36,360 - INFO - [Search] Mentioned document(s) detected: ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'Placement Policy 2026-27.pdf']
+2026-07-22 09:01:37,542 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-22 09:01:37,543 - INFO -   [Timing] Retrieval: 1.184s
+2026-07-22 09:01:37,543 - INFO -   Retrieved 40 candidate chunks
+2026-07-22 09:01:37,543 - INFO -   Adaptive filter: top_score=0.5522
+2026-07-22 09:01:37,543 - INFO -   Adaptive filter: cutoff=0.4522, kept=6/40
+2026-07-22 09:01:37,543 - INFO -   After adaptive filter: 5 chunks
+2026-07-22 09:01:37,546 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-22 09:01:43,864 - INFO -   [Timing] Backend First Token Loop hit: 6.318s since LLM call
+2026-07-22 09:01:43,865 - INFO -   [Timing] Total TTFT (user → first token loop): 7.515s
+2026-07-22 09:02:47,589 - INFO -   [Timing] LLM Streaming Duration: 70.043s
+2026-07-22 09:02:47,590 - INFO -   [Timing] Total Response Time: 71.240s
+2026-07-22 09:03:44,230 - INFO - 
+================================================================================
+2026-07-22 09:03:44,231 - INFO - [2026-07-22T09:03:44.231102] CHAT REQUEST
+2026-07-22 09:03:44,231 - INFO -   Student ID : 3
+2026-07-22 09:03:44,231 - INFO -   Question   : how many students are eligible for placement
+2026-07-22 09:03:44,231 - INFO -   Role       : student
+2026-07-22 09:03:44,231 - INFO - ================================================================================
+2026-07-22 09:03:44,234 - INFO -   [Timing] FastAPI Request started processing at 4987501.531
+2026-07-22 09:03:44,237 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-22 09:03:44,237 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-22 09:03:44,243 - INFO - [Search] Searching relevant chunks for student_id=3, question='how many students are eligible for placement'
+2026-07-22 09:03:44,244 - INFO - [Search] Search matches 12 document(s): ['mentorAI_features_docs.pdf', '2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', '1_Rules_and_Regulations.pdf', 'college_policy.txt', 'Placement Policy 2026-27.pdf', '1_20260312_195129_CV - Keshav Gupta - Intern.pdf', 'Course overview.pdf', 'Sample test.pdf', 'Lec-1.pdf', 'Lec-2.pdf']
+2026-07-22 09:03:44,244 - INFO - [Search] Mentioned document(s) detected: ['2_Placement_Report.pdf', '2_20260323_201254_placement_companies_report.pdf', '2_20260323_201613_sector_wise_placement_report.pdf', 'Placement Policy 2026-27.pdf']
+2026-07-22 09:03:45,165 - INFO - [Search] Finished search. Returning 40 chunks after semantic reranking.
+2026-07-22 09:03:45,166 - INFO -   [Timing] Retrieval: 0.923s
+2026-07-22 09:03:45,166 - INFO -   Retrieved 40 candidate chunks
+2026-07-22 09:03:45,166 - INFO -   Adaptive filter: top_score=0.6785
+2026-07-22 09:03:45,166 - INFO -   Adaptive filter: cutoff=0.5785, kept=2/40
+2026-07-22 09:03:45,166 - INFO -   After adaptive filter: 2 chunks
+2026-07-22 09:03:45,170 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-07-22 09:03:51,319 - INFO -   [Timing] Backend First Token Loop hit: 6.148s since LLM call
+2026-07-22 09:03:51,320 - INFO -   [Timing] Total TTFT (user → first token loop): 7.086s
+2026-07-22 09:03:51,321 - INFO -   [Timing] LLM Streaming Duration: 6.150s
+2026-07-22 09:03:51,321 - INFO -   [Timing] Total Response Time: 7.087s
+2026-07-22 09:44:56,441 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-22 09:44:56,553 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-22 09:44:56,965 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-22 09:44:56,990 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-22 09:44:57,082 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-22 09:44:57,165 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-22 09:45:26,802 - INFO - 
+================================================================================
+2026-07-22 09:45:26,802 - INFO - [2026-07-22T09:45:26.802471] CHAT REQUEST
+2026-07-22 09:45:26,802 - INFO -   Student ID : 3
+2026-07-22 09:45:26,802 - INFO -   Question   : how many students are eligible for placements?
+2026-07-22 09:45:26,802 - INFO -   Role       : student
+2026-07-22 09:45:26,802 - INFO - ================================================================================
+2026-07-22 09:45:26,805 - INFO -   [Timing] FastAPI Request started processing at 4990004.103
+2026-07-22 09:45:26,811 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-22 09:45:26,811 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-22 09:45:26,979 - INFO -   [Timing] Retrieval & Context Building: 0.161s
+2026-07-22 09:45:26,982 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-22 09:45:34,906 - INFO -   [Timing] Backend First Token Loop hit: 7.924s since LLM call
+2026-07-22 09:45:34,907 - INFO -   [Timing] Total TTFT (user → first token loop): 8.101s
+2026-07-22 09:45:35,022 - INFO -   [Timing] LLM Streaming Duration: 8.040s
+2026-07-22 09:45:35,023 - INFO -   [Timing] Total Response Time: 8.217s
+2026-07-22 09:45:58,587 - INFO - 
+================================================================================
+2026-07-22 09:45:58,587 - INFO - [2026-07-22T09:45:58.587871] CHAT REQUEST
+2026-07-22 09:45:58,588 - INFO -   Student ID : 3
+2026-07-22 09:45:58,588 - INFO -   Question   : what is attendance policy?
+2026-07-22 09:45:58,588 - INFO -   Role       : student
+2026-07-22 09:45:58,588 - INFO - ================================================================================
+2026-07-22 09:45:58,594 - INFO -   [Timing] FastAPI Request started processing at 4990035.892
+2026-07-22 09:45:58,606 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-22 09:45:58,607 - INFO -   [Timing] Docs + Mode Detection: 0.012s
+2026-07-22 09:45:58,805 - INFO -   [Timing] Retrieval & Context Building: 0.179s
+2026-07-22 09:45:58,814 - INFO -   [Timing] Context + Prompt Building: 0.005s
+2026-07-22 09:46:19,476 - INFO -   [Timing] Backend First Token Loop hit: 20.661s since LLM call
+2026-07-22 09:46:19,476 - INFO -   [Timing] Total TTFT (user → first token loop): 20.881s
+2026-07-22 09:46:39,162 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-22 09:46:39,164 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-22 09:47:14,554 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-22 09:47:14,626 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-22 09:47:14,657 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-22 09:47:14,685 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-22 09:47:14,750 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-22 09:47:14,827 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-22 09:47:16,370 - INFO -   [Timing] LLM Streaming Duration: 77.555s
+2026-07-22 09:47:16,370 - INFO -   [Timing] Total Response Time: 77.776s
+2026-07-22 09:47:16,582 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-22 09:47:16,714 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-22 09:47:24,029 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-22 09:47:24,030 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-22 09:47:24,030 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-22 09:47:24,030 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-22 09:47:27,629 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-22 09:47:27,630 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-22 09:47:27,631 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-22 09:47:27,631 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-22 09:47:27,631 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-22 09:47:27,632 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-22 09:47:27,632 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-22 09:47:27,633 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-22 09:47:27,634 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-22 09:47:27,634 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-22 09:47:27,635 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-22 09:47:27,635 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-22 09:47:33,891 - INFO - 
+================================================================================
+2026-07-22 09:47:33,891 - INFO - [2026-07-22T09:47:33.891893] CHAT REQUEST
+2026-07-22 09:47:33,892 - INFO -   Student ID : 3
+2026-07-22 09:47:33,892 - INFO -   Question   : can you tell me about my resume projects?
+2026-07-22 09:47:33,892 - INFO -   Role       : student
+2026-07-22 09:47:33,892 - INFO - ================================================================================
+2026-07-22 09:47:33,897 - INFO -   [Timing] FastAPI Request started processing at 4990131.194
+2026-07-22 09:47:33,904 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-22 09:47:33,905 - INFO -   [Timing] Docs + Mode Detection: 0.008s
+2026-07-22 09:47:34,317 - INFO -   [Timing] Retrieval & Context Building: 0.394s
+2026-07-22 09:47:34,320 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-07-22 09:47:43,588 - INFO -   [Timing] Backend First Token Loop hit: 9.268s since LLM call
+2026-07-22 09:47:43,588 - INFO -   [Timing] Total TTFT (user → first token loop): 9.691s
+2026-07-22 09:49:49,900 - INFO -   [Timing] LLM Streaming Duration: 135.580s
+2026-07-22 09:49:49,900 - INFO -   [Timing] Total Response Time: 136.003s
+2026-07-22 09:58:20,754 - INFO - 
+================================================================================
+2026-07-22 09:58:20,755 - INFO - [2026-07-22T09:58:20.755338] CHAT REQUEST
+2026-07-22 09:58:20,755 - INFO -   Student ID : 3
+2026-07-22 09:58:20,755 - INFO -   Question   : can you tell me about campus placement
+2026-07-22 09:58:20,755 - INFO -   Role       : student
+2026-07-22 09:58:20,755 - INFO - ================================================================================
+2026-07-22 09:58:20,759 - INFO -   [Timing] FastAPI Request started processing at 4990778.057
+2026-07-22 09:58:20,765 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-22 09:58:20,765 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-22 09:58:22,811 - INFO -   [Timing] Retrieval & Context Building: 2.036s
+2026-07-22 09:58:22,814 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-22 09:58:24,949 - INFO -   [Timing] Backend First Token Loop hit: 2.135s since LLM call
+2026-07-22 09:58:24,950 - INFO -   [Timing] Total TTFT (user → first token loop): 4.190s
+2026-07-22 09:59:01,069 - INFO -   [Timing] LLM Streaming Duration: 38.255s
+2026-07-22 09:59:01,069 - INFO -   [Timing] Total Response Time: 40.310s
+2026-07-22 10:00:00,271 - INFO - 
+================================================================================
+2026-07-22 10:00:00,271 - INFO - [2026-07-22T10:00:00.271643] CHAT REQUEST
+2026-07-22 10:00:00,271 - INFO -   Student ID : 3
+2026-07-22 10:00:00,271 - INFO -   Question   : list out the points i need to work on from my resume according to campus placements.
+2026-07-22 10:00:00,271 - INFO -   Role       : student
+2026-07-22 10:00:00,271 - INFO - ================================================================================
+2026-07-22 10:00:00,274 - INFO -   [Timing] FastAPI Request started processing at 4990877.572
+2026-07-22 10:00:00,277 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-22 10:00:00,277 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-22 10:00:00,338 - INFO -   [Timing] Retrieval & Context Building: 0.055s
+2026-07-22 10:00:00,341 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-22 10:00:03,956 - INFO -   [Timing] Backend First Token Loop hit: 3.615s since LLM call
+2026-07-22 10:00:03,956 - INFO -   [Timing] Total TTFT (user → first token loop): 3.682s
+2026-07-22 10:00:46,693 - INFO -   [Timing] LLM Streaming Duration: 46.352s
+2026-07-22 10:00:46,693 - INFO -   [Timing] Total Response Time: 46.419s
+2026-07-22 10:12:20,366 - INFO - 
+================================================================================
+2026-07-22 10:12:20,366 - INFO - [2026-07-22T10:12:20.366490] CHAT REQUEST
+2026-07-22 10:12:20,366 - INFO -   Student ID : 3
+2026-07-22 10:12:20,366 - INFO -   Question   : how many students are eligible for campus placements?
+2026-07-22 10:12:20,366 - INFO -   Role       : student
+2026-07-22 10:12:20,366 - INFO - ================================================================================
+2026-07-22 10:12:20,371 - INFO -   [Timing] FastAPI Request started processing at 4991617.668
+2026-07-22 10:12:20,377 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-22 10:12:20,377 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-07-22 10:12:21,979 - INFO -   [Timing] Retrieval & Context Building: 1.589s
+2026-07-22 10:12:21,984 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-07-22 10:12:28,108 - INFO -   [Timing] Backend First Token Loop hit: 6.124s since LLM call
+2026-07-22 10:12:28,109 - INFO -   [Timing] Total TTFT (user → first token loop): 7.738s
+2026-07-22 10:12:28,109 - INFO -   [Timing] LLM Streaming Duration: 6.125s
+2026-07-22 10:12:28,109 - INFO -   [Timing] Total Response Time: 7.739s
+2026-07-23 07:03:23,200 - INFO - 
+================================================================================
+2026-07-23 07:03:23,201 - INFO - [2026-07-23T07:03:23.201595] CHAT REQUEST
+2026-07-23 07:03:23,201 - INFO -   Student ID : 3
+2026-07-23 07:03:23,201 - INFO -   Question   : How many students are eligible for campus placements?
+2026-07-23 07:03:23,201 - INFO -   Role       : student
+2026-07-23 07:03:23,201 - INFO - ================================================================================
+2026-07-23 07:03:23,205 - INFO -   [Timing] FastAPI Request started processing at 5066680.503
+2026-07-23 07:03:23,212 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-23 07:03:23,212 - INFO -   [Timing] Docs + Mode Detection: 0.007s
+2026-07-23 07:03:34,700 - INFO -   [Timing] Retrieval & Context Building: 11.480s
+2026-07-23 07:03:34,703 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-23 07:03:39,116 - INFO -   [Timing] Backend First Token Loop hit: 4.413s since LLM call
+2026-07-23 07:03:39,116 - INFO -   [Timing] Total TTFT (user → first token loop): 15.911s
+2026-07-23 07:03:40,251 - INFO -   [Timing] LLM Streaming Duration: 5.548s
+2026-07-23 07:03:40,251 - INFO -   [Timing] Total Response Time: 17.045s
+2026-07-23 07:07:22,593 - INFO - 
+================================================================================
+2026-07-23 07:07:22,594 - INFO - [2026-07-23T07:07:22.594088] CHAT REQUEST
+2026-07-23 07:07:22,594 - INFO -   Student ID : 3
+2026-07-23 07:07:22,594 - INFO -   Question   : How many students are eligible for campus placements?
+2026-07-23 07:07:22,594 - INFO -   Role       : student
+2026-07-23 07:07:22,594 - INFO - ================================================================================
+2026-07-23 07:07:22,597 - INFO -   [Timing] FastAPI Request started processing at 5066919.895
+2026-07-23 07:07:22,604 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-23 07:07:22,604 - INFO -   [Timing] Docs + Mode Detection: 0.007s
+2026-07-23 07:07:34,679 - INFO -   [Timing] Retrieval & Context Building: 12.067s
+2026-07-23 07:07:34,682 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-23 07:07:38,746 - INFO -   [Timing] Backend First Token Loop hit: 4.064s since LLM call
+2026-07-23 07:07:38,746 - INFO -   [Timing] Total TTFT (user → first token loop): 16.148s
+2026-07-23 07:07:38,747 - INFO -   [Timing] LLM Streaming Duration: 4.065s
+2026-07-23 07:07:38,747 - INFO -   [Timing] Total Response Time: 16.150s
+2026-07-23 07:41:05,394 - INFO - [PracticeEngine] Synchronized document custom topics for student 5
+2026-07-23 07:45:25,270 - INFO - 
+================================================================================
+2026-07-23 07:45:25,270 - INFO - [2026-07-23T07:45:25.270693] CHAT REQUEST
+2026-07-23 07:45:25,270 - INFO -   Student ID : 3
+2026-07-23 07:45:25,270 - INFO -   Question   : How many students are eligible for campus placements?
+2026-07-23 07:45:25,270 - INFO -   Role       : student
+2026-07-23 07:45:25,270 - INFO - ================================================================================
+2026-07-23 07:45:25,275 - INFO -   [Timing] FastAPI Request started processing at 5069202.572
+2026-07-23 07:45:25,281 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-23 07:45:25,282 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-07-23 07:45:35,722 - INFO -   [Timing] Retrieval & Context Building: 10.433s
+2026-07-23 07:45:35,725 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-23 07:45:41,092 - INFO -   [Timing] Backend First Token Loop hit: 5.367s since LLM call
+2026-07-23 07:45:41,092 - INFO -   [Timing] Total TTFT (user → first token loop): 15.817s
+2026-07-23 07:45:41,093 - INFO -   [Timing] LLM Streaming Duration: 5.368s
+2026-07-23 07:45:41,093 - INFO -   [Timing] Total Response Time: 15.818s
+2026-07-23 07:48:45,397 - INFO - 
+================================================================================
+2026-07-23 07:48:45,398 - INFO - [2026-07-23T07:48:45.398172] CHAT REQUEST
+2026-07-23 07:48:45,398 - INFO -   Student ID : 3
+2026-07-23 07:48:45,398 - INFO -   Question   : what is the nvdia package ?
+2026-07-23 07:48:45,398 - INFO -   Role       : student
+2026-07-23 07:48:45,398 - INFO - ================================================================================
+2026-07-23 07:48:45,400 - INFO -   [Timing] FastAPI Request started processing at 5069402.698
+2026-07-23 07:48:45,403 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-23 07:48:45,404 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-23 07:48:46,570 - INFO -   [Timing] Retrieval & Context Building: 1.160s
+2026-07-23 07:48:46,572 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-23 07:48:48,049 - INFO -   [Timing] Backend First Token Loop hit: 1.477s since LLM call
+2026-07-23 07:48:48,050 - INFO -   [Timing] Total TTFT (user → first token loop): 2.649s
+2026-07-23 07:48:48,280 - INFO -   [Timing] LLM Streaming Duration: 1.708s
+2026-07-23 07:48:48,280 - INFO -   [Timing] Total Response Time: 2.880s
+2026-07-23 07:49:07,747 - INFO - 
+================================================================================
+2026-07-23 07:49:07,747 - INFO - [2026-07-23T07:49:07.747593] CHAT REQUEST
+2026-07-23 07:49:07,747 - INFO -   Student ID : 3
+2026-07-23 07:49:07,747 - INFO -   Question   : tell me about campus placements?
+2026-07-23 07:49:07,747 - INFO -   Role       : student
+2026-07-23 07:49:07,747 - INFO - ================================================================================
+2026-07-23 07:49:07,750 - INFO -   [Timing] FastAPI Request started processing at 5069425.048
+2026-07-23 07:49:07,754 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-23 07:49:07,754 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-07-23 07:49:19,168 - INFO -   [Timing] Retrieval & Context Building: 11.407s
+2026-07-23 07:49:19,171 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-23 07:49:21,163 - INFO -   [Timing] Backend First Token Loop hit: 1.991s since LLM call
+2026-07-23 07:49:21,163 - INFO -   [Timing] Total TTFT (user → first token loop): 13.413s
+2026-07-23 07:49:43,760 - INFO -   [Timing] LLM Streaming Duration: 24.588s
+2026-07-23 07:49:43,760 - INFO -   [Timing] Total Response Time: 36.010s
+2026-07-23 07:49:57,246 - INFO - 
+================================================================================
+2026-07-23 07:49:57,247 - INFO - [2026-07-23T07:49:57.247042] CHAT REQUEST
+2026-07-23 07:49:57,247 - INFO -   Student ID : 3
+2026-07-23 07:49:57,247 - INFO -   Question   : Summarize this document: "2_Placement_Report"
+2026-07-23 07:49:57,247 - INFO -   Role       : student
+2026-07-23 07:49:57,247 - INFO - ================================================================================
+2026-07-23 07:49:57,249 - INFO -   [Timing] FastAPI Request started processing at 5069474.547
+2026-07-23 07:49:57,253 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-23 07:49:57,253 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-23 07:49:57,267 - INFO -   [Timing] Retrieval & Context Building: 0.008s
+2026-07-23 07:49:57,268 - INFO -   [Timing] Context + Prompt Building: 0.001s
+2026-07-23 07:49:58,785 - INFO -   [Timing] Backend First Token Loop hit: 1.517s since LLM call
+2026-07-23 07:49:58,785 - INFO -   [Timing] Total TTFT (user → first token loop): 1.536s
+2026-07-23 07:50:00,382 - INFO -   [Timing] LLM Streaming Duration: 3.114s
+2026-07-23 07:50:00,382 - INFO -   [Timing] Total Response Time: 3.132s
+2026-07-23 07:53:05,463 - INFO - 
+================================================================================
+2026-07-23 07:53:05,463 - INFO - [2026-07-23T07:53:05.463730] CHAT REQUEST
+2026-07-23 07:53:05,463 - INFO -   Student ID : 3
+2026-07-23 07:53:05,463 - INFO -   Question   : Summarize this document: "2_Placement_Report"
+2026-07-23 07:53:05,464 - INFO -   Role       : student
+2026-07-23 07:53:05,464 - INFO - ================================================================================
+2026-07-23 07:53:05,467 - INFO -   [Timing] FastAPI Request started processing at 5069662.764
+2026-07-23 07:53:05,472 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-23 07:53:05,472 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-23 07:53:05,489 - INFO -   [Timing] Retrieval & Context Building: 0.009s
+2026-07-23 07:53:05,492 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-23 07:53:14,023 - INFO -   [Timing] Backend First Token Loop hit: 8.531s since LLM call
+2026-07-23 07:53:14,023 - INFO -   [Timing] Total TTFT (user → first token loop): 8.556s
+2026-07-23 07:54:43,734 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-23 07:54:54,049 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-23 07:54:54,050 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-23 07:56:22,395 - INFO -   [Timing] LLM Streaming Duration: 196.903s
+2026-07-23 07:56:22,395 - INFO -   [Timing] Total Response Time: 196.928s
+2026-07-23 08:46:28,699 - INFO - [PracticeEngine] Synchronized document custom topics for student 1
+2026-07-23 08:46:47,579 - INFO - 
+================================================================================
+2026-07-23 08:46:47,579 - INFO - [2026-07-23T08:46:47.579791] CHAT REQUEST
+2026-07-23 08:46:47,579 - INFO -   Student ID : 3
+2026-07-23 08:46:47,579 - INFO -   Question   : Summarize this document: "2_Placement_Report"
+2026-07-23 08:46:47,579 - INFO -   Role       : student
+2026-07-23 08:46:47,580 - INFO - ================================================================================
+2026-07-23 08:46:47,582 - INFO -   [Timing] FastAPI Request started processing at 5072884.880
+2026-07-23 08:46:47,587 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-23 08:46:47,588 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-23 08:46:47,605 - INFO -   [Timing] Retrieval & Context Building: 0.009s
+2026-07-23 08:46:47,608 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-23 08:46:49,332 - INFO -   [Timing] Backend First Token Loop hit: 1.724s since LLM call
+2026-07-23 08:46:49,332 - INFO -   [Timing] Total TTFT (user → first token loop): 1.750s
+2026-07-23 08:47:44,033 - INFO -   [Timing] LLM Streaming Duration: 56.425s
+2026-07-23 08:47:44,033 - INFO -   [Timing] Total Response Time: 56.451s
+2026-07-24 06:34:03,574 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:34:03,794 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-24 06:34:04,291 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:34:04,468 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:34:04,546 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:34:11,120 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:34:11,221 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:34:11,361 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:34:11,430 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-24 06:35:09,089 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:35:09,199 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:35:09,650 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-24 06:35:45,650 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 06:35:45,650 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 06:35:45,729 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:35:46,015 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:35:52,788 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 06:35:52,789 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 06:36:21,432 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:21,476 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:21,569 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:21,599 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:21,622 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:27,731 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:27,774 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:27,811 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:28,057 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:30,815 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:30,816 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:30,816 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:30,816 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:30,816 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:36:30,817 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:36:30,817 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:36:30,817 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:36:33,865 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:33,866 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:36:36,865 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:36,866 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:36,866 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:36:36,866 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:36:40,775 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:40,775 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:40,776 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:36:40,776 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:36:47,198 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:47,213 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:36:51,218 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 06:36:51,220 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 06:36:58,455 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:58,456 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:36:58,456 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:36:58,456 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:37:25,618 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:37:25,650 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:37:26,520 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:37:35,796 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:37:35,796 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:37:35,797 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:37:35,797 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:37:35,798 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:37:35,798 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:38:02,332 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:38:02,624 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:38:12,506 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:38:12,506 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:38:12,507 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:38:12,507 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:46:40,330 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:46:40,425 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:46:40,627 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:46:40,853 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:46:40,860 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-24 06:46:41,158 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:48:57,028 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:48:57,049 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:48:57,216 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:48:57,565 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:48:57,706 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:48:58,619 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 06:49:06,771 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:49:06,771 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:49:06,771 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:49:06,772 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:49:06,772 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:49:06,772 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:49:06,773 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:49:06,773 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:49:06,773 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:49:06,776 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:49:10,660 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 06:49:10,661 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 06:49:47,497 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:49:47,558 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:51:16,016 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:51:16,023 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:51:16,140 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:51:16,145 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-24 06:51:16,402 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:51:16,418 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:51:16,469 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:51:16,475 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:51:16,693 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:51:16,700 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:51:18,692 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:51:18,750 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:52:58,108 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 06:52:58,108 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 06:53:56,469 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:53:56,478 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:53:56,568 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:53:56,574 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-24 06:53:56,726 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:53:56,732 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:53:56,774 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:53:56,780 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:53:57,005 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-07-24 06:53:57,014 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 06:55:38,429 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 06:55:38,429 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 09:42:43,137 - INFO - 
+================================================================================
+2026-07-24 09:42:43,137 - INFO - [2026-07-24T09:42:43.137742] CHAT REQUEST
+2026-07-24 09:42:43,137 - INFO -   Student ID : 3
+2026-07-24 09:42:43,137 - INFO -   Question   : Summarize this document: "mentorAI_features_docs.pdf"
+2026-07-24 09:42:43,137 - INFO -   Role       : student
+2026-07-24 09:42:43,137 - INFO - ================================================================================
+2026-07-24 09:42:43,141 - INFO -   [Timing] FastAPI Request started processing at 5162640.438
+2026-07-24 09:42:43,147 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-24 09:42:43,147 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-07-24 09:42:43,590 - INFO -   [Timing] Retrieval & Context Building: 0.435s
+2026-07-24 09:42:43,593 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-24 09:42:50,313 - INFO -   [Timing] Backend First Token Loop hit: 6.720s since LLM call
+2026-07-24 09:42:50,313 - INFO -   [Timing] Total TTFT (user → first token loop): 7.172s
+2026-07-24 09:42:51,539 - INFO -   [Timing] LLM Streaming Duration: 7.945s
+2026-07-24 09:42:51,539 - INFO -   [Timing] Total Response Time: 8.398s
+2026-07-24 09:44:03,435 - INFO - 
+================================================================================
+2026-07-24 09:44:03,435 - INFO - [2026-07-24T09:44:03.435841] CHAT REQUEST
+2026-07-24 09:44:03,435 - INFO -   Student ID : 3
+2026-07-24 09:44:03,436 - INFO -   Question   : Summarize this document: "mentorAI_features_docs"
+2026-07-24 09:44:03,436 - INFO -   Role       : student
+2026-07-24 09:44:03,436 - INFO - ================================================================================
+2026-07-24 09:44:03,443 - INFO -   [Timing] FastAPI Request started processing at 5162720.740
+2026-07-24 09:44:03,449 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-24 09:44:03,453 - INFO -   [Timing] Docs + Mode Detection: 0.009s
+2026-07-24 09:44:03,470 - INFO -   [Timing] Retrieval & Context Building: 0.004s
+2026-07-24 09:44:03,473 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-07-24 09:44:07,687 - INFO -   [Timing] Backend First Token Loop hit: 4.214s since LLM call
+2026-07-24 09:44:07,688 - INFO -   [Timing] Total TTFT (user → first token loop): 4.244s
+2026-07-24 09:45:45,990 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 09:45:56,321 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 09:45:56,321 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 09:46:09,613 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 09:46:18,234 - INFO -   [Timing] LLM Streaming Duration: 134.760s
+2026-07-24 09:46:18,234 - INFO -   [Timing] Total Response Time: 134.791s
+2026-07-24 09:46:19,831 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 09:46:19,831 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 09:46:45,496 - INFO - 
+================================================================================
+2026-07-24 09:46:45,496 - INFO - [2026-07-24T09:46:45.496452] CHAT REQUEST
+2026-07-24 09:46:45,496 - INFO -   Student ID : 3
+2026-07-24 09:46:45,496 - INFO -   Question   : tell me about attendance policy.
+2026-07-24 09:46:45,496 - INFO -   Role       : student
+2026-07-24 09:46:45,496 - INFO - ================================================================================
+2026-07-24 09:46:45,499 - INFO -   [Timing] FastAPI Request started processing at 5162882.797
+2026-07-24 09:46:45,503 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-24 09:46:45,503 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-24 09:46:46,075 - INFO -   [Timing] Retrieval & Context Building: 0.567s
+2026-07-24 09:46:46,078 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-24 09:46:53,577 - INFO -   [Timing] Backend First Token Loop hit: 7.498s since LLM call
+2026-07-24 09:46:53,577 - INFO -   [Timing] Total TTFT (user → first token loop): 8.078s
+2026-07-24 09:47:44,223 - INFO -   [Timing] LLM Streaming Duration: 58.145s
+2026-07-24 09:47:44,224 - INFO -   [Timing] Total Response Time: 58.724s
+2026-07-24 09:49:05,069 - INFO - 
+================================================================================
+2026-07-24 09:49:05,069 - INFO - [2026-07-24T09:49:05.069378] CHAT REQUEST
+2026-07-24 09:49:05,069 - INFO -   Student ID : 3
+2026-07-24 09:49:05,069 - INFO -   Question   : Summarize this document: "Lec-1"
+2026-07-24 09:49:05,069 - INFO -   Role       : student
+2026-07-24 09:49:05,069 - INFO - ================================================================================
+2026-07-24 09:49:05,072 - INFO -   [Timing] FastAPI Request started processing at 5163022.370
+2026-07-24 09:49:05,075 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-24 09:49:05,076 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-24 09:49:05,086 - INFO -   [Timing] Retrieval & Context Building: 0.003s
+2026-07-24 09:49:05,088 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-24 09:49:09,491 - INFO -   [Timing] Backend First Token Loop hit: 4.403s since LLM call
+2026-07-24 09:49:09,492 - INFO -   [Timing] Total TTFT (user → first token loop): 4.419s
+2026-07-24 09:49:37,657 - INFO -   [Timing] LLM Streaming Duration: 32.569s
+2026-07-24 09:49:37,657 - INFO -   [Timing] Total Response Time: 32.585s
+2026-07-24 09:50:33,039 - INFO - 
+================================================================================
+2026-07-24 09:50:33,040 - INFO - [2026-07-24T09:50:33.040039] CHAT REQUEST
+2026-07-24 09:50:33,040 - INFO -   Student ID : 3
+2026-07-24 09:50:33,040 - INFO -   Question   : Can you explain FORWARD PROPAGATION IN MULTI-LAYER PERCEPTRONS (MLPs) in depth
+2026-07-24 09:50:33,040 - INFO -   Role       : student
+2026-07-24 09:50:33,040 - INFO - ================================================================================
+2026-07-24 09:50:33,043 - INFO -   [Timing] FastAPI Request started processing at 5163110.340
+2026-07-24 09:50:33,046 - INFO -   Detected Mode: LEARNING
+2026-07-24 09:50:33,046 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-24 09:50:33,146 - INFO -   [Timing] Retrieval & Context Building: 0.093s
+2026-07-24 09:50:33,149 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-07-24 09:50:36,203 - INFO -   [Timing] Backend First Token Loop hit: 3.054s since LLM call
+2026-07-24 09:50:36,203 - INFO -   [Timing] Total TTFT (user → first token loop): 3.160s
+2026-07-24 09:53:11,181 - INFO -   [Timing] LLM Streaming Duration: 158.032s
+2026-07-24 09:53:11,181 - INFO -   [Timing] Total Response Time: 158.139s
+2026-07-24 10:32:29,303 - INFO - 
+================================================================================
+2026-07-24 10:32:29,304 - INFO - [2026-07-24T10:32:29.304047] CHAT REQUEST
+2026-07-24 10:32:29,304 - INFO -   Student ID : 3
+2026-07-24 10:32:29,304 - INFO -   Question   : tell me my strength from my resume
+2026-07-24 10:32:29,304 - INFO -   Role       : student
+2026-07-24 10:32:29,304 - INFO - ================================================================================
+2026-07-24 10:32:29,307 - INFO -   [Timing] FastAPI Request started processing at 5165626.604
+2026-07-24 10:32:29,311 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-07-24 10:32:29,311 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-07-24 10:32:29,549 - INFO -   [Timing] Retrieval & Context Building: 0.231s
+2026-07-24 10:32:29,552 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-07-24 10:32:31,766 - INFO -   [Timing] Backend First Token Loop hit: 2.213s since LLM call
+2026-07-24 10:32:31,766 - INFO -   [Timing] Total TTFT (user → first token loop): 2.459s
+2026-07-24 10:32:47,885 - INFO -   [Timing] LLM Streaming Duration: 18.332s
+2026-07-24 10:32:47,885 - INFO -   [Timing] Total Response Time: 18.578s
+2026-07-24 10:37:21,043 - INFO - 
+================================================================================
+2026-07-24 10:37:21,044 - INFO - [2026-07-24T10:37:21.044035] CHAT REQUEST
+2026-07-24 10:37:21,044 - INFO -   Student ID : 1
+2026-07-24 10:37:21,044 - INFO -   Question   : Explain me the placement policies and sectorwise placements.
+2026-07-24 10:37:21,044 - INFO -   Role       : admin
+2026-07-24 10:37:21,044 - INFO - ================================================================================
+2026-07-24 10:37:21,046 - INFO -   [Timing] FastAPI Request started processing at 5165918.344
+2026-07-24 10:37:21,050 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-24 10:37:21,050 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-24 10:37:21,065 - INFO -   [Timing] Retrieval & Context Building: 0.010s
+2026-07-24 10:37:21,067 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-24 10:37:23,185 - INFO -   [Timing] Backend First Token Loop hit: 2.117s since LLM call
+2026-07-24 10:37:23,185 - INFO -   [Timing] Total TTFT (user → first token loop): 2.138s
+2026-07-24 10:37:56,898 - INFO -   [Timing] LLM Streaming Duration: 35.831s
+2026-07-24 10:37:56,898 - INFO -   [Timing] Total Response Time: 35.852s
+2026-07-24 10:43:48,927 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 10:43:49,031 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 10:43:49,270 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-24 10:43:49,294 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 10:43:49,501 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-24 10:44:28,575 - INFO - 
+================================================================================
+2026-07-24 10:44:28,575 - INFO - [2026-07-24T10:44:28.575473] CHAT REQUEST
+2026-07-24 10:44:28,575 - INFO -   Student ID : 3
+2026-07-24 10:44:28,575 - INFO -   Question   : Help me generate a 1 week plan for DSA
+2026-07-24 10:44:28,575 - INFO -   Role       : student
+2026-07-24 10:44:28,575 - INFO - ================================================================================
+2026-07-24 10:44:28,578 - INFO -   [Timing] FastAPI Request started processing at 5166345.875
+2026-07-24 10:44:28,582 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-07-24 10:44:28,582 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-07-24 10:44:28,806 - INFO -   [Timing] Retrieval & Context Building: 0.213s
+2026-07-24 10:44:28,809 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-07-24 10:44:34,197 - INFO -   [Timing] Backend First Token Loop hit: 5.388s since LLM call
+2026-07-24 10:44:34,198 - INFO -   [Timing] Total TTFT (user → first token loop): 5.620s
+2026-07-24 10:45:30,973 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 10:45:30,973 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 10:46:05,632 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:46:05,678 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:46:05,923 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:46:06,036 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:46:06,213 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:46:15,800 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:46:15,800 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:46:15,800 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:46:15,801 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:46:15,801 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:46:15,801 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:46:15,802 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:46:15,802 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:46:15,802 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:46:15,803 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:46:40,225 - INFO - 
+================================================================================
+2026-07-24 10:46:40,225 - INFO - [2026-07-24T10:46:40.225861] CHAT REQUEST
+2026-07-24 10:46:40,225 - INFO -   Student ID : 3
+2026-07-24 10:46:40,225 - INFO -   Question   : Help me create a roadmap for DSA
+2026-07-24 10:46:40,226 - INFO -   Role       : student
+2026-07-24 10:46:40,226 - INFO - ================================================================================
+2026-07-24 10:46:40,229 - INFO -   [Timing] FastAPI Request started processing at 5166477.526
+2026-07-24 10:46:40,232 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-07-24 10:46:40,232 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-24 10:48:39,566 - INFO -   [Timing] LLM Streaming Duration: 250.756s
+2026-07-24 10:48:39,566 - INFO -   [Timing] Total Response Time: 250.988s
+2026-07-24 10:50:29,199 - INFO - --- LLM PROMPT (Subject: None, Topic: Algorithmic Thinking & Big‑O) ---
+2026-07-24 10:50:33,833 - INFO - --- LLM PROMPT (Subject: None, Topic: Algorithmic Thinking & Big‑O) ---
+2026-07-24 10:52:45,763 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:52:45,773 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:52:46,214 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:52:46,215 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:52:55,958 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:52:55,958 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:52:55,958 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:52:55,959 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:52:55,959 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:52:55,959 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:52:55,960 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:52:55,960 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:56:29,282 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 10:56:29,482 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 10:56:46,280 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 10:58:02,267 - INFO - [Practice] Starting session: mode=exam, topic=Algorithmic Thinking & Big‑O, difficulty=mixed
+2026-07-24 10:58:02,268 - INFO - [Practice] Starting session: mode=exam, topic=Algorithmic Thinking & Big‑O, difficulty=mixed
+2026-07-24 10:58:45,857 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:58:46,108 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:58:56,111 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:58:56,111 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:58:56,111 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:58:56,112 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:59:03,056 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 10:59:13,241 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 10:59:13,241 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 10:59:19,765 - INFO - [Practice] Starting session: mode=topic, topic=Algorithmic Thinking & Big‑O, difficulty=easy
+2026-07-24 11:00:18,915 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:00:18,926 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:00:18,955 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:00:18,966 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:00:18,970 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:00:19,018 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:00:23,770 - INFO - [Practice] Starting session: mode=exam, topic=Algorithmic Thinking & Big‑O, difficulty=mixed
+2026-07-24 11:00:23,803 - INFO - [Practice] Starting session: mode=exam, topic=Algorithmic Thinking & Big‑O, difficulty=mixed
+2026-07-24 11:00:29,142 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:00:29,143 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:00:29,143 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:00:29,143 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:00:29,144 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:00:29,144 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:00:29,144 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:00:29,144 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:00:29,145 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:00:29,145 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:00:29,145 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:00:29,145 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:01:34,032 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:01:34,144 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:01:34,318 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:01:34,546 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:01:34,716 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:01:34,798 - ERROR - [PracticeEngine] Failed to load subject_topics: cannot access local variable 'json' where it is not associated with a value
+2026-07-24 11:01:34,833 - INFO - --- LLM PROMPT (Subject: week-1, Topic: Algorithmic Thinking & Big‑O) ---
+2026-07-24 11:01:36,243 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:01:44,079 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:01:44,251 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:01:46,664 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:01:46,664 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:02:40,336 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:02:40,374 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:02:40,644 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:02:40,672 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:02:40,682 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:02:41,440 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:02:49,945 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:02:49,946 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:02:49,946 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:02:49,947 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:02:49,947 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:02:49,948 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:02:49,948 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:02:49,948 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:02:49,965 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:02:49,965 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:02:51,494 - ERROR - [PracticeEngine] Failed to load subject_topics: cannot access local variable 'json' where it is not associated with a value
+2026-07-24 11:02:51,529 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:02:51,567 - INFO - --- LLM PROMPT (Subject: week-1, Topic: Algorithmic Thinking & Big‑O) ---
+2026-07-24 11:02:51,741 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:02:53,805 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:02:53,805 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:03:08,494 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:03:08,641 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:03:16,020 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 11:03:16,020 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 11:03:27,127 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 11:03:50,548 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:03:50,586 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:03:51,117 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:03:51,128 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:03:51,226 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:03:51,297 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:03:56,335 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:03:56,503 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:04:00,396 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:04:00,396 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:04:00,397 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:04:00,397 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:04:00,397 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:04:00,397 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:04:00,398 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:04:00,398 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:04:00,637 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:04:00,776 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:04:03,646 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:04:03,647 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:04:03,649 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:04:03,649 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:04:07,056 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:04:07,056 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:04:07,057 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:04:07,057 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:04:10,916 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:04:10,916 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:04:10,916 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:04:10,917 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:04:28,843 - INFO - CACHE HIT: topic='Algorithmic Thinking & Big‑O', subject='week-1'
+2026-07-24 11:04:28,844 - INFO - CACHE HIT: topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:04:32,761 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 11:04:32,762 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 11:04:32,762 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 11:04:50,369 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 11:04:50,371 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 11:05:07,990 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:05:08,129 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:05:08,132 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:05:08,436 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:05:15,342 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:05:15,614 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:05:18,187 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:05:18,187 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:05:18,187 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:05:18,187 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:05:18,188 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:05:18,188 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:05:18,189 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:05:18,189 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:05:25,012 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:05:25,374 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:05:25,406 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:05:25,447 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:05:25,447 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:05:25,447 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:05:25,447 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:05:28,574 - INFO - [Practice] Starting session: mode=topic, topic=Algorithmic Thinking & Big‑O, difficulty=easy
+2026-07-24 11:05:36,297 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:05:36,297 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:05:36,298 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:05:36,298 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:05:36,298 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:05:36,299 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:06:52,290 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:06:52,555 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:07:02,548 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:07:02,548 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:07:02,549 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:07:02,549 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:07:38,190 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:07:38,249 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:07:45,306 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:07:48,309 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:07:48,309 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:07:48,309 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:07:48,310 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:07:55,509 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:07:55,509 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:09:12,783 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:09:12,880 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:09:12,923 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='week-1'
+2026-07-24 11:09:13,104 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:09:13,324 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-07-24 11:10:54,766 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 11:10:54,766 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-24 11:11:29,528 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:11:29,550 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:11:29,568 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:11:29,884 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:11:30,589 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-24 11:11:39,111 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:11:39,111 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:11:39,112 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:11:39,112 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:11:39,112 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:11:39,113 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:11:39,113 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:11:39,113 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-24 11:11:42,961 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-24 11:11:42,961 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 06:36:59,721 - INFO - 
+================================================================================
+2026-07-27 06:36:59,722 - INFO - [2026-07-27T06:36:59.722898] CHAT REQUEST
+2026-07-27 06:36:59,723 - INFO -   Student ID : 3
+2026-07-27 06:36:59,723 - INFO -   Question   : please create a roadmap for AI
+2026-07-27 06:36:59,723 - INFO -   Role       : student
+2026-07-27 06:36:59,723 - INFO - ================================================================================
+2026-07-27 06:36:59,726 - INFO -   [Timing] FastAPI Request started processing at 233485.207
+2026-07-27 06:36:59,731 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-07-27 06:36:59,731 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-27 06:37:18,457 - INFO - 
+================================================================================
+2026-07-27 06:37:18,457 - INFO - [2026-07-27T06:37:18.457288] CHAT REQUEST
+2026-07-27 06:37:18,457 - INFO -   Student ID : 3
+2026-07-27 06:37:18,457 - INFO -   Question   : Update Learning Preferences
+2026-07-27 06:37:18,457 - INFO -   Role       : student
+2026-07-27 06:37:18,457 - INFO - ================================================================================
+2026-07-27 06:37:18,460 - INFO -   [Timing] FastAPI Request started processing at 233503.941
+2026-07-27 06:37:18,467 - INFO -   Detected Mode: LEARNING
+2026-07-27 06:37:18,468 - INFO -   [Timing] Docs + Mode Detection: 0.008s
+2026-07-27 06:41:57,233 - INFO - 
+================================================================================
+2026-07-27 06:41:57,234 - INFO - [2026-07-27T06:41:57.234059] CHAT REQUEST
+2026-07-27 06:41:57,234 - INFO -   Student ID : 3
+2026-07-27 06:41:57,234 - INFO -   Question   : please help me create a roadmap for Machine learning
+2026-07-27 06:41:57,234 - INFO -   Role       : student
+2026-07-27 06:41:57,234 - INFO - ================================================================================
+2026-07-27 06:41:57,237 - INFO -   [Timing] FastAPI Request started processing at 233782.718
+2026-07-27 06:41:57,242 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-07-27 06:41:57,242 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-27 06:42:05,975 - INFO - 
+================================================================================
+2026-07-27 06:42:05,975 - INFO - [2026-07-27T06:42:05.975383] CHAT REQUEST
+2026-07-27 06:42:05,975 - INFO -   Student ID : 3
+2026-07-27 06:42:05,975 - INFO -   Question   : 1 Month
+2026-07-27 06:42:05,975 - INFO -   Role       : student
+2026-07-27 06:42:05,975 - INFO - ================================================================================
+2026-07-27 06:42:05,990 - INFO -   [Timing] FastAPI Request started processing at 233791.471
+2026-07-27 06:42:06,004 - INFO -   Detected Mode: LEARNING
+2026-07-27 06:42:06,005 - INFO -   [Timing] Docs + Mode Detection: 0.015s
+2026-07-27 06:42:10,572 - INFO - 
+================================================================================
+2026-07-27 06:42:10,572 - INFO - [2026-07-27T06:42:10.572295] CHAT REQUEST
+2026-07-27 06:42:10,572 - INFO -   Student ID : 3
+2026-07-27 06:42:10,572 - INFO -   Question   : Beginner
+2026-07-27 06:42:10,572 - INFO -   Role       : student
+2026-07-27 06:42:10,572 - INFO - ================================================================================
+2026-07-27 06:42:10,583 - INFO -   [Timing] FastAPI Request started processing at 233796.065
+2026-07-27 06:42:10,589 - INFO -   Detected Mode: LEARNING
+2026-07-27 06:42:10,590 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-07-27 06:42:15,995 - INFO - 
+================================================================================
+2026-07-27 06:42:15,996 - INFO - [2026-07-27T06:42:15.996230] CHAT REQUEST
+2026-07-27 06:42:15,996 - INFO -   Student ID : 3
+2026-07-27 06:42:15,996 - INFO -   Question   : 2 hours
+2026-07-27 06:42:15,996 - INFO -   Role       : student
+2026-07-27 06:42:15,996 - INFO - ================================================================================
+2026-07-27 06:42:16,008 - INFO -   [Timing] FastAPI Request started processing at 233801.490
+2026-07-27 06:42:16,022 - INFO -   Detected Mode: LEARNING
+2026-07-27 06:42:16,022 - INFO -   [Timing] Docs + Mode Detection: 0.013s
+2026-07-27 06:42:21,521 - INFO - 
+================================================================================
+2026-07-27 06:42:21,521 - INFO - [2026-07-27T06:42:21.521746] CHAT REQUEST
+2026-07-27 06:42:21,521 - INFO -   Student ID : 3
+2026-07-27 06:42:21,521 - INFO -   Question   : Mixed
+2026-07-27 06:42:21,521 - INFO -   Role       : student
+2026-07-27 06:42:21,521 - INFO - ================================================================================
+2026-07-27 06:42:21,524 - INFO -   [Timing] FastAPI Request started processing at 233807.005
+2026-07-27 06:42:21,527 - INFO -   Detected Mode: LEARNING
+2026-07-27 06:42:21,527 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-27 06:42:33,004 - INFO - 
+================================================================================
+2026-07-27 06:42:33,004 - INFO - [2026-07-27T06:42:33.004613] CHAT REQUEST
+2026-07-27 06:42:33,004 - INFO -   Student ID : 3
+2026-07-27 06:42:33,004 - INFO -   Question   : Only Uploaded Notes
+2026-07-27 06:42:33,004 - INFO -   Role       : student
+2026-07-27 06:42:33,004 - INFO - ================================================================================
+2026-07-27 06:42:33,015 - INFO -   [Timing] FastAPI Request started processing at 233818.497
+2026-07-27 06:42:33,022 - INFO -   Detected Mode: LEARNING
+2026-07-27 06:42:33,022 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-07-27 06:42:36,052 - INFO - 
+================================================================================
+2026-07-27 06:42:36,053 - INFO - [2026-07-27T06:42:36.053083] CHAT REQUEST
+2026-07-27 06:42:36,053 - INFO -   Student ID : 3
+2026-07-27 06:42:36,053 - INFO -   Question   : Generate Roadmap
+2026-07-27 06:42:36,053 - INFO -   Role       : student
+2026-07-27 06:42:36,053 - INFO - ================================================================================
+2026-07-27 06:42:36,064 - INFO -   [Timing] FastAPI Request started processing at 233821.545
+2026-07-27 06:42:36,069 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-07-27 06:42:36,069 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-27 06:55:11,064 - INFO - 
+================================================================================
+2026-07-27 06:55:11,065 - INFO - [2026-07-27T06:55:11.064983] CHAT REQUEST
+2026-07-27 06:55:11,065 - INFO -   Student ID : 3
+2026-07-27 06:55:11,065 - INFO -   Question   : Help me create a roadmap for machine learning
+2026-07-27 06:55:11,065 - INFO -   Role       : student
+2026-07-27 06:55:11,065 - INFO - ================================================================================
+2026-07-27 06:55:43,327 - INFO - 
+================================================================================
+2026-07-27 06:55:43,327 - INFO - [2026-07-27T06:55:43.327727] CHAT REQUEST
+2026-07-27 06:55:43,327 - INFO -   Student ID : 3
+2026-07-27 06:55:43,327 - INFO -   Question   : Help me create a roadmap for machine learning
+2026-07-27 06:55:43,327 - INFO -   Role       : student
+2026-07-27 06:55:43,327 - INFO - ================================================================================
+2026-07-27 06:56:38,121 - INFO - 
+================================================================================
+2026-07-27 06:56:38,122 - INFO - [2026-07-27T06:56:38.122084] CHAT REQUEST
+2026-07-27 06:56:38,122 - INFO -   Student ID : 3
+2026-07-27 06:56:38,122 - INFO -   Question   : can you tell me about attendance policy
+2026-07-27 06:56:38,122 - INFO -   Role       : student
+2026-07-27 06:56:38,122 - INFO - ================================================================================
+2026-07-27 06:56:38,262 - INFO - 
+================================================================================
+2026-07-27 06:56:38,262 - INFO - [2026-07-27T06:56:38.262907] CHAT REQUEST
+2026-07-27 06:56:38,263 - INFO -   Student ID : 3
+2026-07-27 06:56:38,263 - INFO -   Question   : can you tell me about attendance policy
+2026-07-27 06:56:38,263 - INFO -   Role       : student
+2026-07-27 06:56:38,263 - INFO - ================================================================================
+2026-07-27 06:57:32,209 - INFO - 
+================================================================================
+2026-07-27 06:57:32,209 - INFO - [2026-07-27T06:57:32.209611] CHAT REQUEST
+2026-07-27 06:57:32,209 - INFO -   Student ID : 3
+2026-07-27 06:57:32,209 - INFO -   Question   : help me create roamap for AI
+2026-07-27 06:57:32,209 - INFO -   Role       : student
+2026-07-27 06:57:32,209 - INFO - ================================================================================
+2026-07-27 06:58:14,930 - INFO - 
+================================================================================
+2026-07-27 06:58:14,930 - INFO - [2026-07-27T06:58:14.930769] CHAT REQUEST
+2026-07-27 06:58:14,930 - INFO -   Student ID : 3
+2026-07-27 06:58:14,930 - INFO -   Question   : what is attedance policy
+2026-07-27 06:58:14,930 - INFO -   Role       : student
+2026-07-27 06:58:14,931 - INFO - ================================================================================
+2026-07-27 06:59:36,126 - INFO - 
+================================================================================
+2026-07-27 06:59:36,126 - INFO - [2026-07-27T06:59:36.126829] CHAT REQUEST
+2026-07-27 06:59:36,126 - INFO -   Student ID : 3
+2026-07-27 06:59:36,126 - INFO -   Question   : Hello
+2026-07-27 06:59:36,127 - INFO -   Role       : student
+2026-07-27 06:59:36,127 - INFO - ================================================================================
+2026-07-27 07:09:11,874 - INFO - 
+================================================================================
+2026-07-27 07:09:11,874 - INFO - [2026-07-27T07:09:11.874357] CHAT REQUEST
+2026-07-27 07:09:11,874 - INFO -   Student ID : 3
+2026-07-27 07:09:11,874 - INFO -   Question   : Help me create a roadmap for machine learnin g
+2026-07-27 07:09:11,874 - INFO -   Role       : student
+2026-07-27 07:09:11,874 - INFO - ================================================================================
+2026-07-27 07:12:51,175 - INFO - 
+================================================================================
+2026-07-27 07:12:51,175 - INFO - [2026-07-27T07:12:51.175929] CHAT REQUEST
+2026-07-27 07:12:51,176 - INFO -   Student ID : 3
+2026-07-27 07:12:51,176 - INFO -   Question   : help me create AI roadmap.
+2026-07-27 07:12:51,176 - INFO -   Role       : student
+2026-07-27 07:12:51,176 - INFO - ================================================================================
+2026-07-27 07:12:51,179 - INFO -   [Timing] FastAPI Request started processing at 235636.660
+2026-07-27 07:12:51,184 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-07-27 07:12:51,184 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-07-27 07:12:55,604 - INFO - 
+================================================================================
+2026-07-27 07:12:55,604 - INFO - [2026-07-27T07:12:55.604354] CHAT REQUEST
+2026-07-27 07:12:55,604 - INFO -   Student ID : 3
+2026-07-27 07:12:55,604 - INFO -   Question   : 1 Week
+2026-07-27 07:12:55,604 - INFO -   Role       : student
+2026-07-27 07:12:55,604 - INFO - ================================================================================
+2026-07-27 07:12:55,606 - INFO -   [Timing] FastAPI Request started processing at 235641.088
+2026-07-27 07:12:55,610 - INFO -   Detected Mode: LEARNING
+2026-07-27 07:12:55,610 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-07-27 07:12:57,713 - INFO - 
+================================================================================
+2026-07-27 07:12:57,713 - INFO - [2026-07-27T07:12:57.713384] CHAT REQUEST
+2026-07-27 07:12:57,713 - INFO -   Student ID : 3
+2026-07-27 07:12:57,713 - INFO -   Question   : Beginner
+2026-07-27 07:12:57,713 - INFO -   Role       : student
+2026-07-27 07:12:57,713 - INFO - ================================================================================
+2026-07-27 07:12:57,715 - INFO -   [Timing] FastAPI Request started processing at 235643.197
+2026-07-27 07:12:57,718 - INFO -   Detected Mode: LEARNING
+2026-07-27 07:12:57,718 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-27 07:13:01,729 - INFO - 
+================================================================================
+2026-07-27 07:13:01,729 - INFO - [2026-07-27T07:13:01.729540] CHAT REQUEST
+2026-07-27 07:13:01,729 - INFO -   Student ID : 3
+2026-07-27 07:13:01,729 - INFO -   Question   : 2 hours
+2026-07-27 07:13:01,729 - INFO -   Role       : student
+2026-07-27 07:13:01,729 - INFO - ================================================================================
+2026-07-27 07:13:01,732 - INFO -   [Timing] FastAPI Request started processing at 235647.213
+2026-07-27 07:13:01,735 - INFO -   Detected Mode: LEARNING
+2026-07-27 07:13:01,735 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-27 07:13:04,244 - INFO - 
+================================================================================
+2026-07-27 07:13:04,244 - INFO - [2026-07-27T07:13:04.244400] CHAT REQUEST
+2026-07-27 07:13:04,244 - INFO -   Student ID : 3
+2026-07-27 07:13:04,244 - INFO -   Question   : Mixed
+2026-07-27 07:13:04,244 - INFO -   Role       : student
+2026-07-27 07:13:04,244 - INFO - ================================================================================
+2026-07-27 07:13:04,247 - INFO -   [Timing] FastAPI Request started processing at 235649.729
+2026-07-27 07:13:04,251 - INFO -   Detected Mode: LEARNING
+2026-07-27 07:13:04,251 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-07-27 07:13:07,738 - INFO - 
+================================================================================
+2026-07-27 07:13:07,738 - INFO - [2026-07-27T07:13:07.738877] CHAT REQUEST
+2026-07-27 07:13:07,738 - INFO -   Student ID : 3
+2026-07-27 07:13:07,739 - INFO -   Question   : Only Uploaded Notes
+2026-07-27 07:13:07,739 - INFO -   Role       : student
+2026-07-27 07:13:07,739 - INFO - ================================================================================
+2026-07-27 07:13:07,741 - INFO -   [Timing] FastAPI Request started processing at 235653.222
+2026-07-27 07:13:07,744 - INFO -   Detected Mode: LEARNING
+2026-07-27 07:13:07,744 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-07-27 07:13:10,598 - INFO - 
+================================================================================
+2026-07-27 07:13:10,598 - INFO - [2026-07-27T07:13:10.598191] CHAT REQUEST
+2026-07-27 07:13:10,598 - INFO -   Student ID : 3
+2026-07-27 07:13:10,598 - INFO -   Question   : Generate Roadmap
+2026-07-27 07:13:10,598 - INFO -   Role       : student
+2026-07-27 07:13:10,598 - INFO - ================================================================================
+2026-07-27 07:13:10,600 - INFO -   [Timing] FastAPI Request started processing at 235656.082
+2026-07-27 07:13:10,602 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-07-27 07:13:10,603 - INFO -   [Timing] Docs + Mode Detection: 0.002s
+2026-07-27 07:15:14,923 - INFO - --- LLM PROMPT (Subject: None, Topic: Day 1: AI Overview & History) ---
+2026-07-27 07:15:20,630 - INFO - --- LLM PROMPT (Subject: None, Topic: Day 1: AI Overview & History) ---
+2026-07-27 07:17:31,463 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 07:17:31,469 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 07:17:31,473 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 07:17:31,650 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 07:17:41,609 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 07:17:41,609 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 07:17:41,609 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 07:17:41,614 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 07:17:41,615 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 07:17:41,615 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 07:17:41,616 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 07:17:41,616 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 07:25:59,018 - INFO - 
+================================================================================
+2026-07-27 07:25:59,018 - INFO - [2026-07-27T07:25:59.018405] CHAT REQUEST
+2026-07-27 07:25:59,018 - INFO -   Student ID : 3
+2026-07-27 07:25:59,018 - INFO -   Question   : what is attendance policy here
+2026-07-27 07:25:59,018 - INFO -   Role       : student
+2026-07-27 07:25:59,018 - INFO - ================================================================================
+2026-07-27 07:25:59,021 - INFO -   [Timing] FastAPI Request started processing at 236424.502
+2026-07-27 07:25:59,025 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-27 07:25:59,025 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-07-27 07:26:11,775 - INFO -   [Timing] Retrieval & Context Building: 12.743s
+2026-07-27 07:26:11,781 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-07-27 07:26:19,060 - INFO -   [Timing] Backend First Token Loop hit: 7.279s since LLM call
+2026-07-27 07:26:19,060 - INFO -   [Timing] Total TTFT (user → first token loop): 20.039s
+2026-07-27 07:27:20,871 - INFO -   [Timing] LLM Streaming Duration: 69.090s
+2026-07-27 07:27:20,871 - INFO -   [Timing] Total Response Time: 81.850s
+2026-07-27 08:29:22,446 - INFO - 
+================================================================================
+2026-07-27 08:29:22,446 - INFO - [2026-07-27T08:29:22.446602] CHAT REQUEST
+2026-07-27 08:29:22,446 - INFO -   Student ID : 3
+2026-07-27 08:29:22,446 - INFO -   Question   : how many students are eligible for college placements?
+2026-07-27 08:29:22,446 - INFO -   Role       : student
+2026-07-27 08:29:22,446 - INFO - ================================================================================
+2026-07-27 08:29:22,449 - INFO -   [Timing] FastAPI Request started processing at 240227.930
+2026-07-27 08:29:22,453 - INFO -   Detected Mode: FACTUAL_RAG
+2026-07-27 08:29:22,453 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-07-27 08:29:33,483 - INFO -   [Timing] Retrieval & Context Building: 11.022s
+2026-07-27 08:29:33,487 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-07-27 08:29:44,054 - INFO -   [Timing] Backend First Token Loop hit: 10.567s since LLM call
+2026-07-27 08:29:44,055 - INFO -   [Timing] Total TTFT (user → first token loop): 21.606s
+2026-07-27 08:30:07,568 - INFO -   [Timing] LLM Streaming Duration: 34.080s
+2026-07-27 08:30:07,568 - INFO -   [Timing] Total Response Time: 45.119s
+2026-07-27 08:30:38,712 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 08:30:38,814 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 08:30:38,956 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-27 08:30:38,990 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 08:30:39,189 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 08:30:51,639 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 08:30:51,732 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 08:30:51,919 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 08:30:52,103 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 08:30:52,150 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-27 08:30:52,284 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 08:32:20,614 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-27 08:32:20,616 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-27 08:32:33,707 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-27 08:32:33,707 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-07-27 08:32:55,362 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:32:55,524 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:32:55,543 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:32:55,604 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:32:55,881 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:33:05,542 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:05,542 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:05,543 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:05,543 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:05,543 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:05,543 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 08:33:05,544 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 08:33:05,544 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 08:33:05,544 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 08:33:05,545 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 08:33:08,178 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:33:08,251 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:33:08,396 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:33:08,585 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:33:08,816 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:33:08,868 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 08:33:18,362 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:18,363 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:18,363 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:18,363 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:18,363 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:18,364 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 08:33:18,364 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 08:33:18,364 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 08:33:18,364 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 08:33:18,365 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 08:33:18,365 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 08:33:18,365 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 09:53:30,044 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 09:53:30,187 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 09:53:30,231 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating system'
+2026-07-27 09:53:30,334 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 09:53:30,495 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-07-27 09:55:46,895 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 09:55:46,926 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 09:55:46,999 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 09:55:47,014 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 09:55:48,025 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-07-27 09:55:56,517 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 09:55:56,517 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 09:55:56,518 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 09:55:56,518 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 09:55:56,518 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 09:55:56,518 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 09:55:56,519 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 09:55:56,519 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-07-27 09:56:00,317 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-07-27 09:56:00,317 - ERROR - [PracticeEngine] All LLM providers failed!

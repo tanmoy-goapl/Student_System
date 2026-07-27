@@ -33,12 +33,13 @@ CHUNK_OVERLAP_WORDS = 16    # word overlap between consecutive chunks
 
 def extract_text_from_pdf(file_path: str) -> str:
     try:
-        import PyPDF2
+        # pyrefly: ignore [missing-import]
+        import pypdf
         with open(file_path, "rb") as fh:
-            reader = PyPDF2.PdfReader(fh)
+            reader = pypdf.PdfReader(fh)
             pages = []
             for page in reader.pages:
-                raw = page.extract_text() or ""
+                raw = page.extract_text(extraction_mode="layout") or ""
                 pages.append(_clean_page(raw))
             return "\n\n".join(p for p in pages if p.strip())
     except Exception as e:

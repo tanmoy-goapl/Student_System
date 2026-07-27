@@ -1,48 +1,60 @@
 import logging
+import time
 from config import (
     GPT_API_KEY, GPT_BASE_URL, GPT_MODEL,
     LLAMA_BASE_URL, LLAMA_API_KEY, LLAMA_MODEL,
 )
 from llm_state import get_provider
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
-def _call_llm(system_prompt: str, history: list, question: str) -> str:
+# ═══════════════════════════════════════════════════════════════════════════════
+#  CACHED CLIENTS — avoids re-creating HTTP sessions + TLS on every call
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_cached_clients: dict[str, OpenAI] = {}
+
+def _get_client(api_key: str, base_url: str) -> OpenAI:
+    """Return a cached OpenAI client for the given base_url."""
+    cache_key = f"{base_url}|{api_key[:8]}"
+    if cache_key not in _cached_clients:
+        _cached_clients[cache_key] = OpenAI(api_key=api_key, base_url=base_url)
+    return _cached_clients[cache_key]
+
+
+def _build_configs():
+    """Build the ordered provider config list based on current preference."""
     provider = get_provider()
     configs = []
-
-    logger.info(f"  [LLM Call] Preferred provider: {provider}")
 
     def add_gpt():
         if GPT_API_KEY and GPT_BASE_URL:
             configs.append((GPT_MODEL, GPT_API_KEY, GPT_BASE_URL, GPT_MODEL))
-        else:
-            logger.warning("  [LLM Call] GPT config missing API_KEY or BASE_URL")
 
     def add_llama():
         if LLAMA_API_KEY and LLAMA_BASE_URL:
             configs.append(("Llama", LLAMA_API_KEY or GPT_API_KEY, LLAMA_BASE_URL, LLAMA_MODEL))
-        else:
-            logger.warning("  [LLM Call] Llama config missing API_KEY or BASE_URL")
 
-    # Try preferred provider first, then fall back to the other if available.
     if provider == "gpt4o":
-        add_gpt()
-        add_llama()
+        add_gpt(); add_llama()
     elif provider == "llama":
-        add_llama()
-        add_gpt()
+        add_llama(); add_gpt()
     else:
-        add_gpt()
-        add_llama()
+        add_gpt(); add_llama()
 
+    return provider, configs
+
+
+def _call_llm(system_prompt: str, history: list, question: str) -> str:
+    provider, configs = _build_configs()
+    logger.info(f"  [LLM Call] Preferred provider: {provider}")
     logger.info(f"  [LLM Call] Resolved configuration chain: {[c[0] for c in configs]}")
 
     for name, api_key, base_url, model in configs:
         try:
             logger.info(f"  [LLM Call] Trying provider '{name}' at {base_url} using model {model}...")
-            from openai import OpenAI
-            client = OpenAI(api_key=api_key, base_url=base_url)
+            client = _get_client(api_key, base_url)
 
             messages = [{"role": "system", "content": system_prompt}]
             for msg in history:
@@ -62,10 +74,9 @@ def _call_llm(system_prompt: str, history: list, question: str) -> str:
             import traceback
             logger.error(f"  [LLM Call] ERROR trying provider '{name}' ({base_url} {model}): {e}")
             logger.error(traceback.format_exc())
-            continue  # try next provider
+            continue
 
     logger.error("  [LLM Call] ❌ All configured LLM providers failed. Falling back to plain context.")
-    # Plain context fallback (no LLM available)
     return (
         "⚠️ AI service temporarily unavailable.\n\n"
         "**Relevant content from your documents:**\n\n"
@@ -74,47 +85,21 @@ def _call_llm(system_prompt: str, history: list, question: str) -> str:
 
 
 def _call_llm_stream(system_prompt: str, history: list, question: str):
-    provider = get_provider()
-    configs = []
-
+    provider, configs = _build_configs()
     logger.info(f"  [LLM Stream] Preferred provider: {provider}")
-
-    def add_gpt():
-        if GPT_API_KEY and GPT_BASE_URL:
-            configs.append((GPT_MODEL, GPT_API_KEY, GPT_BASE_URL, GPT_MODEL))
-        else:
-            logger.warning("  [LLM Stream] GPT config missing API_KEY or BASE_URL")
-
-    def add_llama():
-        if LLAMA_API_KEY and LLAMA_BASE_URL:
-            configs.append(("Llama", LLAMA_API_KEY or GPT_API_KEY, LLAMA_BASE_URL, LLAMA_MODEL))
-        else:
-            logger.warning("  [LLM Stream] Llama config missing API_KEY or BASE_URL")
-
-    # Try preferred provider first, then fall back to the other if available.
-    if provider == "gpt4o":
-        add_gpt()
-        add_llama()
-    elif provider == "llama":
-        add_llama()
-        add_gpt()
-    else:
-        add_gpt()
-        add_llama()
-
     logger.info(f"  [LLM Stream] Resolved configuration chain: {[c[0] for c in configs]}")
 
     for name, api_key, base_url, model in configs:
         try:
             logger.info(f"  [LLM Stream] Trying provider '{name}' at {base_url} using model {model}...")
-            from openai import OpenAI
-            client = OpenAI(api_key=api_key, base_url=base_url)
+            client = _get_client(api_key, base_url)
 
             messages = [{"role": "system", "content": system_prompt}]
             for msg in history:
                 messages.append({"role": msg.role, "content": msg.content})
             messages.append({"role": "user", "content": question})
 
+            t_sent = time.perf_counter()
             resp = client.chat.completions.create(
                 model=model,
                 messages=messages,
@@ -123,7 +108,14 @@ def _call_llm_stream(system_prompt: str, history: list, question: str):
                 timeout=30,
                 stream=True,
             )
+            
+            first_byte_received = False
             for chunk in resp:
+                if not first_byte_received:
+                    t_first_byte = time.perf_counter()
+                    logger.info(f"  [Timing] Network: LLM Request sent -> First byte received: {t_first_byte - t_sent:.3f}s")
+                    first_byte_received = True
+                    
                 if not getattr(chunk, "choices", None):
                     continue
                 delta = chunk.choices[0].delta
@@ -131,15 +123,14 @@ def _call_llm_stream(system_prompt: str, history: list, question: str):
                 if content:
                     yield content
             logger.info(f"  [LLM Stream] Success with provider '{name}'!")
-            return  # Success, exit generator
+            return
         except Exception as e:
             import traceback
             logger.error(f"  [LLM Stream] ERROR trying provider '{name}' ({base_url} {model}): {e}")
             logger.error(traceback.format_exc())
-            continue  # try next provider
+            continue
 
     logger.error("  [LLM Stream] ❌ All configured LLM providers failed. Falling back to plain context.")
-    # Plain context fallback (no LLM available)
     fallback_text = (
         "⚠️ AI service temporarily unavailable.\n\n"
         "**Relevant content from your documents:**\n\n"

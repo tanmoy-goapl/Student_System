@@ -42,6 +42,7 @@ def _build_system_prompt(
     context: str,
     role: str,
     user_name: str = "the user",
+    proficiency: str = None,
 ) -> str:
     doc_list = ", ".join(doc_names) or "(none)"
     role_instruction = get_role_instruction(role, user_name)
@@ -74,7 +75,8 @@ ROLE GUIDELINE:
 {role_instruction}
 
 CURRENT USER ({role_label}): {user_name}
-AVAILABLE DOCUMENTS: {doc_list}
+SEARCHED DOCUMENTS: {doc_list}
+Note: The list above shows all documents that were searched for this query. The RETRIEVED CONTEXT below contains the actual passages found. If a document is listed in SEARCHED DOCUMENTS but its text is absent from RETRIEVED CONTEXT, it means no relevant passages were returned for it.
 """
 
     # ── Mode-specific rules ──────────────────────────────────────────────────
@@ -82,15 +84,15 @@ AVAILABLE DOCUMENTS: {doc_list}
         rules = f"""
 MODE: STRICT DOCUMENT MODE
 CRITICAL RULES:
-• Use ONLY the provided CONTEXT.
+• Use ONLY the provided RETRIEVED CONTEXT.
 • Ignore all other documents.
 • Ignore your own knowledge.
-• If the answer is missing from the CONTEXT, explicitly state that it does not exist in the document.
+• If the answer is missing from the RETRIEVED CONTEXT, explicitly state that it does not exist in the searched document.
 • Never infer or estimate missing information.
 • Every factual statement derived from a document MUST contain its source filename (e.g. 'Source: filename.pdf').
 
-===== CONTEXT (STRICT) =====
-{context[:MAX_CONTEXT_LEN]}
+===== RETRIEVED CONTEXT =====
+{context[:MAX_CONTEXT_LEN] if context else "(No relevant passages retrieved)"}
 ===== END CONTEXT =====
 """
     elif mode == RetrievalMode.FACTUAL_RAG:
@@ -143,15 +145,40 @@ CRITICAL RULES:
 • Every factual statement derived from a document MUST contain its source filename.
 """
 
+    grounding = """
+GENERAL GROUNDING RULES:
+1. Every factual statement about the user's project, resume, research, or documents must come directly from retrieved documents.
+2. If a detail is not present in the retrieved documents, explicitly state that it is not mentioned.
+3. General knowledge may only be used to:
+   - explain concepts,
+   - define terminology,
+   - provide educational background.
+4. Never use general knowledge to invent implementation details about the user's work.
+5. Prefer saying: "The document does not mention..." instead of making assumptions.
+"""
+
+    prof_instruction = ""
+    if proficiency:
+        prof_lower = proficiency.lower()
+        if "beginner" in prof_lower:
+            prof_instruction = "• TEACHING STYLE: Use very simple language, step-by-step explanations, and real-life analogies/examples. Avoid advanced technical jargon without explaining it simply first."
+        elif "basic" in prof_lower:
+            prof_instruction = "• TEACHING STYLE: Use easy technical explanations with clear illustrative examples."
+        elif "intermediate" in prof_lower:
+            prof_instruction = "• TEACHING STYLE: Use standard technical explanations with practical coding/engineering examples."
+        elif "advanced" in prof_lower:
+            prof_instruction = "• TEACHING STYLE: Be highly concise, focus on interview preparation, complex edge cases, and advanced technical/architectural concepts."
+
     formatting = f"""
 GENERAL FORMATTING RULES:
 • DO NOT output raw markdown or ASCII tables (using pipe | characters). Instead, present schedules, comparisons, or plans using clean bullet points, bold headers, and numbered lists to structure your response beautifully.
 {style_guide}
 {tone_guide}
+{prof_instruction}
 • Maximum 300–400 words.
 """
 
-    return base + rules + formatting
+    return base + rules + grounding + formatting
 
 
 def apply_role_guardrails(role: str, question: str) -> str:

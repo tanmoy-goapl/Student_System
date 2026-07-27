@@ -3,14 +3,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   Sparkles, Paperclip, Send, Bell, Sidebar, PlusCircle, 
-  TrendingUp, FileText, CheckCircle, AlertTriangle, Users, Play, Clock
+  TrendingUp, FileText, CheckCircle, AlertTriangle, Users, Play, Clock, History, Plus
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
 import ReactMarkdown from "react-markdown";
+import ChatHistorySidebar from "@/components/ChatHistorySidebar";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
+  created_at?: string | null;
+  session_id?: string | null;
 };
 
 interface TableBlock {
@@ -80,6 +83,9 @@ export default function ProfessorChatPage() {
   const [loading, setLoading] = useState(false);
   const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
   const [activeMode, setActiveMode] = useState<"Analytics" | "Guidance" | "Quick Answer">("Analytics");
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [resetNext, setResetNext] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const suggestions = [
@@ -104,13 +110,42 @@ export default function ProfessorChatPage() {
         if (res.ok) {
           const data = await res.json();
           setHistory(data || []);
+          if (data && data.length > 0 && data[0].session_id) {
+            setActiveSessionId(data[0].session_id);
+          }
         }
       } catch (err) {
         console.error("Failed to load chat history:", err);
       }
     };
     fetchHistory();
+    
+    const handleNewChat = () => {
+      setHistory([]);
+      setActiveSessionId(null);
+      setResetNext(true);
+    };
+    window.addEventListener("new-chat", handleNewChat);
+    return () => window.removeEventListener("new-chat", handleNewChat);
   }, []);
+
+  const handleSelectSession = async (sessionId: string) => {
+    const userId = Number(localStorage.getItem("user_id") || 0);
+    if (!userId) return;
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/chat/history?student_id=${userId}&session_id=${sessionId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data || []);
+        setActiveSessionId(sessionId);
+      }
+    } catch (err) {
+      console.error("Failed to load session history:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAsk = async (queryText?: string) => {
     const q = (queryText || question).trim();
@@ -129,9 +164,11 @@ export default function ProfessorChatPage() {
           student_id: professorId,
           question: q,
           role: "professor",
-          reset: false,
+          reset: resetNext,
+          session_id: activeSessionId || undefined,
         })
       });
+      setResetNext(false);
 
       if (!res.ok) {
         throw new Error(`Error ${res.status}`);
@@ -179,6 +216,9 @@ export default function ProfessorChatPage() {
                   return copy;
                 });
               }
+              if (parsed.session_id) {
+                setActiveSessionId(parsed.session_id);
+              }
             } catch (e) {
               // Ignore parse errors on partial lines
             }
@@ -197,18 +237,34 @@ export default function ProfessorChatPage() {
       {/* Left Sidebar */}
       <ProfessorSidebar />
 
+      <ChatHistorySidebar
+        studentId={Number(localStorage.getItem("user_id") || 0)}
+        open={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onSelectSession={handleSelectSession}
+        activeSessionId={activeSessionId}
+      />
+
       {/* Main Conversation Canvas */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#040815]">
         
         {/* Chat Header Bar */}
         <header className="h-16 shrink-0 border-b border-white/5 bg-[#050a14]/40 backdrop-blur-md flex items-center justify-between px-6 select-none relative z-40">
-          <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-white">Mentor AI</span>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition cursor-pointer"
+              title="Open History"
+            >
+              <History size={16} />
+            </button>
+            <div className="flex items-center gap-2.5">
+              <div className="h-7 w-7 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                <Sparkles className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-white">Mentor AI</span>
                 <span className="px-1 py-0.5 text-[8px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded">
                   PROFESSOR
                 </span>
@@ -219,8 +275,9 @@ export default function ProfessorChatPage() {
               <p className="text-[9px] text-slate-500 leading-none mt-0.5">Teacher Studio • GPT-4 Turbo</p>
             </div>
           </div>
+        </div>
 
-          {/* Mode switch */}
+        {/* Mode switch */}
           <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
             {(["Analytics", "Guidance", "Quick Answer"] as const).map(mode => (
               <button
@@ -236,6 +293,18 @@ export default function ProfessorChatPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setHistory([]);
+                setActiveSessionId(null);
+                setResetNext(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/10 transition cursor-pointer text-white mr-2"
+              title="Start New Conversation"
+            >
+              <Plus size={14} className="text-slate-300" />
+              <span>New Chat</span>
+            </button>
             <button className="h-8 w-8 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-slate-350 hover:bg-white/10 transition relative">
               <Bell className="w-4 h-4" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500" />

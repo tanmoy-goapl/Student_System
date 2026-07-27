@@ -15,6 +15,8 @@ import {
   Clock
 } from "lucide-react";
 
+import { OfflineState, ErrorState, CardSkeleton, TableSkeleton, ListSkeleton } from "@/components/UIStateSystem";
+
 interface DashboardData {
   total_students: number;
   total_professors: number;
@@ -86,6 +88,7 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "students" | "professors">("overview");
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [hasError, setHasError] = useState(false);
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [students, setStudents] = useState<StudentData[]>([]);
@@ -93,34 +96,34 @@ export default function AdminDashboardPage() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [dashRes, studentsRes, profsRes, actRes, statusRes] = await Promise.all([
-          fetch("/api/admin/dashboard"),
-          fetch("/api/admin/students"),
-          fetch("/api/admin/professors"),
-          fetch("/api/admin/recent-activity"),
-          fetch("/api/admin/system-status"),
-        ]);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setHasError(false);
+      const [dashRes, studentsRes, profsRes, actRes, statusRes] = await Promise.all([
+        fetch("/api/admin/dashboard"),
+        fetch("/api/admin/students"),
+        fetch("/api/admin/professors"),
+        fetch("/api/admin/recent-activity"),
+        fetch("/api/admin/system-status"),
+      ]);
 
-        if (dashRes.ok) setDashboardData(await dashRes.json());
-        if (studentsRes.ok) setStudents(await studentsRes.json());
-        if (profsRes.ok) setProfessors(await profsRes.json());
-        if (actRes.ok) setActivities(await actRes.json());
-        if (statusRes.ok) setSystemStatus(await statusRes.json());
-      } catch (err) {
-        console.error("Failed to load admin dashboard data", err);
-      } finally {
-        setLoading(false);
-      }
+      if (dashRes.ok) setDashboardData(await dashRes.json());
+      if (studentsRes.ok) setStudents(await studentsRes.json());
+      if (profsRes.ok) setProfessors(await profsRes.json());
+      if (actRes.ok) setActivities(await actRes.json());
+      if (statusRes.ok) setSystemStatus(await statusRes.json());
+    } catch (err) {
+      console.error("Failed to load admin dashboard data", err);
+      setHasError(true);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     loadData();
   }, []);
-
-  if (loading) {
-    return <Loader fullScreen text="Loading dashboard data..." />;
-  }
 
   // Filter students based on search
   const filteredStudents = students.filter((s) =>
@@ -128,7 +131,9 @@ export default function AdminDashboardPage() {
   );
 
   return (
-    <div className="space-y-8 p-8 min-h-screen bg-[#020617] text-white">
+    <div className="space-y-8 p-8 min-h-screen bg-[#020617] text-white relative">
+      <OfflineState />
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -157,9 +162,26 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* Tab Contents */}
-      {activeTab === "overview" && (
-        <div className="space-y-8">
+      {hasError ? (
+        <ErrorState message="Failed to load platform stats." onRetry={loadData} />
+      ) : loading ? (
+        <div className="space-y-8 animate-pulse">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <ListSkeleton count={4} />
+            <ListSkeleton count={4} />
+          </div>
+        </div>
+      ) : (
+        <>
+          {activeTab === "overview" && (
+          <div className="space-y-8">
           {/* KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             <StatCard
@@ -352,6 +374,8 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

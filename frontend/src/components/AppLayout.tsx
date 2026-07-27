@@ -98,7 +98,7 @@ export default function AppLayout({
       )}
  
       {/* Everything right of the main sidebar */}
-      <div className={`flex flex-1 min-w-0 ${!isLogin && !isStudioRoute ? "pl-64" : ""}`}>
+      <div className={`flex flex-1 min-w-0 ${!isLogin && !isStudioRoute && role !== "admin" && role !== "professor" ? "pl-64" : ""}`}>
  
         {/* Secondary Sidebar (learning, practice, performance) */}
         {!isLogin && activeSidebar && (

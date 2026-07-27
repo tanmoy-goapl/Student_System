@@ -288,6 +288,11 @@ async def upload_file(
 
         try:
             text = extract_text(file_path)
+            print("\n" + "=" * 80)
+            print("EXTRACTED TEXT")
+            print("=" * 80)
+            print(text[:5000])      # Print first 5000 characters
+            print("=" * 80)
         except ValueError:
             return {
                 "message": "Uploaded (no text extraction support)",
@@ -329,6 +334,11 @@ async def upload_file(
                 }
         else:
             chunks_to_store = chunk_text(text)
+            print(f"\nCreated {len(chunks_to_store)} chunks")
+
+            for i, chunk in enumerate(chunks_to_store):
+                print(f"\n================ CHUNK {i} ================")
+                print(chunk)
 
         # Store ONLY in Chroma
         try:

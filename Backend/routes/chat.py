@@ -18,6 +18,8 @@ import re
 from datetime import datetime
 from typing import List, Optional
 import json
+import time
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -30,6 +32,9 @@ from schemas.chat import ChatRequest, Message, ChatResponse
 from services.chat_intent import RetrievalMode, detect_retrieval_mode
 from services.chat_prompts import _build_system_prompt, apply_role_guardrails
 from services.llm_client import _call_llm, _call_llm_stream
+from services.query_planner import plan_retrieval_strategy
+from services.document_resolver import resolve_documents, get_role_visible_docs
+from services.context_builder import build_context
 
 import os
 import logging
@@ -130,105 +135,7 @@ def _get_boost_types(mode: RetrievalMode, question: str) -> list[str]:
     return []
 
 
-# ═════════════════════════════════════════════════════════════════════════════
-#  ALLOWED DOCUMENTS RESOLVER
-# ═════════════════════════════════════════════════════════════════════════════
 
-def _get_role_visible_docs(request: ChatRequest, db: Session) -> list[Document]:
-    """
-    Return ALL documents that the current user is permitted to see,
-    based on their role and the four visibility tiers:
-      universal      → everyone
-      admin_shared   → admins only
-      course_shared  → teaching professor + enrolled students
-      private        → owner_id + owner_role match only
-    """
-    uid = request.student_id
-    role = request.role
-
-    if role == "admin":
-        return db.query(Document).filter(
-            (Document.visibility == "universal") |
-            (Document.visibility == "admin_shared") |
-            (
-                (Document.visibility == "private") &
-                ((Document.owner_id == uid) | ((Document.owner_id == None) & (Document.student_id == uid))) &
-                (Document.owner_role == "admin")
-            )
-        ).all()
-
-    elif role == "professor":
-        from classroom_models import Classroom
-        teaches = db.query(Classroom).filter(Classroom.professor_id == uid).all()
-        teach_ids = [c.id for c in teaches]
-
-        return db.query(Document).filter(
-            (Document.visibility == "universal") |
-            (
-                (Document.visibility == "course_shared") &
-                (
-                    (Document.classroom_id.in_(teach_ids) if teach_ids else False) |
-                    ((Document.owner_id == uid) | ((Document.owner_id == None) & (Document.student_id == uid)))
-                )
-            ) |
-            (
-                (Document.visibility == "private") &
-                ((Document.owner_id == uid) | ((Document.owner_id == None) & (Document.student_id == uid))) &
-                (Document.owner_role == "professor")
-            )
-        ).all()
-
-    else:  # student
-        from classroom_models import StudentClass
-        joined = db.query(StudentClass).filter(StudentClass.student_id == uid).all()
-        class_ids = [c.class_id for c in joined]
-
-        return db.query(Document).filter(
-            (Document.visibility == "universal") |
-            (
-                (Document.visibility == "course_shared") &
-                (Document.classroom_id.in_(class_ids) if class_ids else False)
-            ) |
-            (
-                (Document.visibility == "private") &
-                ((Document.owner_id == uid) | ((Document.owner_id == None) & (Document.student_id == uid))) &
-                (Document.owner_role == "student")
-            )
-        ).all()
-
-
-def _resolve_allowed_docs(
-    mode: RetrievalMode, request: ChatRequest, db: Session, q_lower: str
-) -> list[Document]:
-    """
-    Return the list of Document objects the retrieval is allowed to search.
-    For STRICT_DOCUMENT: only the explicitly mentioned document(s) within
-    the user's visible set.
-    For everything else: the full visible set.
-    """
-    visible = _get_role_visible_docs(request, db)
-
-    if mode == RetrievalMode.STRICT_DOCUMENT:
-        from services.search import _detect_mentioned_doc
-
-        mentioned_ids = _detect_mentioned_doc(request.question, visible)
-
-        # Heuristic fallback: match by doc type keyword
-        if not mentioned_ids:
-            type_hints = []
-            if "resume" in q_lower: type_hints.append("resume")
-            if "marksheet" in q_lower: type_hints.append("marksheet")
-            if "syllabus" in q_lower: type_hints.append("syllabus")
-            if "policy" in q_lower: type_hints.append("policy")
-            if type_hints:
-                for doc in visible:
-                    if doc.document_type in type_hints or any(h in doc.filename.lower() for h in type_hints):
-                        mentioned_ids.append(doc.id)
-                        break
-
-        return [d for d in visible if d.id in mentioned_ids]
-
-    return visible
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -264,24 +171,23 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     student_name = getattr(user, "name", f"Student #{request.student_id}")
 
     def yield_main():
+        t0 = time.perf_counter()
+        logger.info(f"  [Timing] FastAPI Request started processing at {t0:.3f}")
         yield json.dumps({"status": "Thinking..."}) + "\n"
 
         # ── Fetch user-visible documents (role-aware) ─────────────────────────
-        all_docs = _get_role_visible_docs(request, db)
+        t_docs = time.perf_counter()
+        all_docs = get_role_visible_docs(request.student_id, request.role, db)
 
         # ── Detect mode ──────────────────────────────────────────────────────
         mode = detect_retrieval_mode(request.question, db, request.student_id)
         logger.info(f"  Detected Mode: {mode.value}")
+        logger.info(f"  [Timing] Docs + Mode Detection: {time.perf_counter() - t_docs:.3f}s")
 
         # ── Resolve or generate session ────────────────────────────────────────
-        session_id = request.session_id
-        if not session_id:
-            import uuid
-            session_id = str(uuid.uuid4())
-            
+        session_id = request.session_id or str(uuid.uuid4())
         session_title = request.session_title
         if not session_title:
-            # Use the first 40 chars of question as the session title
             session_title = request.question[:40] + ("..." if len(request.question) > 40 else "")
 
         # ── Persist user message ─────────────────────────────────────────────
@@ -294,27 +200,128 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         except Exception as e:
             logger.error(f"Failed to persist user message: {e}")
 
+        # ── Personal Onboarding Interception ──────────────────────────────────
+        from services.personal_roadmap import (
+            is_onboarding_active, reset_learner_preferences, handle_preferences_onboarding,
+            get_learner_preferences, generate_personalized_roadmap
+        )
+        
+        q_lower = request.question.strip().lower()
+        if q_lower == "update learning preferences" or q_lower == "edit answers":
+            reset_learner_preferences(request.student_id, db)
+            
+        onboarding_already_active = is_onboarding_active(request.student_id, db)
+        onboarding_in_progress = onboarding_already_active or q_lower == "update learning preferences" or q_lower == "edit answers"
+        
+        is_roadmap_request = not onboarding_already_active and (
+            (mode == RetrievalMode.ROADMAP_CREATION) or ("create a roadmap" in q_lower) or ("create a personalized roadmap" in q_lower)
+        )
+        
+        if is_roadmap_request:
+            reset_learner_preferences(request.student_id, db)
+            onboarding_in_progress = True
+
+        if onboarding_in_progress:
+            if q_lower == "generate roadmap":
+                yield json.dumps({"status": "Creating your personalized roadmap..."}) + "\n"
+                time.sleep(1.0)
+                yield json.dumps({"status": "Analyzing your learning preferences..."}) + "\n"
+                time.sleep(1.0)
+                yield json.dumps({"status": "Building weekly learning plan..."}) + "\n"
+                time.sleep(0.5)
+
+                try:
+                    res = generate_personalized_roadmap(request.student_id, db)
+                except Exception as ex:
+                    logger.error(f"Failed to generate personalized roadmap: {ex}", exc_info=True)
+                    res = {
+                        "content": f"### ❌ Error Generating Roadmap\n\nAn unexpected error occurred during generation: {ex}. Please try again.",
+                        "intent": "ROADMAP_CREATION",
+                        "roadmap_metadata": {
+                            "title": "Error Roadmap",
+                            "duration": "N/A",
+                            "weeks": 0,
+                            "tasks": 0
+                        }
+                    }
+
+                prefs = get_learner_preferences(request.student_id, db)
+                if prefs:
+                    prefs.onboarding_active = False
+                    db.commit()
+
+                yield json.dumps({"status": ""}) + "\n"
+                yield json.dumps({"content": res.get("content", "")}) + "\n"
+
+                try:
+                    db.add(ChatMessage(
+                        student_id=request.student_id, role="assistant", content=res.get("content", ""),
+                        session_id=session_id, session_title=session_title
+                    ))
+                    db.commit()
+                except Exception as e:
+                    logger.error(f"Failed to persist assistant roadmap reply: {e}")
+
+                payload = {
+                    "session_id": session_id,
+                    "session_title": res.get("roadmap_metadata", {}).get("title", "Custom Roadmap"),
+                    "intent": res.get("intent"),
+                    "roadmap_metadata": res.get("roadmap_metadata")
+                }
+                yield json.dumps(payload) + "\n"
+                return
+
+            intro_prefix = ""
+            if is_roadmap_request:
+                intro_prefix = "Sure! Before I create a personalized roadmap, I'd like to know a little about you.\n\n"
+                
+            res = handle_preferences_onboarding(request.student_id, request.question, db)
+            assistant_content = intro_prefix + res.get("content", "")
+
+            try:
+                db.add(ChatMessage(
+                    student_id=request.student_id, role="assistant", content=assistant_content,
+                    session_id=session_id, session_title=session_title
+                ))
+                db.commit()
+            except Exception as e:
+                logger.error(f"Failed to persist assistant onboarding reply: {e}")
+
+            yield json.dumps({"status": ""}) + "\n"
+            yield json.dumps({"content": assistant_content}) + "\n"
+            
+            payload = {
+                "session_id": session_id,
+                "session_title": "Learning Onboarding"
+            }
+            if "options" in res:
+                payload["options"] = res["options"]
+            if "intent" in res:
+                payload["intent"] = res["intent"]
+            if "roadmap_metadata" in res:
+                payload["roadmap_metadata"] = res["roadmap_metadata"]
+                
+            yield json.dumps(payload) + "\n"
+            return
+
         # ── ROADMAP CREATION (separate pipeline, not retrieval) ──────────────
         if mode == RetrievalMode.ROADMAP_CREATION:
             yield from _handle_roadmap(request, db)
             return
 
-        q_lower = request.question.lower()
+        # ── STAGE 1: Intent Resolution ──────────────────────────────────────
+        # mode is already resolved by detect_retrieval_mode
 
-        # ── Resolve allowed documents ────────────────────────────────────────
-        allowed_docs = _resolve_allowed_docs(mode, request, db, q_lower)
-        allowed_doc_ids = [d.id for d in allowed_docs]
+        # ── STAGE 2 & 3: Document Resolution ────────────────────────────────
+        target_docs, searched_docs = resolve_documents(
+            mode=mode,
+            question=request.question,
+            student_id=request.student_id,
+            role=request.role,
+            db=db
+        )
 
-        # ── Guard: no documents ──────────────────────────────────────────────
-        if mode == RetrievalMode.STRICT_DOCUMENT and not allowed_doc_ids:
-            yield json.dumps({"content": "I could not find this information in the selected document."}) + "\n"
-            yield json.dumps({"intent": mode.value, "sources": []}) + "\n"
-            return
-
-        if mode == RetrievalMode.FACTUAL_RAG and not allowed_doc_ids:
-            yield json.dumps({"content": "I could not find this information in the available documents."}) + "\n"
-            yield json.dumps({"intent": mode.value, "sources": []}) + "\n"
-            return
+        all_docs = get_role_visible_docs(request.student_id, request.role, db)
 
         if not all_docs and mode in [RetrievalMode.STRICT_DOCUMENT, RetrievalMode.FACTUAL_RAG]:
             no_docs_msg = (
@@ -331,47 +338,43 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             yield json.dumps({"intent": mode.value, "sources": []}) + "\n"
             return
 
+        # ── STAGE 2: Query Planning ──────────────────────────────────────────
+        strategy = plan_retrieval_strategy(
+            question=request.question,
+            has_specific_target_docs=bool(target_docs)
+        )
+
         yield json.dumps({"status": "Searching documents..."}) + "\n"
 
-        # ── RAG: retrieve relevant chunks ────────────────────────────────────
-        boost_types = _get_boost_types(mode, request.question)
-        chunks = []
-        try:
-            chunks = search_relevant_chunks(
-                request.question, request.student_id, request.role, db,
-                top_k=40, allowed_doc_ids=allowed_doc_ids, boost_types=boost_types,
-            )
-        except Exception as e:
-            logger.error(f"Search error: {e}")
+        # ── STAGE 4: Context Building & Quota Ranking ────────────────────────
+        t_retrieval_start = time.perf_counter()
+        chunks, searched_doc_names, retrieved_doc_names, context = build_context(
+            strategy=strategy,
+            question=request.question,
+            target_docs=target_docs,
+            searched_docs=searched_docs,
+            db=db
+        )
+        t_retrieval_end = time.perf_counter()
+        logger.info(f"  [Timing] Retrieval & Context Building: {t_retrieval_end - t_retrieval_start:.3f}s")
 
-        logger.info(f"  Retrieved {len(chunks)} candidate chunks")
+        yield json.dumps({"status": ""}) + "\n"
 
-        # ── Adaptive filtering ───────────────────────────────────────────────
-        chunks = _adaptive_filter(chunks, mode)
-        logger.info(f"  After adaptive filter: {len(chunks)} chunks")
+        # ── STAGE 5: Prompt Construction & LLM Streaming ─────────────────────
+        t_prompt_start = time.perf_counter()
+        from services.personal_roadmap import get_learner_preferences
+        prefs = get_learner_preferences(request.student_id, db)
+        proficiency = prefs.proficiency if prefs else None
 
-        # ── No evidence guard ────────────────────────────────────────────────
-        if not chunks and mode in [RetrievalMode.FACTUAL_RAG, RetrievalMode.STRICT_DOCUMENT]:
-            msg = (
-                "I could not find this information in the selected document."
-                if mode == RetrievalMode.STRICT_DOCUMENT
-                else "I could not find this information in the available documents."
-            )
-            yield json.dumps({"content": msg}) + "\n"
-            yield json.dumps({"intent": mode.value, "sources": []}) + "\n"
-            return
-
-        yield json.dumps({"status": "Generating answer..."}) + "\n"
-
-        # ── Build context ────────────────────────────────────────────────────
-        doc_names = [d.filename for d in all_docs]
-        if chunks:
-            yield json.dumps({"status": "Building context..."}) + "\n"
-            context = build_rich_context(chunks)
-        else:
-            context = ""
-
-        source_docs = list({c["document"] for c in chunks if c.get("document")})
+        system_prompt = _build_system_prompt(
+            mode=mode,
+            doc_names=searched_doc_names,
+            context=context,
+            role=request.role,
+            user_name=student_name,
+            proficiency=proficiency
+        )
+        source_docs = retrieved_doc_names
 
         # ── Conversation history ─────────────────────────────────────────────
         history = (
@@ -382,22 +385,32 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             .all()
         )[-HISTORY_LIMIT:]
 
-        system_prompt = _build_system_prompt(mode, doc_names, context, request.role, student_name)
+        system_prompt = _build_system_prompt(mode, searched_doc_names, context, request.role, student_name, proficiency=proficiency)
 
         if request.reset:
             history_for_llm: list[Message] = []
         else:
             history_for_llm = [Message(role=m.role, content=m.content) for m in history]
 
+        t_prompt_end = time.perf_counter()
+        logger.info(f"  [Timing] Context + Prompt Building: {t_prompt_end - t_prompt_start:.3f}s")
+
         # ── Stream LLM response ──────────────────────────────────────────────
         full_answer = ""
         first_chunk = True
+        t_llm_start = time.perf_counter()
         for chunk in _call_llm_stream(system_prompt, history_for_llm, request.question):
             if first_chunk:
-                yield json.dumps({"status": ""}) + "\n"
+                t_first_token = time.perf_counter()
+                logger.info(f"  [Timing] Backend First Token Loop hit: {t_first_token - t_llm_start:.3f}s since LLM call")
+                logger.info(f"  [Timing] Total TTFT (user → first token loop): {t_first_token - t0:.3f}s")
                 first_chunk = False
             full_answer += chunk
             yield json.dumps({"content": chunk}) + "\n"
+            
+        t_stream_end = time.perf_counter()
+        logger.info(f"  [Timing] LLM Streaming Duration: {t_stream_end - t_llm_start:.3f}s")
+        logger.info(f"  [Timing] Total Response Time: {t_stream_end - t0:.3f}s")
 
         # ── Persist assistant reply ──────────────────────────────────────────
         try:
@@ -418,6 +431,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             "session_id": session_id,
             "session_title": session_title
         }
+        q_lower = request.question.lower()
         if any(w in q_lower for w in ["become", "prepare", "study", "learn", "how do i", "guide"]):
             final_payload["suggest_roadmap"] = True
 
@@ -426,7 +440,11 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     return StreamingResponse(
         yield_main(),
         media_type="application/x-ndjson",
-        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",
+            "Transfer-Encoding": "chunked",
+        },
     )
 
 

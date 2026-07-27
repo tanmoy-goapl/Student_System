@@ -119,8 +119,8 @@ export default function ChatHistorySidebar({
   };
 
   return (
-    // Position sidebar just below the sticky navbar so it never overlaps it.
-    <aside className="fixed top-16 bottom-0 left-0 z-50 w-72 bg-[#090D1F] shadow-2xl border-r border-white/5 flex flex-col text-white">
+    // Rendered as a flex item within the parent layout container
+    <aside className="w-72 h-full shrink-0 bg-[#090D1F] border-r border-white/5 flex flex-col text-white">
       <div className="flex items-center justify-between px-4 py-4 border-b border-white/5 bg-[#0b1227]">
         <div className="flex items-center gap-2">
           <span className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold">

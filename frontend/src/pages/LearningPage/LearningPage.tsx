@@ -9,6 +9,7 @@ import { RelatedConcepts } from "@/components/learningpage/RelatedConcepts";
 import { Sidebar } from "@/components/learningpage/Sidebar/Sidebar";
 import LearningSidebar from "@/components/learningpage/LearningSidebar";
 import { useState, useEffect } from "react";
+import { OfflineState, ErrorState, EmptyState, LearningSkeleton } from "@/components/UIStateSystem";
 import {
   getLearningData,
   getLearningContent,
@@ -71,6 +72,7 @@ export default function LearningPage() {
     const [isCompletedSession, setIsCompletedSession] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
     const [showSummary, setShowSummary] = useState(false);
+    const [hasError, setHasError] = useState(false);
 
     const [modalContent, setModalContent] = useState<{
         title: string;
@@ -114,65 +116,68 @@ export default function LearningPage() {
         return 1;
     };
 
-    useEffect(() => {
-        async function fetchData() {
+    const fetchData = async () => {
+        try {
+            setHasError(false);
+            const studentId = getStudentId();
+            const roadmapId = searchParams?.get("roadmap_id") ? parseInt(searchParams.get("roadmap_id") as string) : undefined;
+            
+            const response = await getLearningData(topic, studentId, subject, roadmapId, source);
+            setData(response);
+            
+            const selectedTopic = response.selectedTopic || topic || "General Topic";
             try {
-                const studentId = getStudentId();
-                const roadmapId = searchParams?.get("roadmap_id") ? parseInt(searchParams.get("roadmap_id") as string) : undefined;
-                
-                const response = await getLearningData(topic, studentId, subject, roadmapId, source);
-                setData(response);
-                
-                const selectedTopic = response.selectedTopic || topic || "General Topic";
-                try {
-                    await streamLearningContent(selectedTopic, studentId, subject, (text) => {
-                        let displayMarkdown = text;
-                        let revisionData = undefined;
-                        if (text.includes("---REVISION---")) {
-                            const parts = text.split("---REVISION---");
-                            displayMarkdown = parts[0].trim();
-                            try {
-                                revisionData = JSON.parse(parts[1].trim());
-                            } catch (e) {}
-                        }
-                        
-                        setData(prev => {
-                            if (!prev) return prev;
-                            return {
-                                ...prev,
-                                notesResponse: { content: displayMarkdown },
-                                learningAssistantResponse: revisionData ? {
-                                    ...prev.learningAssistantResponse,
-                                    data: {
-                                        ...prev.learningAssistantResponse?.data,
-                                        revision: revisionData
-                                    }
-                                } : prev.learningAssistantResponse
-                            };
-                        });
-                    });
-                } catch (streamingError) {
-                    console.warn("Streaming failed, falling back:", streamingError);
-                    const contentResponse = await getLearningContent(selectedTopic, studentId, subject);
+                await streamLearningContent(selectedTopic, studentId, subject, (text) => {
+                    let displayMarkdown = text;
+                    let revisionData = undefined;
+                    if (text.includes("---REVISION---")) {
+                        const parts = text.split("---REVISION---");
+                        displayMarkdown = parts[0].trim();
+                        try {
+                            revisionData = JSON.parse(parts[1].trim());
+                        } catch (e) {}
+                    }
+                    
                     setData(prev => {
                         if (!prev) return prev;
                         return {
                             ...prev,
-                            notesResponse: contentResponse.notesResponse,
-                            learningAssistantResponse: {
+                            notesResponse: { content: displayMarkdown },
+                            learningAssistantResponse: revisionData ? {
                                 ...prev.learningAssistantResponse,
                                 data: {
                                     ...prev.learningAssistantResponse?.data,
-                                    revision: contentResponse.revision
+                                    revision: revisionData
                                 }
-                            }
+                            } : prev.learningAssistantResponse
                         };
                     });
-                }
-            } catch (error) {
-                console.error("Failed to load learning data:", error);
+                });
+            } catch (streamingError) {
+                console.warn("Streaming failed, falling back:", streamingError);
+                const contentResponse = await getLearningContent(selectedTopic, studentId, subject);
+                setData(prev => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        notesResponse: contentResponse.notesResponse,
+                        learningAssistantResponse: {
+                            ...prev.learningAssistantResponse,
+                            data: {
+                                ...prev.learningAssistantResponse?.data,
+                                revision: contentResponse.revision
+                            }
+                        }
+                    };
+                });
             }
+        } catch (error) {
+            console.error("Failed to load learning data:", error);
+            setHasError(true);
         }
+    }
+
+    useEffect(() => {
         fetchData();
     }, [topic, subject, source, refreshKey]);
 
@@ -397,10 +402,20 @@ export default function LearningPage() {
         }
     };
  
+    if (hasError) {
+        return (
+            <div className="flex w-full h-[calc(100vh-4rem)] items-center justify-center bg-slate-950 p-6 relative">
+                <OfflineState />
+                <ErrorState message="Could not load learning workspace details." onRetry={fetchData} />
+            </div>
+        );
+    }
+
     if (!data) {
         return (
-            <div className="flex w-full h-[calc(100vh-4rem)] items-center justify-center bg-slate-950">
-                <div className="text-white">Loading...</div>
+            <div className="relative w-full">
+                <OfflineState />
+                <LearningSkeleton />
             </div>
         );
     }
@@ -448,7 +463,8 @@ export default function LearningPage() {
     };
 
     return (
-        <div className="flex w-full h-[calc(100vh-4rem)]">
+        <div className="flex w-full h-[calc(100vh-4rem)] relative">
+            <OfflineState />
             <div className="w-[20vw] shrink-0 h-full overflow-y-auto purple-scrollbar border-r border-white/10">
                 <LearningSidebar />
             </div>

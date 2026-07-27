@@ -26,7 +26,7 @@ def init_db():
         PracticeSession, PracticeQuestion,
         TopicPerformance, BehavioralInsight, CustomTopic, LearningContent, UserNote
     )
-    from roadmap_models import UserGoal, LearningRoadmap, DailyTask
+    from roadmap_models import UserGoal, LearningRoadmap, DailyTask, LearnerPreferences
     from classroom_models import Classroom, StudentClass, ClassResource, ClassCurriculum
     Base.metadata.create_all(bind=engine)
     

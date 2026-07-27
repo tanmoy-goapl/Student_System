@@ -20,6 +20,7 @@ import {
 } from "@/lib/api";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
+import { OfflineState, ErrorState, SuccessState, ProcessingState, PracticeSkeleton } from "@/components/UIStateSystem";
 
 export interface PracticePageProps {
     onAnswerSubmit?: (
@@ -71,6 +72,7 @@ export default function PracticePage({
     const [isGenerating, setIsGenerating] = useState(false);
     const [sessionStarted, setSessionStarted] = useState(false);
     const [sessionComplete, setSessionComplete] = useState(false);
+    const [hasError, setHasError] = useState(false);
     const [aiQuery, setAiQuery] = useState("");
     const [showAIHelp, setShowAIHelp] = useState(false);
     const [totalQuestions, setTotalQuestions] = useState(10);
@@ -136,6 +138,7 @@ export default function PracticePage({
         setAnswerResult(null);
 
         try {
+            setHasError(false);
             const count = questionCount || totalQuestions;
             const response = await startPracticeSession(
                 getStudentId(),
@@ -160,7 +163,8 @@ export default function PracticePage({
             // Start timer for first question
             startTimer();
         } catch (error) {
-            // Error handled silently
+            console.error("Failed to start session:", error);
+            setHasError(true);
         } finally {
             setIsLoading(false);
             setIsGenerating(false);
@@ -286,6 +290,34 @@ export default function PracticePage({
     };
 
     const renderMainContent = () => {
+        if (hasError) {
+            return (
+                <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto p-8 justify-center">
+                    <ErrorState 
+                        message="Failed to build practice quiz. Make sure documents are uploaded and backend is online." 
+                        onRetry={() => handleStartSession(sessionMode, sessionTopic, sessionDifficulty)} 
+                    />
+                </div>
+            );
+        }
+
+        if (isLoading) {
+            return (
+                <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto p-8 justify-center">
+                    <ProcessingState 
+                        title="Generating Practice Quiz"
+                        steps={[
+                            "📄 Reading study files...",
+                            "🧠 Parsing target topics...",
+                            "🎯 Generating quiz questions...",
+                            "✨ Finalizing quiz workspace..."
+                        ]}
+                        currentStepIndex={isGenerating ? 2 : 3}
+                    />
+                </div>
+            );
+        }
+
         if (!sessionStarted) {
             return (
                 <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto">
@@ -295,18 +327,12 @@ export default function PracticePage({
                                 <svg className="w-10 h-10 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                                 </svg>
-                            </div>
+                             </div>
                             <h2 className="text-2xl font-bold text-white">Ready to Practice?</h2>
                             <p className="text-slate-400 text-sm leading-relaxed">
                                 Select a practice mode and topic from the sidebar to start generating
                                 AI-powered quiz questions from your uploaded documents.
                             </p>
-                            {isLoading && (
-                                <div className="flex items-center justify-center gap-3 text-violet-400">
-                                    <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
-                                    <span className="text-sm">Analyzing your documents and generating questions...</span>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -480,7 +506,8 @@ export default function PracticePage({
     };
 
     return (
-        <div className="flex w-full h-[calc(100vh-4rem)]">
+        <div className="flex w-full h-[calc(100vh-4rem)] relative">
+            <OfflineState />
             <div className="w-[20vw] shrink-0 h-full overflow-y-auto purple-scrollbar border-r border-white/10">
                 <PracticeLeftSidebar onStartSession={handleStartSession} />
             </div>
