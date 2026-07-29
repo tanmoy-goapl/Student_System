@@ -45,12 +45,18 @@ export default function ChatPage() {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const targetChatTextRef = useRef("");
+  const chatTypewriterIntervalRef = useRef<any>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
-
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => { setUser(getStoredUser()); }, []);
+  useEffect(() => {
+    setUser(getStoredUser());
+    return () => {
+      if (chatTypewriterIntervalRef.current) clearInterval(chatTypewriterIntervalRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -165,9 +171,13 @@ export default function ChatPage() {
       // Prepend an empty assistant message which we will fill progressively
       setHistory(prev => [...prev, { role: "assistant", content: "" }]);
 
+      targetChatTextRef.current = "";
+      if (chatTypewriterIntervalRef.current) {
+        clearInterval(chatTypewriterIntervalRef.current);
+      }
+
       const decoder = new TextDecoder();
       let done = false;
-      let assistantAnswer = "";
       let finalIntent = "";
       let finalMetadata = null;
       let finalSuggest = false;
@@ -176,6 +186,28 @@ export default function ChatPage() {
       let buffer = "";
       let contentStarted = false;
       let firstChunkReceived = false;
+
+      // Start typewriter ticker loop
+      let currentTypewriterLength = 0;
+      chatTypewriterIntervalRef.current = setInterval(() => {
+        if (currentTypewriterLength < targetChatTextRef.current.length) {
+          const diff = targetChatTextRef.current.length - currentTypewriterLength;
+          const step = diff > 150 ? 10 : diff > 40 ? 4 : diff > 10 ? 2 : 1;
+          currentTypewriterLength += step;
+          const textChunk = targetChatTextRef.current.slice(0, currentTypewriterLength);
+          
+          setHistory(prev => {
+            const copy = [...prev];
+            if (copy.length > 0) {
+              copy[copy.length - 1] = {
+                ...copy[copy.length - 1],
+                content: textChunk,
+              };
+            }
+            return copy;
+          });
+        }
+      }, 20);
 
       while (!done) {
         const { value, done: doneReading } = await reader.read();
@@ -206,17 +238,7 @@ export default function ChatPage() {
                   contentStarted = true;
                   setStreamStatus("");
                 }
-                assistantAnswer += parsed.content;
-                setHistory(prev => {
-                  const copy = [...prev];
-                  if (copy.length > 0) {
-                    copy[copy.length - 1] = {
-                      ...copy[copy.length - 1],
-                      content: assistantAnswer,
-                    };
-                  }
-                  return copy;
-                });
+                targetChatTextRef.current += parsed.content;
               }
               if (parsed.intent) {
                 finalIntent = parsed.intent;
@@ -240,13 +262,16 @@ export default function ChatPage() {
         }
       }
 
-      // Final state updates
+      // Final state updates and cleanup
+      if (chatTypewriterIntervalRef.current) {
+        clearInterval(chatTypewriterIntervalRef.current);
+      }
       setHistory(prev => {
         const copy = [...prev];
         if (copy.length > 0) {
           copy[copy.length - 1] = {
             ...copy[copy.length - 1],
-            content: assistantAnswer,
+            content: targetChatTextRef.current,
             intent: finalIntent,
             roadmap_metadata: finalMetadata,
             suggest_roadmap: finalSuggest,
@@ -260,7 +285,7 @@ export default function ChatPage() {
         setActiveSessionId(finalSessionId);
       }
 
-      if (!assistantAnswer && !finalMetadata) {
+      if (!targetChatTextRef.current && !finalMetadata) {
         setError("No response received. Please try again.");
         setHistory(prev => prev.slice(0, -1));
       }

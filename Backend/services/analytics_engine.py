@@ -7,18 +7,27 @@ from practice_models import TopicPerformance
 
 logger = logging.getLogger("chatbot")
 
+_curriculum_cache = None
+_subject_topics_cache = None
+
 def _load_curriculum():
-    config_path = os.path.join(os.path.dirname(__file__), "..", "config", "default_curriculum.json")
-    with open(config_path, "r") as f:
-        return json.load(f)
+    global _curriculum_cache
+    if _curriculum_cache is None:
+        config_path = os.path.join(os.path.dirname(__file__), "..", "config", "default_curriculum.json")
+        with open(config_path, "r") as f:
+            _curriculum_cache = json.load(f)
+    return _curriculum_cache
 
 def _load_subject_topics():
-    config_path = os.path.join(os.path.dirname(__file__), "..", "config", "subject_topics.json")
-    try:
-        with open(config_path, "r") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    global _subject_topics_cache
+    if _subject_topics_cache is None:
+        config_path = os.path.join(os.path.dirname(__file__), "..", "config", "subject_topics.json")
+        try:
+            with open(config_path, "r") as f:
+                _subject_topics_cache = json.load(f)
+        except Exception:
+            return {}
+    return _subject_topics_cache
 
 def get_topic_status(sessions: int, questions_attempted: int, accuracy: float) -> str:
     if sessions == 0:

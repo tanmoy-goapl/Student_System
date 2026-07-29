@@ -185,6 +185,20 @@ class LearningContent(Base):
     student = relationship("User", backref="learning_contents")
 
 
+class AICache(Base):
+    __tablename__ = "ai_caches"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    student_id   = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    topic        = Column(String, nullable=False, index=True)
+    action_type  = Column(String, nullable=False, index=True) # "explain", "examples", "summary"
+    content      = Column(Text, nullable=False)
+    created_at   = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    student = relationship("User", backref="ai_caches")
+
+
 class UserNote(Base):
     __tablename__ = "user_notes"
 

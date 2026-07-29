@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from models import User, ChatMessage, Document
 from roadmap_models import LearnerPreferences, UserGoal, LearningRoadmap, DailyTask
-from services.roadmap_engine import _roadmap_llm_call, _balance_json, _fallback_roadmap
+from services.roadmap.roadmap_engine import _roadmap_llm_call, _balance_json, _fallback_roadmap
 
 logger = logging.getLogger(__name__)
 

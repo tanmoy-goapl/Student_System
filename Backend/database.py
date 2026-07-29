@@ -8,7 +8,9 @@ engine = create_engine(
     DATABASE_URL,
     connect_args=connect_args,
     echo=False,
-    future=True
+    future=True,
+    pool_pre_ping=True,
+    pool_recycle=3600
 )
 
 SessionLocal = sessionmaker(
@@ -34,6 +36,9 @@ def init_db():
     from sqlalchemy import text
     try:
         with engine.begin() as conn:
+            if "sqlite" in str(DATABASE_URL):
+                conn.execute(text("PRAGMA journal_mode=WAL;"))
+                conn.execute(text("PRAGMA synchronous=NORMAL;"))
             conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS category VARCHAR;"))
             conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS subject VARCHAR;"))
             conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS title VARCHAR;"))

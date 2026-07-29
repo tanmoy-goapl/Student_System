@@ -529,39 +529,56 @@ export function ProcessingState({
   const pct = steps.length > 0 ? Math.round(((currentStepIndex + 1) / steps.length) * 100) : 0;
 
   return (
-    <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl max-w-md mx-auto my-8 flex flex-col gap-5">
+    <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-8 rounded-2xl max-w-md mx-auto my-8 flex flex-col gap-6 shadow-[0_0_50px_-12px_rgba(91,95,255,0.2)] animate-fade-in">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Loader2 size={16} className="animate-spin text-blue-400" />
-          <h3 className="text-sm font-bold text-white">{title}</h3>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+            <Loader2 size={16} className="animate-spin text-[#5B5FFF]" />
+          </div>
+          <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
         </div>
-        <span className="text-xs font-bold text-blue-400">{pct}%</span>
+        <span className="text-sm font-bold text-[#5B5FFF] bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">{pct}%</span>
       </div>
 
-      {/* Progress Bar */}
-      <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+      {/* Premium Progress Bar */}
+      <div className="w-full h-2 bg-slate-800/80 rounded-full overflow-hidden border border-white/5 relative">
         <div
-          className="h-full bg-blue-500 transition-all duration-500 ease-out"
+          className="h-full bg-gradient-to-r from-[#5B5FFF] via-cyan-400 to-[#5B5FFF] bg-[length:200%_auto] animate-gradient-shift transition-all duration-700 ease-out shadow-[0_0_12px_rgba(91,95,255,0.4)]"
           style={{ width: `${pct}%` }}
         />
       </div>
 
       {/* Step Tracker */}
       {steps.length > 0 && (
-        <div className="flex flex-col gap-2.5 border-t border-white/5 pt-4">
+        <div className="flex flex-col gap-3.5 border-t border-white/10 pt-5">
           {steps.map((step, idx) => {
             const isCompleted = idx < currentStepIndex;
             const isActive = idx === currentStepIndex;
             return (
-              <div key={idx} className="flex gap-2.5 items-center text-xs">
+              <div 
+                key={idx} 
+                className={`flex gap-3 items-center text-xs transition-all duration-300 ${
+                  isCompleted ? "opacity-80" : isActive ? "opacity-100 scale-[1.01]" : "opacity-40"
+                }`}
+              >
                 {isCompleted ? (
-                  <CheckCircle2 size={14} className="text-green-400 shrink-0" />
+                  <div className="p-0.5 bg-emerald-500/20 rounded-full border border-emerald-500/30">
+                    <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
+                  </div>
                 ) : isActive ? (
-                  <Loader2 size={14} className="animate-spin text-blue-400 shrink-0" />
+                  <div className="p-0.5 bg-indigo-500/20 rounded-full border border-indigo-500/30 animate-pulse">
+                    <Loader2 size={12} className="animate-spin text-[#5B5FFF] shrink-0" />
+                  </div>
                 ) : (
-                  <div className="w-3.5 h-3.5 rounded-full border border-slate-700 shrink-0" />
+                  <div className="w-4 h-4 rounded-full border border-slate-700 shrink-0" />
                 )}
-                <span className={isCompleted ? "text-slate-400 line-through" : isActive ? "text-white font-medium" : "text-slate-500"}>
+                <span className={`text-xs ${
+                  isCompleted 
+                    ? "text-slate-300 font-medium" 
+                    : isActive 
+                      ? "text-white font-semibold" 
+                      : "text-slate-500"
+                }`}>
                   {step}
                 </span>
               </div>

@@ -1,4 +1,4 @@
-from services.chat_intent import RetrievalMode
+from services.chatbot.chat_intent import RetrievalMode
 from llm_state import get_user_preferences
 
 MAX_CONTEXT_LEN = 12000
@@ -172,6 +172,8 @@ GENERAL GROUNDING RULES:
     formatting = f"""
 GENERAL FORMATTING RULES:
 • DO NOT output raw markdown or ASCII tables (using pipe | characters). Instead, present schedules, comparisons, or plans using clean bullet points, bold headers, and numbered lists to structure your response beautifully.
+• NEVER output LaTeX mathematical formatting (such as using \\[, \\], \\frac, \\Delta, etc.). Express all mathematical formulas and equations in simple, clear plain text (e.g. "I = dQ / dt" or "R(h) = (1/N) * sum(L(...))").
+• Keep paragraph spacing compact. Avoid adding extra empty lines or double newlines between list items or bullet points.
 {style_guide}
 {tone_guide}
 {prof_instruction}

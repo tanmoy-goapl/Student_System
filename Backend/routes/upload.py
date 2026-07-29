@@ -345,7 +345,7 @@ async def upload_file(
             upsert_chunks(doc.id, chunks_to_store)
             
             # Immediately trigger background topic extraction
-            from services.practice_engine import extract_topics_from_documents
+            from services.practice.topic_extractor import extract_topics_from_documents
             extract_topics_from_documents(actual_student_id, db)
         except Exception as e:
             print("Chroma error:", e)

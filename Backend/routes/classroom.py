@@ -10,7 +10,7 @@ from database import get_db
 from models import User
 from classroom_models import Classroom, StudentClass, ClassResource, ClassCurriculum
 from services.extract import extract_text_from_pdf
-from services.practice_engine import _practice_llm_call
+from services.practice.base import _practice_llm_call
 import json
 
 router = APIRouter(prefix="/classroom", tags=["Classroom"])

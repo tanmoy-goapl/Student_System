@@ -1,17 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import CategorySection from "./CategorySection";
-import { getLearningData, LearningDataResponse } from "@/lib/api";
+import { LearningDataResponse } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 
-export default function LearningSidebar() {
+interface LearningSidebarProps {
+  data: LearningDataResponse | null;
+  onSelectTopic: (id: string, subjectId?: string) => void;
+}
+
+const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic }: LearningSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const topicParam = searchParams?.get("topic");
   const currentRoadmapId = searchParams?.get("roadmap_id") || "";
   const source = searchParams?.get("source") || "courses";
 
-  const [data, setData] = useState<LearningDataResponse | null>(null);
   const [roadmaps, setRoadmaps] = useState<any[]>([]);
   const [expandedCategories, setExpandedCategories] =
     useState<Record<string, boolean>>({});
@@ -19,7 +23,6 @@ export default function LearningSidebar() {
   const [expandedSubjects, setExpandedSubjects] =
     useState<Record<string, boolean>>({});
 
-  // Default to empty string until we fetch data or have URL param
   const [selectedTopicId, setSelectedTopicId] =
     useState<string>(topicParam || "");
 
@@ -91,19 +94,6 @@ export default function LearningSidebar() {
     }
     return 1;
   };
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const roadmapId = currentRoadmapId ? parseInt(currentRoadmapId) : undefined;
-        const response = await getLearningData(topicParam || undefined, getStudentId(), undefined, roadmapId, source);
-        setData(response);
-      } catch (err) {
-        console.error("Failed to load learning data:", err);
-      }
-    }
-    fetchData();
-  }, [topicParam, currentRoadmapId, source]);
 
   useEffect(() => {
     async function fetchUserRoadmaps() {
@@ -201,9 +191,7 @@ export default function LearningSidebar() {
             selectedTopicId={selectedTopicId}
             onSelectTopic={(id, subjectId) => {
               setSelectedTopicId(id);
-              const query = currentRoadmapId ? `&roadmap_id=${currentRoadmapId}` : "";
-              const subjQuery = subjectId ? `&subject=${encodeURIComponent(subjectId)}` : "";
-              router.push(`/learning?topic=${encodeURIComponent(id)}${subjQuery}${query}&source=${source}`);
+              onSelectTopic(id, subjectId);
             }}
             onToggleCategory={toggleCategory}
             onToggleSubject={toggleSubject}
@@ -211,5 +199,7 @@ export default function LearningSidebar() {
         ))}
       </div>
     </div>
-  )
-}
+  );
+});
+
+export default LearningSidebar;

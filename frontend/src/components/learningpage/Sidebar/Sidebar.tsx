@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { AISuggestions } from "./AISuggestions";
 import { CommonMistakes } from "./CommonMistakes";
 import { RelatedDocuments } from "./RelatedDocuments";
@@ -12,7 +13,7 @@ interface SidebarProps {
   onDocumentClick?: (id: string) => void;
 }
 
-export function Sidebar({ 
+export const Sidebar = memo(function Sidebar({ 
   data, 
   onSuggestionClick, 
   onDocumentClick 
@@ -32,4 +33,4 @@ export function Sidebar({
       <TimeSpent data={data.timeSpent} />
     </aside>
   );
-}
+});

@@ -34,7 +34,7 @@ def get_goals(student_id: int, db: Session = Depends(get_db)):
     goals = db.query(UserGoal).filter(UserGoal.student_id == student_id).all()
     return {"success": True, "goals": goals}
 
-from services.roadmap_engine import generate_roadmap_from_llm
+from services.roadmap.roadmap_engine import generate_roadmap_from_llm
 from sqlalchemy import desc
 
 class GenerateRoadmapReq(BaseModel):

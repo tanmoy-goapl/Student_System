@@ -212,4 +212,3 @@ def _fallback_roadmap(error_msg: str = "") -> dict:
             }
         ]
     }
-

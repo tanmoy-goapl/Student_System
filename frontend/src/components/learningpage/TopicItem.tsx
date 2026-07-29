@@ -23,15 +23,18 @@ export default function TopicItem({
     if (topic.subtopics?.includes(selectedTopicId)) {
       setExpanded(true);
     }
-  }, [selectedTopicId, topic.subtopics]);
+  }, [selectedTopicId]);
 
   const handleClick = () => {
     if (topic.locked) return;
-    onSelect(topicId);
     if (topic.subtopics && topic.subtopics.length > 0) {
       setExpanded(!expanded);
+    } else {
+      onSelect(topicId);
     }
   };
+
+  const hasSubtopics = topic.subtopics && topic.subtopics.length > 0;
 
   return (
     <div className="w-[90%] ml-4 mt-1">
@@ -46,7 +49,7 @@ export default function TopicItem({
           transition-all duration-200
           ${topic.locked ? "opacity-50 cursor-not-allowed grayscale" : ""}
           ${
-            (selectedTopicId === topicId) && !topic.locked
+            (selectedTopicId === topicId) && !topic.locked && !hasSubtopics
               ? "bg-[#5b5fff] text-white"
               : "hover:bg-[#111] text-white/80"
           }

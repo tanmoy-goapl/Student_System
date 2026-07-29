@@ -2,7 +2,7 @@ import logging
 import re
 from sqlalchemy.orm import Session
 from models import Document, User
-from services.chat_intent import RetrievalMode
+from services.chatbot.chat_intent import RetrievalMode
 
 logger = logging.getLogger(__name__)
 

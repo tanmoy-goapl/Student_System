@@ -82,7 +82,7 @@ export default function SubjectSection({
               topicId={topicKey}
               selectedTopicId={selectedTopicId}
               onSelect={(id) => {
-                const actualSubjectId = categoryId === "curriculum" ? topic.id : subject.id;
+                const actualSubjectId = subject.title;
                 onSelectTopic(id, actualSubjectId);
               }}
               subjectColor={subject.color}

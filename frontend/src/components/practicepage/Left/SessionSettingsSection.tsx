@@ -1,7 +1,5 @@
 // SessionSettingsSection.tsx
 
-import { Switch, ConfigProvider } from "antd";
-
 import { Difficulty } from "@/constants/practicepage-data";
 import DifficultySelector from "./DifficultySelector";
 import QuestionCounter from "./QuestionCounter";
@@ -58,46 +56,6 @@ export default function SessionSettingsSection({
             onQuestionCountChange
           }
         />
-      </div>
-
-      {/* Timer Toggle */}
-      <div
-        className="
-          mt-5
-          flex items-center justify-between
-          p-3 rounded-xl
-          bg-white/[0.03]
-          border border-white/10
-        "
-      >
-        <div className="flex flex-col">
-          <span className="text-xs font-medium text-white">
-            Timer Mode
-          </span>
-
-          <span className="text-[10px] text-white/40 mt-0.5">
-            Track solving speed
-          </span>
-        </div>
-
-        <ConfigProvider
-          theme={{
-            token: {
-              colorPrimary: "#5B5FFF",
-            },
-            components: {
-              Switch: {
-                colorPrimary: "#5B5FFF",
-                colorPrimaryHover: "#4c4fdb",
-              },
-            },
-          }}
-        >
-          <Switch
-            defaultChecked
-            size="small"
-          />
-        </ConfigProvider>
       </div>
     </div>
   );

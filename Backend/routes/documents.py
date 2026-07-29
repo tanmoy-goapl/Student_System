@@ -206,7 +206,7 @@ def delete_document(document_id: int, db: Session = Depends(get_db)):
     
     # 4. Trigger topic synchronization to cleanup topics of deleted document
     try:
-        from services.practice_engine import extract_topics_from_documents
+        from services.practice.topic_extractor import extract_topics_from_documents
         extract_topics_from_documents(student_id, db)
     except Exception as sync_err:
         print(f"Error synchronizing topics after deletion: {sync_err}")

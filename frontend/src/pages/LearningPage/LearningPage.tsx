@@ -3,12 +3,13 @@
 import { Header } from "@/components/learningpage/Header";
 import { LearningActions } from "@/components/learningpage/LearningActions";
 import NotesCard from "@/components/learningpage/NotesCard";
+import ReactMarkdown from "react-markdown";
 import { QuickActions } from "@/components/learningpage/QuickActions";
 import { QuickRevisionCard } from "@/components/learningpage/QuickRevisionCard";
 import { RelatedConcepts } from "@/components/learningpage/RelatedConcepts";
 import { Sidebar } from "@/components/learningpage/Sidebar/Sidebar";
 import LearningSidebar from "@/components/learningpage/LearningSidebar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { OfflineState, ErrorState, EmptyState, LearningSkeleton } from "@/components/UIStateSystem";
 import {
   getLearningData,
@@ -18,6 +19,9 @@ import {
   explainSimpler,
   giveExamples,
   summarizeTopic,
+  streamExplainSimpler,
+  streamGiveExamples,
+  streamSummarizeTopic,
   getCheatSheet,
   saveNotes,
   addToRevision,
@@ -61,10 +65,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 export default function LearningPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const topic = searchParams?.get("topic") || undefined;
-    const subject = searchParams?.get("subject") || undefined;
-    const source = searchParams?.get("source") || "courses";
+    const roadmapIdParam = searchParams?.get("roadmap_id") || undefined;
     
+    const [activeTopic, setActiveTopic] = useState<string | undefined>(undefined);
+    const [activeSubject, setActiveSubject] = useState<string | undefined>(undefined);
+    const [activeSource, setActiveSource] = useState<string>("courses");
+
     const [data, setData] = useState<LearningDataResponse | null>(null);
     const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
     const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
@@ -73,6 +79,7 @@ export default function LearningPage() {
     const [refreshKey, setRefreshKey] = useState(0);
     const [showSummary, setShowSummary] = useState(false);
     const [hasError, setHasError] = useState(false);
+    const [isContentLoading, setIsContentLoading] = useState(false);
 
     const [modalContent, setModalContent] = useState<{
         title: string;
@@ -84,9 +91,19 @@ export default function LearningPage() {
     const [cheatsheetPoints, setCheatsheetPoints] = useState<any[]>([]);
 
     useEffect(() => {
+        const urlTopic = searchParams?.get("topic") || undefined;
+        const urlSubject = searchParams?.get("subject") || undefined;
+        const urlSource = searchParams?.get("source") || "courses";
+        
+        setActiveTopic(urlTopic);
+        setActiveSubject(urlSubject);
+        setActiveSource(urlSource);
+    }, [searchParams]);
+
+    useEffect(() => {
         setIsCompletedSession(false);
         setShowSummary(false);
-    }, [topic]);
+    }, [activeTopic]);
 
     useEffect(() => {
         const urlTopic = searchParams?.get("topic");
@@ -116,18 +133,121 @@ export default function LearningPage() {
         return 1;
     };
 
-    const fetchData = async () => {
+    const handleSelectTopic = (id: string, subjectId?: string) => {
+        setActiveTopic(id);
+        setActiveSubject(subjectId);
+        
+        const query = roadmapIdParam ? `&roadmap_id=${roadmapIdParam}` : "";
+        const subjQuery = subjectId ? `&subject=${encodeURIComponent(subjectId)}` : "";
+        window.history.pushState(
+            null, 
+            "", 
+            `/learning?topic=${encodeURIComponent(id)}${subjQuery}${query}&source=${activeSource}`
+        );
+    };
+
+    const activeRequestTopicRef = useRef<string | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const targetTextRef = useRef("");
+    const typewriterIntervalRef = useRef<any>(null);
+
+    const fetchData = async (forceRegenerate: boolean = false) => {
+        // Cancel any previous pending requests and typewriter timers immediately
+        if (abortControllerRef.current) {
+            console.log("Cancelling previous request.");
+            abortControllerRef.current.abort();
+        }
+        if (typewriterIntervalRef.current) {
+            clearInterval(typewriterIntervalRef.current);
+        }
+
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+
+        // Set isContentLoading to true immediately to trigger local loading states
+        setIsContentLoading(true);
+
+        const studentId = getStudentId();
+        const roadmapId = searchParams?.get("roadmap_id") ? parseInt(searchParams.get("roadmap_id") as string) : undefined;
         try {
             setHasError(false);
-            const studentId = getStudentId();
-            const roadmapId = searchParams?.get("roadmap_id") ? parseInt(searchParams.get("roadmap_id") as string) : undefined;
+            const response = await getLearningData(activeTopic, studentId, activeSubject, roadmapId, activeSource, undefined, abortController.signal);
             
-            const response = await getLearningData(topic, studentId, subject, roadmapId, source);
+            if (abortController.signal.aborted) return;
+
+            const selectedTopic = response.selectedTopic || activeTopic || "General Topic";
+
+            // If topic is already cached, load it instantly and skip streaming
+            const hasCachedContent = response.notesResponse && 
+                                     typeof response.notesResponse.content === "string" && 
+                                     response.notesResponse.content.length > 0;
+
+            if (hasCachedContent && !forceRegenerate) {
+                setData(response);
+                setIsContentLoading(false);
+                activeRequestTopicRef.current = selectedTopic;
+                return;
+            }
+
             setData(response);
-            
-            const selectedTopic = response.selectedTopic || topic || "General Topic";
+            setIsContentLoading(false);
+
+            // Prevent duplicate requests for the same topic
+            if (activeRequestTopicRef.current === selectedTopic && !forceRegenerate) {
+                console.log("Topic has not changed and no regeneration requested. Reusing explanation.");
+                return;
+            }
+
+            activeRequestTopicRef.current = selectedTopic;
+
+            // Reset notes content and typewriter target so the skeleton loader shows
+            targetTextRef.current = "";
+            setData(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    notesResponse: { content: "" }
+                };
+            });
+
+            // Start smooth typewriter interval
+            let currentTypewriterLength = 0;
+            typewriterIntervalRef.current = setInterval(() => {
+                if (currentTypewriterLength < targetTextRef.current.length) {
+                    const diff = targetTextRef.current.length - currentTypewriterLength;
+                    // Catch up step based on how far behind the typewriter is from the target stream text
+                    const step = diff > 200 ? 12 : diff > 50 ? 5 : diff > 15 ? 2 : 1;
+                    currentTypewriterLength += step;
+                    const nextTextChunk = targetTextRef.current.slice(0, currentTypewriterLength);
+                    
+                    setData(prev => {
+                        if (!prev) return prev;
+                        if (activeRequestTopicRef.current !== selectedTopic) return prev;
+                        return {
+                            ...prev,
+                            notesResponse: { content: nextTextChunk }
+                        };
+                    });
+                }
+            }, 25);
+
+            // If we are forcing regeneration, we call the clear cache endpoint first
+            if (forceRegenerate) {
+                try {
+                    await fetch(`/api/learning/content?student_id=${studentId}&topic=${encodeURIComponent(selectedTopic)}&subject=${encodeURIComponent(activeSubject || "")}&force=true&t=${Date.now()}`, {
+                        method: "GET",
+                        headers: {
+                            "Cache-Control": "no-cache",
+                            "Pragma": "no-cache"
+                        }
+                    });
+                } catch (err) {
+                    console.warn("Failed to clear backend content cache:", err);
+                }
+            }
+
             try {
-                await streamLearningContent(selectedTopic, studentId, subject, (text) => {
+                await streamLearningContent(selectedTopic, studentId, activeSubject, (text) => {
                     let displayMarkdown = text;
                     let revisionData = undefined;
                     if (text.includes("---REVISION---")) {
@@ -138,52 +258,57 @@ export default function LearningPage() {
                         } catch (e) {}
                     }
                     
-                    setData(prev => {
-                        if (!prev) return prev;
-                        return {
-                            ...prev,
-                            notesResponse: { content: displayMarkdown },
-                            learningAssistantResponse: revisionData ? {
-                                ...prev.learningAssistantResponse,
-                                data: {
-                                    ...prev.learningAssistantResponse?.data,
-                                    revision: revisionData
+                    // Update the target text so the typewriter queue can pick it up and stream continuously
+                    targetTextRef.current = displayMarkdown;
+
+                    if (revisionData) {
+                        setData(prev => {
+                            if (!prev) return prev;
+                            if (activeRequestTopicRef.current !== selectedTopic) return prev;
+                            return {
+                                ...prev,
+                                learningAssistantResponse: {
+                                    ...prev.learningAssistantResponse,
+                                    data: {
+                                        ...prev.learningAssistantResponse?.data,
+                                        revision: revisionData
+                                    }
                                 }
-                            } : prev.learningAssistantResponse
-                        };
-                    });
-                });
-            } catch (streamingError) {
-                console.warn("Streaming failed, falling back:", streamingError);
-                const contentResponse = await getLearningContent(selectedTopic, studentId, subject);
-                setData(prev => {
-                    if (!prev) return prev;
-                    return {
-                        ...prev,
-                        notesResponse: contentResponse.notesResponse,
-                        learningAssistantResponse: {
-                            ...prev.learningAssistantResponse,
-                            data: {
-                                ...prev.learningAssistantResponse?.data,
-                                revision: contentResponse.revision
-                            }
-                        }
-                    };
-                });
+                            };
+                        });
+                    }
+                }, abortController.signal);
+            } catch (streamingError: any) {
+                if (streamingError.name === "AbortError") {
+                    console.log("Request successfully aborted.");
+                    return;
+                }
+                console.warn("Streaming failed, letting user know:", streamingError);
+                // No fallback to synchronous REST calls - strictly streaming only!
+                setHasError(true);
             }
-        } catch (error) {
+        } catch (error: any) {
+            if (error.name === "AbortError" || (error instanceof DOMException && error.name === "AbortError")) {
+                console.log("Request successfully aborted.");
+                return;
+            }
             console.error("Failed to load learning data:", error);
             setHasError(true);
         }
-    }
+    };
 
     useEffect(() => {
-        fetchData();
-    }, [topic, subject, source, refreshKey]);
+        fetchData(false);
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, [activeTopic, activeSubject, activeSource, refreshKey]);
 
     // Fetch Cheat Sheet dynamically
     useEffect(() => {
-        const selectedTopic = data?.selectedTopic || topic;
+        const selectedTopic = data?.selectedTopic || activeTopic;
         if (!selectedTopic || typeof selectedTopic !== "string") return;
         
         async function fetchCheatSheet() {
@@ -201,7 +326,7 @@ export default function LearningPage() {
             }
         }
         fetchCheatSheet();
-    }, [topic, data?.selectedTopic]);
+    }, [activeTopic, data?.selectedTopic]);
 
     const handleSuggestionClick = (id: string) => {
         setSelectedSuggestion(id);
@@ -294,50 +419,41 @@ export default function LearningPage() {
         setModalContent({
             title: id === 'simpler' ? "Simplifying Concept..." : id === 'example' ? "Generating Examples..." : "Generating Summary...",
             type: id as 'explain' | 'example' | 'summarize',
-            data: null,
+            data: "",
             loading: true
         });
         
         try {
             if (id === 'simpler') {
-                const res = await explainSimpler(studentId, data.selectedTopic);
-                if (res.success) {
-                    setModalContent({
+                await streamExplainSimpler(studentId, data.selectedTopic, (text) => {
+                    setModalContent(prev => prev ? {
+                        ...prev,
                         title: `Explain Simpler: ${data.selectedTopic}`,
-                        type: 'explain',
-                        data: res.data,
+                        data: text,
                         loading: false
-                    });
-                } else {
-                    setModalContent(null);
-                }
+                    } : null);
+                });
             } else if (id === 'example') {
-                const res = await giveExamples(studentId, data.selectedTopic);
-                if (res.success) {
-                    setModalContent({
+                await streamGiveExamples(studentId, data.selectedTopic, (text) => {
+                    setModalContent(prev => prev ? {
+                        ...prev,
                         title: `Real-world Examples: ${data.selectedTopic}`,
-                        type: 'example',
-                        data: res.data,
+                        data: text,
                         loading: false
-                    });
-                } else {
-                    setModalContent(null);
-                }
+                    } : null);
+                });
             } else if (id === 'summary') {
-                const res = await summarizeTopic(studentId, data.selectedTopic);
-                if (res.success) {
-                    setModalContent({
+                await streamSummarizeTopic(studentId, data.selectedTopic, (text) => {
+                    setModalContent(prev => prev ? {
+                        ...prev,
                         title: `Summary & Key Points: ${data.selectedTopic}`,
-                        type: 'summarize',
-                        data: res.data,
+                        data: text,
                         loading: false
-                    });
-                } else {
-                    setModalContent(null);
-                }
+                    } : null);
+                });
             }
         } catch (err) {
-            console.error("Failed to execute quick action:", err);
+            console.error("Failed to execute quick action stream:", err);
             setModalContent(null);
         }
     };
@@ -372,8 +488,8 @@ export default function LearningPage() {
 
     const handleConceptClick = (concept: any) => {
         if (concept.topic) {
-            const subjQuery = subject ? `&subject=${encodeURIComponent(subject)}` : "";
-            router.push(`/learning?topic=${encodeURIComponent(concept.topic)}${subjQuery}&source=${source}`);
+            const subjQuery = activeSubject ? `&subject=${encodeURIComponent(activeSubject)}` : "";
+            router.push(`/learning?topic=${encodeURIComponent(concept.topic)}${subjQuery}&source=${activeSource}`);
         }
     };
 
@@ -381,9 +497,9 @@ export default function LearningPage() {
         if (!data?.selectedTopic) return;
         
         if (id === "practice_topic") {
-            window.location.href = `/practice?topic=${encodeURIComponent(data.selectedTopic)}&source=${source}`;
+            window.location.href = `/practice?topic=${encodeURIComponent(data.selectedTopic)}&source=${activeSource}`;
         } else if (id === "take_quiz") {
-            window.location.href = `/practice?topic=${encodeURIComponent(data.selectedTopic)}&mode=exam&source=${source}`;
+            window.location.href = `/practice?topic=${encodeURIComponent(data.selectedTopic)}&mode=exam&source=${activeSource}`;
         } else if (id === "add_revision") {
             await handleAddRevision();
         } else if (id === "view_notes") {
@@ -466,14 +582,18 @@ export default function LearningPage() {
         <div className="flex w-full h-[calc(100vh-4rem)] relative">
             <OfflineState />
             <div className="w-[20vw] shrink-0 h-full overflow-y-auto purple-scrollbar border-r border-white/10">
-                <LearningSidebar />
+                <LearningSidebar data={data} onSelectTopic={handleSelectTopic} />
             </div>
 
-            <div id="learning-content-container" className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto purple-scrollbar">
-                <div className="flex-1 space-y-4 px-6 py-4 w-full">
+            <div id="learning-content-container" className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto purple-scrollbar relative">
+                {isContentLoading && (
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500 animate-pulse z-10" />
+                )}
+                <div className={`flex-1 space-y-6 px-6 py-6 w-full max-w-4xl mx-auto transition-opacity duration-300 ${isContentLoading ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
                     <Header data={data.headerResponse?.data} />
+                    
                     <div id="notes-section">
-                        <NotesCard notesResponse={data.notesResponse} showSummary={showSummary} setShowSummary={setShowSummary} />
+                        <NotesCard notesResponse={data.notesResponse} onRegenerate={() => fetchData(true)} />
                     </div>
                     
                     <QuickActions
@@ -481,22 +601,21 @@ export default function LearningPage() {
                         onActionClick={handleQuickActionClick}
                     />
                     
-                    <RelatedConcepts
-                        concepts={data.learningAssistantResponse?.data?.relatedConcepts || []}
-                        onConceptClick={handleConceptClick}
-                    />
-                    
                     <QuickRevisionCard
-                        title="Interview Cheat Sheet"
                         points={cheatsheetPoints.length > 0 ? cheatsheetPoints : (data.learningAssistantResponse?.data?.revision?.points || [])}
                         onSaveNotes={handleSaveNotes}
                         onAddRevision={handleAddRevision}
                     />
                     
-                    <LearningActions 
-                        actions={learningActions} 
-                        onActionClick={handleLearningActionClick}
-                    />
+                    <button
+                        onClick={() => {
+                            const targetTopic = data?.selectedTopic || activeTopic || "";
+                            window.location.href = `/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}`;
+                        }}
+                        className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-sm py-3.5 rounded-xl transition-all shadow-[0_4px_15px_rgba(99,102,241,0.2)] flex items-center justify-center gap-2 cursor-pointer border border-indigo-500/20 active:scale-[0.98] mt-6"
+                    >
+                        <span>📝 Practice Topic</span>
+                    </button>
                 </div>
             </div>
 
@@ -528,93 +647,15 @@ export default function LearningPage() {
                         
                         {/* Body */}
                         <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4 text-sm text-zinc-300 custom-scrollbar">
-                            {modalContent.loading ? (
+                            {modalContent.loading && !modalContent.data ? (
                                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
                                     <div className="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
                                     <p className="text-zinc-400 text-xs animate-pulse">AI is generating content, please wait...</p>
                                 </div>
                             ) : (
-                                <>
-                                    {modalContent.type === 'explain' && (
-                                        <div className="space-y-4">
-                                            <div>
-                                                <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Concept</h4>
-                                                <p className="leading-relaxed bg-white/[0.02] border border-white/5 p-3.5 rounded-xl">{modalContent.data.simplified_explanation}</p>
-                                            </div>
-                                            {modalContent.data.examples && modalContent.data.examples.length > 0 && (
-                                                <div>
-                                                    <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Analogy / Example</h4>
-                                                    <ul className="space-y-2">
-                                                        {modalContent.data.examples.map((ex: string, i: number) => (
-                                                            <li key={i} className="flex gap-2 items-start bg-indigo-500/5 border border-indigo-500/10 p-3 rounded-xl">
-                                                                <span className="text-indigo-400 font-bold"># {i + 1}</span>
-                                                                <span>{ex}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-                                            {modalContent.data.key_idea && (
-                                                <div className="border-t border-white/5 pt-4">
-                                                    <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Key Idea</h4>
-                                                    <p className="font-medium text-white italic">"{modalContent.data.key_idea}"</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {modalContent.type === 'example' && (
-                                        <div className="space-y-4">
-                                            <div>
-                                                <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">Scenarios</h4>
-                                                <div className="grid gap-3">
-                                                    {modalContent.data.examples?.map((ex: any, i: number) => (
-                                                        <div key={i} className="bg-cyan-500/5 border border-cyan-500/10 p-3.5 rounded-xl">
-                                                            <div className="text-xs font-bold text-cyan-400 mb-1">{ex.title}</div>
-                                                            <p className="text-xs leading-relaxed text-zinc-300">{ex.description}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            {modalContent.data.practical_applications && (
-                                                <div className="border-t border-white/5 pt-4">
-                                                    <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Practical Applications</h4>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {modalContent.data.practical_applications.map((app: string, i: number) => (
-                                                            <span key={i} className="text-xs bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-white/80">{app}</span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {modalContent.type === 'summarize' && (
-                                        <div className="space-y-4">
-                                            <div>
-                                                <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">Key Revision Points</h4>
-                                                <ul className="space-y-2">
-                                                    {modalContent.data.summary_points?.map((pt: string, i: number) => (
-                                                        <li key={i} className="flex gap-2.5 items-start bg-purple-500/5 border border-purple-500/10 p-3 rounded-xl">
-                                                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
-                                                            <span className="text-xs leading-relaxed">{pt}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                            {modalContent.data.important_concepts && (
-                                                <div className="border-t border-white/5 pt-4">
-                                                    <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Key Concepts to Remember</h4>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {modalContent.data.important_concepts.map((concept: string, i: number) => (
-                                                            <span key={i} className="text-xs bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-lg text-purple-300 font-medium">{concept}</span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </>
+                                <div className="prose prose-invert prose-sm max-w-none prose-headings:text-zinc-100 prose-headings:font-bold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/10 prose-hr:border-white/5">
+                                    <ReactMarkdown>{modalContent.data || ""}</ReactMarkdown>
+                                </div>
                             )}
                         </div>
                     </div>

@@ -1,10 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from "react";
-import PracticeModeSection from "./PracticeModeSection";
 import TopicSelectorSection from "./TopicSelectorSection";
 import SessionSettingsSection from "./SessionSettingsSection";
-import SessionInfoSection from "./SessionInfoSection";
 import AddGeneralTopicModal from "./AddGeneralTopicModal";
 import { getPracticeData, PracticeDataResponse } from "@/lib/api";
 import { Plus } from "lucide-react";
@@ -23,7 +21,6 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
   const [data, setData] = useState<PracticeDataResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [selectedMode, setSelectedMode] = useState<string>("topic");
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
   const [selectedTopic, setSelectedTopic] = useState<string>(topicParam || "");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("easy");
@@ -51,14 +48,6 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
       const studentId = getStudentId();
       const response = await getPracticeData(studentId);
       setData(response);
-
-      // Select dynamic recommended mode
-      if (response.practiceModes && response.practiceModes.length > 0) {
-        const currentMode = response.practiceModes.find((m: any) => m.isCurrent);
-        if (currentMode) {
-          setSelectedMode(currentMode.id);
-        }
-      }
 
       // Auto-expand only document subjects and select first topic if none is selected
       if (response.subjects && response.subjects.length > 0) {
@@ -107,7 +96,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
 
   const handleStartPractice = () => {
     if (onStartSession) {
-      onStartSession(selectedMode, selectedTopic || undefined, selectedDifficulty, questionCount);
+      onStartSession("topic", selectedTopic || undefined, selectedDifficulty, questionCount);
     }
   };
 
@@ -131,13 +120,6 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
   return (
     <div className="bg-[#131826] w-[20vw] h-screen flex flex-col text-white">
       <div className="flex-1 overflow-y-auto purple-scrollbar">
-        {/* Practice Mode Section */}
-        <PracticeModeSection
-          modes={data?.practiceModes || []}
-          selectedMode={selectedMode}
-          onSelectMode={setSelectedMode}
-        />
-
         {/* Topic Selector Section */}
         {hasSubjects ? (
           <TopicSelectorSection
@@ -146,7 +128,6 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
             selectedTopic={selectedTopic}
             onSelectTopic={(topic) => {
               setSelectedTopic(topic);
-              setSelectedMode("topic");
             }}
             onToggleSubject={toggleSubject}
             onAddTopicClick={() => setIsAddModalOpen(true)}
@@ -193,11 +174,6 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
             Start Practice
           </button>
         </div>
-
-        {/* Session Info Section */}
-        {data?.sessionStats && (
-          <SessionInfoSection stats={data.sessionStats} />
-        )}
       </div>
 
       {/* Add Topic Modal */}

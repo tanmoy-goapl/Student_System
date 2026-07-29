@@ -570,7 +570,15 @@ export interface LearningDataResponse {
   quickActions?: any[];
 }
 
-export async function getLearningData(topic?: string, studentId?: number, subject?: string, roadmapId?: number, source?: string, classId?: number): Promise<LearningDataResponse> {
+export async function getLearningData(
+  topic?: string, 
+  studentId?: number, 
+  subject?: string, 
+  roadmapId?: number, 
+  source?: string, 
+  classId?: number,
+  signal?: AbortSignal
+): Promise<LearningDataResponse> {
   let url = "/api/learning/data";
   const params = new URLSearchParams();
   if (topic) params.append("topic", topic);
@@ -585,6 +593,7 @@ export async function getLearningData(topic?: string, studentId?: number, subjec
   
   return request<LearningDataResponse>(url, {
     method: "GET",
+    signal,
   });
 }
 
@@ -612,7 +621,8 @@ export async function streamLearningContent(
   topic: string, 
   studentId: number, 
   subject?: string, 
-  onChunk?: (text: string) => void
+  onChunk?: (text: string) => void,
+  signal?: AbortSignal
 ): Promise<string> {
   let url = "/api/learning/stream_content";
   const params = new URLSearchParams();
@@ -629,7 +639,8 @@ export async function streamLearningContent(
 
   const response = await fetch(url, {
     method: "GET",
-    headers
+    headers,
+    signal
   });
 
   if (!response.body) throw new Error("ReadableStream not yet supported in this browser.");
@@ -638,6 +649,49 @@ export async function streamLearningContent(
   const decoder = new TextDecoder();
   let fullText = "";
 
+  if (signal) {
+    signal.addEventListener("abort", () => {
+      try {
+        reader.cancel();
+      } catch (e) {}
+    });
+  }
+
+  try {
+    while (true) {
+      if (signal?.aborted) {
+        break;
+      }
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      fullText += chunk;
+      if (onChunk) onChunk(fullText);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  
+  return fullText;
+}
+
+export async function streamExplainSimpler(
+  studentId: number, 
+  topicName: string, 
+  onChunk?: (text: string) => void,
+  signal?: AbortSignal
+): Promise<string> {
+  let url = "/api/learning/explain/stream";
+  const params = new URLSearchParams();
+  params.append("student_id", studentId.toString());
+  params.append("topic_name", topicName);
+  const q = params.toString();
+  if (q) url += `?${q}`;
+  const response = await fetch(url, { method: "GET", signal });
+  if (!response.body) throw new Error("ReadableStream not supported.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -645,7 +699,60 @@ export async function streamLearningContent(
     fullText += chunk;
     if (onChunk) onChunk(fullText);
   }
-  
+  return fullText;
+}
+
+export async function streamGiveExamples(
+  studentId: number, 
+  topicName: string, 
+  onChunk?: (text: string) => void,
+  signal?: AbortSignal
+): Promise<string> {
+  let url = "/api/learning/examples/stream";
+  const params = new URLSearchParams();
+  params.append("student_id", studentId.toString());
+  params.append("topic_name", topicName);
+  const q = params.toString();
+  if (q) url += `?${q}`;
+  const response = await fetch(url, { method: "GET", signal });
+  if (!response.body) throw new Error("ReadableStream not supported.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    fullText += chunk;
+    if (onChunk) onChunk(fullText);
+  }
+  return fullText;
+}
+
+export async function streamSummarizeTopic(
+  studentId: number, 
+  topicName: string, 
+  onChunk?: (text: string) => void,
+  signal?: AbortSignal
+): Promise<string> {
+  let url = "/api/learning/summarize/stream";
+  const params = new URLSearchParams();
+  params.append("student_id", studentId.toString());
+  params.append("topic_name", topicName);
+  const q = params.toString();
+  if (q) url += `?${q}`;
+  const response = await fetch(url, { method: "GET", signal });
+  if (!response.body) throw new Error("ReadableStream not supported.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    fullText += chunk;
+    if (onChunk) onChunk(fullText);
+  }
   return fullText;
 }
 

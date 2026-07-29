@@ -29,8 +29,8 @@ from database import get_db
 from models import ChatMessage, Document, DocumentChunk, User
 from services.search import search_relevant_chunks, build_rich_context
 from schemas.chat import ChatRequest, Message, ChatResponse
-from services.chat_intent import RetrievalMode, detect_retrieval_mode
-from services.chat_prompts import _build_system_prompt, apply_role_guardrails
+from services.chatbot.chat_intent import RetrievalMode, detect_retrieval_mode
+from services.chatbot.chat_prompts import _build_system_prompt, apply_role_guardrails
 from services.llm_client import _call_llm, _call_llm_stream
 from services.query_planner import plan_retrieval_strategy
 from services.document_resolver import resolve_documents, get_role_visible_docs
@@ -201,7 +201,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             logger.error(f"Failed to persist user message: {e}")
 
         # ── Personal Onboarding Interception ──────────────────────────────────
-        from services.personal_roadmap import (
+        from services.chatbot.personal_roadmap import (
             is_onboarding_active, reset_learner_preferences, handle_preferences_onboarding,
             get_learner_preferences, generate_personalized_roadmap
         )
@@ -362,7 +362,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
 
         # ── STAGE 5: Prompt Construction & LLM Streaming ─────────────────────
         t_prompt_start = time.perf_counter()
-        from services.personal_roadmap import get_learner_preferences
+        from services.chatbot.personal_roadmap import get_learner_preferences
         prefs = get_learner_preferences(request.student_id, db)
         proficiency = prefs.proficiency if prefs else None
 
@@ -489,7 +489,7 @@ CURRENT REQUEST: {request.question}"""
     yield json.dumps({"status": "Building custom milestone curriculum (may take ~20s)..."}) + "\n"
 
     from roadmap_models import UserGoal, LearningRoadmap, DailyTask
-    from services.roadmap_engine import generate_roadmap_from_llm
+    from services.roadmap.roadmap_engine import generate_roadmap_from_llm
 
     goal_record = UserGoal(
         student_id=request.student_id,
@@ -507,7 +507,7 @@ CURRENT REQUEST: {request.question}"""
     def bg_task(student_id, goal_id, goal_title, goal_duration):
         bg_db = SessionLocal()
         try:
-            from services.roadmap_engine import generate_roadmap_from_llm
+            from services.roadmap.roadmap_engine import generate_roadmap_from_llm
             from roadmap_models import LearningRoadmap, DailyTask, UserGoal
 
             bg_goal = bg_db.query(UserGoal).filter(UserGoal.id == goal_id).first()

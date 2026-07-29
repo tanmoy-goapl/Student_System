@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001";
+const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8001";
 
 export const dynamic = "force-dynamic";
 

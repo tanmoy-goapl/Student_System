@@ -1,18 +1,9 @@
-'use client'
-
-import LivePerformance from "./LivePerformance";
 import AIBehavioralInsights from "./AIBehavioralInsights";
 import WeakTopics from "./WeakTopics";
 import AdaptiveEngine from "./AdaptiveEngine";
 import SuggestedNext from "./SuggestedNext";
 
 interface PracticeSidebarProps {
-  // Live Performance Props
-  accuracy?: number;
-  avgSpeed?: string;
-  streak?: number;
-  pointsEarned?: number;
-
   // Dynamic data from API
   weakTopics?: {
     topic: string;
@@ -36,10 +27,6 @@ interface PracticeSidebarProps {
 }
 
 export default function PracticeSidebar({
-  accuracy = 0,
-  avgSpeed = "0s",
-  streak = 0,
-  pointsEarned = 0,
   weakTopics,
   insights,
   adaptiveEngine,
@@ -52,13 +39,6 @@ export default function PracticeSidebar({
     <div className="w-[20vw] h-screen bg-gradient-to-b from-slate-900 to-slate-950 flex flex-col border-l border-white/10 overflow-hidden">
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <LivePerformance
-          accuracy={accuracy}
-          avgSpeed={avgSpeed}
-          streak={streak}
-          pointsEarned={pointsEarned}
-        />
-
         <AIBehavioralInsights insights={insights} />
 
         <WeakTopics topics={weakTopics} />

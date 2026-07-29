@@ -51,35 +51,36 @@ interface LearningSectionHeaderProps {
 export function Header({
   data,
 }: LearningSectionHeaderProps) {
+  const difficultyStat = data.stats.find(s => s.label === "Difficulty");
+  const accuracyStat = data.stats.find(s => s.label === "Accuracy");
+
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-r from-[#17152b] via-[#14142a] to-[#10111d] p-6 shadow-2xl">
-      <div className="flex flex-wrap gap-6 items-center justify-between w-full">
-        {/* LEFT */}
-        <div className="flex-1 min-w-[250px] sm:min-w-[300px]">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <Badge>{data.category}</Badge>
+    <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-5">
+      <div>
+        <div className="flex items-center gap-3 mb-1.5">
+          <Badge>{data.category}</Badge>
+          <Badge variant="danger">{data.status}</Badge>
+        </div>
+        <h1 className="text-2xl font-extrabold tracking-tight text-white">
+          {data.title}
+        </h1>
+        <p className="text-xs text-zinc-400 mt-1 font-medium">{data.subtitle}</p>
+      </div>
 
-            <Badge variant="danger">{data.status}</Badge>
+      <div className="flex items-center gap-6 self-start sm:self-center bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3">
+        {difficultyStat && (
+          <div className="flex flex-col">
+            <span className="text-[9px] uppercase tracking-wider text-zinc-400 font-semibold mb-0.5">Difficulty</span>
+            <span className={`text-sm font-bold ${difficultyStat.valueColor || "text-white"}`}>{difficultyStat.value}</span>
           </div>
-
-          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight">
-            {data.title}
-          </h1>
-
-          <p className="mt-2 text-xs sm:text-sm font-medium text-zinc-400">{data.subtitle}</p>
-        </div>
-
-        {/* RIGHT */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {data.stats.map((stat) => (
-            <StatCard
-              key={stat.label}
-              label={stat.label}
-              value={stat.value}
-              valueColor={stat.valueColor}
-            />
-          ))}
-        </div>
+        )}
+        <div className="h-8 w-[1px] bg-white/10" />
+        {accuracyStat && (
+          <div className="flex flex-col">
+            <span className="text-[9px] uppercase tracking-wider text-zinc-400 font-semibold mb-0.5">Accuracy</span>
+            <span className={`text-sm font-bold ${accuracyStat.valueColor || "text-white"}`}>{accuracyStat.value}</span>
+          </div>
+        )}
       </div>
     </div>
   );
