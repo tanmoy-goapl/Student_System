@@ -77,7 +77,20 @@ export default function PracticePage({
     const [hasError, setHasError] = useState(false);
     const [aiQuery, setAiQuery] = useState("");
     const [showAIHelp, setShowAIHelp] = useState(false);
-    const [totalQuestions, setTotalQuestions] = useState(10);
+    const [totalQuestions, setTotalQuestions] = useState(5);
+    const [loadingStep, setLoadingStep] = useState(0);
+
+    useEffect(() => {
+        if (isLoading) {
+            setLoadingStep(0);
+            const interval = setInterval(() => {
+                setLoadingStep(prev => (prev < 2 ? prev + 1 : prev));
+            }, 800);
+            return () => clearInterval(interval);
+        }
+    }, [isLoading]);
+
+    const hasAutoStarted = useRef(false);
 
     // Timer
     const timerRef = useRef<number>(0);
@@ -177,7 +190,8 @@ export default function PracticePage({
     useEffect(() => {
         const topicParam = searchParams?.get("topic");
         const modeParam = searchParams?.get("mode") || "topic";
-        if (topicParam) {
+        if (topicParam && !hasAutoStarted.current) {
+            hasAutoStarted.current = true;
             handleStartSession(modeParam, topicParam);
         }
     }, [searchParams]);
@@ -314,7 +328,7 @@ export default function PracticePage({
                             "🎯 Generating quiz questions...",
                             "✨ Finalizing quiz workspace..."
                         ]}
-                        currentStepIndex={isGenerating ? 2 : 3}
+                        currentStepIndex={loadingStep}
                     />
                 </div>
             );
@@ -408,8 +422,7 @@ export default function PracticePage({
                             <div className="text-4xl">📄</div>
                             <h3 className="text-lg font-semibold text-white">No Questions Generated</h3>
                             <p className="text-slate-400 text-sm">
-                                Upload study documents first, then start a practice session.
-                                The AI will generate questions from your uploaded content.
+                                Please check your connection or try restarting the practice session.
                             </p>
                         </div>
                     </div>
@@ -520,7 +533,7 @@ export default function PracticePage({
             </div>
 
             {/* Right sidebar containing insights, weak topics, and adaptive suggestions */}
-            <div className="w-[20vw] shrink-0 h-full overflow-y-auto purple-scrollbar border-l border-white/10">
+            <div className="w-[20vw] shrink-0 h-full flex flex-col">
                 <PracticeSidebar
                     weakTopics={performance?.weak_topics}
                     insights={performance?.insights}

@@ -34,8 +34,27 @@ export default function PersonalPage() {
 
   useEffect(() => {
     fetchRoadmap();
-    const interval = setInterval(() => {
-      fetchRoadmap();
+    const interval = setInterval(async () => {
+      try {
+        const studentId = localStorage.getItem("user_id") || "1";
+        const res = await fetch(`/api/roadmap/current/${studentId}`);
+        const rData = await res.json();
+        if (rData.generating) {
+          setIsGenerating(true);
+          setGeneratingTitle(rData.goal_title);
+        } else if (rData.success) {
+          setIsGenerating(false);
+          setRoadmap(rData.roadmap);
+          setTasks(rData.tasks);
+          if (rData.active_week) setActiveWeek(rData.active_week);
+          clearInterval(interval);
+        } else {
+          setIsGenerating(false);
+          clearInterval(interval);
+        }
+      } catch (error) {
+        console.error("Failed to poll roadmap:", error);
+      }
     }, 5000);
     return () => clearInterval(interval);
   }, []);

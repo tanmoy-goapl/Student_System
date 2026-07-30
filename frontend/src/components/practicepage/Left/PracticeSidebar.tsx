@@ -24,7 +24,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
   const [selectedTopic, setSelectedTopic] = useState<string>(topicParam || "");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("easy");
-  const [questionCount, setQuestionCount] = useState<number>(2);
+  const [questionCount, setQuestionCount] = useState<number>(5);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {

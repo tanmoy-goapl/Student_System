@@ -36,9 +36,9 @@ export default function PracticeSidebar({
   onGoToLearning,
 }: PracticeSidebarProps) {
   return (
-    <div className="w-[20vw] h-screen bg-gradient-to-b from-slate-900 to-slate-950 flex flex-col border-l border-white/10 overflow-hidden">
+    <div className="w-full h-full bg-gradient-to-b from-slate-900 to-slate-950 flex flex-col border-l border-white/10 overflow-hidden">
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
         <AIBehavioralInsights insights={insights} />
 
         <WeakTopics topics={weakTopics} />

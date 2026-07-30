@@ -146,6 +146,33 @@ export default function ProfessorSidebar() {
 
       {/* Scrollable Navigation & Class List */}
       <div className="flex-1 overflow-y-auto purple-scrollbar px-5 pb-5 space-y-6">
+        {/* Navigation Items */}
+        <div>
+          <h2 className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold mb-3 px-1">Navigation</h2>
+          <nav className="space-y-1">
+            {navItems.map(item => {
+              const active = pathname === item.path || (item.path !== "/professor" && pathname?.startsWith(item.path));
+              return (
+                <Link
+                  key={item.label}
+                  href={item.path}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
+                    active
+                      ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-white border border-blue-500/20 shadow-[0_0_12px_rgba(59,130,246,0.1)]"
+                      : "text-white/50 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <item.icon size={15} strokeWidth={active ? 2.2 : 1.8} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Divider */}
+        <div className="w-full h-px bg-white/5" />
+
         {/* Classes Section */}
         <div>
           <h2 className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold mb-3 px-1">My Classes</h2>
@@ -207,33 +234,6 @@ export default function ProfessorSidebar() {
               );
             })}
           </div>
-        </div>
-
-        {/* Divider */}
-        <div className="w-full h-px bg-white/5" />
-
-        {/* Navigation Items */}
-        <div>
-          <h2 className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold mb-3 px-1">Navigation</h2>
-          <nav className="space-y-1">
-            {navItems.map(item => {
-              const active = pathname === item.path || (item.path !== "/professor" && pathname?.startsWith(item.path));
-              return (
-                <Link
-                  key={item.label}
-                  href={item.path}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
-                    active
-                      ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-white border border-blue-500/20 shadow-[0_0_12px_rgba(59,130,246,0.1)]"
-                      : "text-white/50 hover:bg-white/5 hover:text-white"
-                  }`}
-                >
-                  <item.icon size={15} strokeWidth={active ? 2.2 : 1.8} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
         </div>
       </div>
 

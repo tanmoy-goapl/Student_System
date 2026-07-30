@@ -1,4 +1,5 @@
 import { Play, RefreshCw, BookOpen, ArrowRight, Target } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface SuggestedAction {
   title: string;
@@ -43,8 +44,10 @@ const actionStyles: Record<string, { icon: any; bg: string; border: string; icon
 };
 
 export default function SuggestedNext({ actions = [] }: SuggestedNextProps) {
+  const router = useRouter();
+
   const handleActionClick = (url: string) => {
-    window.location.href = url;
+    router.push(url);
   };
 
   return (
@@ -54,7 +57,7 @@ export default function SuggestedNext({ actions = [] }: SuggestedNextProps) {
       </h3>
 
       <div className="space-y-2">
-        {actions.map((action, idx) => {
+        {actions.slice(0, 2).map((action, idx) => {
           const style = actionStyles[action.title] || actionStyles["Continue Practice"];
           const Icon = style.icon;
 

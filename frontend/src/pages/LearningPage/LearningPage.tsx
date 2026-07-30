@@ -1,12 +1,10 @@
 'use client';
 
 import { Header } from "@/components/learningpage/Header";
-import { LearningActions } from "@/components/learningpage/LearningActions";
 import NotesCard from "@/components/learningpage/NotesCard";
 import ReactMarkdown from "react-markdown";
 import { QuickActions } from "@/components/learningpage/QuickActions";
 import { QuickRevisionCard } from "@/components/learningpage/QuickRevisionCard";
-import { RelatedConcepts } from "@/components/learningpage/RelatedConcepts";
 import { Sidebar } from "@/components/learningpage/Sidebar/Sidebar";
 import LearningSidebar from "@/components/learningpage/LearningSidebar";
 import { useState, useEffect, useRef } from "react";
@@ -174,8 +172,28 @@ export default function LearningPage() {
             const response = await getLearningData(activeTopic, studentId, activeSubject, roadmapId, activeSource, undefined, abortController.signal);
             
             if (abortController.signal.aborted) return;
+            if (!response) {
+                setHasError(true);
+                setIsContentLoading(false);
+                return;
+            }
 
             const selectedTopic = response.selectedTopic || activeTopic || "General Topic";
+
+            // Sync URL parameters in the history state if the topic parameter was missing (e.g. on roadmap select)
+            const urlTopic = searchParams?.get("topic");
+            if (!urlTopic && response.selectedTopic) {
+                const query = roadmapIdParam ? `&roadmap_id=${roadmapIdParam}` : "";
+                const subjectId = response.selectedSubject || activeSubject;
+                const subjQuery = subjectId ? `&subject=${encodeURIComponent(subjectId)}` : "";
+                window.history.replaceState(
+                    null,
+                    "",
+                    `/learning?topic=${encodeURIComponent(response.selectedTopic)}${subjQuery}${query}&source=${activeSource}`
+                );
+                setActiveTopic(response.selectedTopic);
+                if (subjectId) setActiveSubject(subjectId);
+            }
 
             // If topic is already cached, load it instantly and skip streaming
             const hasCachedContent = response.notesResponse && 
@@ -216,7 +234,7 @@ export default function LearningPage() {
                 if (currentTypewriterLength < targetTextRef.current.length) {
                     const diff = targetTextRef.current.length - currentTypewriterLength;
                     // Catch up step based on how far behind the typewriter is from the target stream text
-                    const step = diff > 200 ? 12 : diff > 50 ? 5 : diff > 15 ? 2 : 1;
+                    const step = diff > 300 ? 35 : diff > 100 ? 18 : diff > 30 ? 8 : diff > 10 ? 4 : 2;
                     currentTypewriterLength += step;
                     const nextTextChunk = targetTextRef.current.slice(0, currentTypewriterLength);
                     
@@ -229,7 +247,7 @@ export default function LearningPage() {
                         };
                     });
                 }
-            }, 25);
+            }, 30);
 
             // If we are forcing regeneration, we call the clear cache endpoint first
             if (forceRegenerate) {
@@ -497,9 +515,9 @@ export default function LearningPage() {
         if (!data?.selectedTopic) return;
         
         if (id === "practice_topic") {
-            window.location.href = `/practice?topic=${encodeURIComponent(data.selectedTopic)}&source=${activeSource}`;
+            router.push(`/practice?topic=${encodeURIComponent(data.selectedTopic)}&source=${activeSource}`);
         } else if (id === "take_quiz") {
-            window.location.href = `/practice?topic=${encodeURIComponent(data.selectedTopic)}&mode=exam&source=${activeSource}`;
+            router.push(`/practice?topic=${encodeURIComponent(data.selectedTopic)}&mode=exam&source=${activeSource}`);
         } else if (id === "add_revision") {
             await handleAddRevision();
         } else if (id === "view_notes") {
@@ -606,11 +624,10 @@ export default function LearningPage() {
                         onSaveNotes={handleSaveNotes}
                         onAddRevision={handleAddRevision}
                     />
-                    
                     <button
                         onClick={() => {
                             const targetTopic = data?.selectedTopic || activeTopic || "";
-                            window.location.href = `/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}`;
+                            router.push(`/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}`);
                         }}
                         className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-sm py-3.5 rounded-xl transition-all shadow-[0_4px_15px_rgba(99,102,241,0.2)] flex items-center justify-center gap-2 cursor-pointer border border-indigo-500/20 active:scale-[0.98] mt-6"
                     >

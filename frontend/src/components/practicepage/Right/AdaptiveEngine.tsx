@@ -35,13 +35,6 @@ export default function AdaptiveEngine({
       bgClass: "bg-blue-500/5 border-blue-500/10",
     },
     {
-      label: "Focus Topic",
-      value: config.focus_topic,
-      icon: Zap,
-      colorClass: "text-violet-400",
-      bgClass: "bg-violet-500/5 border-violet-500/10",
-    },
-    {
       label: "Last Active",
       value: config.last_active,
       icon: Calendar,

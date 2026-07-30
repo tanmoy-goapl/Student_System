@@ -36,9 +36,46 @@ class SubmitAnswerRequest(BaseModel):
 
 @router.post("/session/start")
 def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
-    """Start a new practice session and generate the first batch of questions."""
+    """Start a new practice session, or resume the active one if it exists."""
     try:
-        logger.info(f"[Practice] Starting session: mode={req.mode}, topic={req.topic}, difficulty={req.difficulty}")
+        logger.info(f"[Practice] Starting/resuming session: mode={req.mode}, topic={req.topic}, difficulty={req.difficulty}")
+
+        # Check for existing active session for this student and topic to support instant refresh recovery
+        # Check for existing active session for this student and topic to support instant refresh recovery
+        if req.mode == "topic" and req.topic:
+            existing_session = db.query(PracticeSession).filter(
+                PracticeSession.student_id == req.student_id,
+                PracticeSession.topic == req.topic,
+                PracticeSession.is_active == True
+            ).first()
+            if existing_session:
+                existing_session.question_count = 5
+                db.commit()
+                existing_questions = db.query(PracticeQuestion).filter(
+                    PracticeQuestion.session_id == existing_session.id
+                ).all()
+                if existing_questions:
+                    logger.info(f"[Practice] Resuming existing active session {existing_session.id} for topic='{req.topic}'")
+                    return {
+                        "session_id": existing_session.id,
+                        "mode": existing_session.mode,
+                        "topic": existing_session.topic,
+                        "difficulty": existing_session.difficulty,
+                        "total_questions": 5,
+                        "questions": [
+                            {
+                                "id": pq.id,
+                                "topic": pq.topic,
+                                "subtopic": pq.subtopic,
+                                "difficulty": pq.difficulty,
+                                "question": pq.question_text,
+                                "options": pq.options,
+                                "correct_answer": pq.correct_answer,
+                                "explanation": pq.explanation
+                            }
+                            for pq in existing_questions[:5]
+                        ]
+                    }
 
         # Determine which topics to use based on mode
         if req.mode == "weakness":
@@ -81,7 +118,7 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
             mode=req.mode,
             topic=topic_for_gen,
             difficulty=difficulty,
-            question_count=req.question_count,
+            question_count=5,
             is_active=True,
         )
         db.add(session)
@@ -89,7 +126,7 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
         db.refresh(session)
 
         # Generate first batch of questions
-        gen_count = min(req.question_count, 5)
+        gen_count = 5
         raw_questions = generate_questions(
             student_id=req.student_id,
             topic=topic_for_gen,

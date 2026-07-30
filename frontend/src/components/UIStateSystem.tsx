@@ -526,7 +526,19 @@ export function ProcessingState({
   steps?: string[];
   currentStepIndex?: number;
 }) {
-  const pct = steps.length > 0 ? Math.round(((currentStepIndex + 1) / steps.length) * 100) : 0;
+  const targetPct = steps.length > 0 ? Math.round(((currentStepIndex + 1) / steps.length) * 100) : 0;
+  const [pct, setPct] = useState(10);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPct((p) => {
+        if (p < targetPct) return Math.min(p + 2, targetPct);
+        if (p > targetPct) return Math.max(p - 2, targetPct);
+        return p;
+      });
+    }, 45);
+    return () => clearInterval(interval);
+  }, [targetPct]);
 
   return (
     <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-8 rounded-2xl max-w-md mx-auto my-8 flex flex-col gap-6 shadow-[0_0_50px_-12px_rgba(91,95,255,0.2)] animate-fade-in">

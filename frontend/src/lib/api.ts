@@ -430,6 +430,15 @@ export async function createClass(data: { name: string; course_code: string; pro
   });
 }
 
+export async function deleteClass(classId: number, userId: number) {
+  return request<{
+    success: boolean;
+    message: string;
+  }>(`/api/classroom/${classId}?user_id=${userId}`, {
+    method: "DELETE"
+  });
+}
+
 export async function joinClass(data: { code: string; student_id: number }) {
   return request<{
     success: boolean;
@@ -567,6 +576,7 @@ export interface LearningDataResponse {
   learningAssistantResponse: any;
   rightSidebarData: any;
   selectedTopic: string;
+  selectedSubject?: string;
   quickActions?: any[];
 }
 
@@ -648,13 +658,17 @@ export async function streamLearningContent(
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let fullText = "";
+  let isStreamActive = true;
+
+  const handleAbort = () => {
+    if (!isStreamActive) return;
+    try {
+      reader.cancel().catch(() => {});
+    } catch (e) {}
+  };
 
   if (signal) {
-    signal.addEventListener("abort", () => {
-      try {
-        reader.cancel();
-      } catch (e) {}
-    });
+    signal.addEventListener("abort", handleAbort);
   }
 
   try {
@@ -669,7 +683,13 @@ export async function streamLearningContent(
       if (onChunk) onChunk(fullText);
     }
   } finally {
-    reader.releaseLock();
+    isStreamActive = false;
+    if (signal) {
+      signal.removeEventListener("abort", handleAbort);
+    }
+    try {
+      reader.releaseLock();
+    } catch (e) {}
   }
   
   return fullText;

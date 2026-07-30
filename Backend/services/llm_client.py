@@ -66,7 +66,7 @@ def _call_llm(system_prompt: str, history: list, question: str) -> str:
                 messages=messages,
                 max_tokens=2048,
                 temperature=0.2,
-                timeout=30,
+                timeout=10.0,
             )
             logger.info(f"  [LLM Call] Success with provider '{name}'!")
             return resp.choices[0].message.content
@@ -105,7 +105,7 @@ def _call_llm_stream(system_prompt: str, history: list, question: str):
                 messages=messages,
                 max_tokens=2048,
                 temperature=0.2,
-                timeout=30,
+                timeout=10.0,
                 stream=True,
             )
             

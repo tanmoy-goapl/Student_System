@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { 
   BookOpen, Users, TrendingUp, AlertTriangle, Search, 
-  ChevronDown, UserPlus, PlusCircle, Sparkles, Clock, FileText, X
+  ChevronDown, UserPlus, PlusCircle, Sparkles, Clock, FileText, X, Trash2
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
 import Loader from "@/components/Loader";
-import { createClass } from "@/lib/api";
+import { createClass, deleteClass } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 interface ClassCardData {
@@ -171,6 +171,27 @@ export default function ClassroomsPage() {
       setCreateError(err.message || "An error occurred.");
     } finally {
       setCreateLoading(false);
+    }
+  };
+
+  const handleDeleteClick = async (classId: number) => {
+    const ok = window.confirm("Are you sure you want to delete this class? This will permanently delete all associated curriculum data and student progress reports.");
+    if (!ok) return;
+
+    setLoading(true);
+    try {
+      const userId = localStorage.getItem("user_id");
+      const professorId = userId ? parseInt(userId, 10) : 1;
+      const res = await deleteClass(classId, professorId);
+      if (res.success) {
+        await fetchClasses();
+      } else {
+        alert(res.message || "Failed to delete class");
+      }
+    } catch (err: any) {
+      alert(err.message || "An error occurred while deleting the class");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -391,9 +412,21 @@ export default function ClassroomsPage() {
                           <h4 className="text-sm font-bold text-white group-hover:text-blue-400 transition">{cls.name}</h4>
                           <p className="text-[10px] text-slate-400 font-medium">{cls.grade}</p>
                         </div>
-                        <span className={`px-2 py-0.5 text-[8px] font-extrabold tracking-wider rounded border ${cls.badgeColor}`}>
-                          {cls.badge}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`px-2 py-0.5 text-[8px] font-extrabold tracking-wider rounded border ${cls.badgeColor}`}>
+                            {cls.badge}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(parseInt(cls.id, 10));
+                            }}
+                            className="p-1 rounded bg-rose-500/10 border border-rose-500/20 text-rose-450 hover:bg-rose-500/20 hover:text-rose-400 transition cursor-pointer"
+                            title="Delete Class"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Stats Metrics Row */}

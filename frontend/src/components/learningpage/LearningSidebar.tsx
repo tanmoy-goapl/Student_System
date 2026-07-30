@@ -148,7 +148,7 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic }: L
               value={currentRoadmapId}
               onChange={(e) => {
                 const id = e.target.value;
-                const query = id ? `roadmap_id=${id}` : "";
+                const query = id ? `roadmap_id=${id}&source=personal` : "source=courses";
                 router.push(`/learning?${query}`);
               }}
             >

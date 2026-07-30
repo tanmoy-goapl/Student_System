@@ -49,6 +49,44 @@ def pre_generate_questions_bg(student_id: int, topic: str, subject: Optional[str
 
 router = APIRouter()
 
+def resolve_standard_subject(topic: str, current_subject: Optional[str] = None) -> Optional[str]:
+    if current_subject and current_subject != "undefined" and current_subject != "null":
+        subj_lower = current_subject.lower()
+        if not subj_lower.startswith("week") and not subj_lower.startswith("unit"):
+            if "operating system" in subj_lower or subj_lower == "os":
+                return "Operating Systems"
+            elif "machine learning" in subj_lower or subj_lower == "ml":
+                return "Machine Learning"
+            elif "artificial intelligence" in subj_lower or subj_lower == "ai":
+                return "Artificial Intelligence"
+            elif "data structure" in subj_lower or subj_lower == "dsa":
+                return "Data Structures and Algorithms"
+            elif "computer network" in subj_lower or subj_lower == "cn":
+                return "Computer Networks"
+            elif "programming" in subj_lower:
+                return "Programming Fundamentals"
+
+    import re
+    clean_topic = re.sub(r'^Day\s*\d+\s*:\s*', '', topic or '').strip()
+
+    if topic:
+        try:
+            import os
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            p = os.path.join(base_dir, "config", "subject_topics.json")
+            if os.path.exists(p):
+                with open(p, "r") as f:
+                    subject_topics = json.load(f)
+                for subj, topics in subject_topics.items():
+                    if any(t.lower() == clean_topic.lower() for t in topics):
+                        return subj
+        except Exception as e:
+            logger.error(f"Failed to lookup subject by topic: {e}")
+
+    if current_subject == "undefined" or current_subject == "null" or not current_subject:
+        return None
+    return current_subject
+
 @router.get("/content")
 def get_learning_content_endpoint(
     student_id: int = 1,
@@ -62,22 +100,7 @@ def get_learning_content_endpoint(
     if not topic:
         return {"notesResponse": [], "revision": {}}
         
-    if subject == "undefined" or subject == "null" or not subject:
-        subject = None
-    else:
-        subj_lower = subject.lower()
-        if "operating system" in subj_lower or subj_lower == "os":
-            subject = "Operating Systems"
-        elif "machine learning" in subj_lower or subj_lower == "ml":
-            subject = "Machine Learning"
-        elif "artificial intelligence" in subj_lower or subj_lower == "ai":
-            subject = "Artificial Intelligence"
-        elif "data structure" in subj_lower or subj_lower == "dsa":
-            subject = "Data Structures and Algorithms"
-        elif "computer network" in subj_lower or subj_lower == "cn":
-            subject = "Computer Networks"
-        elif "programming" in subj_lower:
-            subject = "Programming Fundamentals"
+    subject = resolve_standard_subject(topic, subject)
         
     cached = db.query(LearningContent).filter(
         LearningContent.student_id == student_id,
@@ -108,9 +131,14 @@ def get_learning_content_endpoint(
         db.commit()
         return {"success": True, "message": "Cache cleared successfully"}
     
+    is_old_format = False
     if cached:
         cached_str = str(cached.content)
-        is_old_format = isinstance(cached.content, list) or ("## Why is it important?" not in cached_str and "## How does it work?" not in cached_str)
+        # Check case-insensitively to prevent minor casing differences from invalidating valid caches
+        is_old_format = isinstance(cached.content, list) or ("why is it important" not in cached_str.lower() and "how does it work" not in cached_str.lower())
+        if subject and ("keshav" in cached_str.lower() or "placement policy" in cached_str.lower() or "deregistered" in cached_str.lower()):
+            logger.warning(f"CACHE INVALIDATED (Resume/Policy Leak detected): topic='{topic}', subject='{subject}'")
+            is_old_format = True
 
         if "could not be generated" not in cached_str and not is_old_format:
             logger.info(f"CACHE HIT: topic='{topic}', subject='{subject}'")
@@ -178,22 +206,7 @@ def stream_content(
     if not topic:
         return {"error": "Topic is required"}
         
-    if subject == "undefined" or subject == "null" or not subject:
-        subject = None
-    else:
-        subj_lower = subject.lower()
-        if "operating system" in subj_lower or subj_lower == "os":
-            subject = "Operating Systems"
-        elif "machine learning" in subj_lower or subj_lower == "ml":
-            subject = "Machine Learning"
-        elif "artificial intelligence" in subj_lower or subj_lower == "ai":
-            subject = "Artificial Intelligence"
-        elif "data structure" in subj_lower or subj_lower == "dsa":
-            subject = "Data Structures and Algorithms"
-        elif "computer network" in subj_lower or subj_lower == "cn":
-            subject = "Computer Networks"
-        elif "programming" in subj_lower:
-            subject = "Programming Fundamentals"
+    subject = resolve_standard_subject(topic or "", subject)
         
     cached = db.query(LearningContent).filter(
         LearningContent.student_id == student_id,

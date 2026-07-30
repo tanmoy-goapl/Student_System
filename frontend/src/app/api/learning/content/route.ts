@@ -10,11 +10,13 @@ export async function GET(request: Request) {
     const topic = searchParams.get("topic");
     const studentId = searchParams.get("student_id");
     const subject = searchParams.get("subject");
+    const force = searchParams.get("force");
     let url = `${BACKEND_URL}/learning/content`;
     const backendParams = new URLSearchParams();
     if (topic) backendParams.append("topic", topic);
     if (studentId) backendParams.append("student_id", studentId);
     if (subject) backendParams.append("subject", subject);
+    if (force) backendParams.append("force", force);
     
     const q = backendParams.toString();
     if (q) url += `?${q}`;

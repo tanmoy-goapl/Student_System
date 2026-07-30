@@ -45,7 +45,7 @@ def _practice_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 2
                 ],
                 max_tokens=max_tokens,
                 temperature=0.3,
-                timeout=45,
+                timeout=120.0,
             )
             content = resp.choices[0].message.content
             if not content:
@@ -95,6 +95,7 @@ def _practice_llm_stream(system_prompt: str, user_prompt: str, max_tokens: int =
                 ],
                 max_tokens=max_tokens,
                 temperature=0.3,
+                timeout=120.0,
                 stream=True,
             )
             for chunk in resp:

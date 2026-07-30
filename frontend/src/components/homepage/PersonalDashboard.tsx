@@ -46,11 +46,17 @@ export default function PersonalDashboard() {
 
   useEffect(() => {
     fetchRoadmaps();
+  }, []);
+
+  useEffect(() => {
+    const hasGenerating = roadmaps.some(rm => rm.status === 'Generating');
+    if (!hasGenerating) return;
+
     const interval = setInterval(() => {
       fetchRoadmaps();
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [roadmaps]);
 
   const handleContinueRoadmap = (roadmapId: number | string) => {
     if (typeof roadmapId === 'string' && roadmapId.startsWith('gen_')) return;

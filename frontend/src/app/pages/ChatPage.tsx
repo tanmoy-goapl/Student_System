@@ -94,10 +94,19 @@ export default function ChatPage() {
 
   const scrollThrottleRef = useRef<number>(0);
   useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
     const now = Date.now();
     if (now - scrollThrottleRef.current > 120) {
       scrollThrottleRef.current = now;
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      const lastMsg = history[history.length - 1];
+      const isUserMsg = lastMsg && lastMsg.role === "user";
+      const threshold = 150;
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+
+      if (isUserMsg || nearBottom || loading) {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
     }
   }, [history, loading]);
 
@@ -628,55 +637,63 @@ function ChatBubble({ msg, isGenerating, onAsk }: { msg: Message, isGenerating?:
             : "bg-white/5 text-blue-100 border-white/10 rounded-2xl rounded-bl-none"
           }`}
       >
-        {parseMarkdownAndTables(msg.content + (isGenerating ? "▌" : "")).map((block, bIdx) => {
-          if (block.type === "table" && block.tableData) {
-            return (
-              <div key={bIdx} className="overflow-x-auto my-3">
-                <table className="min-w-full border-collapse border border-white/10 text-xs rounded-xl overflow-hidden">
-                  <thead className="bg-white/5">
-                    <tr className="border-b border-white/5">
-                      {block.tableData.headers.map((h, hIdx) => (
-                        <th key={hIdx} className="border border-white/10 px-3 py-2 font-bold text-left text-white">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {block.tableData.rows.map((row, rIdx) => (
-                      <tr key={rIdx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                        {row.map((cell, cIdx) => (
-                          <td key={cIdx} className="border border-white/10 px-3 py-2 text-blue-200">
-                            <ReactMarkdown
-                              components={{
-                                p: ({ children }) => <span className="text-blue-200">{children}</span>,
-                                strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>
-                              }}
-                            >
-                              {cell}
-                            </ReactMarkdown>
-                          </td>
+        {isGenerating && !msg.content ? (
+          <div className="flex items-center gap-1.5 py-1.5 px-0.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-bounce shadow-[0_0_8px_rgba(96,165,250,0.6)]" style={{ animationDelay: "0ms", animationDuration: "1s" }}></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-bounce shadow-[0_0_8px_rgba(129,140,248,0.6)]" style={{ animationDelay: "150ms", animationDuration: "1s" }}></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-pink-400 animate-bounce shadow-[0_0_8px_rgba(244,114,182,0.6)]" style={{ animationDelay: "300ms", animationDuration: "1s" }}></span>
+          </div>
+        ) : (
+          parseMarkdownAndTables(msg.content + (isGenerating ? "▌" : "")).map((block, bIdx) => {
+            if (block.type === "table" && block.tableData) {
+              return (
+                <div key={bIdx} className="overflow-x-auto my-3">
+                  <table className="min-w-full border-collapse border border-white/10 text-xs rounded-xl overflow-hidden">
+                    <thead className="bg-white/5">
+                      <tr className="border-b border-white/5">
+                        {block.tableData.headers.map((h, hIdx) => (
+                          <th key={hIdx} className="border border-white/10 px-3 py-2 font-bold text-left text-white">{h}</th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {block.tableData.rows.map((row, rIdx) => (
+                        <tr key={rIdx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                          {row.map((cell, cIdx) => (
+                            <td key={cIdx} className="border border-white/10 px-3 py-2 text-blue-200">
+                              <ReactMarkdown
+                                components={{
+                                  p: ({ children }) => <span className="text-blue-200">{children}</span>,
+                                  strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>
+                                }}
+                              >
+                                {cell}
+                              </ReactMarkdown>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            }
+            return (
+              <ReactMarkdown
+                key={bIdx}
+                components={{
+                  h3: ({ children }) => <h3 className="font-semibold text-base mt-2 mb-1 text-white">{children}</h3>,
+                  ul: ({ children }) => <ul className="list-disc ml-4 space-y-1 text-blue-200">{children}</ul>,
+                  li: ({ children }) => <li className="text-sm">{children}</li>,
+                  strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+                  p: ({ children }) => <p className="mb-1.5 last:mb-0 text-blue-100">{children}</p>,
+                }}
+              >
+                {block.content}
+              </ReactMarkdown>
             );
-          }
-          return (
-            <ReactMarkdown
-              key={bIdx}
-              components={{
-                h3: ({ children }) => <h3 className="font-semibold text-base mt-2 mb-1 text-white">{children}</h3>,
-                ul: ({ children }) => <ul className="list-disc ml-4 space-y-1 text-blue-200">{children}</ul>,
-                li: ({ children }) => <li className="text-sm">{children}</li>,
-                strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                p: ({ children }) => <p className="mb-1.5 last:mb-0 text-blue-100">{children}</p>,
-              }}
-            >
-              {block.content}
-            </ReactMarkdown>
-          );
-        })}
+          })
+        )}
 
         {/* Custom Success Card for Roadmap Creation */}
         {msg.intent === "ROADMAP_CREATION" && msg.roadmap_metadata && (

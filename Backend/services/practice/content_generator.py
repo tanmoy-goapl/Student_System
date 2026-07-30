@@ -31,36 +31,52 @@ def generate_learning_content(student_id: int, topic: str, db: Session, subject:
 
     subtopics_str = ""
     is_curriculum_subject = False
+    is_document_topic = False
     
-    # Always prioritize checking uploaded document context first if they exist
-    docs = db.query(Document).filter(Document.student_id == student_id).all()
-    context = ""
-    if docs:
-        search_query = f"{subject} {topic}" if subject else topic
-        doc_ids = [d.id for d in docs]
+    if subject:
         try:
-            results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
-            if results and results.get("documents") and results["documents"][0]:
-                context = "\n\n".join(results["documents"][0])
-        except Exception as e:
-            logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
-            
-    if not context:
-        if subject:
-            try:
-                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                p = os.path.join(base_dir, "config", "subject_topics.json")
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            p = os.path.join(base_dir, "config", "subject_topics.json")
+            if os.path.exists(p):
                 with open(p, "r") as f:
                     subject_topics = json.load(f)
                 if subject in subject_topics:
                     is_curriculum_subject = True
-            except Exception as e:
-                logger.error(f"[PracticeEngine] Failed to load subject_topics: {e}")
+        except Exception as e:
+            logger.error(f"[PracticeEngine] Failed to load subject_topics: {e}")
 
-        if is_curriculum_subject:
-            context = "(Curriculum topic — use highly rigorous general knowledge for a college level curriculum)"
-        else:
-            context = "(No relevant content found in documents — use general knowledge for a college level curriculum)"
+    # Determine if this topic belongs to a user-uploaded document
+    # Only query ChromaDB for genuine document-based topics, NOT for roadmap or curriculum topics
+    if not is_curriculum_subject and subject:
+        from services.practice.topic_extractor import extract_topics_from_documents
+        try:
+            extracted = extract_topics_from_documents(student_id, db)
+            for subj in extracted.get("subjects", []):
+                for t in subj.get("topics", []):
+                    if t.get("name", "").lower() == topic.lower():
+                        is_document_topic = True
+                        break
+                if is_document_topic:
+                    break
+        except Exception as e:
+            logger.warning(f"[PracticeEngine] Failed to check document topics: {e}")
+
+    context = ""
+    if is_document_topic:
+        # Only query ChromaDB for topics that genuinely come from uploaded documents
+        docs = db.query(Document).filter(Document.student_id == student_id).all()
+        if docs:
+            search_query = f"{subject} {topic}" if subject else topic
+            doc_ids = [d.id for d in docs]
+            try:
+                results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
+                if results and results.get("documents") and results["documents"][0]:
+                    context = "\n\n".join(results["documents"][0])
+            except Exception as e:
+                logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
+                
+    if not context:
+        context = "(Use highly rigorous general knowledge for a college level curriculum)"
 
     extra_instructions = ""
     if subject == "Programming Fundamentals":
@@ -116,7 +132,7 @@ JSON structure:
     max_retries = 2
     response = ""
     for attempt in range(max_retries):
-        response = _practice_llm_call(system_prompt, user_prompt, max_tokens=6000)
+        response = _practice_llm_call(system_prompt, user_prompt, max_tokens=2000)
         
         if subject == "Programming Fundamentals":
             forbidden_words = [
@@ -167,6 +183,51 @@ JSON structure:
             "revision": default_revision
         }
 
+def generate_local_fallback_content(topic: str, subject: Optional[str], context: str) -> str:
+    subj_name = subject or "General Computer Science"
+    clean_context = context
+    if "No relevant content" in context or "use highly rigorous" in context:
+        clean_context = f"This guide covers {topic} in the context of {subj_name}."
+    
+    paragraphs = [p.strip() for p in clean_context.split("\n\n") if p.strip()]
+    what_is_desc = paragraphs[0] if len(paragraphs) > 0 else f"{topic} is a key concept in {subj_name}."
+    why_important = paragraphs[1] if len(paragraphs) > 1 else f"Understanding {topic} is critical to mastering the core principles of {subj_name}."
+    how_works = paragraphs[2] if len(paragraphs) > 2 else f"It operates as part of the standard architecture of {subj_name} systems."
+    
+    fallback_text = f"""# What is {topic}?
+
+{what_is_desc}
+
+---
+
+## Why is it important?
+
+{why_important}
+
+---
+
+## How does it work?
+
+{how_works}
+
+---
+
+## Real-world Example
+
+💡 Example: An analogy to help visualize {topic} is a coordinator ensuring operations flow smoothly in a system.
+
+---REVISION---
+{{
+    "title": "Key Takeaways",
+    "points": [
+        {{"id": 1, "text": "Essential core concept of {topic} in {subj_name}."}},
+        {{"id": 2, "text": "Key performance and architectural implications."}},
+        {{"id": 3, "text": "Fundamental component for design and exams."}}
+    ]
+}}
+"""
+    return fallback_text
+
 def stream_learning_content(student_id: int, topic: str, db: Session, subject: Optional[str] = None):
     """
     Stream learning content for a specific topic in Markdown, returning chunks.
@@ -174,36 +235,52 @@ def stream_learning_content(student_id: int, topic: str, db: Session, subject: O
     """
     subtopics_str = ""
     is_curriculum_subject = False
+    is_document_topic = False
     
-    # Always prioritize checking uploaded document context first if they exist
-    docs = db.query(Document).filter(Document.student_id == student_id).all()
-    context = ""
-    if docs:
-        search_query = f"{subject} {topic}" if subject else topic
-        doc_ids = [d.id for d in docs]
+    if subject:
         try:
-            results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
-            if results and results.get("documents") and results["documents"][0]:
-                context = "\n\n".join(results["documents"][0])
-        except Exception as e:
-            logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
-            
-    if not context:
-        if subject:
-            try:
-                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                p = os.path.join(base_dir, "config", "subject_topics.json")
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            p = os.path.join(base_dir, "config", "subject_topics.json")
+            if os.path.exists(p):
                 with open(p, "r") as f:
                     subject_topics = json.load(f)
                 if subject in subject_topics:
                     is_curriculum_subject = True
-            except Exception as e:
-                logger.error(f"[PracticeEngine] Failed to load subject_topics: {e}")
+        except Exception as e:
+            logger.error(f"[PracticeEngine] Failed to load subject_topics: {e}")
 
-        if is_curriculum_subject:
-            context = "(Curriculum topic — use highly rigorous general knowledge for a college level curriculum)"
-        else:
-            context = "(No relevant content found in documents — use general knowledge for a college level curriculum)"
+    # Determine if this topic belongs to a user-uploaded document
+    # Only query ChromaDB for genuine document-based topics, NOT for roadmap or curriculum topics
+    if not is_curriculum_subject and subject:
+        from services.practice.topic_extractor import extract_topics_from_documents
+        try:
+            extracted = extract_topics_from_documents(student_id, db)
+            for subj in extracted.get("subjects", []):
+                for t in subj.get("topics", []):
+                    if t.get("name", "").lower() == topic.lower():
+                        is_document_topic = True
+                        break
+                if is_document_topic:
+                    break
+        except Exception as e:
+            logger.warning(f"[PracticeEngine] Failed to check document topics: {e}")
+
+    context = ""
+    if is_document_topic:
+        # Only query ChromaDB for topics that genuinely come from uploaded documents
+        docs = db.query(Document).filter(Document.student_id == student_id).all()
+        if docs:
+            search_query = f"{subject} {topic}" if subject else topic
+            doc_ids = [d.id for d in docs]
+            try:
+                results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
+                if results and results.get("documents") and results["documents"][0]:
+                    context = "\n\n".join(results["documents"][0])
+            except Exception as e:
+                logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
+                
+    if not context:
+        context = "(Use highly rigorous general knowledge for a college level curriculum)"
 
     extra_instructions = ""
     if subject == "Programming Fundamentals":
@@ -277,9 +354,26 @@ CRITICAL RULES:
     logger.info(f"--- LLM PROMPT (Subject: {subject}, Topic: {topic}) ---")
     
     full_response = ""
-    for chunk in _practice_llm_stream(system_prompt, user_prompt, max_tokens=6000):
-        full_response += chunk
-        yield chunk
+    had_error = False
+    try:
+        for chunk in _practice_llm_stream(system_prompt, user_prompt, max_tokens=2000):
+            if chunk.startswith("ERROR:"):
+                had_error = True
+                break
+            full_response += chunk
+            yield chunk
+    except Exception as stream_err:
+        logger.error(f"[PracticeEngine] Streaming error: {stream_err}")
+        had_error = True
+
+    if had_error or not full_response.strip():
+        logger.warning(f"[PracticeEngine] LLM failed to stream. Generating local fallback study guide for '{topic}'...")
+        fallback_data = generate_local_fallback_content(topic, subject, context)
+        full_response = fallback_data
+        chunk_size = 64
+        for i in range(0, len(fallback_data), chunk_size):
+            yield fallback_data[i:i+chunk_size]
+        return
         
     try:
         parts = full_response.split("---REVISION---")

@@ -2,7 +2,6 @@ import { memo } from "react";
 import { AISuggestions } from "./AISuggestions";
 import { CommonMistakes } from "./CommonMistakes";
 import { RelatedDocuments } from "./RelatedDocuments";
-import { TimeSpent } from "./TimeSpent";
 import { SidebarResponse } from "./types";
 import { UnderstandingLevel } from "./UnderstandingLevel";
 
@@ -30,7 +29,6 @@ export const Sidebar = memo(function Sidebar({
         data={data.relatedDocuments}
         onDocumentClick={onDocumentClick}
       />
-      <TimeSpent data={data.timeSpent} />
     </aside>
   );
 });
