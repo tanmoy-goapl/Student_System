@@ -630,14 +630,22 @@ def get_learning_data(
             "relation": r["relation"]
         })
 
+    revision_points = []
+    if cached_content and cached_content.revision:
+        if isinstance(cached_content.revision, dict):
+            revision_points = cached_content.revision.get("points", [])
+        elif isinstance(cached_content.revision, list):
+            revision_points = cached_content.revision
+
     learning_assistant_response = {
         "success": True,
         "data": {
-            "revision": {"title": "Quick Revision", "points": []},
+            "revision": {"title": "Quick Revision", "points": revision_points},
             "actions": [
                 {"id": 'simpler', "label": 'Explain Simpler', "iconName": 'Lightbulb', "variant": 'primary'},
                 {"id": 'example', "label": 'Give Example', "iconName": 'FlaskConical', "variant": 'cyan'},
-                {"id": 'summary', "label": 'Summarize', "iconName": 'FileText', "variant": 'purple'},
+                {"id": 'flashcard', "label": 'Flashcards', "iconName": 'BookOpen', "variant": 'purple'},
+
             ],
             "relatedConcepts": related_concepts_formatted,
             "learningActions": [

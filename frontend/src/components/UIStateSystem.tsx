@@ -12,8 +12,12 @@ import {
   BookOpen,
   UploadCloud,
   FileQuestion,
-  RefreshCw
+  RefreshCw,
+  FileText,
+  Brain,
+  Target
 } from "lucide-react";
+
 
 /* ==========================================
    1. SHIMMER & BASE UTILITIES
@@ -540,20 +544,29 @@ export function ProcessingState({
     return () => clearInterval(interval);
   }, [targetPct]);
 
+  const getStepIcon = (text: string) => {
+    const t = text.toLowerCase();
+    if (t.includes("read") || t.includes("file") || t.includes("doc")) return <FileText size={13} className="text-blue-400 shrink-0" />;
+    if (t.includes("parse") || t.includes("brain") || t.includes("topic")) return <Brain size={13} className="text-pink-400 shrink-0" />;
+    if (t.includes("generate") || t.includes("quiz") || t.includes("question")) return <Target size={13} className="text-amber-400 shrink-0" />;
+    if (t.includes("finalize") || t.includes("workspace") || t.includes("finish")) return <Sparkles size={13} className="text-indigo-400 shrink-0" />;
+    return <BookOpen size={13} className="text-zinc-400 shrink-0" />;
+  };
+
   return (
-    <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-8 rounded-2xl max-w-md mx-auto my-8 flex flex-col gap-6 shadow-[0_0_50px_-12px_rgba(91,95,255,0.2)] animate-fade-in">
+    <div className="bg-slate-950/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl max-w-md mx-auto my-8 flex flex-col gap-6 shadow-[0_0_50px_-12px_rgba(91,95,255,0.25)] border-indigo-500/20 animate-fade-in">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+          <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/25">
             <Loader2 size={16} className="animate-spin text-[#5B5FFF]" />
           </div>
           <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
         </div>
-        <span className="text-sm font-bold text-[#5B5FFF] bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">{pct}%</span>
+        <span className="text-xs font-extrabold text-[#5B5FFF] bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/25 tracking-wide">{pct}%</span>
       </div>
 
       {/* Premium Progress Bar */}
-      <div className="w-full h-2 bg-slate-800/80 rounded-full overflow-hidden border border-white/5 relative">
+      <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-white/5 relative">
         <div
           className="h-full bg-gradient-to-r from-[#5B5FFF] via-cyan-400 to-[#5B5FFF] bg-[length:200%_auto] animate-gradient-shift transition-all duration-700 ease-out shadow-[0_0_12px_rgba(91,95,255,0.4)]"
           style={{ width: `${pct}%` }}
@@ -562,36 +575,42 @@ export function ProcessingState({
 
       {/* Step Tracker */}
       {steps.length > 0 && (
-        <div className="flex flex-col gap-3.5 border-t border-white/10 pt-5">
+        <div className="flex flex-col gap-4 border-t border-white/5 pt-5">
           {steps.map((step, idx) => {
             const isCompleted = idx < currentStepIndex;
             const isActive = idx === currentStepIndex;
+            // Clean up emoji prefix (e.g. 📄, 🧠, 🎯, ✨)
+            const cleanStepText = step.replace(/^[\uD83C-\uDBFF\uDC00-\uDFFF\u2600-\u27BF\u2300-\u23FF📄🧠🎯✨]+\s*/g, "");
+
             return (
               <div 
                 key={idx} 
-                className={`flex gap-3 items-center text-xs transition-all duration-300 ${
-                  isCompleted ? "opacity-80" : isActive ? "opacity-100 scale-[1.01]" : "opacity-40"
+                className={`flex gap-3.5 items-center text-xs transition-all duration-300 ${
+                  isCompleted ? "opacity-75" : isActive ? "opacity-100 scale-[1.01]" : "opacity-30"
                 }`}
               >
                 {isCompleted ? (
                   <div className="p-0.5 bg-emerald-500/20 rounded-full border border-emerald-500/30">
-                    <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
+                    <CheckCircle2 size={11} className="text-emerald-400 shrink-0" />
                   </div>
                 ) : isActive ? (
                   <div className="p-0.5 bg-indigo-500/20 rounded-full border border-indigo-500/30 animate-pulse">
-                    <Loader2 size={12} className="animate-spin text-[#5B5FFF] shrink-0" />
+                    <Loader2 size={11} className="animate-spin text-[#5B5FFF] shrink-0" />
                   </div>
                 ) : (
-                  <div className="w-4 h-4 rounded-full border border-slate-700 shrink-0" />
+                  <div className="w-4 h-4 rounded-full border border-slate-800 shrink-0 bg-slate-900/50" />
                 )}
-                <span className={`text-xs ${
+                
+                {getStepIcon(step)}
+
+                <span className={`text-xs tracking-wide ${
                   isCompleted 
-                    ? "text-slate-300 font-medium" 
+                    ? "text-slate-400 font-medium line-through decoration-slate-800" 
                     : isActive 
                       ? "text-white font-semibold" 
                       : "text-slate-500"
                 }`}>
-                  {step}
+                  {cleanStepText}
                 </span>
               </div>
             );

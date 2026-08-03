@@ -113,7 +113,7 @@ def get_class_analytics(class_id: int, db: Session = Depends(get_db)):
         else:
             inactive_students_count += 1
             
-        is_at_risk = student_accuracy < 50 or progress_pct < 30
+        is_at_risk = student_accuracy < 50 and progress_pct > 0
         
         recent_quiz = db.query(QuizHistory).filter(QuizHistory.student_id == student.id).order_by(QuizHistory.created_at.desc()).first()
             

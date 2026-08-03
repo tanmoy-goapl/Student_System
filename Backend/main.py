@@ -229,6 +229,7 @@ async def lifespan(app: FastAPI):
             else:
                 log_f.write(f"Zip file not found: {zip_path}\n")
         
+        # pyrefly: ignore [missing-import]
         from seed_kb import seed_knowledge_base
         seed_knowledge_base()
     except Exception as seed_err:
@@ -278,6 +279,265 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
+
+@app.get("/force-seed-db")
+def force_seed_db_endpoint():
+    from database import SessionLocal
+    from models import User
+    from classroom_models import Classroom, StudentClass, ClassCurriculum
+    from practice_models import TopicPerformance, UserPerformance, QuizHistory, PracticeSession, PracticeQuestion
+    from datetime import datetime, timedelta
+    import random
+    import json
+
+    
+    db = SessionLocal()
+    results = []
+    try:
+        classrooms = db.query(Classroom).all()
+        for classroom in classrooms:
+            student_classes = db.query(StudentClass).filter(StudentClass.class_id == classroom.id).all()
+            student_ids = [sc.student_id for sc in student_classes]
+            students = db.query(User).filter(User.id.in_(student_ids)).all()
+            
+            curriculum = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == classroom.id).first()
+            topics = []
+            if curriculum and curriculum.curriculum_json:
+                if "units" in curriculum.curriculum_json:
+                    for unit in curriculum.curriculum_json["units"]:
+                        topics.extend(unit.get("topics", []))
+                elif "semesters" in curriculum.curriculum_json:
+                    for sem in curriculum.curriculum_json["semesters"]:
+                        for course in sem.get("courses", []):
+                            topics.extend(course.get("topics", []))
+            if not topics:
+                topics = ["Introduction", "Core Concepts", "Advanced Application", "Final Review"]
+                
+            for student in students:
+                if student.role != "student":
+                    continue
+                
+                # Force delete old performance to rewrite fresh real-looking data
+                db.query(UserPerformance).filter(UserPerformance.student_id == student.id).delete()
+                db.query(TopicPerformance).filter(TopicPerformance.student_id == student.id).delete()
+                db.query(QuizHistory).filter(QuizHistory.student_id == student.id).delete()
+                
+                # Delete associated questions first to avoid FK constraint errors on delete session
+                session_ids = [s.id for s in db.query(PracticeSession).filter(PracticeSession.student_id == student.id).all()]
+                if session_ids:
+                    db.query(PracticeQuestion).filter(PracticeQuestion.session_id.in_(session_ids)).delete(synchronize_session=False)
+                
+                db.query(PracticeSession).filter(PracticeSession.student_id == student.id).delete()
+                db.flush()
+                
+                perf = UserPerformance(student_id=student.id)
+                db.add(perf)
+                
+                # Choose a student archetype for realistic data distribution
+                archetype = random.choice(["excellent", "average", "average", "average", "struggling"])
+                if archetype == "excellent":
+                    accuracy_base = random.randint(85, 96)
+                    practiced_ratio = random.uniform(0.6, 0.9)
+                elif archetype == "struggling":
+                    accuracy_base = random.randint(35, 48)
+                    practiced_ratio = random.uniform(0.15, 0.3)
+                else:
+                    accuracy_base = random.randint(60, 78)
+                    practiced_ratio = random.uniform(0.3, 0.6)
+
+                total_q = random.randint(25, 60)
+                correct_q = int(total_q * (accuracy_base / 100.0))
+                
+                perf.total_questions_attempted = total_q
+                perf.total_correct_answers = correct_q
+                perf.lifetime_accuracy = round((correct_q / total_q) * 100, 1) if total_q > 0 else 0.0
+                perf.total_points = correct_q * 10
+                
+                # Determine how many topics they practiced
+                practiced_count = max(1, int(len(topics) * practiced_ratio))
+                perf.topics_covered = practiced_count
+                
+                perf.badges_earned = random.randint(1, 4) if archetype != "struggling" else 0
+                perf.current_streak = random.randint(3, 7) if archetype == "excellent" else random.randint(0, 3)
+                perf.longest_streak = max(perf.current_streak, random.randint(4, 10))
+                perf.total_time_seconds = total_q * random.randint(35, 80)
+                perf.last_practiced = datetime.utcnow() - timedelta(days=random.randint(0, 5))
+                
+                practiced_topics = random.sample(topics, practiced_count)
+
+                
+                for topic in topics:
+                    if topic in practiced_topics:
+                        tp = TopicPerformance(
+                            student_id=student.id,
+                            topic=topic,
+                            subject=classroom.name,
+                            sessions=random.randint(1, 4),
+                            questions_attempted=random.randint(5, 20)
+                        )
+                        topic_acc = accuracy_base + random.randint(-12, 8)
+                        topic_acc = max(15.0, min(100.0, topic_acc))
+                        tp.correct_answers = int(tp.questions_attempted * (topic_acc / 100.0))
+                        tp.accuracy = round((tp.correct_answers / tp.questions_attempted) * 100, 1)
+                        tp.current_difficulty = random.choice(["easy", "medium", "hard"])
+                        
+                        if tp.accuracy >= 75:
+                            tp.status = "STRONG"
+                        elif tp.accuracy >= 55:
+                            tp.status = "LEARNING"
+                        else:
+                            tp.status = "WEAK"
+                            
+                        tp.last_practiced_at = datetime.utcnow() - timedelta(hours=random.randint(1, 72))
+                        db.add(tp)
+                        
+                        session = PracticeSession(
+                            student_id=student.id,
+                            mode="topic",
+                            topic=topic,
+                            difficulty=tp.current_difficulty,
+                            question_count=5,
+                            correct_answers=tp.correct_answers % 6,
+                            accuracy=round(((tp.correct_answers % 6) / 5) * 100, 1),
+                            created_at=datetime.utcnow() - timedelta(days=random.randint(1, 4)),
+                            ended_at=datetime.utcnow(),
+                            is_active=False
+                        )
+                        db.add(session)
+                        db.flush()
+                        
+                        quiz = QuizHistory(
+                            student_id=student.id,
+                            session_id=session.id,
+                            topic=topic,
+                            score_percentage=session.accuracy,
+                            created_at=session.created_at
+                        )
+                        db.add(quiz)
+                    else:
+                        tp = TopicPerformance(
+                            student_id=student.id,
+                            topic=topic,
+                            subject=classroom.name,
+                            status="NOT_STARTED"
+                        )
+                        db.add(tp)
+                
+                results.append(f"Seeded student {student.name} for class {classroom.name}")
+            
+        # Seed global question bank cache for all topics to make quiz generation instant
+        from practice_models import AICache
+        all_unique_topics = set()
+        for classroom in classrooms:
+            curriculum = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == classroom.id).first()
+            if curriculum and curriculum.curriculum_json:
+                if "units" in curriculum.curriculum_json:
+                    for unit in curriculum.curriculum_json["units"]:
+                        all_unique_topics.update(unit.get("topics", []))
+                elif "semesters" in curriculum.curriculum_json:
+                    for sem in curriculum.curriculum_json["semesters"]:
+                        for course in sem.get("courses", []):
+                            all_unique_topics.update(course.get("topics", []))
+
+        # Clear existing global topic caches and student revision action caches to reload new format
+        db.query(AICache).filter(AICache.student_id == 0, AICache.action_type == "master_question_bank").delete()
+        db.query(AICache).filter(AICache.action_type.in_(["explain", "examples", "flashcard"])).delete()
+
+        
+        for topic in all_unique_topics:
+            mock_bank = {
+                "easy": [],
+                "medium": [],
+                "hard": [],
+                "is_initial": False
+            }
+            difficulties = ["easy", "medium", "hard"]
+            q_index = 1
+            for diff in difficulties:
+                for i in range(1, 11):
+                    mock_bank[diff].append({
+                        "topic": topic,
+                        "subtopic": f"Section {i}",
+                        "difficulty": diff,
+                        "question": f"Practice Question {q_index}: Which of the following is a key element of {topic}?",
+                        "options": [
+                            {"id": "A", "text": f"Option A: Core definition of {topic}"},
+                            {"id": "B", "text": "Option B: Secondary component"},
+                            {"id": "C", "text": "Option C: Unrelated detail"},
+                            {"id": "D", "text": "Option D: None of the above"}
+                        ],
+                        "correct_answer": "A",
+                        "explanation": f"Option A is correct because it matches the core definition of {topic}."
+                    })
+                    q_index += 1
+            
+            db.add(AICache(
+                student_id=0,
+                topic=topic,
+                action_type="master_question_bank",
+                content=json.dumps(mock_bank)
+            ))
+        db.flush()
+        
+        db.commit()
+        return {"status": "success", "seeded": results}
+
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+    finally:
+        db.close()
+
+
+@app.get("/test-analytics/{class_id}")
+def test_analytics_endpoint(class_id: int):
+    from database import SessionLocal
+    from classroom_models import Classroom, ClassCurriculum, StudentClass
+    from models import User
+    from services.analytics_engine import get_predefined_topics, calculate_subject_metrics
+    
+    db = SessionLocal()
+    try:
+        classroom = db.query(Classroom).filter(Classroom.id == class_id).first()
+        if not classroom:
+            return {"error": "Classroom not found"}
+            
+        curriculum = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == class_id).first()
+        subject_name = curriculum.subject_name if curriculum else f"Class {class_id}"
+        
+        student_classes = db.query(StudentClass).filter(StudentClass.class_id == class_id).all()
+        student_ids = [sc.student_id for sc in student_classes]
+        
+        if not student_ids:
+            return {"error": "No students enrolled"}
+            
+        student_id = student_ids[0]
+        student = db.query(User).filter(User.id == student_id).first()
+        
+        predefined_topics = get_predefined_topics(student_id, subject_name, db)
+        
+        from practice_models import TopicPerformance
+        performances = db.query(TopicPerformance).filter(
+            TopicPerformance.student_id == student_id
+        ).all()
+        
+        perf_topics_in_db = [p.topic for p in performances]
+        
+        metrics = calculate_subject_metrics(student_id, subject_name, db)
+        
+        return {
+            "classroom_name": classroom.name,
+            "subject_name": subject_name,
+            "student_name": student.name,
+            "predefined_topics": predefined_topics,
+            "perf_topics_in_db": perf_topics_in_db,
+            "metrics": metrics
+        }
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        db.close()
 
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

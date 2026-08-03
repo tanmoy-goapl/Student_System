@@ -28,21 +28,7 @@ export function QuickRevisionCard({
           </h2>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onSaveNotes}
-            className="rounded-lg border border-white/10 bg-transparent px-3 py-1.5 text-[10px] font-medium text-zinc-400 transition-all hover:bg-white/5 hover:text-white"
-          >
-            Save Notes
-          </button>
 
-          <button
-            onClick={onAddRevision}
-            className="rounded-lg border border-indigo-500/20 bg-indigo-600/20 px-3 py-1.5 text-[10px] font-medium text-indigo-300 transition-all hover:bg-indigo-600/35 hover:text-white"
-          >
-            Add to Revision
-          </button>
-        </div>
       </div>
 
       {/* ITEMS */}

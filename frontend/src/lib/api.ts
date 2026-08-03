@@ -749,13 +749,13 @@ export async function streamGiveExamples(
   return fullText;
 }
 
-export async function streamSummarizeTopic(
+export async function streamFlashcards(
   studentId: number, 
   topicName: string, 
   onChunk?: (text: string) => void,
   signal?: AbortSignal
 ): Promise<string> {
-  let url = "/api/learning/summarize/stream";
+  let url = "/api/learning/flashcard/stream";
   const params = new URLSearchParams();
   params.append("student_id", studentId.toString());
   params.append("topic_name", topicName);
@@ -775,6 +775,7 @@ export async function streamSummarizeTopic(
   }
   return fullText;
 }
+
 
 export async function explainSimpler(studentId: number, topicName: string, topicContent?: string): Promise<any> {
   return request<any>("/api/learning/explain", {

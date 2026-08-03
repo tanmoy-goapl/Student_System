@@ -87,10 +87,15 @@ def get_predefined_topics(student_id: int, subject_name: str, db: Session) -> li
                 ClassCurriculum.subject_name == subject_name,
                 ClassCurriculum.class_id.in_(class_ids)
             ).first()
-            if curr and curr.curriculum_json and "units" in curr.curriculum_json:
+            if curr and curr.curriculum_json:
                 topics = []
-                for unit in curr.curriculum_json["units"]:
-                    topics.extend(unit.get("topics", []))
+                if "units" in curr.curriculum_json:
+                    for unit in curr.curriculum_json["units"]:
+                        topics.extend(unit.get("topics", []))
+                elif "semesters" in curr.curriculum_json:
+                    for sem in curr.curriculum_json["semesters"]:
+                        for course in sem.get("courses", []):
+                            topics.extend(course.get("topics", []))
                 if topics:
                     seen = set()
                     unique_topics = []

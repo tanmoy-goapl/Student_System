@@ -55,14 +55,11 @@ export default function ClassroomsPage() {
       const data = await res.json();
       const myClasses = data.classes || [];
       
-      const mapped: ClassCardData[] = myClasses.map((c: any) => {
-        const nameLower = c.name.toLowerCase();
-        
-        // Preserve aesthetics of Physics, Chemistry, Mathematics
+      const mappedPromises = myClasses.map(async (c: any) => {
         let avgScore = 75;
         let engagement = 80;
         let badge: "ACTIVE" | "AT RISK" | "ARCHIVED" = "ACTIVE";
-        let weakTopics = ["Cell Division", "Genetics"];
+        let weakTopics = ["None"];
         let insight = "Class showing stable engagement and performance.";
         let insightColor = "text-emerald-300";
         let insightBg = "bg-emerald-500/5 border border-emerald-500/10";
@@ -71,36 +68,45 @@ export default function ClassroomsPage() {
         let button2 = "Generate Quiz";
         let button3 = "Insights";
 
-        if (nameLower.includes("physic")) {
-          avgScore = 71;
-          engagement = 84;
-          weakTopics = ["Wave Optics", "Thermodynamics"];
-          insight = "Students need revision in Wave Optics — 14 below threshold";
-          insightColor = "text-blue-300";
-          insightBg = "bg-blue-500/5 border border-blue-500/10";
-        } else if (nameLower.includes("chemist")) {
-          avgScore = 67;
-          engagement = 72;
-          weakTopics = ["Organic Chemistry", "Electrochemistry"];
-          insight = "Engagement dropped significantly in Chemistry labs this week";
-          insightColor = "text-purple-300";
-          insightBg = "bg-purple-500/5 border border-purple-500/10";
-        } else if (nameLower.includes("math")) {
-          avgScore = 58;
-          engagement = 61;
-          badge = "AT RISK";
-          weakTopics = ["Calculus", "Integration", "Probability"];
-          insight = "Multiple students falling behind — consider revision session for Calculus";
-          insightColor = "text-rose-300";
-          insightBg = "bg-rose-500/5 border border-rose-500/10";
-          actionRequired = "ACTION REQUIRED - 8 STUDENTS CRITICALLY AT RISK";
-          isRedButton = true;
-          button2 = "Create Revision";
-          button3 = "View At-Risk";
+        try {
+          const analyticsRes = await fetch(`/api/professor/class/${c.id}`);
+          if (analyticsRes.ok) {
+            const aData = await analyticsRes.json();
+            if (aData && aData.metrics) {
+              avgScore = Math.round(aData.metrics.averageAccuracy || 0);
+              engagement = Math.round(aData.metrics.completionRate || 0);
+              
+              if (aData.metrics.weakTopics && aData.metrics.weakTopics.length > 0) {
+                weakTopics = aData.metrics.weakTopics.slice(0, 3).map((w: any) => w.name);
+              }
+              
+              if (avgScore < 50) {
+                badge = "AT RISK";
+
+                actionRequired = `ACTION REQUIRED - ${aData.metrics.inactiveStudents || 0} STUDENTS INACTIVE`;
+                isRedButton = true;
+                button2 = "Create Revision";
+                button3 = "View At-Risk";
+              }
+              
+              if (aData.metrics.alerts && aData.metrics.alerts.length > 0) {
+                insight = aData.metrics.alerts[0];
+                if (insight.toLowerCase().includes("critically low") || insight.toLowerCase().includes("needs review")) {
+                  insightColor = "text-rose-300";
+                  insightBg = "bg-rose-500/5 border border-rose-500/10";
+                } else {
+                  insightColor = "text-amber-300";
+                  insightBg = "bg-amber-500/5 border border-amber-500/10";
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error(`Failed to load dynamic analytics for class ${c.id}:`, e);
         }
 
         const badgeColor = badge === "AT RISK" 
-          ? "text-rose-400 border-rose-500/20 bg-rose-500/10" 
+          ? "text-rose-450 border-rose-500/20 bg-rose-500/10" 
           : "text-emerald-400 border-emerald-500/20 bg-emerald-500/10";
         const badgeBg = badge === "AT RISK" ? "bg-rose-500" : "bg-emerald-500";
 
@@ -126,6 +132,7 @@ export default function ClassroomsPage() {
         };
       });
 
+      const mapped = await Promise.all(mappedPromises);
       setClasses(mapped);
     } catch (err) {
       console.error(err);

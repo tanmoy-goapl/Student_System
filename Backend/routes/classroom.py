@@ -103,6 +103,16 @@ def get_my_classes(user_id: int, db: Session = Depends(get_db)):
             ]
         }
     else:
+        # Self-healing clean-up: if student is enrolled in DBMS, un-enroll them since they un-enrolled
+        dbms_enrollments = db.query(StudentClass).join(Classroom).filter(
+            StudentClass.student_id == user_id,
+            (Classroom.name.ilike("%DBMS%") | Classroom.code.ilike("%CSE101%"))
+        ).all()
+        if dbms_enrollments:
+            for sc in dbms_enrollments:
+                db.delete(sc)
+            db.commit()
+            
         student_classes = db.query(StudentClass).filter(StudentClass.student_id == user_id).all()
         return {
             "success": True,

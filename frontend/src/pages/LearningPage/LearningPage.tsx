@@ -19,7 +19,8 @@ import {
   summarizeTopic,
   streamExplainSimpler,
   streamGiveExamples,
-  streamSummarizeTopic,
+  streamFlashcards,
+
   getCheatSheet,
   saveNotes,
   addToRevision,
@@ -81,12 +82,15 @@ export default function LearningPage() {
 
     const [modalContent, setModalContent] = useState<{
         title: string;
-        type: 'explain' | 'example' | 'summarize';
+        type: 'explain' | 'example' | 'flashcard';
         data: any;
         loading?: boolean;
     } | null>(null);
 
+
     const [cheatsheetPoints, setCheatsheetPoints] = useState<any[]>([]);
+    const [revealedFlashcardIds, setRevealedFlashcardIds] = useState<number[]>([]);
+
 
     useEffect(() => {
         const urlTopic = searchParams?.get("topic") || undefined;
@@ -435,11 +439,13 @@ export default function LearningPage() {
         const studentId = getStudentId();
         
         setModalContent({
-            title: id === 'simpler' ? "Simplifying Concept..." : id === 'example' ? "Generating Examples..." : "Generating Summary...",
-            type: id as 'explain' | 'example' | 'summarize',
+            title: id === 'simpler' ? "Simplifying Concept..." : id === 'example' ? "Generating Examples..." : "Generating Flashcards...",
+            type: id === 'simpler' ? 'explain' : id === 'example' ? 'example' : 'flashcard',
             data: "",
             loading: true
         });
+
+
         
         try {
             if (id === 'simpler') {
@@ -460,16 +466,17 @@ export default function LearningPage() {
                         loading: false
                     } : null);
                 });
-            } else if (id === 'summary') {
-                await streamSummarizeTopic(studentId, data.selectedTopic, (text) => {
+            } else if (id === 'flashcard') {
+                await streamFlashcards(studentId, data.selectedTopic, (text) => {
                     setModalContent(prev => prev ? {
                         ...prev,
-                        title: `Summary & Key Points: ${data.selectedTopic}`,
+                        title: `Study Flashcards: ${data.selectedTopic}`,
                         data: text,
                         loading: false
                     } : null);
                 });
             }
+
         } catch (err) {
             console.error("Failed to execute quick action stream:", err);
             setModalContent(null);
@@ -669,12 +676,203 @@ export default function LearningPage() {
                                     <div className="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
                                     <p className="text-zinc-400 text-xs animate-pulse">AI is generating content, please wait...</p>
                                 </div>
-                            ) : (
-                                <div className="prose prose-invert prose-sm max-w-none prose-headings:text-zinc-100 prose-headings:font-bold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/10 prose-hr:border-white/5">
-                                    <ReactMarkdown>{modalContent.data || ""}</ReactMarkdown>
-                                </div>
-                            )}
+                            ) : modalContent.type === 'explain' ? (() => {
+                                // Inline Parser for Explain
+                                const text = modalContent.data || "";
+                                const conceptMatch = text.match(/\[CONCEPT\]([\s\S]*?)(?=\[ANALOGY\]|\[TAKEAWAY\]|$)/i);
+                                const analogyMatch = text.match(/\[ANALOGY\]([\s\S]*?)(?=\[TAKEAWAY\]|$)/i);
+                                const takeawayMatch = text.match(/\[TAKEAWAY\]([\s\S]*?)$/i);
+                                
+                                const concept = conceptMatch ? conceptMatch[1].replace(/===/g, "").trim() : "";
+                                const analogy = analogyMatch ? analogyMatch[1].replace(/===/g, "").trim() : "";
+                                const takeaway = takeawayMatch ? takeawayMatch[1].replace(/===/g, "").trim() : "";
+
+                                // Fallback for old cache format
+                                if (!concept && !analogy && !takeaway) {
+                                    return (
+                                        <div className="prose prose-invert prose-sm max-w-none prose-headings:text-zinc-100 prose-headings:font-bold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/10 prose-hr:border-white/5">
+                                            <ReactMarkdown>{text}</ReactMarkdown>
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <div className="space-y-4">
+                                        {concept && (
+                                            <div className="border border-blue-500/20 bg-blue-500/5 rounded-2xl p-5 shadow-sm">
+                                                <h4 className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-2 flex items-center gap-1.5">
+                                                    <span>📝</span> Concept Definition
+                                                </h4>
+                                                <p className="text-xs leading-relaxed text-zinc-350">{concept}</p>
+                                            </div>
+                                        )}
+                                        {analogy && (
+                                            <div className="border border-amber-500/20 bg-amber-500/5 rounded-2xl p-5 shadow-sm">
+                                                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-2 flex items-center gap-1.5">
+                                                    <span>💡</span> Creative Analogy
+                                                </h4>
+                                                <p className="text-xs leading-relaxed text-zinc-350">{analogy}</p>
+                                            </div>
+                                        )}
+                                        {takeaway && (
+                                            <div className="border border-emerald-500/20 bg-emerald-500/5 rounded-2xl p-5 shadow-sm">
+                                                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2 flex items-center gap-1.5">
+                                                    <span>🎯</span> Key Takeaway
+                                                </h4>
+                                                <p className="text-xs leading-relaxed text-emerald-400 font-medium">{takeaway}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })() : modalContent.type === 'example' ? (() => {
+                                // Inline Parser for Examples
+                                const text = modalContent.data || "";
+                                const items = text.split("===");
+                                const parsed = items.map((item: string, idx: number) => {
+                                    const titleMatch = item.match(/\[TITLE\]([\s\S]*?)(?=\[CONTENT\]|$)/i);
+                                    const contentMatch = item.match(/\[CONTENT\]([\s\S]*?)$/i);
+                                    return {
+                                        id: idx,
+                                        title: titleMatch ? titleMatch[1].replace(/\[TITLE\]/gi, "").trim() : `Example ${idx + 1}`,
+                                        content: contentMatch ? contentMatch[1].replace(/\[CONTENT\]/gi, "").trim() : "",
+                                    };
+                                }).filter((item: any) => item.content || item.title.includes("Example"));
+
+                                // Fallback for old cache format
+                                if (parsed.length === 0) {
+                                    return (
+                                        <div className="prose prose-invert prose-sm max-w-none prose-headings:text-zinc-100 prose-headings:font-bold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/10 prose-hr:border-white/5">
+                                            <ReactMarkdown>{text}</ReactMarkdown>
+                                        </div>
+                                    );
+                                }
+
+                                const colors = [
+                                    "border-cyan-500/20 bg-cyan-500/5 text-cyan-400",
+                                    "border-purple-500/20 bg-purple-500/5 text-purple-400",
+                                    "border-rose-500/20 bg-rose-500/5 text-rose-400"
+                                ];
+                                return (
+                                    <div className="space-y-4">
+                                        {parsed.map((item: any, idx: number) => (
+                                            <div key={idx} className={`border rounded-2xl p-5 shadow-sm ${colors[idx % colors.length].split(" ").slice(0, 2).join(" ")}`}>
+                                                <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${colors[idx % colors.length].split(" ")[2]}`}>
+                                                    <span>🌟</span> {item.title}
+                                                </h4>
+                                                <p className="text-xs leading-relaxed text-zinc-350">{item.content}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })() : (() => {
+                                // Inline Parser for Flashcards
+                                const text = modalContent.data || "";
+                                const items = text.split("===");
+                                const parsed = items.map((item: string, idx: number) => {
+                                    const qMatch = item.match(/\[QUESTION\]([\s\S]*?)(?=\[ANSWER\]|$)/i);
+                                    const aMatch = item.match(/\[ANSWER\]([\s\S]*?)$/i);
+                                    return {
+                                        id: idx,
+                                        question: qMatch ? qMatch[1].trim() : "",
+                                        answer: aMatch ? aMatch[1].trim() : "",
+                                    };
+                                }).filter((item: any) => item.question || item.answer);
+
+                                // Fallback for old cache format
+                                if (parsed.length === 0) {
+                                    return (
+                                        <div className="prose prose-invert prose-sm max-w-none prose-headings:text-zinc-100 prose-headings:font-bold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/10 prose-hr:border-white/5">
+                                            <ReactMarkdown>{text}</ReactMarkdown>
+                                        </div>
+                                    );
+                                }
+
+                                const cardThemes = [
+                                    {
+                                        unrevealedBg: "bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/40 border-blue-500/20 hover:border-blue-400/50 shadow-md shadow-blue-500/5",
+                                        revealedBg: "bg-gradient-to-br from-blue-950/80 to-blue-900/40 border-blue-400/50 shadow-lg shadow-blue-500/10",
+                                        headerTag: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+                                        actionText: "text-blue-400 hover:text-blue-300",
+                                        answerLabel: "text-blue-400",
+                                    },
+                                    {
+                                        unrevealedBg: "bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950/40 border-purple-500/20 hover:border-purple-400/50 shadow-md shadow-purple-500/5",
+                                        revealedBg: "bg-gradient-to-br from-purple-950/80 to-purple-900/40 border-purple-400/50 shadow-lg shadow-purple-500/10",
+                                        headerTag: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+                                        actionText: "text-purple-400 hover:text-purple-300",
+                                        answerLabel: "text-purple-400",
+                                    },
+                                    {
+                                        unrevealedBg: "bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/40 border-emerald-500/20 hover:border-emerald-400/50 shadow-md shadow-emerald-500/5",
+                                        revealedBg: "bg-gradient-to-br from-emerald-950/80 to-emerald-900/40 border-emerald-400/50 shadow-lg shadow-emerald-500/10",
+                                        headerTag: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+                                        actionText: "text-emerald-400 hover:text-emerald-300",
+                                        answerLabel: "text-emerald-400",
+                                    },
+                                    {
+                                        unrevealedBg: "bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 border-amber-500/20 hover:border-amber-400/50 shadow-md shadow-amber-500/5",
+                                        revealedBg: "bg-gradient-to-br from-amber-950/80 to-amber-900/40 border-amber-400/50 shadow-lg shadow-amber-500/10",
+                                        headerTag: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+                                        actionText: "text-amber-400 hover:text-amber-300",
+                                        answerLabel: "text-amber-400",
+                                    },
+                                    {
+                                        unrevealedBg: "bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950/40 border-rose-500/20 hover:border-rose-400/50 shadow-md shadow-rose-500/5",
+                                        revealedBg: "bg-gradient-to-br from-rose-950/80 to-rose-900/40 border-rose-400/50 shadow-lg shadow-rose-500/10",
+                                        headerTag: "text-rose-400 bg-rose-500/10 border-rose-500/20",
+                                        actionText: "text-rose-400 hover:text-rose-300",
+                                        answerLabel: "text-rose-400",
+                                    }
+                                ];
+
+                                return (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {parsed.map((item: any) => {
+                                            const isRevealed = revealedFlashcardIds.includes(item.id);
+                                            const theme = cardThemes[item.id % cardThemes.length];
+                                            return (
+                                                <div
+                                                    key={item.id}
+                                                    onClick={() => {
+                                                        setRevealedFlashcardIds((prev: number[]) => 
+                                                            prev.includes(item.id) 
+                                                                ? prev.filter((id: number) => id !== item.id) 
+                                                                : [...prev, item.id]
+                                                        );
+                                                    }}
+                                                    className={`border rounded-2xl p-5 min-h-[150px] flex flex-col justify-between cursor-pointer transition-all duration-300 select-none ${
+                                                        isRevealed ? theme.revealedBg : theme.unrevealedBg
+                                                    }`}
+                                                >
+                                                    <div>
+                                                        <span className={`text-[8px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full border ${theme.headerTag}`}>
+                                                            Flashcard {item.id + 1}
+                                                        </span>
+                                                        <p className="text-[11px] font-bold text-white mt-3 leading-snug">
+                                                            {item.question}
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div className="mt-4 pt-3 border-t border-white/5 flex flex-col items-start">
+                                                        {isRevealed ? (
+                                                            <div className="animate-in fade-in slide-in-from-top-1 duration-200 w-full">
+                                                                <span className={`text-[9px] font-bold tracking-wider uppercase ${theme.answerLabel}`}>Answer:</span>
+                                                                <p className="text-[10px] text-zinc-200 mt-1 leading-relaxed">{item.answer}</p>
+                                                            </div>
+                                                        ) : (
+                                                            <button className={`text-[9px] font-bold tracking-wider uppercase transition flex items-center gap-1 ${theme.actionText}`}>
+                                                                <span>👀</span> Click to Reveal Answer
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })()}
                         </div>
+
                     </div>
                 </div>
             )}

@@ -585,11 +585,12 @@ export const LEARNING_ASSISTANT_RESPONSE: LearningAssistantResponse = {
       },
 
       {
-        id: 'summary',
-        label: 'Summarize',
-        icon: FileText,
+        id: 'flashcard',
+        label: 'Flashcards',
+        icon: BookOpen,
         variant: 'purple',
       },
+
 
       {
         id: 'ask',

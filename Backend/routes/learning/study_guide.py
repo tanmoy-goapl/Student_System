@@ -29,11 +29,27 @@ def pre_generate_questions_bg(student_id: int, topic: str, subject: Optional[str
         bg_db = SessionLocal()
         cached = None
         try:
+            # Check if there is already a student-specific or shared cache (case-insensitive)
             cached = bg_db.query(AICache).filter(
-                AICache.student_id == student_id,
-                AICache.topic == topic,
+                AICache.topic.ilike(topic),
                 AICache.action_type == "master_question_bank"
             ).first()
+            
+            # If a shared cache exists but not cloned for this student, clone it instantly
+            if cached and cached.student_id != student_id:
+                try:
+                    clone = AICache(
+                        student_id=student_id,
+                        topic=topic,
+                        action_type="master_question_bank",
+                        content=cached.content
+                    )
+                    bg_db.add(clone)
+                    bg_db.commit()
+                    logger.info(f"[BGTask] Cloned shared question bank for topic '{topic}' to student {student_id}")
+                except Exception as e:
+                    bg_db.rollback()
+                    logger.error(f"[BGTask] Failed to clone shared question bank: {e}")
         except Exception as e:
             logger.error(f"[BGTask] Failed to check master question bank cache: {e}")
         finally:

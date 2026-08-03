@@ -277,20 +277,45 @@ def generate_questions(
                 bg_db.close()
         threading.Thread(target=run_in_bg, daemon=True).start()
 
-    # Wait up to 10 seconds for Stage 1 (initial 5 questions) to generate and cache
+    # Wait up to 1 second for Stage 1 (initial 5 questions) to generate and cache (2 iterations)
     master_cached = None
-    for _ in range(20):
+    for _ in range(2):
         db.expire_all()
+        # 1. Try student-specific cache
         master_cached = db.query(AICache).filter(
             AICache.student_id == student_id,
             AICache.topic == topic,
             AICache.action_type == "master_question_bank"
         ).first()
+        
+        # 2. Try global/any-student cache for this topic to avoid duplicate LLM generation latency
+        if not master_cached:
+            any_cached = db.query(AICache).filter(
+                AICache.topic.ilike(topic),
+                AICache.action_type == "master_question_bank"
+            ).first()
+            if any_cached:
+                try:
+                    # Clone cache for this student to make future checks instant
+                    master_cached = AICache(
+                        student_id=student_id,
+                        topic=topic,
+                        action_type="master_question_bank",
+                        content=any_cached.content
+                    )
+                    db.add(master_cached)
+                    db.commit()
+                    logger.info(f"[PracticeEngine] Shared cache HIT: Cloned question bank for topic='{topic}' from another student profile.")
+                except Exception:
+                    db.rollback()
+                break
+                
         if master_cached:
             break
         time.sleep(0.5)
     
     if master_cached:
+
         try:
             bank = json.loads(master_cached.content)
             diff_key = difficulty.lower()

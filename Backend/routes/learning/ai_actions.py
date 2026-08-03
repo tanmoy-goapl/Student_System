@@ -21,10 +21,18 @@ from practice_models import AICache
 @router.get("/explain/stream")
 def explain_topic_stream(student_id: int, topic_name: str, db: Session = Depends(get_db)):
     cached = db.query(AICache).filter(
-        AICache.student_id == student_id,
         AICache.topic == topic_name,
         AICache.action_type == "explain"
     ).first()
+
+    if cached and "[CONCEPT]" not in cached.content:
+        try:
+            db.delete(cached)
+            db.commit()
+            logger.info(f"Invalidated old explain cache format for topic '{topic_name}'")
+        except Exception:
+            db.rollback()
+        cached = None
 
     if cached:
         def yield_cached():
@@ -37,8 +45,21 @@ def explain_topic_stream(student_id: int, topic_name: str, db: Session = Depends
 
     system_prompt = f"""You are a helpful teaching assistant.
 Explain the concept "{topic_name}" in extremely simple, friendly, and plain English.
-Provide clear analogies, 2 simple real-world examples, and the key takeaway idea in one sentence.
-Use proper Markdown formatting with subheadings."""
+Use the following structure exactly. Do not add any other text outside these tags.
+Use '===' as the block separator. Keep the text concise and easy to read.
+
+[CONCEPT]
+Explain the concept here in 2-3 short, clear sentences.
+
+===
+
+[ANALOGY]
+Provide a simple, relatable analogy here.
+
+===
+
+[TAKEAWAY]
+Provide a single-sentence key takeaway here."""
     user_prompt = f"Explain the topic: {topic_name}"
 
     def generate_and_cache():
@@ -72,10 +93,18 @@ Use proper Markdown formatting with subheadings."""
 @router.get("/examples/stream")
 def give_examples_stream(student_id: int, topic_name: str, db: Session = Depends(get_db)):
     cached = db.query(AICache).filter(
-        AICache.student_id == student_id,
         AICache.topic == topic_name,
         AICache.action_type == "examples"
     ).first()
+
+    if cached and "[TITLE]" not in cached.content:
+        try:
+            db.delete(cached)
+            db.commit()
+            logger.info(f"Invalidated old examples cache format for topic '{topic_name}'")
+        except Exception:
+            db.rollback()
+        cached = None
 
     if cached:
         def yield_cached():
@@ -86,10 +115,30 @@ def give_examples_stream(student_id: int, topic_name: str, db: Session = Depends
             headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
         )
 
+
     system_prompt = f"""You are a helpful teaching assistant.
-Provide 3 highly relatable real-world examples or scenarios for the concept "{topic_name}".
-Also explain the practical applications where this concept is used in industry.
-Use proper Markdown formatting with subheadings."""
+Provide exactly 3 highly relatable real-world examples for the concept "{topic_name}".
+Use the following structure exactly. Do not add any other text outside these tags.
+Use '===' as the block separator. Keep descriptions concise.
+
+[TITLE]
+1. Real-World Scenario
+[CONTENT]
+A short, 2-3 sentence description of the example and why it applies.
+
+===
+
+[TITLE]
+2. Industry Application
+[CONTENT]
+A short, 2-3 sentence description of the example and why it applies.
+
+===
+
+[TITLE]
+3. Everyday Analogy
+[CONTENT]
+A short, 2-3 sentence description of the example and why it applies."""
     user_prompt = f"Generate examples for the topic: {topic_name}"
 
     def generate_and_cache():
@@ -120,13 +169,22 @@ Use proper Markdown formatting with subheadings."""
         headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
     )
 
-@router.get("/summarize/stream")
-def summarize_topic_stream(student_id: int, topic_name: str, db: Session = Depends(get_db)):
+@router.get("/flashcard/stream")
+def flashcard_topic_stream(student_id: int, topic_name: str, db: Session = Depends(get_db)):
     cached = db.query(AICache).filter(
-        AICache.student_id == student_id,
         AICache.topic == topic_name,
-        AICache.action_type == "summary"
+        AICache.action_type == "flashcard"
     ).first()
+
+    if cached and "[QUESTION]" not in cached.content:
+        try:
+            db.delete(cached)
+            db.commit()
+            logger.info(f"Invalidated old flashcard cache format for topic '{topic_name}'")
+        except Exception:
+            db.rollback()
+        cached = None
+
 
     if cached:
         def yield_cached():
@@ -137,11 +195,46 @@ def summarize_topic_stream(student_id: int, topic_name: str, db: Session = Depen
             headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
         )
 
+
     system_prompt = f"""You are a helpful teaching assistant.
-Summarize "{topic_name}" for quick exam revision.
-Provide 5 concise bullet points covering key facts, definitions, and exam notes.
-Use proper Markdown formatting with subheadings."""
-    user_prompt = f"Summarize the topic: {topic_name}"
+Generate exactly 5 interactive exam flashcards for the concept "{topic_name}".
+Use the following structure exactly. Do not add any other text outside these tags.
+Use '===' as the block separator. Keep questions and answers concise.
+
+[QUESTION]
+Question 1 text here?
+[ANSWER]
+Answer 1 text here.
+
+===
+
+[QUESTION]
+Question 2 text here?
+[ANSWER]
+Answer 2 text here.
+
+===
+
+[QUESTION]
+Question 3 text here?
+[ANSWER]
+Answer 3 text here.
+
+===
+
+[QUESTION]
+Question 4 text here?
+[ANSWER]
+Answer 4 text here.
+
+===
+
+[QUESTION]
+Question 5 text here?
+[ANSWER]
+Answer 5 text here."""
+    user_prompt = f"Generate study flashcards for the topic: {topic_name}"
+
 
     def generate_and_cache():
         full_text = ""
@@ -155,21 +248,22 @@ Use proper Markdown formatting with subheadings."""
                 local_db.add(AICache(
                     student_id=student_id,
                     topic=topic_name,
-                    action_type="summary",
+                    action_type="flashcard",
                     content=full_text
                 ))
                 local_db.commit()
-                logger.info(f"Cached summary action for topic='{topic_name}'")
+                logger.info(f"Cached flashcard action for topic='{topic_name}'")
             finally:
                 local_db.close()
         except Exception as e:
-            logger.error(f"Failed to cache summary action: {e}")
+            logger.error(f"Failed to cache flashcard action: {e}")
 
     return StreamingResponse(
         generate_and_cache(),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
     )
+
 
 class ExplainRequest(BaseModel):
     student_id: int

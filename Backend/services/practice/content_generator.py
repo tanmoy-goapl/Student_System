@@ -45,35 +45,17 @@ def generate_learning_content(student_id: int, topic: str, db: Session, subject:
         except Exception as e:
             logger.error(f"[PracticeEngine] Failed to load subject_topics: {e}")
 
-    # Determine if this topic belongs to a user-uploaded document
-    # Only query ChromaDB for genuine document-based topics, NOT for roadmap or curriculum topics
-    if not is_curriculum_subject and subject:
-        from services.practice.topic_extractor import extract_topics_from_documents
-        try:
-            extracted = extract_topics_from_documents(student_id, db)
-            for subj in extracted.get("subjects", []):
-                for t in subj.get("topics", []):
-                    if t.get("name", "").lower() == topic.lower():
-                        is_document_topic = True
-                        break
-                if is_document_topic:
-                    break
-        except Exception as e:
-            logger.warning(f"[PracticeEngine] Failed to check document topics: {e}")
-
     context = ""
-    if is_document_topic:
-        # Only query ChromaDB for topics that genuinely come from uploaded documents
+    try:
         docs = db.query(Document).filter(Document.student_id == student_id).all()
         if docs:
             search_query = f"{subject} {topic}" if subject else topic
             doc_ids = [d.id for d in docs]
-            try:
-                results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
-                if results and results.get("documents") and results["documents"][0]:
-                    context = "\n\n".join(results["documents"][0])
-            except Exception as e:
-                logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
+            results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
+            if results and results.get("documents") and results["documents"][0]:
+                context = "\n\n".join(results["documents"][0])
+    except Exception as e:
+        logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
                 
     if not context:
         context = "(Use highly rigorous general knowledge for a college level curriculum)"
@@ -249,35 +231,17 @@ def stream_learning_content(student_id: int, topic: str, db: Session, subject: O
         except Exception as e:
             logger.error(f"[PracticeEngine] Failed to load subject_topics: {e}")
 
-    # Determine if this topic belongs to a user-uploaded document
-    # Only query ChromaDB for genuine document-based topics, NOT for roadmap or curriculum topics
-    if not is_curriculum_subject and subject:
-        from services.practice.topic_extractor import extract_topics_from_documents
-        try:
-            extracted = extract_topics_from_documents(student_id, db)
-            for subj in extracted.get("subjects", []):
-                for t in subj.get("topics", []):
-                    if t.get("name", "").lower() == topic.lower():
-                        is_document_topic = True
-                        break
-                if is_document_topic:
-                    break
-        except Exception as e:
-            logger.warning(f"[PracticeEngine] Failed to check document topics: {e}")
-
     context = ""
-    if is_document_topic:
-        # Only query ChromaDB for topics that genuinely come from uploaded documents
+    try:
         docs = db.query(Document).filter(Document.student_id == student_id).all()
         if docs:
             search_query = f"{subject} {topic}" if subject else topic
             doc_ids = [d.id for d in docs]
-            try:
-                results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
-                if results and results.get("documents") and results["documents"][0]:
-                    context = "\n\n".join(results["documents"][0])
-            except Exception as e:
-                logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
+            results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
+            if results and results.get("documents") and results["documents"][0]:
+                context = "\n\n".join(results["documents"][0])
+    except Exception as e:
+        logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
                 
     if not context:
         context = "(Use highly rigorous general knowledge for a college level curriculum)"
