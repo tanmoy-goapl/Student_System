@@ -469,3 +469,255 @@ def save_notes(req: SaveNotesRequest, db: Session = Depends(get_db)):
     db.add(new_note)
     db.commit()
     return {"success": True, "message": "Notes saved."}
+
+
+@router.get("/generate_material/stream")
+def generate_material_stream(
+    topic: str,
+    subject: str = "Computer Science",
+    user_id: int = 1,
+    classroom_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Professor-only: Generate comprehensive, in-depth study material from scratch.
+    This is a completely separate pipeline from the student study guide generator.
+    Always generates fresh content via LLM — never uses cache.
+    Saves to a real physical file in UPLOAD_DIR for download support.
+    """
+
+    system_prompt = f"""You are a senior university professor and published textbook author preparing comprehensive lecture notes for distribution to students.
+
+Generate an extremely detailed, rigorous, and well-structured study material document for the topic: "{topic}" under the subject "{subject}".
+
+Your output must be thorough enough to serve as a standalone reference for students preparing for university exams. Cover the following in depth:
+
+# {topic}
+
+## 1. Introduction & Definition
+Provide a precise academic definition. Explain the concept's origin, its role within {subject}, and why it exists. Give 2-3 sentences of historical context if applicable.
+
+---
+
+## 2. Core Concepts & Theory
+Break down every fundamental aspect of {topic} in detail. Explain the underlying principles, mathematical models (in plain text, no LaTeX), algorithms, data structures, or theoretical frameworks involved. Use numbered steps for processes. Be thorough — assume you are writing a textbook chapter.
+
+---
+
+## 3. How It Works (Step-by-Step)
+Provide an extremely detailed, step-by-step walkthrough of how {topic} operates in practice. Include state transitions, decision points, edge cases, and failure scenarios. Use bullet points for clarity.
+
+---
+
+## 4. Types & Classifications
+If applicable, enumerate and explain all major types, categories, or variations of {topic}. Compare them with pros/cons. Use structured bullet points.
+
+---
+
+## 5. Real-World Applications & Examples
+Provide at least 3 concrete, real-world examples or case studies where {topic} is applied. Explain each example in 3-5 sentences. Include industry applications (e.g., how operating systems, databases, or networks use this concept).
+
+---
+
+## 6. Common Pitfalls & Edge Cases
+Describe at least 3 common mistakes, misconceptions, or tricky edge cases related to {topic}. Explain why they happen and how to avoid them.
+
+---
+
+## 7. Interview & Exam Preparation
+List 3-4 high-yield interview questions or exam-style questions related to {topic}. For each, provide a model answer (2-3 sentences).
+
+---
+
+## 8. Summary & Key Takeaways
+Provide a concise bulleted summary of the most critical points. These should be dense, fact-packed revision bullets.
+
+RULES:
+- Write in clear, professional academic English.
+- Use markdown formatting: headings (#, ##), bold (**text**), bullet points (-), and numbered lists.
+- DO NOT use LaTeX. Express formulas in plain text.
+- DO NOT use emoji numbers (1️⃣, 2️⃣) or markdown tables.
+- DO NOT use code block fencing unless showing actual code.
+- Aim for 1000-1200 words of dense, substantive content.
+- Every section must have real, detailed content — no placeholders or one-liners.
+"""
+
+    user_prompt = f"Generate the complete, in-depth study material for the topic \"{topic}\" in the subject \"{subject}\". Be extremely thorough and detailed."
+
+    logger.info(f"[ProfessorGen] Generating fresh study material for topic='{topic}', subject='{subject}', user_id={user_id}, classroom_id={classroom_id}")
+
+    # Generate a unique key for tracking this task
+    import threading
+    import time
+    
+    # Shared variables for tracking background generation
+    if not hasattr(generate_material_stream, "_bg_generators"):
+        generate_material_stream._bg_generators = {}
+        generate_material_stream._bg_lock = threading.Lock()
+        
+    bg_generators = generate_material_stream._bg_generators
+    bg_lock = generate_material_stream._bg_lock
+    
+    task_key = f"{user_id}_{classroom_id or 0}_{topic.replace(' ', '_').lower()}"
+
+    def bg_worker():
+        logger.info(f"[BgGen] Worker thread started for key: {task_key}")
+        full_text = ""
+        try:
+            for chunk in _practice_llm_stream(system_prompt, user_prompt, max_tokens=4096):
+                if chunk.startswith("ERROR:"):
+                    with bg_lock:
+                        bg_generators[task_key]["error"] = chunk
+                        bg_generators[task_key]["completed"] = True
+                    return
+                full_text += chunk
+                with bg_lock:
+                    bg_generators[task_key]["buffer"] += chunk
+                    
+            # Complete! Now save files, insert database records, and index vector database
+            if full_text.strip():
+                from database import SessionLocal
+                import datetime
+                from models import Document
+                from config import UPLOAD_DIR
+
+                local_db = SessionLocal()
+                try:
+                    doc_name = f"AI Study Material - {topic}.md"
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    safe_name = f"{user_id}_{timestamp}_{doc_name}"
+                    file_path = os.path.join(UPLOAD_DIR, safe_name)
+
+                    # Save text to markdown file
+                    os.makedirs(UPLOAD_DIR, exist_ok=True)
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        f.write(full_text)
+
+                    # Remove old generated doc duplicate
+                    existing = local_db.query(Document).filter(
+                        Document.student_id == user_id,
+                        Document.filename == doc_name
+                    ).first()
+                    if existing:
+                        if existing.file_path and os.path.exists(existing.file_path):
+                            try:
+                                os.remove(existing.file_path)
+                            except Exception:
+                                pass
+                        local_db.delete(existing)
+                        local_db.commit()
+
+                    # Save new Document metadata
+                    new_doc = Document(
+                        student_id=user_id,
+                        filename=doc_name,
+                        file_path=file_path,
+                        category="Studies",
+                        subject=subject,
+                        uploaded_at=datetime.datetime.now(),
+                        visibility="course_shared",
+                        document_type="notes",
+                        classroom_id=classroom_id,
+                        document_format="MD",
+                        file_size=os.path.getsize(file_path),
+                        pages=max(1, len(full_text) // 3000),
+                        title=f"AI Study Material - {topic}"
+                    )
+                    local_db.add(new_doc)
+                    local_db.commit()
+                    local_db.refresh(new_doc)
+
+                    # Index generated notes into Chroma vector store
+                    try:
+                        from services.extract import chunk_text
+                        from chroma_store import upsert_chunks, delete_document_chunks
+                        
+                        delete_document_chunks(new_doc.id)
+                        chunks_to_store = chunk_text(full_text)
+                        upsert_chunks(new_doc.id, chunks_to_store)
+                        logger.info(f"[BgGen] Indexed {len(chunks_to_store)} chunks into Chroma for doc_id={new_doc.id}")
+                        
+                        # Immediately trigger background topic extraction
+                        from services.practice.topic_extractor import extract_topics_from_documents
+                        extract_topics_from_documents(user_id, local_db)
+                    except Exception as e:
+                        logger.error(f"[BgGen] Failed to index generated notes in Chroma: {e}")
+
+                    # Save classroom resource association
+                    if classroom_id:
+                        from classroom_models import ClassResource
+                        
+                        existing_res = local_db.query(ClassResource).filter(
+                            ClassResource.class_id == classroom_id,
+                            ClassResource.title == f"AI Study Material - {topic}"
+                        ).first()
+                        if existing_res:
+                            local_db.delete(existing_res)
+                            local_db.commit()
+
+                        new_resource = ClassResource(
+                            class_id=classroom_id,
+                            title=f"AI Study Material - {topic}",
+                            type="notes",
+                            file_path=file_path,
+                            uploaded_by=user_id,
+                            uploaded_at=datetime.datetime.now()
+                        )
+                        local_db.add(new_resource)
+                        local_db.commit()
+                        logger.info(f"[BgGen] Saved generated resource in class_resources for classroom_id={classroom_id}")
+
+                    logger.info(f"[BgGen] Saved generated material as document & file: '{doc_name}' associated with classroom={classroom_id}")
+                finally:
+                    local_db.close()
+        except Exception as e:
+            logger.error(f"[BgGen] Background worker error: {e}", exc_info=True)
+            with bg_lock:
+                bg_generators[task_key]["error"] = str(e)
+        finally:
+            with bg_lock:
+                bg_generators[task_key]["completed"] = True
+            logger.info(f"[BgGen] Worker thread finished for key: {task_key}")
+
+    # Kickoff worker thread if not already running
+    with bg_lock:
+        if task_key not in bg_generators or bg_generators[task_key]["completed"] or bg_generators[task_key]["error"]:
+            bg_generators[task_key] = {
+                "buffer": "",
+                "completed": False,
+                "error": None
+            }
+            thread = threading.Thread(target=bg_worker, daemon=True)
+            thread.start()
+
+    def generate_stream():
+        read_offset = 0
+        while True:
+            with bg_lock:
+                state = bg_generators.get(task_key)
+                if not state:
+                    break
+                
+                buffer = state["buffer"]
+                completed = state["completed"]
+                error = state["error"]
+
+                if error:
+                    yield f"\n\n⚠️ Generation failed: {error}"
+                    break
+
+                if len(buffer) > read_offset:
+                    chunk = buffer[read_offset:]
+                    read_offset = len(buffer)
+                    yield chunk
+
+                if completed and len(buffer) <= read_offset:
+                    break
+            
+            time.sleep(0.1)
+
+    return StreamingResponse(
+        generate_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
+    )

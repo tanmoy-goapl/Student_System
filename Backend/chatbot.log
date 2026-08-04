@@ -7282,3 +7282,260 @@ ERROR: Connection error.
 2026-08-03 05:56:54,629 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
 2026-08-03 05:56:54,672 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
 2026-08-03 05:56:54,698 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 06:21:04,301 - INFO - Cached explain action for topic='Wave Optics Study Files'
+2026-08-03 06:21:20,410 - INFO - Cached explain action for topic='2_Placement_Report'
+2026-08-03 06:26:14,377 - INFO - Cached examples action for topic='2_Placement_Report'
+2026-08-03 07:15:38,849 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='deadlocks'
+2026-08-03 07:15:39,855 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='deadlocks'
+2026-08-03 07:15:39,864 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: deadlocks) ---
+2026-08-03 07:17:12,848 - INFO - Successfully cached streamed content for topic='deadlocks', subject='Operating Systems'
+2026-08-03 07:18:47,952 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='deadlocks'
+2026-08-03 07:18:48,744 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='deadlocks'
+2026-08-03 07:19:16,407 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'deadlocks' to save resources.
+2026-08-03 07:19:21,752 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='deadlocks'
+2026-08-03 07:19:21,752 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='deadlocks'
+2026-08-03 07:25:16,732 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-03 07:25:16,733 - INFO - DEBUG2 performances keys: ['OS Components and Services']
+2026-08-03 07:25:16,733 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x706e860ff010>]
+2026-08-03 07:25:16,839 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-03 07:25:16,840 - INFO - DEBUG2 performances keys: ['OS Components and Services']
+2026-08-03 07:25:16,840 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x706e84fdac10>]
+2026-08-03 07:25:28,868 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-03 07:25:28,986 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 07:25:29,046 - INFO - CACHE HIT (Fast Return): topic='What is Machine Learning?', subject='Machine Learning'
+2026-08-03 07:25:29,109 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 07:25:36,615 - INFO - CACHE HIT (Fast Return): topic='System Model & Deadlock Characterization', subject='Operating Systems'
+2026-08-03 07:25:36,732 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 07:26:06,979 - INFO - Cached explain action for topic='System Model & Deadlock Characterization'
+2026-08-03 07:26:11,094 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 07:26:11,095 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 07:26:18,323 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 07:26:18,324 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 07:40:37,305 - INFO - [ProfessorGen] Generating fresh study material for topic='Deadlocks', subject='Operating system', user_id=2
+2026-08-03 07:48:15,483 - ERROR - [ProfessorGen] Failed to save document entry: type object 'Document' has no attribute 'name'
+2026-08-03 08:20:17,785 - INFO - [ProfessorGen] Generating fresh study material for topic='Deadlocks', subject='Operating system', user_id=2, classroom_id=3
+2026-08-03 08:27:42,593 - ERROR - [ProfessorGen] Failed to save document file or entry: type object 'Document' has no attribute 'name'
+2026-08-03 08:28:39,227 - INFO - [ProfessorGen] Generating fresh study material for topic='Deadlocks', subject='Operating system', user_id=2, classroom_id=3
+2026-08-03 08:30:14,543 - ERROR - [ProfessorGen] Failed to save document file or entry: type object 'Document' has no attribute 'name'
+2026-08-03 08:42:37,402 - INFO - [ProfessorGen] Generating fresh study material for topic='Unsupervised Learning', subject='Machine learning ', user_id=2, classroom_id=1
+2026-08-03 08:48:59,774 - INFO - [ProfessorGen] Saved generated material as document & file: 'AI Study Material - Unsupervised Learning.txt' associated with classroom=1
+2026-08-03 08:59:06,468 - INFO - [ProfessorGen] Generating fresh study material for topic='Unsupervised Learning', subject='Machine learning ', user_id=2, classroom_id=1
+2026-08-03 09:00:47,559 - INFO - [ProfessorGen] Saved generated material as document & file: 'AI Study Material - Unsupervised Learning.txt' associated with classroom=1
+2026-08-03 09:05:10,857 - INFO - [ProfessorGen] Generating fresh study material for topic='Unsupervised learning', subject='Machine learning ', user_id=2, classroom_id=1
+2026-08-03 09:08:49,182 - INFO - [ProfessorGen] Saved generated material in class_resources for classroom_id=1
+2026-08-03 09:08:49,183 - INFO - [ProfessorGen] Saved generated material as document & file: 'AI Study Material - Unsupervised learning.pdf' associated with classroom=1
+2026-08-03 09:11:19,029 - INFO - Cached examples action for topic='AI Study Material - Unsupervised learning'
+2026-08-03 09:25:14,515 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-03 09:25:14,515 - INFO - DEBUG2 performances keys: ['OS Components and Services']
+2026-08-03 09:25:14,515 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7053b5fb0950>]
+2026-08-03 09:25:14,617 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-03 09:25:14,617 - INFO - DEBUG2 performances keys: ['OS Components and Services']
+2026-08-03 09:25:14,618 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7053b5e95690>]
+2026-08-03 09:25:21,676 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-03 09:25:21,676 - INFO - DEBUG2 performances keys: []
+2026-08-03 09:25:21,676 - INFO - DEBUG2 matched perfs: []
+2026-08-03 09:25:21,765 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-03 09:25:21,766 - INFO - DEBUG2 performances keys: []
+2026-08-03 09:25:21,766 - INFO - DEBUG2 matched perfs: []
+2026-08-03 09:33:35,458 - INFO - [ProfessorGen] Generating fresh study material for topic='arrays', subject='DSA', user_id=2, classroom_id=4
+2026-08-03 09:34:55,554 - INFO - [ProfessorGen] Generating fresh study material for topic='arrays', subject='DSA', user_id=2, classroom_id=4
+2026-08-03 09:38:52,648 - INFO - [ProfessorGen] Saved generated material in class_resources for classroom_id=4
+2026-08-03 09:38:52,648 - INFO - [ProfessorGen] Saved generated material as document & file: 'AI Study Material - arrays.md' associated with classroom=4
+2026-08-03 09:38:59,282 - INFO - [ProfessorGen] Saved generated material in class_resources for classroom_id=4
+2026-08-03 09:38:59,282 - INFO - [ProfessorGen] Saved generated material as document & file: 'AI Study Material - arrays.md' associated with classroom=4
+2026-08-03 09:54:28,914 - INFO - [ProfessorGen] Generating fresh study material for topic='Unsupervised Learning', subject='Machine learning ', user_id=2, classroom_id=1
+2026-08-03 09:57:50,911 - INFO - [ProfessorGen] Saved generated material in class_resources for classroom_id=1
+2026-08-03 09:57:50,911 - INFO - [ProfessorGen] Saved generated material as document & file: 'AI Study Material - Unsupervised Learning.md' associated with classroom=1
+2026-08-03 10:30:28,795 - INFO - Cached examples action for topic='AI Study Material - Unsupervised Learning'
+2026-08-03 10:30:42,586 - INFO - Cached explain action for topic='AI Study Material - Unsupervised Learning'
+2026-08-03 10:31:59,431 - INFO - Cached explain action for topic='AI Study Material - arrays'
+2026-08-03 10:33:28,243 - INFO - 
+================================================================================
+2026-08-03 10:33:28,243 - INFO - [2026-08-03T10:33:28.243782] CHAT REQUEST
+2026-08-03 10:33:28,243 - INFO -   Student ID : 3
+2026-08-03 10:33:28,243 - INFO -   Question   : Can you tell me about the unsupervised learning
+2026-08-03 10:33:28,243 - INFO -   Role       : student
+2026-08-03 10:33:28,244 - INFO - ================================================================================
+2026-08-03 10:33:28,246 - INFO -   [Timing] FastAPI Request started processing at 323521.914
+2026-08-03 10:33:28,252 - INFO -   Detected Mode: LEARNING
+2026-08-03 10:33:28,252 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-08-03 10:33:29,260 - INFO -   [Timing] Retrieval & Context Building: 0.988s
+2026-08-03 10:33:29,265 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-03 10:33:38,838 - INFO -   [Timing] Backend First Token Loop hit: 9.572s since LLM call
+2026-08-03 10:33:38,838 - INFO -   [Timing] Total TTFT (user → first token loop): 10.592s
+2026-08-03 10:34:57,899 - INFO -   [Timing] LLM Streaming Duration: 88.634s
+2026-08-03 10:34:57,900 - INFO -   [Timing] Total Response Time: 89.653s
+2026-08-03 10:38:21,660 - INFO - [ProfessorGen] Generating fresh study material for topic='Arrays', subject='DSA', user_id=2, classroom_id=4
+2026-08-03 10:39:55,686 - INFO - [ProfessorGen] Indexed 29 chunks into Chroma for doc_id=74
+2026-08-03 10:39:55,688 - ERROR - [ProfessorGen] Failed to index generated notes in Chroma: cannot access local variable 'threading' where it is not associated with a value
+2026-08-03 10:39:55,693 - INFO - [ProfessorGen] Saved generated material in class_resources for classroom_id=4
+2026-08-03 10:39:55,693 - INFO - [ProfessorGen] Saved generated material as document & file: 'AI Study Material - Arrays.md' associated with classroom=4
+2026-08-03 10:43:20,856 - INFO - 
+================================================================================
+2026-08-03 10:43:20,856 - INFO - [2026-08-03T10:43:20.856856] CHAT REQUEST
+2026-08-03 10:43:20,856 - INFO -   Student ID : 3
+2026-08-03 10:43:20,857 - INFO -   Question   : tell me about arrays in depth
+2026-08-03 10:43:20,857 - INFO -   Role       : student
+2026-08-03 10:43:20,857 - INFO - ================================================================================
+2026-08-03 10:43:20,859 - INFO -   [Timing] FastAPI Request started processing at 324114.527
+2026-08-03 10:43:20,864 - INFO -   Detected Mode: LEARNING
+2026-08-03 10:43:20,864 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-03 10:43:22,031 - INFO -   [Timing] Retrieval & Context Building: 1.157s
+2026-08-03 10:43:22,034 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-03 10:43:25,765 - INFO -   [Timing] Backend First Token Loop hit: 3.730s since LLM call
+2026-08-03 10:43:25,765 - INFO -   [Timing] Total TTFT (user → first token loop): 4.906s
+2026-08-03 10:46:21,698 - INFO -   [Timing] LLM Streaming Duration: 179.664s
+2026-08-03 10:46:21,699 - INFO -   [Timing] Total Response Time: 180.839s
+2026-08-03 12:55:01,553 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-03 12:55:01,554 - INFO - DEBUG2 performances keys: ['OS Components and Services']
+2026-08-03 12:55:01,554 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x787a2d340450>]
+2026-08-03 12:55:01,590 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-03 12:55:01,591 - INFO - DEBUG2 performances keys: ['OS Components and Services']
+2026-08-03 12:55:01,591 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x787a2d347390>]
+2026-08-03 12:55:06,096 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-03 12:55:06,180 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 12:55:16,542 - INFO - CACHE HIT (Fast Return): topic='System Calls', subject='Operating Systems'
+2026-08-03 12:55:16,607 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 12:55:23,129 - INFO - [Practice] Starting/resuming session: mode=topic, topic=System Calls, difficulty=mixed
+2026-08-03 12:55:23,142 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='System Calls'
+2026-08-03 12:55:23,180 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 12:55:23,218 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 12:55:23,225 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='System Calls'
+2026-08-03 12:55:48,301 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 12:55:48,301 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 12:55:58,632 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 12:55:58,635 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 12:56:53,567 - INFO - Cached generated quiz questions for topic='System Calls', difficulty='easy'
+2026-08-03 12:56:57,182 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='System Calls'
+2026-08-03 12:56:57,182 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='System Calls'
+2026-08-03 12:58:38,915 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-03 12:58:38,916 - INFO - DEBUG2 performances keys: []
+2026-08-03 12:58:38,916 - INFO - DEBUG2 matched perfs: []
+2026-08-03 12:58:38,956 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-03 12:58:38,956 - INFO - DEBUG2 performances keys: []
+2026-08-03 12:58:38,956 - INFO - DEBUG2 matched perfs: []
+2026-08-03 12:58:51,901 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-03 12:58:51,936 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 12:58:52,027 - INFO - CACHE HIT (Fast Return): topic='What is Machine Learning?', subject='Machine Learning'
+2026-08-03 12:58:52,057 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 12:59:33,997 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 12:59:34,000 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 12:59:38,192 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-03 12:59:38,253 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 12:59:39,218 - INFO - CACHE HIT (Fast Return): topic='What is Machine Learning?', subject='Machine Learning'
+2026-08-03 12:59:39,261 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 13:01:00,608 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 13:01:00,653 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 13:02:58,865 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-03 13:03:09,100 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-03 13:03:09,101 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-03 13:03:09,115 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='System Calls' (total=5 questions)
+2026-08-03 13:04:16,206 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-03 13:04:16,226 - INFO - CACHE HIT (Fast Return): topic='Algorithmic Thinking & Big‑O', subject='None'
+2026-08-03 13:04:16,251 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 13:04:16,287 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 13:04:29,899 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 13:04:29,931 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Recursion & Divide‑and‑Conquer'
+2026-08-03 13:04:30,024 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Recursion & Divide‑and‑Conquer'
+2026-08-03 13:04:30,030 - INFO - --- LLM PROMPT (Subject: Week 1 (Unlocked), Topic: Recursion & Divide‑and‑Conquer) ---
+2026-08-03 13:04:48,421 - INFO - CACHE HIT (Fast Return): topic='Arrays & Prefix Sums', subject='Week 1 (Unlocked)'
+2026-08-03 13:04:48,454 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 13:04:58,115 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 13:04:58,115 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 13:05:03,599 - INFO - CACHE HIT (Fast Return): topic='Hashing & Collision Resolution', subject='Week 1 (Unlocked)'
+2026-08-03 13:05:03,638 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-03 13:05:11,707 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 13:05:11,713 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 13:05:30,116 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 13:05:30,116 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 13:05:45,367 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 13:05:45,369 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-03 13:06:42,029 - INFO - Successfully cached streamed content for topic='Recursion & Divide‑and‑Conquer', subject='Week 1 (Unlocked)'
+2026-08-03 13:09:25,438 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Recursion & Divide‑and‑Conquer'
+2026-08-03 13:09:25,439 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Recursion & Divide‑and‑Conquer'
+2026-08-03 13:15:27,572 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-03 13:15:37,981 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-03 13:15:37,982 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-03 13:15:38,170 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Recursion & Divide‑and‑Conquer' (total=5 questions)
+2026-08-03 13:23:01,865 - INFO - [ProfessorGen] Generating fresh study material for topic='unsupervised learning', subject='Machine learning ', user_id=2, classroom_id=1
+2026-08-03 13:28:10,757 - INFO - [ProfessorGen] Indexed 33 chunks into Chroma for doc_id=75
+2026-08-03 13:28:10,759 - ERROR - [ProfessorGen] Failed to index generated notes in Chroma: cannot access local variable 'threading' where it is not associated with a value
+2026-08-03 13:28:10,763 - INFO - [ProfessorGen] Saved generated material in class_resources for classroom_id=1
+2026-08-03 13:28:10,763 - INFO - [ProfessorGen] Saved generated material as document & file: 'AI Study Material - unsupervised learning.md' associated with classroom=1
+2026-08-03 13:30:43,000 - INFO - Cached examples action for topic='AI Study Material - unsupervised learning'
+2026-08-03 13:30:55,086 - INFO - Cached explain action for topic='AI Study Material - unsupervised learning'
+2026-08-04 07:02:07,258 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-04 07:02:07,258 - INFO - DEBUG2 performances keys: ['OS Components and Services']
+2026-08-04 07:02:07,258 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x74e654478950>]
+2026-08-04 07:02:07,438 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-04 07:02:07,439 - INFO - DEBUG2 performances keys: ['OS Components and Services']
+2026-08-04 07:02:07,439 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x74e6544d1ed0>]
+2026-08-04 07:02:18,728 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-04 07:02:18,728 - INFO - DEBUG2 performances keys: []
+2026-08-04 07:02:18,728 - INFO - DEBUG2 matched perfs: []
+2026-08-04 07:02:18,804 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-04 07:02:18,805 - INFO - DEBUG2 performances keys: []
+2026-08-04 07:02:18,805 - INFO - DEBUG2 matched perfs: []
+2026-08-04 07:02:24,942 - INFO - DEBUG2 predefined_topics: ['History of AI', 'Agents and Environments', 'Problem Solving as Search', 'Uninformed Search Strategies', 'Informed Search Strategies', 'Propositional Logic', 'First-Order Logic', 'Inference in Logic', 'Knowledge Graphs', 'Ontologies', 'Probability Theory Basics', 'Bayes Rule', 'Bayesian Networks', 'Markov Decision Processes', 'Hidden Markov Models', 'Learning from Examples', 'Knowledge in Learning', 'Statistical Learning', 'Neural Networks Basics', 'Deep Learning Basics', 'Natural Language Processing', 'Computer Vision', 'Robotics', 'Ethical AI', 'Future of AI']
+2026-08-04 07:02:24,942 - INFO - DEBUG2 performances keys: []
+2026-08-04 07:02:24,942 - INFO - DEBUG2 matched perfs: []
+2026-08-04 07:02:25,020 - INFO - DEBUG2 predefined_topics: ['History of AI', 'Agents and Environments', 'Problem Solving as Search', 'Uninformed Search Strategies', 'Informed Search Strategies', 'Propositional Logic', 'First-Order Logic', 'Inference in Logic', 'Knowledge Graphs', 'Ontologies', 'Probability Theory Basics', 'Bayes Rule', 'Bayesian Networks', 'Markov Decision Processes', 'Hidden Markov Models', 'Learning from Examples', 'Knowledge in Learning', 'Statistical Learning', 'Neural Networks Basics', 'Deep Learning Basics', 'Natural Language Processing', 'Computer Vision', 'Robotics', 'Ethical AI', 'Future of AI']
+2026-08-04 07:02:25,020 - INFO - DEBUG2 performances keys: []
+2026-08-04 07:02:25,020 - INFO - DEBUG2 matched perfs: []
+2026-08-04 07:02:29,956 - INFO - DEBUG2 predefined_topics: ['Time Complexity', 'Space Complexity', 'Big O Notation', 'Arrays', 'Linked Lists', 'Stacks', 'Queues', 'Binary Trees', 'BST', 'Graph Traversal', 'BFS', 'DFS', 'Binary Search', 'Merge Sort', 'Quick Sort', 'Heap Sort', 'Memoization', 'Knapsack', 'LCS', 'DP Problems']
+2026-08-04 07:02:29,956 - INFO - DEBUG2 performances keys: ['Time Complexity']
+2026-08-04 07:02:29,956 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x74e6544d1b50>]
+2026-08-04 07:02:30,025 - INFO - DEBUG2 predefined_topics: ['Time Complexity', 'Space Complexity', 'Big O Notation', 'Arrays', 'Linked Lists', 'Stacks', 'Queues', 'Binary Trees', 'BST', 'Graph Traversal', 'BFS', 'DFS', 'Binary Search', 'Merge Sort', 'Quick Sort', 'Heap Sort', 'Memoization', 'Knapsack', 'LCS', 'DP Problems']
+2026-08-04 07:02:30,026 - INFO - DEBUG2 performances keys: ['Time Complexity']
+2026-08-04 07:02:30,026 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x74e65435b650>]
+2026-08-04 07:02:41,749 - INFO - CACHE HIT (Fast Return): topic='Time Complexity', subject='Data Structures and Algorithms'
+2026-08-04 07:02:41,793 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 07:02:46,556 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 07:02:46,566 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-04 07:02:46,577 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Time Complexity'
+2026-08-04 07:02:46,584 - INFO - [PracticeEngine] Master cache HIT: Retrieved 2 cached questions for topic='Time Complexity', difficulty='easy', returning 2
+2026-08-04 07:02:46,609 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 07:02:47,007 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Time Complexity'
+2026-08-04 07:02:56,767 - INFO - PERFORMANCE UPDATED | Topic: Time Complexity | Accuracy: 42.857142857142854% | Sessions: 3 | Status: LEARNING
+2026-08-04 07:03:07,056 - INFO - PERFORMANCE UPDATED | Topic: Time Complexity | Accuracy: 50.0% | Sessions: 3 | Status: LEARNING
+2026-08-04 07:03:09,570 - INFO - [PracticeEngine] Master cache HIT: Retrieved 2 cached questions for topic='Time Complexity', difficulty='medium', returning 2
+2026-08-04 07:03:14,921 - INFO - PERFORMANCE UPDATED | Topic: Time Complexity | Accuracy: 55.55555555555556% | Sessions: 3 | Status: LEARNING
+2026-08-04 07:03:24,026 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 07:03:24,027 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 07:03:25,110 - INFO - PERFORMANCE UPDATED | Topic: Time Complexity | Accuracy: 60.0% | Sessions: 3 | Status: LEARNING
+2026-08-04 07:03:26,944 - INFO - [PracticeEngine] Master cache HIT: Retrieved 2 cached questions for topic='Time Complexity', difficulty='medium', returning 1
+2026-08-04 07:03:33,508 - INFO - PERFORMANCE UPDATED | Topic: Time Complexity | Accuracy: 63.63636363636363% | Sessions: 3 | Status: LEARNING
+2026-08-04 07:03:35,082 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Time Complexity'
+2026-08-04 07:03:35,082 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Time Complexity'
+2026-08-04 07:03:37,951 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 07:03:38,025 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 07:03:53,703 - INFO - DEBUG2 predefined_topics: ['Time Complexity', 'Space Complexity', 'Big O Notation', 'Arrays', 'Linked Lists', 'Stacks', 'Queues', 'Binary Trees', 'BST', 'Graph Traversal', 'BFS', 'DFS', 'Binary Search', 'Merge Sort', 'Quick Sort', 'Heap Sort', 'Memoization', 'Knapsack', 'LCS', 'DP Problems']
+2026-08-04 07:03:53,704 - INFO - DEBUG2 performances keys: ['Time Complexity']
+2026-08-04 07:03:53,704 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x74e64c253310>]
+2026-08-04 07:03:53,792 - INFO - DEBUG2 predefined_topics: ['Time Complexity', 'Space Complexity', 'Big O Notation', 'Arrays', 'Linked Lists', 'Stacks', 'Queues', 'Binary Trees', 'BST', 'Graph Traversal', 'BFS', 'DFS', 'Binary Search', 'Merge Sort', 'Quick Sort', 'Heap Sort', 'Memoization', 'Knapsack', 'LCS', 'DP Problems']
+2026-08-04 07:03:53,792 - INFO - DEBUG2 performances keys: ['Time Complexity']
+2026-08-04 07:03:53,792 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x74e64c22a7d0>]
+2026-08-04 07:09:36,807 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-04 07:09:47,105 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-04 07:09:47,106 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-04 07:09:47,111 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Time Complexity' (total=5 questions)
+2026-08-04 07:14:19,463 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 07:14:19,493 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 07:14:22,037 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-04 07:14:22,044 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-04 07:14:22,093 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 07:14:22,132 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 07:14:22,193 - INFO - CACHE HIT (Fast Return): topic='Time Complexity', subject='Data Structures and Algorithms'
+2026-08-04 07:14:22,225 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 07:14:30,577 - INFO - DEBUG2 predefined_topics: ['History of AI', 'Agents and Environments', 'Problem Solving as Search', 'Uninformed Search Strategies', 'Informed Search Strategies', 'Propositional Logic', 'First-Order Logic', 'Inference in Logic', 'Knowledge Graphs', 'Ontologies', 'Probability Theory Basics', 'Bayes Rule', 'Bayesian Networks', 'Markov Decision Processes', 'Hidden Markov Models', 'Learning from Examples', 'Knowledge in Learning', 'Statistical Learning', 'Neural Networks Basics', 'Deep Learning Basics', 'Natural Language Processing', 'Computer Vision', 'Robotics', 'Ethical AI', 'Future of AI']
+2026-08-04 07:14:30,577 - INFO - DEBUG2 performances keys: []
+2026-08-04 07:14:30,577 - INFO - DEBUG2 matched perfs: []
+2026-08-04 07:14:30,658 - INFO - DEBUG2 predefined_topics: ['History of AI', 'Agents and Environments', 'Problem Solving as Search', 'Uninformed Search Strategies', 'Informed Search Strategies', 'Propositional Logic', 'First-Order Logic', 'Inference in Logic', 'Knowledge Graphs', 'Ontologies', 'Probability Theory Basics', 'Bayes Rule', 'Bayesian Networks', 'Markov Decision Processes', 'Hidden Markov Models', 'Learning from Examples', 'Knowledge in Learning', 'Statistical Learning', 'Neural Networks Basics', 'Deep Learning Basics', 'Natural Language Processing', 'Computer Vision', 'Robotics', 'Ethical AI', 'Future of AI']
+2026-08-04 07:14:30,658 - INFO - DEBUG2 performances keys: []
+2026-08-04 07:14:30,658 - INFO - DEBUG2 matched perfs: []
+2026-08-04 07:18:37,656 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-04 07:18:37,656 - INFO - DEBUG2 performances keys: []
+2026-08-04 07:18:37,656 - INFO - DEBUG2 matched perfs: []
+2026-08-04 07:18:37,737 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-04 07:18:37,737 - INFO - DEBUG2 performances keys: []
+2026-08-04 07:18:37,737 - INFO - DEBUG2 matched perfs: []

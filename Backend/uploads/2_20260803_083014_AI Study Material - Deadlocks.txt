@@ -1,0 +1,194 @@
+# Deadlocks  
+**Subject:** Operating Systems  
+**Level:** Undergraduate / Graduate (exam‑oriented)  
+
+---  
+
+## 1. Introduction & Definition  
+
+**Definition (formal).**  
+A *deadlock* is a set of two or more processes (or threads) in a concurrent system, each of which is waiting for an event that can be caused only by another member of the same set. Consequently none of the processes can proceed, and the system remains in a permanent waiting state unless external intervention occurs.
+
+**Historical context.**  
+The term originated in the 1960s during the development of early multiprogramming operating systems (e.g., IBM OS/360). Researchers such as Coffman, Elphick, and Shoshani formalised the conditions under which deadlocks arise (the “Coffman conditions”) and laid the groundwork for detection and avoidance algorithms that are still taught today.
+
+**Why deadlocks exist.**  
+Modern OSes must allow many independent activities to share a limited pool of resources (CPU, memory, I/O devices, locks, semaphores, etc.). When resources are non‑preemptible and processes request them in an uncontrolled order, circular waiting can appear, leading to deadlock. Understanding deadlocks is essential because they represent a class of *liveness* failures—situations where the system makes no forward progress despite being otherwise correct.
+
+---  
+
+## 2. Core Concepts & Theory  
+
+### 2.1 The Coffman Conditions  
+
+A deadlock can arise **iff** all four of the following conditions hold simultaneously:
+
+1. **Mutual Exclusion** – At least one resource is non‑shareable; only one process can use it at a time.  
+2. **Hold and Wait** – A process is holding at least one resource while simultaneously requesting additional resources.  
+3. **No Preemption** – Resources cannot be forcibly taken away from a process; they must be released voluntarily.  
+4. **Circular Wait** – A closed chain of processes exists, where each process holds a resource needed by the next process in the chain.
+
+If any one of these conditions is broken, deadlock cannot occur.
+
+### 2.2 Resource‑Allocation Graph (RAG)  
+
+A **resource‑allocation graph** is a directed bipartite graph used to model the state of a system:
+
+- **Vertices**:  
+  - *Process vertices* (P1, P2, …)  
+  - *Resource vertices* (R1, R2, …).  
+- **Edges**:  
+  - *Request edge* (Pi → Rj) indicates Pi is waiting for an instance of Rj.  
+  - *Assignment edge* (Rj → Pi) indicates Rj is currently allocated to Pi.
+
+**Key properties**  
+
+- If the graph contains **no cycles**, the system is deadlock‑free.  
+- If the graph contains a **cycle** and each resource type has exactly one instance, the cycle is a deadlock.  
+- If resources have multiple instances, a cycle is **necessary but not sufficient**; further analysis (e.g., using the Banker's algorithm) is required.
+
+### 2.3 Formal Model (Banker’s Algorithm)  
+
+The Banker’s algorithm treats the system as a bank that allocates resources safely. The algorithm maintains three vectors for each process *i*:
+
+1. **Maximum demand** `max[i]` – the total number of each resource type that *i* may ever request.  
+2. **Allocation** `alloc[i]` – the number of each resource type currently held by *i*.  
+3. **Need** `need[i] = max[i] – alloc[i]` – remaining resources *i* may still request.
+
+The system also tracks **Available** – the number of each resource type currently free.
+
+**Safety test (pseudocode, numbered steps).**  
+
+1. Initialize `Work = Available`, `Finish[i] = false` for all processes.  
+2. Find a process `i` such that `Finish[i] == false` and `need[i] ≤ Work`.  
+3. If no such `i` exists, go to step 5.  
+4. Set `Work = Work + alloc[i]`; `Finish[i] = true`; repeat step 2.  
+5. If all `Finish[i]` are true, the state is **safe** (no deadlock possible). Otherwise it is **unsafe** (deadlock may occur).
+
+The algorithm is called “Banker’s” because a banker would only grant a loan if it can guarantee that all customers can be satisfied later.
+
+### 2.4 Detection vs. Prevention vs. Avoidance  
+
+| Strategy | When it acts | Core idea | Typical overhead |
+|----------|--------------|----------|------------------|
+| **Prevention** | *Before* a deadlock can form | Force one of the Coffman conditions to be false (e.g., prohibit hold‑and‑wait) | May reduce concurrency, simple to implement |
+| **Avoidance** | *During* resource allocation | Examine each request with a safety algorithm (Banker’s) and only grant if the resulting state is safe | Requires knowledge of future maximum demands; runtime cost of safety test |
+| **Detection & Recovery** | *After* a deadlock has formed | Periodically run a detection algorithm (e.g., cycle detection on RAG) and then recover (kill processes, preempt resources) | Can tolerate higher concurrency but needs recovery mechanisms |
+
+### 2.5 Data Structures Used  
+
+- **RAG adjacency lists** – for detection (DFS/BFS).  
+- **Available vector, Allocation matrix, Max matrix, Need matrix** – for avoidance.  
+- **Wait‑for graph (WFG)** – a condensed RAG where only processes appear; an edge Pi → Pj means Pi is waiting for a resource held by Pj. Cycle detection on the WFG is sufficient for deadlock detection in systems with multiple instances of each resource.
+
+---  
+
+## 3. How It Works (Step‑by‑Step)  
+
+Below is a canonical scenario illustrating how a deadlock can materialise in a system that uses simple mutex locks.
+
+1. **System start** – Two processes, **P1** and **P2**, each need two locks, **L1** and **L2**, to complete their critical sections.  
+2. **Initial state** – Both locks are free.  
+3. **P1 acquires L1** – Request succeeds; L1 is now assigned to P1.  
+4. **P2 acquires L2** – Request succeeds; L2 is now assigned to P2.  
+5. **P1 requests L2** – L2 is held by P2, so P1 issues a *request edge* P1 → L2 and blocks.  
+6. **P2 requests L1** – L1 is held by P1, so P2 issues a *request edge* P2 → L1 and blocks.  
+7. **RAG now contains a cycle**: P1 → L2 → P2 → L1 → P1. All four Coffman conditions hold, therefore a deadlock exists.  
+
+**Decision points & edge cases**  
+
+- **Preemption possibility** – If the OS allowed preempting a lock (e.g., via priority inheritance), step 5 could be resolved by forcibly releasing L2.  
+- **Hold‑and‑wait avoidance** – If the OS required processes to request *all* needed locks atomically (step 3 would have failed because P1 did not already hold L2), the deadlock would be prevented.  
+- **Multiple instances** – Suppose L1 and L2 each have two instances. The same sequence may not deadlock because a second instance could satisfy one of the pending requests, breaking the circular wait.  
+
+**Failure scenario**  
+
+If the deadlock persists, the OS may invoke a *deadlock recovery* routine:
+
+1. Run a **cycle‑detection** algorithm on the wait‑for graph.  
+2. Identify the set of processes forming the cycle (P1, P2).  
+3. Choose a victim (e.g., the process with the lowest priority or the one that has performed the least work).  
+4. **Terminate** the victim or **preempt** one of its held resources.  
+5. Release the victim’s resources, allowing the remaining processes to continue.  
+
+---  
+
+## 4. Types & Classifications  
+
+- **Resource‑type deadlock** – Involves a single class of resource (e.g., printers). The classic RAG cycle analysis applies directly.  
+- **Communication deadlock** – Occurs in message‑passing systems when two processes wait indefinitely for messages from each other (e.g., MPI barrier misuse).  
+- **Lock‑order deadlock** – Arises when different threads acquire multiple locks in inconsistent orders.  
+- **Starvation vs. deadlock** – Starvation is a *potential* indefinite postponement caused by scheduling; deadlock is a *definite* circular wait.  
+- **Deadly embrace** – A term used in database transaction processing where two transactions each hold a lock the other needs (similar to lock‑order deadlock).  
+
+**Pros / Cons of each classification (brief)**  
+
+- *Resource‑type* deadlocks are easiest to detect with RAGs; however, they often require the OS to maintain per‑resource state, increasing overhead.  
+- *Communication* deadlocks are harder to detect statically because they involve program logic; runtime monitoring is required.  
+- *Lock‑order* deadlocks are common in multi‑threaded applications; disciplined lock ordering eliminates them with minimal performance impact.  
+- *Starvation* is not a true deadlock but can be mitigated by fair scheduling; confusing the two leads to mis‑diagnosis.  
+
+---  
+
+## 5. Real‑World Applications & Examples  
+
+1. **Database transaction processing (two‑phase locking).**  
+   - Two transactions T1 and T2 each lock rows A and B in opposite order. T1 locks A then requests B; T2 locks B then requests A. The lock manager’s wait‑for graph contains a cycle, causing the DBMS to abort one transaction to break the deadlock.  
+
+2. **Operating‑system kernel (inode and buffer cache).**  
+   - In many Unix‑like kernels, a process may hold an inode lock while requesting a buffer cache lock, while another process holds the buffer cache lock and requests the inode lock. The kernel’s deadlock detection routine periodically scans the kernel’s lock graph and forces a rollback of one of the blocked operations.  
+
+3. **Distributed systems (microservice orchestration).**  
+   - Service A holds a distributed lock on resource X and calls Service B, which attempts to acquire a lock on resource Y while Service B already holds Y and calls back Service A for X. The resulting circular wait across network nodes is a classic distributed deadlock; systems such as Apache ZooKeeper provide lock‑ordering guarantees to avoid it.  
+
+---  
+
+## 6. Common Pitfalls & Edge Cases  
+
+1. **Assuming “no cycle = no deadlock” in multi‑instance resources.**  
+   - A cycle in the RAG is *necessary* but not *sufficient* when resources have multiple instances. Failing to run a safety test can lead to false positives.  
+2. **Violating the “no preemption” condition unintentionally.**  
+   - Some OS kernels allow priority‑based preemption of spinlocks; if the programmer assumes locks are non‑preemptible, they may write code that deadlocks under high load.  
+3. **Mixing lock‑based and lock‑free synchronization.**  
+   - A thread that uses a lock may also perform a lock‑free atomic operation that internally acquires a hidden lock, creating an invisible circular wait. Careful documentation of all synchronization primitives is required.  
+
+---  
+
+## 7. Interview & Exam Preparation  
+
+1. **Question:** *State the four Coffman conditions and give a practical example that violates each one.*  
+   **Answer:** Mutual exclusion – two processes cannot share a printer simultaneously. Hold‑and‑wait – a process that releases all resources before requesting new ones (e.g., using `acquireAll` semantics) breaks this condition. No preemption – if the OS can forcibly take a lock away, preemption is violated. Circular wait – imposing a total ordering on lock acquisition eliminates circular wait.  
+
+2. **Question:** *Explain how the Banker’s algorithm decides whether to grant a request.*  
+   **Answer:** It simulates allocation of the requested resources, computes the new `Available` and `Need` vectors, then runs the safety test. If after the simulated allocation every process can finish (i.e., a safe sequence exists), the request is granted; otherwise it is denied.  
+
+3. **Question:** *Describe how to detect a deadlock using a wait‑for graph.*  
+   **Answer:** Build a directed graph where each node is a process and an edge Pi → Pj exists if Pi is waiting for a resource held by Pj. Perform a depth‑first search to find cycles; any cycle indicates a deadlock.  
+
+4. **Question:** *Why is deadlock avoidance generally more expensive than deadlock detection?*  
+   **Answer:** Avoidance requires the system to know each process’s maximum future resource demand and to run a safety algorithm on every allocation request, incurring per‑request overhead. Detection can be deferred to periodic scans, spreading the cost over time.  
+
+5. **Question:** *Give an example of a deadlock that can occur in a distributed system and a technique to prevent it.*  
+   **Answer:** Two microservices each hold a distributed lock on different keys and request the other’s lock, forming a circular wait across nodes. Enforcing a global lock ordering (e.g., alphabetical order of keys) prevents the circular wait.  
+
+6. **Question:** *What is the difference between a livelock and a deadlock?*  
+   **Answer:** In a deadlock the involved processes remain blocked and make no state changes. In a livelock the processes are active (e.g., repeatedly retrying) but still cannot make progress because they keep interfering with each other.  
+
+7. **Question:** *How does priority inheritance help mitigate deadlocks?*  
+   **Answer:** When a high‑priority thread is blocked by a low‑priority thread holding a needed lock, the low‑priority thread temporarily inherits the higher priority, allowing it to finish and release the lock sooner, thus breaking the hold‑and‑wait condition that could lead to deadlock.  
+
+---  
+
+## 8. Summary & Key Takeaways  
+
+- A deadlock is a **circular wait** among two or more processes, caused by the simultaneous satisfaction of the four Coffman conditions.  
+- **Resource‑allocation graphs** and **wait‑for graphs** are the primary modeling tools; a cycle is a deadlock indicator (single‑instance case).  
+- **Banker’s algorithm** provides a *safety* test for avoidance; it requires knowledge of each process’s maximum demand.  
+- **Prevention** eliminates at least one Coffman condition (e.g., by disallowing hold‑and‑wait or imposing a total lock order).  
+- **Detection** runs periodically, finds cycles, and then recovers by terminating or preempting victim processes.  
+- **Multiple instances** of a resource make cycle detection insufficient; a full safety analysis is needed.  
+- Real‑world deadlocks appear in databases (two‑phase locking), kernel subsystems (inode vs. buffer locks), and distributed services (distributed lock ordering).  
+- Common mistakes include assuming “no cycle = safe” for multi‑instance resources, ignoring hidden preemptions, and mixing synchronization primitives without a global ordering.  
+- Master the Coffman conditions, graph‑based detection, and the Banker’s safety test—these are the core concepts examined in interviews and exams.  
+
+*End of study material.*

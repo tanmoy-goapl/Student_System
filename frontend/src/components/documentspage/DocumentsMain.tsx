@@ -5,13 +5,14 @@ import {
   ArrowUpDown, CheckCircle, Clock, FileText, Trash2, 
   Eye, Download, Sparkles, X, AlertCircle, FileCode, Loader2
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 export type DocumentStatus = 'ready' | 'processing';
 
 export type DocumentItem = {
     id: string;
     name: string;
-    type: 'PDF' | 'DOC' | 'TXT';
+    type: 'PDF' | 'DOC' | 'TXT' | 'MD';
     subject: string;
     subjectColor: string;
     pages: number;
@@ -20,6 +21,7 @@ export type DocumentItem = {
     status: DocumentStatus;
     documentType?: string;
     visibility?: string;
+    filename?: string;
 };
 
 export type DocumentKPI = {
@@ -229,40 +231,155 @@ function DocumentCard({
     );
 }
 
+const markdownComponents = {
+  h1: ({node, ...props}: any) => <h1 className="text-base font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300 border-b border-white/10 pb-2 mb-4 tracking-tight mt-6" {...props} />,
+  h2: ({node, ...props}: any) => <h2 className="text-sm font-bold text-blue-300 mt-5 mb-3 tracking-wide" {...props} />,
+  h3: ({node, ...props}: any) => <h3 className="text-xs font-semibold text-slate-200 mt-4 mb-2" {...props} />,
+  p: ({node, ...props}: any) => <p className="mb-4 text-slate-350 text-[11px] leading-relaxed" {...props} />,
+  ul: ({node, ...props}: any) => <ul className="list-disc pl-5 mb-4 space-y-2 text-[11px] text-slate-350" {...props} />,
+  ol: ({node, ...props}: any) => <ol className="list-decimal pl-5 mb-4 space-y-2 text-[11px] text-slate-350" {...props} />,
+  li: ({node, ...props}: any) => <li className="mb-1 text-slate-350" {...props} />,
+  blockquote: ({node, ...props}: any) => <blockquote className="border-l-4 border-blue-500 bg-blue-500/5 px-4 py-3 rounded-r-xl my-4 text-slate-300 italic text-[11px]" {...props} />,
+  code: ({node, className, children, ...props}: any) => {
+    const match = /language-(\w+)/.exec(className || '');
+    return match ? (
+      <pre className="bg-[#0c1020] border border-white/10 p-3.5 rounded-xl font-mono text-[10px] text-blue-200 overflow-x-auto my-3">
+        <code className={className} {...props}>{children}</code>
+      </pre>
+    ) : (
+      <code className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded font-mono text-[10px] text-indigo-300 mx-0.5" {...props}>{children}</code>
+    );
+  },
+  strong: ({node, ...props}: any) => <strong className="font-bold text-white" {...props} />
+};
+
+const parseAndRenderMarkdown = (text: string) => {
+  if (!text) return null;
+  
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+  let currentTableRows: string[][] = [];
+  let currentTextBlock: string[] = [];
+
+  const flushText = (key: string | number) => {
+    if (currentTextBlock.length > 0) {
+      elements.push(
+        <ReactMarkdown 
+          key={`text-${key}`}
+          components={markdownComponents}
+        >
+          {currentTextBlock.join("\n")}
+        </ReactMarkdown>
+      );
+      currentTextBlock = [];
+    }
+  };
+
+  const flushTable = (key: string | number) => {
+    if (currentTableRows.length > 0) {
+      const rows = currentTableRows.filter(row => {
+        const joined = row.join("").trim();
+        return !/^[|\s-]+$/.test(joined) && joined.length > 0;
+      });
+
+      if (rows.length > 0) {
+        const headers = rows[0];
+        const bodyRows = rows.slice(1);
+        
+        elements.push(
+          <div key={`table-${key}`} className="my-4 overflow-x-auto rounded-xl border border-white/10 bg-[#0d1220]/60 backdrop-blur-sm">
+            <table className="w-full border-collapse text-left text-[10px]">
+              <thead>
+                <tr className="border-b border-white/10 bg-blue-500/10 text-blue-300 font-bold">
+                  {headers.map((h, i) => (
+                    <th key={i} className="p-2.5 font-bold uppercase tracking-wider border-r border-white/5 last:border-0">{h.trim()}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {bodyRows.map((row, rowIndex) => (
+                  <tr key={rowIndex} className="hover:bg-white/[0.02] transition-colors">
+                    {row.map((cell, cellIndex) => (
+                      <td key={cellIndex} className="p-2.5 text-slate-350 font-medium border-r border-white/5 last:border-0">
+                        <ReactMarkdown components={{ p: ({node, ...props}) => <span {...props} /> }}>
+                          {cell.trim()}
+                        </ReactMarkdown>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+      currentTableRows = [];
+    }
+  };
+
+  let elementKey = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith("|") && line.endsWith("|")) {
+      flushText(elementKey++);
+      
+      const cells = line.split("|").map(c => c.trim());
+      if (line.startsWith("|")) cells.shift();
+      if (line.endsWith("|")) cells.pop();
+      
+      currentTableRows.push(cells);
+    } else {
+      if (currentTableRows.length > 0) {
+        flushTable(elementKey++);
+      }
+      currentTextBlock.push(lines[i]);
+    }
+  }
+  
+  flushText(elementKey++);
+  flushTable(elementKey++);
+  
+  return <>{elements}</>;
+};
+
 export default function DocumentsMain({ documents, totalCount, kpis, onDelete }: Props) {
     const [previewDoc, setPreviewDoc] = useState<DocumentItem | null>(null);
     const [textContent, setTextContent] = useState<string | null>(null);
     const [textLoading, setTextLoading] = useState(false);
     const [textError, setTextError] = useState<string | null>(null);
+    const [isPreviewPdf, setIsPreviewPdf] = useState<boolean>(false);
     const [activeTab, setActiveTab] = useState<'universal' | 'private'>('universal');
 
     const cleanId = (id: string) => id.replace("db-", "");
 
-    const handlePreview = (doc: DocumentItem) => {
+    const handlePreview = (doc: any) => {
         setPreviewDoc(doc);
         setTextContent(null);
         setTextError(null);
+        setIsPreviewPdf(false);
+        setTextLoading(true);
 
-        const ext = doc.name.substring(doc.name.lastIndexOf('.')).toLowerCase();
-        const isText = [".txt", ".csv", ".md", ".json"].includes(ext) || doc.type === "TXT";
-
-        if (isText) {
-            setTextLoading(true);
-            fetch(`/api/documents/view?document_id=${cleanId(doc.id)}`)
-                .then(res => {
-                    if (!res.ok) throw new Error("Failed to load text contents");
-                    return res.text();
-                })
-                .then(text => {
+        const cleanIdVal = cleanId(doc.id);
+        fetch(`/api/documents/view?document_id=${cleanIdVal}`)
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to load document");
+                return res.text();
+            })
+            .then(text => {
+                const isRealPdf = text.startsWith("%PDF-");
+                if (isRealPdf) {
+                    setIsPreviewPdf(true);
+                } else {
+                    setIsPreviewPdf(false);
                     setTextContent(text);
-                })
-                .catch(err => {
-                    setTextError(err.message || "Could not read text contents.");
-                })
-                .finally(() => {
-                    setTextLoading(false);
-                });
-        }
+                }
+            })
+            .catch(err => {
+                setTextError(err.message || "Could not read document contents.");
+            })
+            .finally(() => {
+                setTextLoading(false);
+            });
     };
 
     const handleDownload = (doc: DocumentItem) => {
@@ -410,56 +527,39 @@ export default function DocumentsMain({ documents, totalCount, kpis, onDelete }:
                         {/* Content Container */}
                         <div className="flex-1 overflow-auto bg-slate-950/20 p-6 flex items-center justify-center">
                             {(() => {
-                                const ext = previewDoc.name.substring(previewDoc.name.lastIndexOf('.')).toLowerCase();
-                                
-                                // 1. PDF Preview
-                                if (ext === '.pdf') {
-                                    return (
-                                        <iframe
-                                            src={`/api/documents/view?document_id=${cleanId(previewDoc.id)}#toolbar=0`}
-                                            className="w-full h-full rounded-lg border border-white/5 bg-slate-900"
-                                        />
-                                    );
-                                }
-                                
-                                // 2. Image Preview
-                                if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'].includes(ext)) {
-                                    return (
-                                        <div className="relative max-w-full max-h-full flex items-center justify-center">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={`/api/documents/view?document_id=${cleanId(previewDoc.id)}`}
-                                                alt={previewDoc.name}
-                                                className="max-w-full max-h-[70vh] rounded-lg object-contain shadow-lg border border-white/5"
-                                            />
-                                        </div>
-                                    );
-                                }
+                                 if (textLoading) {
+                                     return (
+                                         <div className="flex flex-col items-center justify-center gap-3">
+                                             <Loader2 className="h-8 w-8 text-violet-500 animate-spin" />
+                                             <span className="text-xs text-white/40">Reading file...</span>
+                                         </div>
+                                     );
+                                 }
+                                 if (textError) {
+                                     return (
+                                         <div className="flex flex-col items-center justify-center gap-2 text-red-400">
+                                             <AlertCircle className="h-8 w-8" />
+                                             <span className="text-xs">{textError}</span>
+                                         </div>
+                                     );
+                                 }
 
-                                // 3. Text/CSV/MD Preview
-                                if (['.txt', '.csv', '.md', '.json'].includes(ext) || previewDoc.type === 'TXT') {
-                                    if (textLoading) {
-                                        return (
-                                            <div className="flex flex-col items-center justify-center gap-3">
-                                                <Loader2 className="h-8 w-8 text-violet-500 animate-spin" />
-                                                <span className="text-xs text-white/40">Reading text file...</span>
-                                            </div>
-                                        );
-                                    }
-                                    if (textError) {
-                                        return (
-                                            <div className="flex flex-col items-center justify-center gap-2 text-red-400">
-                                                <AlertCircle className="h-8 w-8" />
-                                                <span className="text-xs">{textError}</span>
-                                            </div>
-                                        );
-                                    }
-                                    return (
-                                        <pre className="w-full h-full text-xs font-mono text-slate-300 whitespace-pre-wrap bg-slate-950 p-6 rounded-xl border border-white/5 overflow-auto select-text purple-scrollbar">
-                                            {textContent}
-                                        </pre>
-                                    );
-                                }
+                                 if (isPreviewPdf) {
+                                     return (
+                                         <iframe
+                                             src={`/api/documents/view?document_id=${cleanId(previewDoc.id)}#toolbar=0`}
+                                             className="w-full h-full rounded-lg border border-white/5 bg-slate-900"
+                                         />
+                                     );
+                                 }
+
+                                 if (textContent !== null) {
+                                     return (
+                                         <div className="w-full h-full text-xs leading-relaxed text-slate-200 bg-slate-950 p-6 rounded-xl border border-white/5 overflow-auto select-text purple-scrollbar text-left max-w-none space-y-5">
+                                             {parseAndRenderMarkdown(textContent)}
+                                         </div>
+                                     );
+                                 }
 
                                 // 4. Fallback for Office Docs
                                 return (

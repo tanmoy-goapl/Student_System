@@ -632,13 +632,15 @@ export async function streamLearningContent(
   studentId: number, 
   subject?: string, 
   onChunk?: (text: string) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  bypassCache: boolean = false
 ): Promise<string> {
   let url = "/api/learning/stream_content";
   const params = new URLSearchParams();
   params.append("topic", topic);
   params.append("student_id", studentId.toString());
   if (subject) params.append("subject", subject);
+  if (bypassCache) params.append("bypass_cache", "true");
   
   const q = params.toString();
   if (q) url += `?${q}`;
@@ -692,6 +694,40 @@ export async function streamLearningContent(
     } catch (e) {}
   }
   
+  return fullText;
+}
+
+export async function streamGenerateMaterial(
+  topic: string,
+  subject: string,
+  userId: number,
+  onChunk?: (text: string) => void,
+  signal?: AbortSignal,
+  classroomId?: string
+): Promise<string> {
+  let url = "/api/learning/generate_material/stream";
+  const params = new URLSearchParams();
+  params.append("topic", topic);
+  params.append("subject", subject);
+  params.append("user_id", userId.toString());
+  if (classroomId) {
+    params.append("classroom_id", classroomId);
+  }
+  const q = params.toString();
+  if (q) url += `?${q}`;
+
+  const response = await fetch(url, { method: "GET", signal });
+  if (!response.body) throw new Error("ReadableStream not supported.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    fullText += chunk;
+    if (onChunk) onChunk(fullText);
+  }
   return fullText;
 }
 

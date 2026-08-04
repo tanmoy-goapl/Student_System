@@ -215,6 +215,7 @@ def stream_content(
     topic: Optional[str] = None,
     student_id: int = 1,
     subject: Optional[str] = None,
+    bypass_cache: Optional[bool] = False,
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
@@ -224,17 +225,21 @@ def stream_content(
         
     subject = resolve_standard_subject(topic or "", subject)
         
-    cached = db.query(LearningContent).filter(
-        LearningContent.student_id == student_id,
-        LearningContent.subject == subject,
-        LearningContent.topic == topic
-    ).first()
-    
-    if not cached and subject:
+    cached = None
+    # Ensure bypass_cache is treated as true if it's the boolean True or the string "true"
+    is_bypass = bypass_cache is True or str(bypass_cache).lower() == "true"
+    if not is_bypass:
         cached = db.query(LearningContent).filter(
             LearningContent.student_id == student_id,
+            LearningContent.subject == subject,
             LearningContent.topic == topic
         ).first()
+        
+        if not cached and subject:
+            cached = db.query(LearningContent).filter(
+                LearningContent.student_id == student_id,
+                LearningContent.topic == topic
+            ).first()
     
     import threading
     threading.Thread(target=pre_generate_questions_bg, args=(student_id, topic, subject), daemon=True).start()

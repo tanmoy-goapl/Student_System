@@ -412,20 +412,6 @@ export default function ChatPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setQuestion("Update Learning Preferences");
-                setTimeout(() => {
-                  const btn = document.getElementById("chat-send-btn");
-                  if (btn) (btn as HTMLButtonElement).click();
-                }, 50);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-500/20 bg-blue-500/10 text-xs font-semibold hover:border-blue-500/30 hover:bg-blue-500/20 transition cursor-pointer text-blue-300"
-              title="Update Learning Preferences"
-            >
-              <Sparkles size={14} className="text-blue-400 animate-pulse" />
-              <span>Update Preferences</span>
-            </button>
 
             <button
               onClick={() => {

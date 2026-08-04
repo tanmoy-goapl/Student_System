@@ -53,6 +53,7 @@ def to_ui_doc(doc: Document) -> dict:
     return {
         "id": f"db-{doc.id}",
         "name": display_name,
+        "filename": doc.filename,
         "type": doc_type,
         "subject": subject_val,
         "subjectColor": color,
