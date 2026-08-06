@@ -349,6 +349,23 @@ export default function HomeView() {
                     return (
                       <div
                         key={i}
+                        onClick={() => {
+                          let initialQuery = "";
+                          if (act.title === "Generate Lesson") {
+                            initialQuery = "Create a detailed lesson plan on process scheduling, outlining objectives, core concepts, and interactive activities.";
+                          } else if (act.title === "Create Quiz") {
+                            initialQuery = "Generate a multiple-choice practice quiz with 5 questions, options, and explanations on memory management.";
+                          } else if (act.title === "Review Submissions") {
+                            initialQuery = "Analyze my students' latest submissions and give a summary of common conceptual errors and weak areas.";
+                          } else if (act.title === "Generate Revision Notes") {
+                            initialQuery = "Produce concise, bulleted revision notes on the core differences between paging and segmentation.";
+                          } else if (act.title === "Simplify Topic") {
+                            initialQuery = "Explain the deadlock prevention banker's algorithm using a simple, relatable real-world analogy.";
+                          } else if (act.title === "Create Practice Set") {
+                            initialQuery = "Prepare a structured problem set focusing on CPU scheduling algorithm master calculations.";
+                          }
+                          router.push(`/professor/chatbot?query=${encodeURIComponent(initialQuery)}`);
+                        }}
                         className="relative overflow-hidden rounded-2xl border border-white/5 bg-slate-900/20 p-5 backdrop-blur-xl group transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/30 hover:bg-slate-900/40 cursor-pointer flex flex-col justify-between min-h-[145px]"
                       >
                         <div className="flex items-start justify-between mb-2">

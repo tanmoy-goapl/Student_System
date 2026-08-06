@@ -173,13 +173,13 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic }: L
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto purple-scrollbar">
+      <div className="flex-1 overflow-y-auto purple-scrollbar px-2">
         {data?.sidebarData
           ?.filter((category: any) => {
             if (source === "personal") {
               return category.id === "roadmap" || category.id === "documents";
             } else {
-              return category.id === "curriculum" || category.id === "current" || category.id === "history" || category.id === "class" || category.id === "documents";
+              return category.id === "curriculum" || category.id === "current" || category.id === "history" || category.id === "class";
             }
           })
           .map((category: any) => (

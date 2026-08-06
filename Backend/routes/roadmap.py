@@ -167,9 +167,31 @@ class CompleteTopicRequest(BaseModel):
 @router.post("/complete_topic")
 def complete_topic(req: CompleteTopicRequest, db: Session = Depends(get_db)):
     from sqlalchemy import desc
+    
+    # 1. Always create or update TopicPerformance so the frontend knows the topic is read/started
+    from practice_models import TopicPerformance
+    perf = db.query(TopicPerformance).filter_by(student_id=req.student_id, topic=req.topic).first()
+    if not perf:
+        perf = TopicPerformance(
+            student_id=req.student_id,
+            topic=req.topic,
+            sessions=1,
+            questions_attempted=0,
+            accuracy=0.0,
+            current_difficulty="Beginner",
+            status="LEARNING"
+        )
+        db.add(perf)
+    else:
+        if perf.sessions == 0:
+            perf.sessions = 1
+        if perf.status == "NOT_STARTED":
+            perf.status = "LEARNING"
+    db.commit()
+
     roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == req.student_id).order_by(desc(LearningRoadmap.created_at)).first()
     if not roadmap:
-        return {"success": False, "message": "No active roadmap found"}
+        return {"success": True, "message": "Topic marked as read (no active roadmap)"}
         
     # Find the task matching the topic directly or as a subtopic
     task = None
@@ -189,26 +211,8 @@ def complete_topic(req: CompleteTopicRequest, db: Session = Depends(get_db)):
                 break
                 
     if not task:
-        available = [t.topic for t in all_tasks]
-        import logging
-        logging.getLogger(__name__).warning(f"[complete_topic] Task not found for topic: '{req.topic}'. Available: {available}")
-        return {"success": False, "message": "Task not found"}
+        return {"success": True, "message": "Topic marked as read (not found in active roadmap)"}
         
-    from practice_models import TopicPerformance
-    perf = db.query(TopicPerformance).filter_by(student_id=req.student_id, topic=req.topic).first()
-    if not perf:
-        perf = TopicPerformance(
-            student_id=req.student_id,
-            topic=req.topic,
-            sessions=0,
-            questions_attempted=0,
-            accuracy=0.0,
-            current_difficulty="Beginner",
-            status="NOT_STARTED"
-        )
-        db.add(perf)
-        db.commit()
-
     if is_subtopic:
         # Check if all subtopics are completed
         all_completed = True

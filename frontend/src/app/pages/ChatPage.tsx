@@ -60,21 +60,10 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!user?.id) return;
-    const fetchHistory = async () => {
-      try {
-        const res = await fetch(`/api/chat/history?student_id=${user.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setHistory(data || []);
-          if (data && data.length > 0 && data[0].session_id) {
-            setActiveSessionId(data[0].session_id);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load student chat history:", err);
-      }
-    };
-    fetchHistory();
+    // AI chatbot always starts with a new chat on page load
+    setHistory([]);
+    setActiveSessionId(null);
+    setResetNext(true);
   }, [user]);
 
   useEffect(() => {

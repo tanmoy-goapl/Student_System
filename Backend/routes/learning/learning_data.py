@@ -62,11 +62,194 @@ def get_learning_data(
     roadmap_id: Optional[int] = None,
     source: Optional[str] = "courses",
     class_id: Optional[int] = None,
+    skip_sidebar: Optional[bool] = False,
     db: Session = Depends(get_db)
 ):
     subject = resolve_standard_subject(topic or "", subject)
 
     sidebar_data = []
+
+    # Fast path: skip sidebar computation when only switching topics
+    if skip_sidebar and topic:
+        selected_topic = topic
+        # Jump directly to topic performance + content (skip sidebar building)
+        perf = db.query(TopicPerformance).filter_by(student_id=student_id, topic=selected_topic).first()
+        
+        if not perf and student_id:
+            from practice_models import PracticeQuestion, PracticeSession
+            hist_count = db.query(PracticeQuestion).join(PracticeSession).filter(
+                PracticeSession.student_id == student_id,
+                PracticeQuestion.topic == selected_topic,
+                PracticeQuestion.is_correct.isnot(None)
+            ).count()
+            if hist_count > 0:
+                history_qs = db.query(PracticeQuestion).join(PracticeSession).filter(
+                    PracticeSession.student_id == student_id,
+                    PracticeQuestion.topic == selected_topic,
+                    PracticeQuestion.is_correct.isnot(None)
+                ).all()
+                attempted = len(history_qs)
+                correct = sum(1 for q in history_qs if q.is_correct)
+                acc = (correct / attempted * 100) if attempted > 0 else 0.0
+                sess = db.query(PracticeSession.id).join(PracticeQuestion).filter(
+                    PracticeSession.student_id == student_id,
+                    PracticeQuestion.topic == selected_topic,
+                    PracticeQuestion.is_correct.isnot(None)
+                ).distinct().count()
+                from services.analytics_engine import get_topic_status
+                perf = TopicPerformance(
+                    student_id=student_id,
+                    topic=selected_topic,
+                    subject=subject or "General",
+                    sessions=sess,
+                    questions_attempted=attempted,
+                    correct_answers=correct,
+                    accuracy=acc,
+                    status=get_topic_status(sess, attempted, acc)
+                )
+                db.add(perf)
+                db.commit()
+                db.refresh(perf)
+        
+        from services.analytics_engine import calculate_topic_metrics
+        metrics = calculate_topic_metrics(perf)
+        accuracy = metrics["accuracy"]
+        confidence = metrics.get("confidence", 0.0)
+        questions_attempted = metrics.get("questions_attempted", 0)
+        difficulty = (perf.current_difficulty.capitalize()) if perf else "Mixed"
+        sessions = metrics["sessions"]
+        status = metrics["status"]
+        
+        is_completed = False
+        if perf:
+            is_completed = True
+        
+        header_response = {
+            "success": True,
+            "data": {
+                "category": "Topic",
+                "status": f"{status.capitalize()}" if perf else ("Learning" if is_completed else "Not Started"),
+                "is_completed": is_completed,
+                "title": selected_topic,
+                "subtitle": "Learning Mode",
+                "stats": [
+                    {"label": "Difficulty", "value": difficulty, "valueColor": "text-amber-400" if difficulty == "Hard" else "text-cyan-400"},
+                    {"label": "Sessions", "value": str(sessions), "trend": "+1", "trendUp": True},
+                    {"label": "Questions", "value": str(questions_attempted)},
+                    {"label": "Accuracy", "value": f"{accuracy}%", "valueColor": "text-rose-400" if accuracy < 50 else "text-green-400"},
+                    {"label": "Confidence", "value": f"{confidence}%", "valueColor": "text-indigo-400"},
+                ],
+            },
+        }
+        
+        right_sidebar_data = {
+            "success": True,
+            "data": {
+                "understandingLevel": {
+                    "mainPercentage": accuracy,
+                    "status": status,
+                    "confidence": confidence,
+                    "skillBreakdown": [
+                        {"id": "conceptual", "label": "Conceptual", "percentage": accuracy if perf else (20.0 if is_completed else 0.0), "color": "#a78bfa"},
+                        {"id": "problem-solving", "label": "Problem Solving", "percentage": round(accuracy * 0.8, 2) if perf else 0.0, "color": "#f87171"},
+                    ],
+                },
+                "analytics": {
+                    "status": status,
+                    "score": int(perf.accuracy) if perf else (50 if is_completed else 0),
+                    "trend": "up",
+                    "trendValue": "+5%",
+                    "baselineText": f"Based on {sessions} sessions" if perf else ("Based on reading completion" if is_completed else "Start practicing to see trends"),
+                },
+                "commonMistakes": {"mistakes": [{"id": "m1", "text": "Review fundamentals for better accuracy.", "severity": "medium"}]},
+                "aiSuggestions": {"suggestions": [
+                    {"id": "s1", "label": f"Practice {selected_topic}", "iconName": "BookOpen", "color": "indigo"},
+                    {"id": "s2", "label": "Take a short quiz", "iconName": "Zap", "color": "amber"},
+                ]},
+                "relatedDocuments": {"documents": [{"id": "d1", "title": "Reference Material", "type": "pdf", "iconName": "FileText"}]},
+                "timeSpent": {
+                    "metrics": [
+                        {"id": "t1", "label": "Sessions", "value": str(sessions), "color": "text-blue-400"},
+                        {"id": "t2", "label": "Accuracy", "value": f"{int(perf.accuracy)}%" if perf else ("50%" if is_completed else "0%"), "color": "text-green-400"},
+                    ],
+                    "comparison": {
+                        "value": "+1 session" if perf and sessions > 0 else "+0 session",
+                        "trend": "up" if perf and sessions > 0 else "neutral",
+                        "text": "vs last week"
+                    }
+                },
+            },
+        }
+        
+        # Check for cached content
+        cached_content = db.query(LearningContent).filter(
+            LearningContent.student_id == student_id,
+            LearningContent.subject == subject,
+            LearningContent.topic == selected_topic
+        ).first()
+        if not cached_content:
+            cached_content = db.query(LearningContent).filter(
+                LearningContent.topic == selected_topic
+            ).first()
+        
+        is_old_format = False
+        if cached_content:
+            cached_str = str(cached_content.content)
+            is_old_format = isinstance(cached_content.content, list) or ("why is it important" not in cached_str.lower() and "how does it work" not in cached_str.lower())
+            if subject and ("keshav" in cached_str.lower() or "placement policy" in cached_str.lower() or "deregistered" in cached_str.lower()):
+                is_old_format = True
+        
+        if cached_content and "could not be generated" not in str(cached_content.content) and not is_old_format:
+            notes_response = {
+                "success": True,
+                "generatedBy": "AI Assistant (Cached)",
+                "status": "Personal Study Guide",
+                "topic": selected_topic,
+                "content": cached_content.content
+            }
+        else:
+            notes_response = {
+                "success": True,
+                "generatedBy": "AI Assistant",
+                "status": "Loading content...",
+                "topic": selected_topic,
+                "content": []
+            }
+        
+        revision_points = []
+        if cached_content and cached_content.revision:
+            if isinstance(cached_content.revision, dict):
+                revision_points = cached_content.revision.get("points", [])
+            elif isinstance(cached_content.revision, list):
+                revision_points = cached_content.revision
+        
+        learning_assistant_response = {
+            "success": True,
+            "data": {
+                "revision": {"title": "Quick Revision", "points": revision_points},
+                "actions": [
+                    {"id": 'simpler', "label": 'Explain Simpler', "iconName": 'Lightbulb', "variant": 'primary'},
+                    {"id": 'example', "label": 'Give Example', "iconName": 'FlaskConical', "variant": 'cyan'},
+                    {"id": 'flashcard', "label": 'Flashcards', "iconName": 'BookOpen', "variant": 'purple'},
+                ],
+                "relatedConcepts": [],
+                "learningActions": [
+                    {"id": 'practice_topic', "label": 'Practice Topic', "subLabel": 'Solve problems', "iconName": 'Pen', "variant": 'neutral'},
+                    {"id": 'take_quiz', "label": 'Take Quiz', "subLabel": 'Test your memory', "iconName": 'Zap', "variant": 'amber'},
+                    {"id": 'add_revision', "label": 'Add Revision', "subLabel": 'Schedule for later', "iconName": 'Bookmark', "variant": 'purple'},
+                    {"id": 'view_notes', "label": 'View Notes', "subLabel": 'Study details', "iconName": 'BookOpen', "variant": 'primary'},
+                ]
+            },
+        }
+        
+        return {
+            "notesResponse": notes_response,
+            "headerResponse": header_response,
+            "learningAssistantResponse": learning_assistant_response,
+            "rightSidebarData": right_sidebar_data,
+            "selectedTopic": selected_topic,
+            "selectedSubject": subject
+        }
 
     # 1c. Roadmap Tasks
     from roadmap_models import LearningRoadmap, DailyTask
@@ -101,7 +284,10 @@ def get_learning_data(
             for t in weeks[wn]:
                 day_title = t.topic
                 if t.day_number:
-                    day_title = f"Day {t.day_number}: {t.topic}"
+                    # Only prepend "Day X: " if t.topic doesn't already start with "Day X:" case-insensitively
+                    prefix = f"Day {t.day_number}:"
+                    if not t.topic.strip().lower().startswith(prefix.lower()):
+                        day_title = f"{prefix} {t.topic}"
                 
                 topics_list.append({
                     "id": t.topic,
@@ -142,7 +328,7 @@ def get_learning_data(
             ]
         })
         
-    if doc_subjects:
+    if doc_subjects and source == "personal":
         sidebar_data.append({
             "id": "documents",
             "title": "Your Uploaded Document Topics",
@@ -499,9 +685,8 @@ def get_learning_data(
         LearningContent.topic == selected_topic
     ).first()
     
-    if not cached_content and subject:
+    if not cached_content:
         cached_content = db.query(LearningContent).filter(
-            LearningContent.student_id == student_id,
             LearningContent.topic == selected_topic
         ).first()
 

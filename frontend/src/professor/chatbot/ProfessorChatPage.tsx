@@ -6,8 +6,11 @@ import {
   TrendingUp, FileText, CheckCircle, AlertTriangle, Users, Play, Clock, History, Plus
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
+import { useRouter } from "next/navigation";
+import { ChatThinking } from "@/components/UIStateSystem";
 import ReactMarkdown from "react-markdown";
 import ChatHistorySidebar from "@/components/ChatHistorySidebar";
+import { uploadDocument } from "@/lib/api";
 
 type Message = {
   role: "user" | "assistant";
@@ -81,12 +84,38 @@ export default function ProfessorChatPage() {
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
+  const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
   const [activeMode, setActiveMode] = useState<"Analytics" | "Guidance" | "Quick Answer">("Analytics");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [resetNext, setResetNext] = useState(false);
+  const [fileUploading, setFileUploading] = useState(false);
+  const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const userId = Number(localStorage.getItem("user_id") || 0);
+    if (!file || !userId) return;
+    setError("");
+    setFileUploading(true);
+    try {
+      const res = await uploadDocument(userId, file, "owner");
+      setHistory(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `📁 **Uploaded "${res.filename}"** (${res.chunks_created} chunks processed). I have parsed it and added it to my knowledge. You can now ask questions about it!`,
+        },
+      ]);
+    } catch (err: any) {
+      setError(err.message || "Failed to upload document");
+    } finally {
+      setFileUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const suggestions = [
     { text: "Which topics are students struggling with?", desc: "Extract weak topics and class averages" },
@@ -102,30 +131,26 @@ export default function ProfessorChatPage() {
   }, [history, loading]);
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      const userId = Number(localStorage.getItem("user_id") || 0);
-      if (!userId) return;
-      try {
-        const res = await fetch(`/api/chat/history?student_id=${userId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setHistory(data || []);
-          if (data && data.length > 0 && data[0].session_id) {
-            setActiveSessionId(data[0].session_id);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load chat history:", err);
-      }
-    };
-    fetchHistory();
-    
     const handleNewChat = () => {
       setHistory([]);
       setActiveSessionId(null);
       setResetNext(true);
     };
+    handleNewChat();
     window.addEventListener("new-chat", handleNewChat);
+    
+    // Parse query parameter from URL and auto-run
+    const searchParams = new URLSearchParams(window.location.search);
+    const initialQuery = searchParams.get("query");
+    if (initialQuery) {
+      // Clear query parameter from URL so React StrictMode or double renders do not trigger it twice
+      window.history.replaceState(null, "", window.location.pathname);
+      // Small timeout to allow state to settle
+      setTimeout(() => {
+        handleAsk(initialQuery);
+      }, 300);
+    }
+
     return () => window.removeEventListener("new-chat", handleNewChat);
   }, []);
 
@@ -342,26 +367,11 @@ export default function ProfessorChatPage() {
                 </div>
               </div>
 
-              {/* Suggestions Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full pt-4">
-                {suggestions.map((sug, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => handleAsk(sug.text)}
-                    className="p-4 rounded-xl border border-white/5 bg-slate-900/40 hover:border-blue-500/20 hover:bg-slate-900/60 transition cursor-pointer text-left flex justify-between items-center group"
-                  >
-                    <div>
-                      <h4 className="text-[11px] font-bold text-white group-hover:text-blue-400 transition">{sug.text}</h4>
-                      <p className="text-[9px] text-slate-500 mt-0.5 leading-none">{sug.desc}</p>
-                    </div>
-                    <Send className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-400 transition opacity-0 group-hover:opacity-100" />
-                  </div>
-                ))}
-              </div>
+""
             </div>
           ) : (
             /* Active message history */
-            <div className="max-w-3xl mx-auto space-y-6">
+            <div className="max-w-5xl w-full mx-auto space-y-6">
               {history.map((msg, idx) => (
                 <div key={idx} className={`flex gap-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.role === "assistant" && (
@@ -369,7 +379,7 @@ export default function ProfessorChatPage() {
                       <Sparkles className="w-4 h-4 text-white" />
                     </div>
                   )}
-                  <div className={`p-4 rounded-2xl max-w-[80%] text-xs leading-relaxed border whitespace-pre-wrap break-words ${
+                  <div className={`p-4 rounded-2xl max-w-[90%] text-xs leading-relaxed border whitespace-pre-wrap break-words ${
                     msg.role === "user" 
                       ? "bg-blue-600/10 border-blue-500/25 text-white rounded-tr-none" 
                       : "bg-slate-900/50 border-white/5 text-slate-200 rounded-tl-none"
@@ -420,15 +430,8 @@ export default function ProfessorChatPage() {
                 </div>
               ))}
               {loading && (
-                <div className="flex gap-4 justify-start items-center">
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shrink-0">
-                    <Sparkles className="w-4 h-4 text-white animate-spin" />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </div>
+                <div className="flex gap-3 justify-start items-start animate-in fade-in duration-300">
+                  <ChatThinking />
                 </div>
               )}
               <div ref={bottomRef} />
@@ -438,8 +441,29 @@ export default function ProfessorChatPage() {
 
         {/* Input Bar */}
         <footer className="p-4 shrink-0 border-t border-white/5 bg-[#050a14]/20">
-          <div className="max-w-3xl mx-auto relative flex items-center bg-slate-950/60 rounded-2xl border border-white/10 px-4 py-2">
-            <button className="h-8 w-8 rounded-xl hover:bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition">
+          {error && (
+            <div className="max-w-5xl mx-auto mb-2 text-rose-400 text-[10px] font-semibold bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-lg">
+              {error}
+            </div>
+          )}
+          {fileUploading && (
+            <div className="max-w-5xl mx-auto mb-2 text-blue-400 text-[10px] font-semibold bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-blue-400 animate-ping" />
+              Uploading and analyzing document...
+            </div>
+          )}
+          <div className="max-w-5xl mx-auto relative flex items-center bg-slate-950/60 rounded-2xl border border-white/10 px-4 py-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              accept=".pdf,.txt,.docx,.png,.jpg,.jpeg"
+            />
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="h-8 w-8 rounded-xl hover:bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition"
+            >
               <Paperclip className="w-4.5 h-4.5" />
             </button>
             <input

@@ -42,7 +42,19 @@ export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarP
             />
             {/* Buttons */}
             <button
-              onClick={() => router.push("/courses")}
+              onClick={() => {
+                // If on /personal dashboard or /courses dashboard, toggle home route
+                if (pathname === "/personal" || pathname === "/courses" || pathname === "/") {
+                  router.push("/courses");
+                } else {
+                  // Keep current sub-page (e.g. /learning, /practice) but change source to courses
+                  const params = new URLSearchParams(searchParams?.toString() || "");
+                  params.set("source", "courses");
+                  // Clear roadmap_id if switching to courses context to prevent conflict
+                  params.delete("roadmap_id");
+                  router.push(`${pathname}?${params.toString()}`);
+                }
+              }}
               className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
                 selectedMode === "courses" ? "text-white" : "text-white/40 hover:text-white/70"
               }`}
@@ -50,7 +62,16 @@ export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarP
               Courses
             </button>
             <button
-              onClick={() => router.push("/personal")}
+              onClick={() => {
+                if (pathname === "/personal" || pathname === "/courses" || pathname === "/") {
+                  router.push("/personal");
+                } else {
+                  // Keep current sub-page but change source to personal
+                  const params = new URLSearchParams(searchParams?.toString() || "");
+                  params.set("source", "personal");
+                  router.push(`${pathname}?${params.toString()}`);
+                }
+              }}
               className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
                 selectedMode === "personal" ? "text-white" : "text-white/40 hover:text-white/70"
               }`}

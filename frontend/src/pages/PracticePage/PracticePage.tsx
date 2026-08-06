@@ -201,8 +201,6 @@ export default function PracticePage({
         if (!selectedAnswer || !sessionId || !questions[currentQuestionIndex]) return;
 
         const timeSpent = stopTimer();
-        setAnswered(true);
-
         try {
             const result = await submitPracticeAnswer(
                 sessionId,
@@ -212,6 +210,7 @@ export default function PracticePage({
             );
 
             setAnswerResult(result);
+            setAnswered(true);
 
             // Update live stats
             const avgSeconds = result.stats.avg_time_seconds;
@@ -431,6 +430,7 @@ export default function PracticePage({
         }
 
         const currentQuestion = questions[currentQuestionIndex];
+        const isLastQuestion = currentQuestionIndex + 1 >= totalQuestions;
         const questionForComponents = {
             id: currentQuestion.id,
             number: currentQuestionIndex + 1,
@@ -441,11 +441,14 @@ export default function PracticePage({
             mode: "Topic-Based",
             description: "Document-based question",
             questionText: currentQuestion.question,
-            answers: currentQuestion.options.map((opt: { id: string; text: string }) => ({
-                id: opt.id,
-                text: opt.text,
-                isCorrect: answerResult ? opt.id === answerResult.correct_answer : false,
-            })),
+            answers: currentQuestion.options.map((opt: { id: string; text: string }) => {
+                const isCorrectOption = answerResult ? opt.id === answerResult.correct_answer : false;
+                return {
+                    id: opt.id,
+                    text: opt.text,
+                    isCorrect: isCorrectOption,
+                };
+            }),
             progressColor: "bg-gradient-to-r from-emerald-500 via-cyan-500 to-red-500",
         };
 
@@ -505,6 +508,7 @@ export default function PracticePage({
                         onSkip={handleSkip}
                         onNext={answered ? handleNextQuestion : undefined}
                         canProceed={true}
+                        isLastQuestion={isLastQuestion}
                     />
 
                     <AIHelpSection
@@ -523,7 +527,7 @@ export default function PracticePage({
             
             {/* Left sidebar only visible before session starts */}
             {!sessionStarted && (
-                <div className="w-[20vw] shrink-0 h-full overflow-y-auto purple-scrollbar border-r border-white/10">
+                <div className="w-[20vw] shrink-0 h-full border-r border-white/10">
                     <PracticeLeftSidebar onStartSession={handleStartSession} />
                 </div>
             )}

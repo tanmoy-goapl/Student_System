@@ -23,6 +23,11 @@ def generate_learning_content(student_id: int, topic: str, db: Session, subject:
         LearningContent.topic == topic
     ).first()
     
+    if not cached:
+        cached = db.query(LearningContent).filter(
+            LearningContent.topic == topic
+        ).first()
+    
     if cached:
         return {
             "notesResponse": cached.content,
@@ -258,6 +263,8 @@ def stream_learning_content(student_id: int, topic: str, db: Session, subject: O
     system_prompt = f"""You are a university professor explaining a complex concept to a student.
 Teach the topic "{topic}" in a simple, highly readable, and structured learning note style (like an AI tutor, not a textbook).
 Keep paragraphs short. Avoid dumping technical terms together. Use simple analogies.
+
+CRITICAL: Keep the entire explanation brief, highly concise, and punchy (approximately 250-350 words total). This is extremely important to reduce latency and speed up delivery!
 
 Adjust the complexity and technical depth of your explanation to match the student's proficiency level: "{proficiency}".
 - For Beginner/Basic: Use simple language, focus on high-level concepts, and use clear relatable analogies.

@@ -7539,3 +7539,1086 @@ ERROR: Connection error.
 2026-08-04 07:18:37,737 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
 2026-08-04 07:18:37,737 - INFO - DEBUG2 performances keys: []
 2026-08-04 07:18:37,737 - INFO - DEBUG2 matched perfs: []
+2026-08-04 14:20:56,481 - INFO - 
+================================================================================
+2026-08-04 14:20:56,481 - INFO - [2026-08-04T14:20:56.481963] CHAT REQUEST
+2026-08-04 14:20:56,482 - INFO -   Student ID : 2
+2026-08-04 14:20:56,482 - INFO -   Question   : can you tell me weak points from my resume
+2026-08-04 14:20:56,482 - INFO -   Role       : professor
+2026-08-04 14:20:56,482 - INFO - ================================================================================
+2026-08-04 14:20:56,484 - INFO -   [Timing] FastAPI Request started processing at 31078.374
+2026-08-04 14:20:56,489 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-08-04 14:20:56,489 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-04 14:20:57,027 - INFO -   [Timing] Retrieval & Context Building: 0.526s
+2026-08-04 14:20:57,030 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-04 14:21:04,946 - INFO -   [Timing] Backend First Token Loop hit: 7.916s since LLM call
+2026-08-04 14:21:04,946 - INFO -   [Timing] Total TTFT (user → first token loop): 8.462s
+2026-08-04 14:21:55,663 - INFO -   [Timing] LLM Streaming Duration: 58.633s
+2026-08-04 14:21:55,663 - INFO -   [Timing] Total Response Time: 59.179s
+2026-08-04 14:26:21,868 - INFO - 
+================================================================================
+2026-08-04 14:26:21,868 - INFO - [2026-08-04T14:26:21.868958] CHAT REQUEST
+2026-08-04 14:26:21,869 - INFO -   Student ID : 2
+2026-08-04 14:26:21,869 - INFO -   Question   : explain me the complete section:2 from the unsupervised learning
+2026-08-04 14:26:21,869 - INFO -   Role       : professor
+2026-08-04 14:26:21,869 - INFO - ================================================================================
+2026-08-04 14:26:21,871 - INFO -   [Timing] FastAPI Request started processing at 31403.761
+2026-08-04 14:26:21,875 - INFO -   Detected Mode: LEARNING
+2026-08-04 14:26:21,875 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-04 14:26:21,888 - INFO -   [Timing] Retrieval & Context Building: 0.005s
+2026-08-04 14:26:21,889 - INFO -   [Timing] Context + Prompt Building: 0.001s
+2026-08-04 14:26:24,294 - INFO -   [Timing] Backend First Token Loop hit: 2.404s since LLM call
+2026-08-04 14:26:24,294 - INFO -   [Timing] Total TTFT (user → first token loop): 2.423s
+2026-08-04 14:26:48,397 - INFO -   [Timing] LLM Streaming Duration: 26.507s
+2026-08-04 14:26:48,397 - INFO -   [Timing] Total Response Time: 26.526s
+2026-08-04 16:16:47,417 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-04 16:16:47,424 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-04 16:16:47,462 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:16:47,493 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:16:48,223 - INFO - CACHE HIT (Fast Return): topic='Time Complexity', subject='Data Structures and Algorithms'
+2026-08-04 16:16:48,255 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:16:56,250 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-04 16:16:56,280 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:17:30,673 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:17:37,952 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:17:38,679 - INFO - CACHE HIT (Fast Return): topic='System Boot', subject='Operating Systems'
+2026-08-04 16:17:38,708 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:17:51,438 - INFO - Cached explain action for topic='System Boot'
+2026-08-04 16:18:02,714 - INFO - Cached examples action for topic='System Boot'
+2026-08-04 16:18:24,553 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:18:24,768 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Interprocess Communication'
+2026-08-04 16:18:24,808 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Interprocess Communication'
+2026-08-04 16:18:24,835 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Interprocess Communication) ---
+2026-08-04 16:19:02,892 - INFO - Successfully cached streamed content for topic='Interprocess Communication', subject='Operating Systems'
+2026-08-04 16:19:06,515 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:19:06,517 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:19:15,404 - INFO - Cached explain action for topic='Interprocess Communication'
+2026-08-04 16:19:15,745 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Interprocess Communication'
+2026-08-04 16:19:15,745 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Interprocess Communication'
+2026-08-04 16:19:32,558 - INFO - Cached examples action for topic='Interprocess Communication'
+2026-08-04 16:19:45,717 - INFO - Cached flashcard action for topic='Interprocess Communication'
+2026-08-04 16:20:12,170 - INFO - CACHE HIT (Fast Return): topic='Interprocess Communication', subject='Operating Systems'
+2026-08-04 16:20:12,203 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:20:23,634 - INFO - CACHE HIT (Fast Return): topic='Multithreading Models', subject='Operating Systems'
+2026-08-04 16:20:23,664 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:20:29,829 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:20:29,939 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Real-Time Scheduling' to save resources.
+2026-08-04 16:20:29,968 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Real-Time Scheduling) ---
+2026-08-04 16:20:54,195 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:20:54,197 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:21:05,315 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:21:05,316 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:21:12,544 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:21:24,112 - INFO - Successfully cached streamed content for topic='Real-Time Scheduling', subject='Operating Systems'
+2026-08-04 16:21:36,084 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:22:09,497 - INFO - Cached explain action for topic='Real-Time Scheduling'
+2026-08-04 16:22:38,195 - INFO - Cached flashcard action for topic='Real-Time Scheduling'
+2026-08-04 16:23:41,023 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-04 16:23:41,054 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:23:49,624 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-08-04 16:23:49,642 - INFO - [Practice] Resuming existing active session 2533 for topic='OS Components and Services'
+2026-08-04 16:23:49,659 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:23:49,692 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:24:00,309 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 88.23529411764706% | Sessions: 5 | Status: STRONG
+2026-08-04 16:24:19,388 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 88.88888888888889% | Sessions: 5 | Status: STRONG
+2026-08-04 16:24:22,758 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:24:22,760 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-04 16:24:29,021 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 89.47368421052632% | Sessions: 5 | Status: STRONG
+2026-08-04 16:24:34,379 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 85.0% | Sessions: 5 | Status: STRONG
+2026-08-04 16:24:39,401 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 85.71428571428571% | Sessions: 5 | Status: STRONG
+2026-08-04 16:24:45,591 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:24:45,673 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-04 16:25:17,686 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-04 16:25:27,973 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-04 16:25:27,974 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-04 16:25:27,978 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Interprocess Communication' (total=5 questions)
+2026-08-04 16:25:32,375 - INFO - 
+================================================================================
+2026-08-04 16:25:32,376 - INFO - [2026-08-04T16:25:32.376056] CHAT REQUEST
+2026-08-04 16:25:32,376 - INFO -   Student ID : 3
+2026-08-04 16:25:32,376 - INFO -   Question   : can you tell me about deadlocks ?
+2026-08-04 16:25:32,376 - INFO -   Role       : student
+2026-08-04 16:25:32,376 - INFO - ================================================================================
+2026-08-04 16:25:32,378 - INFO -   [Timing] FastAPI Request started processing at 38553.286
+2026-08-04 16:25:32,382 - INFO -   Detected Mode: LEARNING
+2026-08-04 16:25:32,383 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-04 16:25:33,487 - INFO -   [Timing] Retrieval & Context Building: 1.098s
+2026-08-04 16:25:33,490 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-04 16:25:36,128 - INFO -   [Timing] Backend First Token Loop hit: 2.638s since LLM call
+2026-08-04 16:25:36,129 - INFO -   [Timing] Total TTFT (user → first token loop): 3.750s
+2026-08-04 16:26:08,140 - INFO -   [Timing] LLM Streaming Duration: 34.649s
+2026-08-04 16:26:08,140 - INFO -   [Timing] Total Response Time: 35.762s
+2026-08-04 16:27:19,110 - INFO - 
+================================================================================
+2026-08-04 16:27:19,110 - INFO - [2026-08-04T16:27:19.110599] CHAT REQUEST
+2026-08-04 16:27:19,110 - INFO -   Student ID : 3
+2026-08-04 16:27:19,110 - INFO -   Question   : tell me about attendance policy
+2026-08-04 16:27:19,110 - INFO -   Role       : student
+2026-08-04 16:27:19,110 - INFO - ================================================================================
+2026-08-04 16:27:19,113 - INFO -   [Timing] FastAPI Request started processing at 38660.020
+2026-08-04 16:27:19,116 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-04 16:27:19,117 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-04 16:27:22,530 - INFO -   [Timing] Retrieval & Context Building: 3.406s
+2026-08-04 16:27:22,533 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-04 16:27:25,149 - INFO -   [Timing] Backend First Token Loop hit: 2.616s since LLM call
+2026-08-04 16:27:25,149 - INFO -   [Timing] Total TTFT (user → first token loop): 6.036s
+2026-08-04 16:27:34,027 - INFO -   [Timing] LLM Streaming Duration: 11.493s
+2026-08-04 16:27:34,027 - INFO -   [Timing] Total Response Time: 14.914s
+2026-08-04 16:28:19,932 - INFO - 
+================================================================================
+2026-08-04 16:28:19,932 - INFO - [2026-08-04T16:28:19.932290] CHAT REQUEST
+2026-08-04 16:28:19,932 - INFO -   Student ID : 3
+2026-08-04 16:28:19,932 - INFO -   Question   : tell me about my projects from my resume
+2026-08-04 16:28:19,932 - INFO -   Role       : student
+2026-08-04 16:28:19,932 - INFO - ================================================================================
+2026-08-04 16:28:19,934 - INFO -   [Timing] FastAPI Request started processing at 38720.842
+2026-08-04 16:28:19,937 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-08-04 16:28:19,937 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-04 16:28:21,810 - INFO -   [Timing] Retrieval & Context Building: 1.866s
+2026-08-04 16:28:21,812 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-04 16:28:23,832 - INFO -   [Timing] Backend First Token Loop hit: 2.020s since LLM call
+2026-08-04 16:28:23,833 - INFO -   [Timing] Total TTFT (user → first token loop): 3.898s
+2026-08-04 16:28:36,688 - INFO -   [Timing] LLM Streaming Duration: 14.876s
+2026-08-04 16:28:36,689 - INFO -   [Timing] Total Response Time: 16.754s
+2026-08-04 16:33:49,316 - INFO - [ProfessorGen] Generating fresh study material for topic='Deadlocks', subject='Operating system', user_id=2, classroom_id=3
+2026-08-04 16:33:49,317 - INFO - [BgGen] Worker thread started for key: 2_3_deadlocks
+2026-08-04 16:35:20,092 - INFO - [BgGen] Indexed 36 chunks into Chroma for doc_id=76
+2026-08-04 16:35:20,094 - ERROR - [BgGen] Failed to index generated notes in Chroma: cannot access local variable 'threading' where it is not associated with a value
+2026-08-04 16:35:20,099 - INFO - [BgGen] Saved generated resource in class_resources for classroom_id=3
+2026-08-04 16:35:20,099 - INFO - [BgGen] Saved generated material as document & file: 'AI Study Material - Deadlocks.md' associated with classroom=3
+2026-08-04 16:35:20,099 - INFO - [BgGen] Worker thread finished for key: 2_3_deadlocks
+2026-08-04 16:36:03,863 - INFO - Cached explain action for topic='AI Study Material - Deadlocks'
+2026-08-05 05:33:23,554 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-05 05:33:23,561 - INFO - DEBUG2 performances keys: ['OS Components and Services']
+2026-08-05 05:33:23,561 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x708e92bd8490>]
+2026-08-05 05:33:23,689 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-05 05:33:23,690 - INFO - DEBUG2 performances keys: ['OS Components and Services']
+2026-08-05 05:33:23,690 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x708e92b08f50>]
+2026-08-05 05:33:39,692 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 05:33:39,696 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-05 05:33:39,696 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 05:33:39,916 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:33:39,984 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:33:39,995 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:33:55,133 - INFO - CACHE HIT (Fast Return): topic='System Calls', subject='Operating Systems'
+2026-08-05 05:33:55,163 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:33:57,622 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:33:57,979 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='OS Design and Implementation'
+2026-08-05 05:33:58,751 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='OS Design and Implementation'
+2026-08-05 05:33:58,772 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: OS Design and Implementation) ---
+2026-08-05 05:34:21,694 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:34:21,695 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:34:36,303 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:34:36,304 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:34:39,771 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:34:43,732 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:35:03,682 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:35:03,683 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:35:17,803 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:35:17,803 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:35:21,208 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:35:21,212 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:35:21,240 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'What is Machine Learning?' to save resources.
+2026-08-05 05:35:21,269 - INFO - --- LLM PROMPT (Subject: None, Topic: What is Machine Learning?) ---
+2026-08-05 05:35:25,102 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:35:41,830 - INFO - Successfully cached streamed content for topic='OS Design and Implementation', subject='Operating Systems'
+2026-08-05 05:35:45,522 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:36:02,764 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:36:02,764 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:36:16,490 - INFO - Successfully cached streamed content for topic='What is Machine Learning?', subject='None'
+2026-08-05 05:36:38,664 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='OS Design and Implementation'
+2026-08-05 05:36:38,665 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='OS Design and Implementation'
+2026-08-05 05:36:42,777 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-05 05:36:42,809 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:37:11,870 - INFO - CACHE HIT (Fast Return): topic='What is Machine Learning?', subject='Machine Learning'
+2026-08-05 05:37:11,904 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:37:24,592 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:37:53,673 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:37:53,674 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:37:59,383 - INFO - Cached flashcard action for topic='What is Machine Learning?'
+2026-08-05 05:38:10,373 - INFO - [Practice] Starting/resuming session: mode=topic, topic=What is Machine Learning?, difficulty=mixed
+2026-08-05 05:38:10,413 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='What is Machine Learning?'
+2026-08-05 05:38:10,417 - INFO - [PracticeEngine] Master cache HIT: Retrieved 1 cached questions for topic='What is Machine Learning?', difficulty='easy', returning 1
+2026-08-05 05:38:10,445 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:38:10,490 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='What is Machine Learning?'
+2026-08-05 05:38:10,491 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:38:29,836 - INFO - PERFORMANCE UPDATED | Topic: What is Machine Learning? | Accuracy: 100.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 05:38:31,987 - INFO - [PracticeEngine] Master cache HIT: Retrieved 1 cached questions for topic='What is Machine Learning?', difficulty='easy', returning 1
+2026-08-05 05:38:42,137 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='What is Machine Learning?'
+2026-08-05 05:38:42,137 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='What is Machine Learning?'
+2026-08-05 05:38:44,589 - INFO - PERFORMANCE UPDATED | Topic: What is Machine Learning? | Accuracy: 100.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 05:38:47,022 - INFO - [PracticeEngine] Master cache HIT: Retrieved 5 cached questions for topic='What is Machine Learning?', difficulty='easy', returning 3
+2026-08-05 05:39:01,533 - INFO - PERFORMANCE UPDATED | Topic: What is Machine Learning? | Accuracy: 75.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 05:39:11,385 - INFO - PERFORMANCE UPDATED | Topic: What is Machine Learning? | Accuracy: 80.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 05:39:20,682 - INFO - PERFORMANCE UPDATED | Topic: What is Machine Learning? | Accuracy: 83.33333333333334% | Sessions: 2 | Status: LEARNING
+2026-08-05 05:39:32,564 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:39:32,592 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:42:40,492 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-05 05:42:50,892 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-05 05:42:50,893 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-05 05:42:50,897 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='OS Design and Implementation' (total=5 questions)
+2026-08-05 05:43:34,365 - INFO - [Practice] Starting/resuming session: mode=topic, topic=System Calls, difficulty=mixed
+2026-08-05 05:43:34,370 - INFO - [Practice] Resuming existing active session 2539 for topic='System Calls'
+2026-08-05 05:43:34,387 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:43:34,417 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:43:44,860 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:43:44,889 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:44:17,032 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:44:17,060 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:44:24,820 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 05:44:24,842 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 05:44:24,858 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:44:24,894 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:44:25,000 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 05:44:25,031 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:44:33,190 - INFO - CACHE HIT (Fast Return): topic='System Boot', subject='Operating Systems'
+2026-08-05 05:44:33,222 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:44:37,873 - INFO - CACHE HIT (Fast Return): topic='Process Concept & Scheduling', subject='Operating Systems'
+2026-08-05 05:44:37,902 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:44:43,865 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-05 05:44:54,283 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-05 05:44:54,283 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-05 05:44:54,287 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='What is Machine Learning?' (total=5 questions)
+2026-08-05 05:45:06,795 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:45:13,747 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:45:13,747 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:45:20,436 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:45:20,437 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:45:24,364 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:45:48,335 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:45:53,106 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 05:45:53,112 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 05:45:53,144 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:45:53,173 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:45:53,321 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 05:45:53,353 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:45:54,976 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:45:54,977 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:45:55,554 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:45:55,582 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:46:01,877 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:46:01,877 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:46:05,737 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:46:23,670 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Supervised vs Unsupervised, difficulty=easy
+2026-08-05 05:46:23,680 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Supervised vs Unsupervised'
+2026-08-05 05:46:23,681 - INFO - [PracticeEngine] Master cache HIT: Retrieved 1 cached questions for topic='Supervised vs Unsupervised', difficulty='easy', returning 1
+2026-08-05 05:46:23,709 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Supervised vs Unsupervised'
+2026-08-05 05:46:30,139 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:46:30,167 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:46:35,255 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:46:36,110 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Agents and Environments, difficulty=easy
+2026-08-05 05:46:36,115 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Agents and Environments'
+2026-08-05 05:46:36,145 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Agents and Environments'
+2026-08-05 05:47:40,125 - INFO - Cached generated quiz questions for topic='Agents and Environments', difficulty='easy'
+2026-08-05 05:47:45,558 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Supervised vs Unsupervised'
+2026-08-05 05:47:45,559 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Supervised vs Unsupervised'
+2026-08-05 05:47:50,134 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Agents and Environments'
+2026-08-05 05:47:50,135 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Agents and Environments'
+2026-08-05 05:47:53,414 - INFO - PERFORMANCE UPDATED | Topic: Agents and Environments | Accuracy: 100.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 05:48:23,132 - INFO - PERFORMANCE UPDATED | Topic: Agents and Environments | Accuracy: 100.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 05:48:34,834 - INFO - PERFORMANCE UPDATED | Topic: Agents and Environments | Accuracy: 100.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 05:48:52,017 - INFO - PERFORMANCE UPDATED | Topic: Agents and Environments | Accuracy: 100.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 05:49:04,558 - INFO - PERFORMANCE UPDATED | Topic: Agents and Environments | Accuracy: 83.33333333333334% | Sessions: 2 | Status: LEARNING
+2026-08-05 05:49:11,473 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:49:11,514 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:49:37,617 - INFO - CACHE HIT (Fast Return): topic='Day 1: AI Overview & History', subject='None'
+2026-08-05 05:49:37,647 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:49:37,828 - INFO - CACHE HIT (Fast Return): topic='Day 1: AI Overview & History', subject='None'
+2026-08-05 05:49:37,860 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:49:40,658 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:49:40,686 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:50:06,166 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:50:06,200 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:50:16,899 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:50:17,200 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:50:20,146 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 05:50:20,600 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:50:20,636 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:50:25,883 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:50:25,913 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 05:53:47,039 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-05 05:53:51,679 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-05 05:53:56,986 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-05 05:53:56,986 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-05 05:53:56,991 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Supervised vs Unsupervised' (total=5 questions)
+2026-08-05 05:54:00,906 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-05 05:54:00,906 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-05 05:54:00,911 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Agents and Environments' (total=5 questions)
+2026-08-05 05:55:08,763 - INFO - Cached examples action for topic='AI Study Material - Deadlocks'
+2026-08-05 06:16:13,111 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 06:16:13,154 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:16:13,311 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 06:16:13,366 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:16:19,472 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:16:19,605 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Virtual Memory & Demand Paging'
+2026-08-05 06:16:19,643 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Virtual Memory & Demand Paging'
+2026-08-05 06:16:19,650 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Virtual Memory & Demand Paging) ---
+2026-08-05 06:16:26,049 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:16:26,101 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Page Replacement Algorithms' to save resources.
+2026-08-05 06:16:26,129 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Page Replacement Algorithms) ---
+2026-08-05 06:16:54,959 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:16:58,740 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:16:58,742 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:16:58,821 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-05 06:16:58,854 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:17:05,911 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:17:05,911 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:17:18,979 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:17:23,233 - INFO - Successfully cached streamed content for topic='Virtual Memory & Demand Paging', subject='Operating Systems'
+2026-08-05 06:17:28,357 - INFO - Successfully cached streamed content for topic='Page Replacement Algorithms', subject='Operating Systems'
+2026-08-05 06:17:36,349 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:17:40,201 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:17:40,201 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:17:41,151 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Virtual Memory & Demand Paging'
+2026-08-05 06:17:41,151 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Virtual Memory & Demand Paging'
+2026-08-05 06:19:30,088 - WARNING - CACHE INVALIDATED (Resume/Policy Leak detected): topic='Virtual Memory & Demand Paging', subject='Operating Systems'
+2026-08-05 06:19:30,088 - INFO - CACHE INVALIDATED (Old format): topic='Virtual Memory & Demand Paging', subject='Operating Systems'
+2026-08-05 06:19:30,128 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:19:30,188 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Virtual Memory & Demand Paging' to save resources.
+2026-08-05 06:19:30,217 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Virtual Memory & Demand Paging) ---
+2026-08-05 06:19:36,263 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:19:36,316 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Thrashing & Allocating Kernel Memory' to save resources.
+2026-08-05 06:19:36,343 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Thrashing & Allocating Kernel Memory) ---
+2026-08-05 06:20:11,613 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:20:11,613 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:20:11,614 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:20:11,790 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-05 06:20:11,821 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:20:18,501 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:20:18,502 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:20:22,369 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:20:53,712 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:20:53,712 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:20:53,714 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:21:14,246 - INFO - Successfully cached streamed content for topic='Virtual Memory & Demand Paging', subject='Operating Systems'
+2026-08-05 06:21:18,162 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:21:18,329 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Probability Theory Basics' to save resources.
+2026-08-05 06:21:18,368 - INFO - --- LLM PROMPT (Subject: Artificial Intelligence, Topic: Probability Theory Basics) ---
+2026-08-05 06:21:38,334 - INFO - Successfully cached streamed content for topic='Thrashing & Allocating Kernel Memory', subject='Operating Systems'
+2026-08-05 06:21:41,241 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:21:41,299 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Learning from Examples' to save resources.
+2026-08-05 06:21:41,328 - INFO - --- LLM PROMPT (Subject: Artificial Intelligence, Topic: Learning from Examples) ---
+2026-08-05 06:22:00,003 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:22:00,004 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:22:00,004 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:22:00,225 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-05 06:22:00,253 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:22:22,342 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:22:22,342 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:22:22,856 - INFO - CACHE HIT (Fast Return): topic='System Boot', subject='Operating Systems'
+2026-08-05 06:22:22,893 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:22:25,224 - INFO - CACHE HIT (Fast Return): topic='OS Design and Implementation', subject='Operating Systems'
+2026-08-05 06:22:25,255 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:22:29,490 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:22:41,872 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:22:41,872 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:22:41,874 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:23:03,764 - INFO - Successfully cached streamed content for topic='Probability Theory Basics', subject='Artificial Intelligence'
+2026-08-05 06:23:03,952 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:23:03,953 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:23:04,050 - INFO - CACHE HIT (Fast Return): topic='System Boot', subject='Operating Systems'
+2026-08-05 06:23:04,104 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:23:07,442 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:23:07,443 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:23:07,446 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:23:11,310 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:23:32,483 - INFO - Successfully cached streamed content for topic='Learning from Examples', subject='Artificial Intelligence'
+2026-08-05 06:23:42,935 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-05 06:23:45,743 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:23:45,743 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:23:53,169 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-05 06:23:53,169 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-05 06:23:53,174 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Virtual Memory & Demand Paging' (total=5 questions)
+2026-08-05 06:24:51,152 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 06:24:51,201 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:24:51,364 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 06:24:51,396 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:24:54,893 - INFO - CACHE HIT (Fast Return): topic='System Boot', subject='Operating Systems'
+2026-08-05 06:24:54,924 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:25:32,836 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:25:32,836 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:25:32,837 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:25:33,189 - INFO - CACHE HIT (Fast Return): topic='Virtual Machines', subject='Operating Systems'
+2026-08-05 06:25:33,221 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:25:36,724 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:25:36,726 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:25:36,726 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:26:14,774 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:26:14,775 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:26:14,777 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:33:14,906 - INFO - CACHE HIT (Fast Return): topic='Virtual Machines', subject='Operating Systems'
+2026-08-05 06:33:14,959 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:33:59,334 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:50:43,339 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 06:50:43,357 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 06:50:43,377 - INFO - CACHE HIT (Fast Return): topic='Virtual Machines', subject='Operating Systems'
+2026-08-05 06:50:43,384 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:50:43,419 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:50:43,430 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:50:55,604 - INFO - --- LLM PROMPT (Subject: Artificial Intelligence, Topic: Agents and Environments) ---
+2026-08-05 06:51:26,538 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:51:28,870 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Problem Solving as Search'
+2026-08-05 06:51:28,903 - INFO - --- LLM PROMPT (Subject: Artificial Intelligence, Topic: Problem Solving as Search) ---
+2026-08-05 06:51:28,905 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Problem Solving as Search'
+2026-08-05 06:51:30,388 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:51:36,999 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Agents and Environments' to save resources.
+2026-08-05 06:51:37,027 - INFO - --- LLM PROMPT (Subject: Artificial Intelligence, Topic: Agents and Environments) ---
+2026-08-05 06:51:37,588 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:52:03,888 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:52:03,891 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:52:11,289 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:52:18,668 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:52:30,132 - INFO - Successfully cached streamed content for topic='Agents and Environments', subject='Artificial Intelligence'
+2026-08-05 06:52:36,860 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Knowledge Graphs' to save resources.
+2026-08-05 06:52:36,886 - INFO - --- LLM PROMPT (Subject: Artificial Intelligence, Topic: Knowledge Graphs) ---
+2026-08-05 06:53:04,673 - INFO - Successfully cached streamed content for topic='Agents and Environments', subject='Artificial Intelligence'
+2026-08-05 06:53:09,262 - INFO - Successfully cached streamed content for topic='Problem Solving as Search', subject='Artificial Intelligence'
+2026-08-05 06:53:18,293 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Informed Search Strategies' to save resources.
+2026-08-05 06:53:18,325 - INFO - --- LLM PROMPT (Subject: Artificial Intelligence, Topic: Informed Search Strategies) ---
+2026-08-05 06:53:20,029 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:53:23,509 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:53:27,429 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:53:42,566 - INFO - CACHE HIT (Fast Return): topic='Day 1: AI Overview & History', subject='None'
+2026-08-05 06:53:42,612 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:53:49,149 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:53:56,069 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:53:59,499 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:54:02,889 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:54:06,789 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:54:17,679 - INFO - Successfully cached streamed content for topic='Knowledge Graphs', subject='Artificial Intelligence'
+2026-08-05 06:54:26,089 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 06:54:57,591 - INFO - Successfully cached streamed content for topic='Informed Search Strategies', subject='Artificial Intelligence'
+2026-08-05 06:56:11,438 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Problem Solving as Search'
+2026-08-05 06:56:11,438 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Problem Solving as Search'
+2026-08-05 06:59:29,278 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 06:59:29,309 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:59:29,384 - INFO - CACHE HIT (Fast Return): topic='Agents and Environments', subject='Artificial Intelligence'
+2026-08-05 06:59:29,414 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:59:30,893 - INFO - CACHE HIT (Fast Return): topic='Day 1: AI Overview & History', subject='Artificial Intelligence'
+2026-08-05 06:59:30,923 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 06:59:33,595 - INFO - CACHE HIT (Fast Return): topic='Agents and Environments', subject='Artificial Intelligence'
+2026-08-05 06:59:33,625 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:00:11,589 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 07:00:11,592 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 07:00:11,635 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:00:11,670 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:00:15,344 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 07:00:15,346 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 07:00:18,812 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:00:32,594 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Day 5: Next Steps & Learning Path' to save resources.
+2026-08-05 07:00:32,622 - INFO - --- LLM PROMPT (Subject: Week 1 (Unlocked), Topic: Day 5: Next Steps & Learning Path) ---
+2026-08-05 07:00:55,123 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 07:00:58,833 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:00:58,859 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:01:02,313 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 07:01:13,624 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 07:01:13,626 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 07:01:37,231 - INFO - Successfully cached streamed content for topic='Day 5: Next Steps & Learning Path', subject='Week 1 (Unlocked)'
+2026-08-05 07:02:13,381 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-05 07:02:23,742 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-05 07:02:23,742 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-05 07:02:23,748 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Problem Solving as Search' (total=5 questions)
+2026-08-05 07:03:50,107 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 07:03:50,157 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:03:51,376 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 07:03:51,408 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:03:54,038 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:03:54,075 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:04:35,274 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 07:05:04,727 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:06:34,060 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-05 07:06:34,095 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:06:36,308 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:06:36,346 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:07:17,695 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-05 07:11:52,689 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Core Programming & Tools, difficulty=easy
+2026-08-05 07:11:52,697 - INFO - [Practice] Resuming existing active session 2534 for topic='Core Programming & Tools'
+2026-08-05 07:11:58,089 - INFO - PERFORMANCE UPDATED | Topic: Core Programming & Tools | Accuracy: 0.0% | Sessions: 1 | Status: LEARNING
+2026-08-05 07:12:05,803 - INFO - PERFORMANCE UPDATED | Topic: Core Programming & Tools | Accuracy: 50.0% | Sessions: 1 | Status: LEARNING
+2026-08-05 07:12:11,171 - INFO - PERFORMANCE UPDATED | Topic: Core Programming & Tools | Accuracy: 33.33333333333333% | Sessions: 1 | Status: LEARNING
+2026-08-05 07:12:16,508 - INFO - PERFORMANCE UPDATED | Topic: Core Programming & Tools | Accuracy: 25.0% | Sessions: 1 | Status: LEARNING
+2026-08-05 07:12:21,207 - INFO - PERFORMANCE UPDATED | Topic: Core Programming & Tools | Accuracy: 40.0% | Sessions: 1 | Status: LEARNING
+2026-08-05 07:12:35,659 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:12:35,692 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:14:35,769 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:14:35,796 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:16:53,464 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Company Classification, difficulty=easy
+2026-08-05 07:16:53,471 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Company Classification'
+2026-08-05 07:16:54,016 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Company Classification'
+2026-08-05 07:17:22,503 - INFO - Cached generated quiz questions for topic='Company Classification', difficulty='easy'
+2026-08-05 07:17:27,451 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Company Classification'
+2026-08-05 07:17:27,452 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Company Classification'
+2026-08-05 07:17:30,726 - INFO - PERFORMANCE UPDATED | Topic: Company Classification | Accuracy: 100.0% | Sessions: 1 | Status: LEARNING
+2026-08-05 07:17:38,785 - INFO - PERFORMANCE UPDATED | Topic: Company Classification | Accuracy: 100.0% | Sessions: 1 | Status: LEARNING
+2026-08-05 07:17:47,719 - INFO - PERFORMANCE UPDATED | Topic: Company Classification | Accuracy: 100.0% | Sessions: 1 | Status: LEARNING
+2026-08-05 07:17:58,262 - INFO - PERFORMANCE UPDATED | Topic: Company Classification | Accuracy: 75.0% | Sessions: 1 | Status: LEARNING
+2026-08-05 07:18:04,572 - INFO - PERFORMANCE UPDATED | Topic: Company Classification | Accuracy: 80.0% | Sessions: 1 | Status: LEARNING
+2026-08-05 07:23:29,090 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-05 07:23:39,547 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-05 07:23:39,547 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-05 07:23:39,552 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Company Classification' (total=5 questions)
+2026-08-05 07:23:52,448 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:23:52,472 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:23:57,024 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Company Classification, difficulty=easy
+2026-08-05 07:23:57,029 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Company Classification'
+2026-08-05 07:23:57,031 - INFO - [PracticeEngine] Master cache HIT: Retrieved 2 cached questions, filtered down to 2 non-repeated questions, returning 2
+2026-08-05 07:23:57,060 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Company Classification'
+2026-08-05 07:24:06,256 - INFO - PERFORMANCE UPDATED | Topic: Company Classification | Accuracy: 83.33333333333334% | Sessions: 2 | Status: LEARNING
+2026-08-05 07:24:11,756 - INFO - PERFORMANCE UPDATED | Topic: Company Classification | Accuracy: 85.71428571428571% | Sessions: 2 | Status: LEARNING
+2026-08-05 07:24:14,426 - INFO - [PracticeEngine] Master cache HIT: Retrieved 2 cached questions, filtered down to 0 non-repeated questions, returning 2
+2026-08-05 07:24:21,550 - INFO - PERFORMANCE UPDATED | Topic: Company Classification | Accuracy: 87.5% | Sessions: 2 | Status: LEARNING
+2026-08-05 07:24:30,799 - INFO - PERFORMANCE UPDATED | Topic: Company Classification | Accuracy: 88.88888888888889% | Sessions: 2 | Status: LEARNING
+2026-08-05 07:24:32,727 - INFO - [PracticeEngine] Master cache HIT: Retrieved 2 cached questions, filtered down to 0 non-repeated questions, returning 1
+2026-08-05 07:24:36,965 - INFO - PERFORMANCE UPDATED | Topic: Company Classification | Accuracy: 90.0% | Sessions: 2 | Status: STRONG
+2026-08-05 07:24:42,569 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:24:42,609 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:24:48,008 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Core Programming & Tools, difficulty=easy
+2026-08-05 07:24:48,015 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Core Programming & Tools'
+2026-08-05 07:24:48,045 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Core Programming & Tools'
+2026-08-05 07:25:40,407 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Company Classification'
+2026-08-05 07:25:40,407 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Company Classification'
+2026-08-05 07:25:42,499 - INFO - Cached generated quiz questions for topic='Core Programming & Tools', difficulty='easy'
+2026-08-05 07:25:43,957 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:25:43,983 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:25:51,188 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Core Programming & Tools, difficulty=easy
+2026-08-05 07:25:51,192 - INFO - [Practice] Resuming existing active session 2546 for topic='Core Programming & Tools'
+2026-08-05 07:25:57,213 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Core Programming & Tools'
+2026-08-05 07:25:57,213 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Core Programming & Tools'
+2026-08-05 07:25:58,262 - INFO - PERFORMANCE UPDATED | Topic: Core Programming & Tools | Accuracy: 50.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 07:26:09,739 - INFO - PERFORMANCE UPDATED | Topic: Core Programming & Tools | Accuracy: 42.857142857142854% | Sessions: 2 | Status: LEARNING
+2026-08-05 07:26:14,958 - INFO - PERFORMANCE UPDATED | Topic: Core Programming & Tools | Accuracy: 50.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 07:26:21,913 - INFO - PERFORMANCE UPDATED | Topic: Core Programming & Tools | Accuracy: 55.55555555555556% | Sessions: 2 | Status: LEARNING
+2026-08-05 07:26:30,735 - INFO - PERFORMANCE UPDATED | Topic: Core Programming & Tools | Accuracy: 50.0% | Sessions: 2 | Status: LEARNING
+2026-08-05 07:26:34,524 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:26:34,594 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 07:31:41,943 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-05 07:31:52,317 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-05 07:31:52,318 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-05 07:31:52,323 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Company Classification' (total=5 questions)
+2026-08-05 07:31:58,692 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-05 07:32:09,128 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-05 07:32:09,128 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-05 07:32:09,133 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Core Programming & Tools' (total=5 questions)
+2026-08-05 07:43:21,820 - INFO - 
+================================================================================
+2026-08-05 07:43:21,820 - INFO - [2026-08-05T07:43:21.820952] CHAT REQUEST
+2026-08-05 07:43:21,821 - INFO -   Student ID : 2
+2026-08-05 07:43:21,821 - INFO -   Question   : Create a detailed lesson plan on process scheduling, outlining objectives, core concepts, and interactive activities.
+2026-08-05 07:43:21,821 - INFO -   Role       : professor
+2026-08-05 07:43:21,821 - INFO - ================================================================================
+2026-08-05 07:43:21,823 - INFO -   [Timing] FastAPI Request started processing at 93622.730
+2026-08-05 07:43:21,830 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-08-05 07:43:21,830 - INFO -   [Timing] Docs + Mode Detection: 0.007s
+2026-08-05 07:43:21,834 - INFO - 
+================================================================================
+2026-08-05 07:43:21,834 - INFO - [2026-08-05T07:43:21.834645] CHAT REQUEST
+2026-08-05 07:43:21,835 - INFO -   Student ID : 2
+2026-08-05 07:43:21,835 - INFO -   Question   : Create a detailed lesson plan on process scheduling, outlining objectives, core concepts, and interactive activities.
+2026-08-05 07:43:21,835 - INFO -   Role       : professor
+2026-08-05 07:43:21,835 - INFO - ================================================================================
+2026-08-05 07:43:21,840 - INFO -   [Timing] FastAPI Request started processing at 93622.747
+2026-08-05 07:43:21,845 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-08-05 07:43:21,845 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-05 07:43:22,009 - INFO -   [Timing] Retrieval & Context Building: 0.153s
+2026-08-05 07:43:22,012 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-05 07:43:22,013 - INFO -   [Timing] Retrieval & Context Building: 0.169s
+2026-08-05 07:43:22,015 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-05 07:43:29,136 - INFO -   [Timing] Backend First Token Loop hit: 7.123s since LLM call
+2026-08-05 07:43:29,136 - INFO -   [Timing] Total TTFT (user → first token loop): 7.296s
+2026-08-05 07:43:29,137 - INFO -   [Timing] Backend First Token Loop hit: 7.121s since LLM call
+2026-08-05 07:43:29,137 - INFO -   [Timing] Total TTFT (user → first token loop): 7.314s
+2026-08-05 07:45:41,216 - INFO -   [Timing] LLM Streaming Duration: 139.204s
+2026-08-05 07:45:41,216 - INFO -   [Timing] Total Response Time: 139.376s
+2026-08-05 07:45:42,237 - INFO -   [Timing] LLM Streaming Duration: 140.222s
+2026-08-05 07:45:42,238 - INFO -   [Timing] Total Response Time: 140.415s
+2026-08-05 08:17:58,711 - INFO - 
+================================================================================
+2026-08-05 08:17:58,711 - INFO - [2026-08-05T08:17:58.711768] CHAT REQUEST
+2026-08-05 08:17:58,711 - INFO -   Student ID : 2
+2026-08-05 08:17:58,711 - INFO -   Question   : Generate a multiple-choice practice quiz with 5 questions, options, and explanations on memory management.
+2026-08-05 08:17:58,711 - INFO -   Role       : professor
+2026-08-05 08:17:58,712 - INFO - ================================================================================
+2026-08-05 08:17:58,722 - INFO -   [Timing] FastAPI Request started processing at 95699.629
+2026-08-05 08:17:58,735 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-08-05 08:17:58,735 - INFO -   [Timing] Docs + Mode Detection: 0.013s
+2026-08-05 08:17:58,770 - INFO - 
+================================================================================
+2026-08-05 08:17:58,771 - INFO - [2026-08-05T08:17:58.771086] CHAT REQUEST
+2026-08-05 08:17:58,771 - INFO -   Student ID : 2
+2026-08-05 08:17:58,771 - INFO -   Question   : Generate a multiple-choice practice quiz with 5 questions, options, and explanations on memory management.
+2026-08-05 08:17:58,771 - INFO -   Role       : professor
+2026-08-05 08:17:58,771 - INFO - ================================================================================
+2026-08-05 08:17:58,774 - INFO -   [Timing] FastAPI Request started processing at 95699.682
+2026-08-05 08:17:58,781 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-08-05 08:17:58,781 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-08-05 08:17:58,976 - INFO -   [Timing] Retrieval & Context Building: 0.185s
+2026-08-05 08:17:58,978 - INFO -   [Timing] Retrieval & Context Building: 0.233s
+2026-08-05 08:17:58,979 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-05 08:17:58,985 - INFO -   [Timing] Context + Prompt Building: 0.006s
+2026-08-05 08:18:02,728 - INFO -   [Timing] Backend First Token Loop hit: 3.749s since LLM call
+2026-08-05 08:18:02,729 - INFO -   [Timing] Backend First Token Loop hit: 3.744s since LLM call
+2026-08-05 08:18:02,729 - INFO -   [Timing] Total TTFT (user → first token loop): 3.954s
+2026-08-05 08:18:02,729 - INFO -   [Timing] Total TTFT (user → first token loop): 4.007s
+2026-08-05 08:18:28,030 - INFO -   [Timing] LLM Streaming Duration: 29.051s
+2026-08-05 08:18:28,031 - INFO -   [Timing] Total Response Time: 29.256s
+2026-08-05 08:18:29,103 - INFO -   [Timing] LLM Streaming Duration: 30.118s
+2026-08-05 08:18:29,103 - INFO -   [Timing] Total Response Time: 30.382s
+2026-08-05 08:20:49,884 - INFO - 
+================================================================================
+2026-08-05 08:20:49,884 - INFO - [2026-08-05T08:20:49.884589] CHAT REQUEST
+2026-08-05 08:20:49,884 - INFO -   Student ID : 2
+2026-08-05 08:20:49,884 - INFO -   Question   : Generate a multiple-choice practice quiz with 5 questions, options, and explanations on memory management.
+2026-08-05 08:20:49,884 - INFO -   Role       : professor
+2026-08-05 08:20:49,884 - INFO - ================================================================================
+2026-08-05 08:20:49,887 - INFO -   [Timing] FastAPI Request started processing at 95870.794
+2026-08-05 08:20:49,890 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-08-05 08:20:49,890 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-05 08:20:50,071 - INFO -   [Timing] Retrieval & Context Building: 0.171s
+2026-08-05 08:20:50,076 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-05 08:20:51,775 - INFO -   [Timing] Backend First Token Loop hit: 1.699s since LLM call
+2026-08-05 08:20:51,775 - INFO -   [Timing] Total TTFT (user → first token loop): 1.888s
+2026-08-05 08:21:47,570 - INFO -   [Timing] LLM Streaming Duration: 57.494s
+2026-08-05 08:21:47,570 - INFO -   [Timing] Total Response Time: 57.683s
+2026-08-05 08:27:49,497 - INFO - 
+================================================================================
+2026-08-05 08:27:49,497 - INFO - [2026-08-05T08:27:49.497816] CHAT REQUEST
+2026-08-05 08:27:49,497 - INFO -   Student ID : 2
+2026-08-05 08:27:49,497 - INFO -   Question   : tell me about amir amrks
+2026-08-05 08:27:49,497 - INFO -   Role       : professor
+2026-08-05 08:27:49,498 - INFO - ================================================================================
+2026-08-05 08:27:49,500 - INFO -   [Timing] FastAPI Request started processing at 96290.408
+2026-08-05 08:27:49,503 - INFO -   Detected Mode: LEARNING
+2026-08-05 08:27:49,504 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-05 08:27:49,561 - INFO -   [Timing] Retrieval & Context Building: 0.049s
+2026-08-05 08:27:49,564 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-05 08:27:51,153 - INFO -   [Timing] Backend First Token Loop hit: 1.589s since LLM call
+2026-08-05 08:27:51,153 - INFO -   [Timing] Total TTFT (user → first token loop): 1.653s
+2026-08-05 08:28:06,274 - INFO -   [Timing] LLM Streaming Duration: 16.710s
+2026-08-05 08:28:06,274 - INFO -   [Timing] Total Response Time: 16.774s
+2026-08-05 09:22:45,304 - INFO - 
+================================================================================
+2026-08-05 09:22:45,304 - INFO - [2026-08-05T09:22:45.304182] CHAT REQUEST
+2026-08-05 09:22:45,304 - INFO -   Student ID : 2
+2026-08-05 09:22:45,304 - INFO -   Question   : Generate a multiple-choice practice quiz with 5 questions, options, and explanations on memory management.
+2026-08-05 09:22:45,304 - INFO -   Role       : professor
+2026-08-05 09:22:45,304 - INFO - ================================================================================
+2026-08-05 09:22:45,306 - INFO -   [Timing] FastAPI Request started processing at 99586.213
+2026-08-05 09:22:45,310 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-08-05 09:22:45,310 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-05 09:22:45,369 - INFO -   [Timing] Retrieval & Context Building: 0.049s
+2026-08-05 09:22:45,374 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-05 09:22:57,020 - INFO -   [Timing] Backend First Token Loop hit: 11.646s since LLM call
+2026-08-05 09:22:57,020 - INFO -   [Timing] Total TTFT (user → first token loop): 11.714s
+2026-08-05 09:22:57,021 - INFO -   [Timing] LLM Streaming Duration: 11.647s
+2026-08-05 09:22:57,021 - INFO -   [Timing] Total Response Time: 11.715s
+2026-08-05 09:23:31,735 - INFO - 
+================================================================================
+2026-08-05 09:23:31,735 - INFO - [2026-08-05T09:23:31.735649] CHAT REQUEST
+2026-08-05 09:23:31,735 - INFO -   Student ID : 2
+2026-08-05 09:23:31,735 - INFO -   Question   : tell me priya marks
+2026-08-05 09:23:31,735 - INFO -   Role       : professor
+2026-08-05 09:23:31,735 - INFO - ================================================================================
+2026-08-05 09:23:31,738 - INFO -   [Timing] FastAPI Request started processing at 99632.645
+2026-08-05 09:23:31,741 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-05 09:23:31,741 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-05 09:23:38,186 - INFO -   [Timing] Retrieval & Context Building: 6.436s
+2026-08-05 09:23:38,191 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-05 09:23:49,969 - INFO -   [Timing] Backend First Token Loop hit: 11.778s since LLM call
+2026-08-05 09:23:49,969 - INFO -   [Timing] Total TTFT (user → first token loop): 18.232s
+2026-08-05 09:23:49,970 - INFO -   [Timing] LLM Streaming Duration: 11.779s
+2026-08-05 09:23:49,970 - INFO -   [Timing] Total Response Time: 18.232s
+2026-08-05 09:24:30,302 - INFO - 
+================================================================================
+2026-08-05 09:24:30,303 - INFO - [2026-08-05T09:24:30.303051] CHAT REQUEST
+2026-08-05 09:24:30,303 - INFO -   Student ID : 2
+2026-08-05 09:24:30,303 - INFO -   Question   : tell me priya marks?
+2026-08-05 09:24:30,303 - INFO -   Role       : professor
+2026-08-05 09:24:30,303 - INFO - ================================================================================
+2026-08-05 09:24:30,305 - INFO -   [Timing] FastAPI Request started processing at 99691.213
+2026-08-05 09:24:30,309 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-05 09:24:30,309 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-05 09:24:30,643 - INFO -   [Timing] Retrieval & Context Building: 0.327s
+2026-08-05 09:24:30,647 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-05 09:24:42,197 - INFO -   [Timing] Backend First Token Loop hit: 11.550s since LLM call
+2026-08-05 09:24:42,198 - INFO -   [Timing] Total TTFT (user → first token loop): 11.892s
+2026-08-05 09:24:42,198 - INFO -   [Timing] LLM Streaming Duration: 11.550s
+2026-08-05 09:24:42,198 - INFO -   [Timing] Total Response Time: 11.893s
+2026-08-05 09:32:56,116 - INFO - 
+================================================================================
+2026-08-05 09:32:56,116 - INFO - [2026-08-05T09:32:56.116872] CHAT REQUEST
+2026-08-05 09:32:56,116 - INFO -   Student ID : 2
+2026-08-05 09:32:56,117 - INFO -   Question   : tell me priya marks?
+2026-08-05 09:32:56,117 - INFO -   Role       : professor
+2026-08-05 09:32:56,117 - INFO - ================================================================================
+2026-08-05 09:32:56,119 - INFO -   [Timing] FastAPI Request started processing at 100197.026
+2026-08-05 09:32:56,122 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-05 09:32:56,123 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-05 09:32:56,456 - INFO -   [Timing] Retrieval & Context Building: 0.326s
+2026-08-05 09:32:56,459 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-05 09:33:08,310 - INFO -   [Timing] Backend First Token Loop hit: 11.850s since LLM call
+2026-08-05 09:33:08,310 - INFO -   [Timing] Total TTFT (user → first token loop): 12.191s
+2026-08-05 09:33:08,310 - INFO -   [Timing] LLM Streaming Duration: 11.851s
+2026-08-05 09:33:08,310 - INFO -   [Timing] Total Response Time: 12.191s
+2026-08-05 09:34:31,689 - INFO - 
+================================================================================
+2026-08-05 09:34:31,690 - INFO - [2026-08-05T09:34:31.690132] CHAT REQUEST
+2026-08-05 09:34:31,690 - INFO -   Student ID : 2
+2026-08-05 09:34:31,690 - INFO -   Question   : tell me priya marks?
+2026-08-05 09:34:31,690 - INFO -   Role       : professor
+2026-08-05 09:34:31,690 - INFO - ================================================================================
+2026-08-05 09:34:31,692 - INFO -   [Timing] FastAPI Request started processing at 100292.600
+2026-08-05 09:34:31,695 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-05 09:34:31,695 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-05 09:34:38,470 - INFO -   [Timing] Retrieval & Context Building: 6.769s
+2026-08-05 09:34:38,473 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-05 09:34:50,240 - INFO -   [Timing] Backend First Token Loop hit: 11.767s since LLM call
+2026-08-05 09:34:50,240 - INFO -   [Timing] Total TTFT (user → first token loop): 18.548s
+2026-08-05 09:34:50,241 - INFO -   [Timing] LLM Streaming Duration: 11.767s
+2026-08-05 09:34:50,241 - INFO -   [Timing] Total Response Time: 18.549s
+2026-08-05 09:35:08,260 - INFO - 
+================================================================================
+2026-08-05 09:35:08,260 - INFO - [2026-08-05T09:35:08.260535] CHAT REQUEST
+2026-08-05 09:35:08,260 - INFO -   Student ID : 2
+2026-08-05 09:35:08,260 - INFO -   Question   : tell me priya marks?
+2026-08-05 09:35:08,260 - INFO -   Role       : professor
+2026-08-05 09:35:08,260 - INFO - ================================================================================
+2026-08-05 09:35:08,263 - INFO -   [Timing] FastAPI Request started processing at 100329.170
+2026-08-05 09:35:08,266 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-05 09:35:08,266 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-05 09:35:17,260 - INFO -   [Timing] Retrieval & Context Building: 8.986s
+2026-08-05 09:35:17,265 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-05 09:35:29,070 - INFO -   [Timing] Backend First Token Loop hit: 11.805s since LLM call
+2026-08-05 09:35:29,070 - INFO -   [Timing] Total TTFT (user → first token loop): 20.808s
+2026-08-05 09:35:29,071 - INFO -   [Timing] LLM Streaming Duration: 11.806s
+2026-08-05 09:35:29,071 - INFO -   [Timing] Total Response Time: 20.808s
+2026-08-05 09:41:38,743 - INFO - 
+================================================================================
+2026-08-05 09:41:38,744 - INFO - [2026-08-05T09:41:38.744162] CHAT REQUEST
+2026-08-05 09:41:38,744 - INFO -   Student ID : 2
+2026-08-05 09:41:38,744 - INFO -   Question   : tell me about deadlocks
+2026-08-05 09:41:38,744 - INFO -   Role       : professor
+2026-08-05 09:41:38,744 - INFO - ================================================================================
+2026-08-05 09:41:38,746 - INFO -   [Timing] FastAPI Request started processing at 100719.654
+2026-08-05 09:41:38,750 - INFO -   Detected Mode: LEARNING
+2026-08-05 09:41:38,750 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-05 09:41:40,026 - INFO -   [Timing] Retrieval & Context Building: 1.269s
+2026-08-05 09:41:40,028 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-05 09:41:43,724 - INFO -   [Timing] Backend First Token Loop hit: 3.695s since LLM call
+2026-08-05 09:41:43,724 - INFO -   [Timing] Total TTFT (user → first token loop): 4.977s
+2026-08-05 09:43:28,869 - INFO -   [Timing] LLM Streaming Duration: 108.841s
+2026-08-05 09:43:28,870 - INFO -   [Timing] Total Response Time: 110.123s
+2026-08-05 09:44:21,745 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 09:44:21,772 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-05 09:45:16,081 - INFO - [Practice] Starting/resuming session: mode=weakness, topic=Core Concepts, difficulty=mixed
+2026-08-05 09:45:16,088 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Core Concepts, Core Programming & Tools, Time Complexity'
+2026-08-05 09:45:16,116 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Core Concepts, Core Programming & Tools, Time Complexity'
+2026-08-05 09:46:51,254 - INFO - Cached generated quiz questions for topic='Core Concepts, Core Programming & Tools, Time Complexity', difficulty='easy'
+2026-08-05 09:46:56,988 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Core Concepts, Core Programming & Tools, Time Complexity'
+2026-08-05 09:46:56,988 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Core Concepts, Core Programming & Tools, Time Complexity'
+2026-08-05 09:50:34,156 - INFO - 
+================================================================================
+2026-08-05 09:50:34,156 - INFO - [2026-08-05T09:50:34.156415] CHAT REQUEST
+2026-08-05 09:50:34,156 - INFO -   Student ID : 2
+2026-08-05 09:50:34,156 - INFO -   Question   : can you tell me about priya marks
+2026-08-05 09:50:34,156 - INFO -   Role       : professor
+2026-08-05 09:50:34,156 - INFO - ================================================================================
+2026-08-05 09:50:34,159 - INFO -   [Timing] FastAPI Request started processing at 101255.066
+2026-08-05 09:50:34,162 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-05 09:50:34,162 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-05 09:50:34,546 - INFO -   [Timing] Retrieval & Context Building: 0.377s
+2026-08-05 09:50:34,549 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-05 09:50:38,154 - INFO -   [Timing] Backend First Token Loop hit: 3.605s since LLM call
+2026-08-05 09:50:38,154 - INFO -   [Timing] Total TTFT (user → first token loop): 3.996s
+2026-08-05 09:51:12,785 - INFO -   [Timing] LLM Streaming Duration: 38.236s
+2026-08-05 09:51:12,786 - INFO -   [Timing] Total Response Time: 38.627s
+2026-08-05 09:52:15,508 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Error code: 502 - {'error': {'message': "Upstream request failed: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))", 'type': 'proxy_error'}}
+2026-08-05 09:52:25,848 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-05 09:52:25,848 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-05 09:52:25,853 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Core Concepts, Core Programming & Tools, Time Complexity' (total=5 questions)
+2026-08-06 05:52:26,200 - INFO - [Practice] Starting/resuming session: mode=topic, topic=System Boot, difficulty=mixed
+2026-08-06 05:52:26,222 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='System Boot'
+2026-08-06 05:52:26,234 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 05:52:26,287 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 05:52:27,032 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='System Boot'
+2026-08-06 05:52:39,005 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 05:52:39,039 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 05:52:44,745 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Paging & Segmentation'
+2026-08-06 05:52:44,779 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Paging & Segmentation'
+2026-08-06 05:52:44,780 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Paging & Segmentation) ---
+2026-08-06 05:53:02,905 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Virtual Memory & Demand Paging' to save resources.
+2026-08-06 05:53:22,132 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:53:23,026 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 05:53:23,033 - INFO - CACHE HIT (Fast Return): topic='Page Replacement Algorithms', subject='Operating Systems'
+2026-08-06 05:53:23,069 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 05:53:23,100 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 05:53:25,992 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:53:45,822 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:53:45,853 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Deep Learning Basics' to save resources.
+2026-08-06 05:53:45,893 - INFO - --- LLM PROMPT (Subject: Artificial Intelligence, Topic: Deep Learning Basics) ---
+2026-08-06 05:53:49,302 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:53:53,261 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:54:06,612 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:54:29,242 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:54:36,462 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:54:51,278 - INFO - Successfully cached streamed content for topic='Paging & Segmentation', subject='Operating Systems'
+2026-08-06 05:54:53,972 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Semaphores & Mutexes' to save resources.
+2026-08-06 05:54:54,005 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Semaphores & Mutexes) ---
+2026-08-06 05:55:18,189 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Peterson's Solution' to save resources.
+2026-08-06 05:55:18,233 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Peterson's Solution) ---
+2026-08-06 05:55:31,710 - INFO - Successfully cached streamed content for topic='Deep Learning Basics', subject='Artificial Intelligence'
+2026-08-06 05:55:37,492 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:56:01,072 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:56:05,041 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 05:56:42,554 - INFO - Successfully cached streamed content for topic='Semaphores & Mutexes', subject='Operating Systems'
+2026-08-06 05:57:11,276 - INFO - Successfully cached streamed content for topic='Peterson's Solution', subject='Operating Systems'
+2026-08-06 05:58:00,410 - INFO - Cached generated quiz questions for topic='System Boot', difficulty='easy'
+2026-08-06 05:58:10,508 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='System Boot'
+2026-08-06 05:58:10,508 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='System Boot'
+2026-08-06 05:58:15,564 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Paging & Segmentation'
+2026-08-06 05:58:15,565 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Paging & Segmentation'
+2026-08-06 06:04:12,527 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-06 06:04:17,310 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-06 06:04:22,370 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-06 06:04:22,370 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-06 06:04:22,375 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='System Boot' (total=5 questions)
+2026-08-06 06:04:26,150 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-06 06:04:26,150 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-06 06:04:26,155 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Paging & Segmentation' (total=5 questions)
+2026-08-06 06:07:16,975 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 06:07:17,006 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:07:31,614 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Monitors'
+2026-08-06 06:07:31,653 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Monitors'
+2026-08-06 06:07:31,654 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Monitors) ---
+2026-08-06 06:08:00,044 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:08:03,474 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:08:06,874 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:08:10,275 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:08:14,105 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:08:17,864 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-08-06 06:08:17,887 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='OS Components and Services'
+2026-08-06 06:08:17,894 - INFO - [PracticeEngine] Master cache HIT: Retrieved 1 cached questions, filtered down to 1 non-repeated questions, returning 1
+2026-08-06 06:08:17,900 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:08:18,005 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:08:18,031 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='OS Components and Services'
+2026-08-06 06:08:26,424 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:08:41,744 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:08:45,624 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:08:55,997 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 81.81818181818183% | Sessions: 6 | Status: LEARNING
+2026-08-06 06:08:56,784 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:08:58,676 - INFO - [PracticeEngine] Master cache HIT: Retrieved 1 cached questions, filtered down to 0 non-repeated questions, returning 1
+2026-08-06 06:09:04,433 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 82.6086956521739% | Sessions: 6 | Status: LEARNING
+2026-08-06 06:09:06,524 - INFO - Successfully cached streamed content for topic='Monitors', subject='Operating Systems'
+2026-08-06 06:09:06,541 - INFO - [PracticeEngine] Master cache HIT: Retrieved 1 cached questions, filtered down to 0 non-repeated questions, returning 1
+2026-08-06 06:09:49,125 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='OS Components and Services'
+2026-08-06 06:09:49,125 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='OS Components and Services'
+2026-08-06 06:10:36,589 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Monitors'
+2026-08-06 06:10:36,589 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Monitors'
+2026-08-06 06:15:13,268 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 06:15:13,268 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 06:15:13,303 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:15:13,329 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:15:23,233 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Knowledge Graphs' to save resources.
+2026-08-06 06:15:39,534 - INFO - [Practice] Starting/resuming session: mode=topic, topic=System Calls, difficulty=mixed
+2026-08-06 06:15:39,541 - INFO - [Practice] Resuming existing active session 2539 for topic='System Calls'
+2026-08-06 06:15:39,558 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:15:39,684 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:15:46,939 - INFO - PERFORMANCE UPDATED | Topic: System Calls | Accuracy: 100.0% | Sessions: 2 | Status: LEARNING
+2026-08-06 06:15:50,601 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-06 06:15:54,049 - INFO - PERFORMANCE UPDATED | Topic: System Calls | Accuracy: 100.0% | Sessions: 2 | Status: LEARNING
+2026-08-06 06:15:56,363 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:16:00,147 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-06 06:16:00,147 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-06 06:16:00,156 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='OS Components and Services' (total=5 questions)
+2026-08-06 06:16:03,556 - INFO - PERFORMANCE UPDATED | Topic: System Calls | Accuracy: 100.0% | Sessions: 2 | Status: LEARNING
+2026-08-06 06:16:07,478 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:16:11,252 - INFO - PERFORMANCE UPDATED | Topic: System Calls | Accuracy: 80.0% | Sessions: 2 | Status: LEARNING
+2026-08-06 06:16:14,398 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:16:18,328 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:16:21,156 - INFO - PERFORMANCE UPDATED | Topic: System Calls | Accuracy: 83.33333333333334% | Sessions: 2 | Status: LEARNING
+2026-08-06 06:16:24,489 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:16:24,554 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:16:30,961 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 06:16:30,990 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:16:34,894 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-08-06 06:16:34,898 - INFO - [Practice] Resuming existing active session 2549 for topic='OS Components and Services'
+2026-08-06 06:16:34,935 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:16:35,003 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:16:38,301 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-06 06:16:38,840 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 83.33333333333334% | Sessions: 6 | Status: LEARNING
+2026-08-06 06:16:44,405 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 84.0% | Sessions: 6 | Status: LEARNING
+2026-08-06 06:16:48,106 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 84.61538461538461% | Sessions: 6 | Status: LEARNING
+2026-08-06 06:16:48,687 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-06 06:16:48,687 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-06 06:16:48,692 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Monitors' (total=5 questions)
+2026-08-06 06:16:49,866 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='OS Components and Services'
+2026-08-06 06:16:49,868 - INFO - [PracticeEngine] Master cache HIT: Retrieved 1 cached questions, filtered down to 0 non-repeated questions, returning 1
+2026-08-06 06:16:50,122 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='OS Components and Services'
+2026-08-06 06:16:56,282 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 85.18518518518519% | Sessions: 6 | Status: STRONG
+2026-08-06 06:16:58,775 - INFO - [PracticeEngine] Master cache HIT: Retrieved 1 cached questions, filtered down to 0 non-repeated questions, returning 1
+2026-08-06 06:17:01,489 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 85.71428571428571% | Sessions: 6 | Status: STRONG
+2026-08-06 06:17:06,902 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:17:07,008 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:17:14,269 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:18:42,439 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='OS Components and Services'
+2026-08-06 06:18:42,439 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='OS Components and Services'
+2026-08-06 06:21:04,162 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 06:21:04,208 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:21:04,243 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-06 06:21:04,271 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:21:10,907 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:21:10,933 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-08-06 06:21:10,945 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='OS Components and Services'
+2026-08-06 06:21:10,950 - INFO - [PracticeEngine] Master cache HIT: Retrieved 5 cached questions, filtered down to 5 non-repeated questions, returning 5
+2026-08-06 06:21:11,062 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:21:11,955 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='OS Components and Services'
+2026-08-06 06:21:16,190 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 82.75862068965517% | Sessions: 7 | Status: LEARNING
+2026-08-06 06:21:21,498 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 83.33333333333334% | Sessions: 7 | Status: LEARNING
+2026-08-06 06:21:25,813 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 83.87096774193549% | Sessions: 7 | Status: LEARNING
+2026-08-06 06:21:31,849 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 84.375% | Sessions: 7 | Status: LEARNING
+2026-08-06 06:21:36,583 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 81.81818181818183% | Sessions: 7 | Status: LEARNING
+2026-08-06 06:21:40,148 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:21:40,208 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 06:21:48,000 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 06:27:14,825 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-06 06:27:25,220 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-06 06:27:25,221 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-06 06:27:25,221 - ERROR - [PracticeEngine] Failed to generate initial 5 questions, aborting incremental flow
+2026-08-06 07:18:20,278 - INFO - 
+================================================================================
+2026-08-06 07:18:20,279 - INFO - [2026-08-06T07:18:20.279023] CHAT REQUEST
+2026-08-06 07:18:20,279 - INFO -   Student ID : 3
+2026-08-06 07:18:20,279 - INFO -   Question   : make a roadmap for 1 week for angular.
+2026-08-06 07:18:20,279 - INFO -   Role       : student
+2026-08-06 07:18:20,279 - INFO - ================================================================================
+2026-08-06 07:18:20,282 - INFO -   [Timing] FastAPI Request started processing at 178521.189
+2026-08-06 07:18:20,285 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-08-06 07:18:20,286 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-06 07:18:28,238 - INFO - 
+================================================================================
+2026-08-06 07:18:28,238 - INFO - [2026-08-06T07:18:28.238964] CHAT REQUEST
+2026-08-06 07:18:28,239 - INFO -   Student ID : 3
+2026-08-06 07:18:28,239 - INFO -   Question   : 1 Week
+2026-08-06 07:18:28,239 - INFO -   Role       : student
+2026-08-06 07:18:28,239 - INFO - ================================================================================
+2026-08-06 07:18:28,241 - INFO -   [Timing] FastAPI Request started processing at 178529.149
+2026-08-06 07:18:28,246 - INFO -   Detected Mode: LEARNING
+2026-08-06 07:18:28,246 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-06 07:18:32,796 - INFO - 
+================================================================================
+2026-08-06 07:18:32,797 - INFO - [2026-08-06T07:18:32.797113] CHAT REQUEST
+2026-08-06 07:18:32,797 - INFO -   Student ID : 3
+2026-08-06 07:18:32,797 - INFO -   Question   : Advanced
+2026-08-06 07:18:32,797 - INFO -   Role       : student
+2026-08-06 07:18:32,797 - INFO - ================================================================================
+2026-08-06 07:18:32,799 - INFO -   [Timing] FastAPI Request started processing at 178533.707
+2026-08-06 07:18:32,802 - INFO -   Detected Mode: LEARNING
+2026-08-06 07:18:32,802 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-06 07:18:35,607 - INFO - 
+================================================================================
+2026-08-06 07:18:35,607 - INFO - [2026-08-06T07:18:35.607417] CHAT REQUEST
+2026-08-06 07:18:35,607 - INFO -   Student ID : 3
+2026-08-06 07:18:35,607 - INFO -   Question   : 2 hours
+2026-08-06 07:18:35,607 - INFO -   Role       : student
+2026-08-06 07:18:35,607 - INFO - ================================================================================
+2026-08-06 07:18:35,609 - INFO -   [Timing] FastAPI Request started processing at 178536.517
+2026-08-06 07:18:35,612 - INFO -   Detected Mode: LEARNING
+2026-08-06 07:18:35,613 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-06 07:18:39,973 - INFO - 
+================================================================================
+2026-08-06 07:18:39,973 - INFO - [2026-08-06T07:18:39.973221] CHAT REQUEST
+2026-08-06 07:18:39,973 - INFO -   Student ID : 3
+2026-08-06 07:18:39,973 - INFO -   Question   : Mixed
+2026-08-06 07:18:39,973 - INFO -   Role       : student
+2026-08-06 07:18:39,973 - INFO - ================================================================================
+2026-08-06 07:18:39,975 - INFO -   [Timing] FastAPI Request started processing at 178540.883
+2026-08-06 07:18:39,978 - INFO -   Detected Mode: LEARNING
+2026-08-06 07:18:39,978 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-06 07:18:50,173 - INFO - 
+================================================================================
+2026-08-06 07:18:50,173 - INFO - [2026-08-06T07:18:50.173329] CHAT REQUEST
+2026-08-06 07:18:50,173 - INFO -   Student ID : 3
+2026-08-06 07:18:50,173 - INFO -   Question   : Yes
+2026-08-06 07:18:50,173 - INFO -   Role       : student
+2026-08-06 07:18:50,173 - INFO - ================================================================================
+2026-08-06 07:18:50,175 - INFO -   [Timing] FastAPI Request started processing at 178551.083
+2026-08-06 07:18:50,178 - INFO -   Detected Mode: LEARNING
+2026-08-06 07:18:50,179 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-06 07:18:53,713 - INFO - 
+================================================================================
+2026-08-06 07:18:53,713 - INFO - [2026-08-06T07:18:53.713344] CHAT REQUEST
+2026-08-06 07:18:53,713 - INFO -   Student ID : 3
+2026-08-06 07:18:53,713 - INFO -   Question   : Generate Roadmap
+2026-08-06 07:18:53,713 - INFO -   Role       : student
+2026-08-06 07:18:53,713 - INFO - ================================================================================
+2026-08-06 07:18:53,715 - INFO -   [Timing] FastAPI Request started processing at 178554.623
+2026-08-06 07:18:53,718 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-08-06 07:18:53,718 - INFO -   [Timing] Docs + Mode Detection: 0.002s
+2026-08-06 07:19:18,222 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:19:18,295 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Day 2: Advanced Change Detection Strategies'
+2026-08-06 07:19:18,334 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Day 2: Advanced Change Detection Strategies'
+2026-08-06 07:19:18,338 - INFO - --- LLM PROMPT (Subject: None, Topic: Day 2: Advanced Change Detection Strategies) ---
+2026-08-06 07:19:35,417 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Day 1: Angular Architecture & Ivy Compiler' to save resources.
+2026-08-06 07:19:35,448 - INFO - --- LLM PROMPT (Subject: Week 1 (Unlocked), Topic: Day 1: Angular Architecture & Ivy Compiler) ---
+2026-08-06 07:19:51,482 - INFO - Successfully cached streamed content for topic='Day 2: Advanced Change Detection Strategies', subject='None'
+2026-08-06 07:20:01,854 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 07:20:10,909 - INFO - Successfully cached streamed content for topic='Day 1: Angular Architecture & Ivy Compiler', subject='Week 1 (Unlocked)'
+2026-08-06 07:20:16,633 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Day 2: Advanced Change Detection Strategies'
+2026-08-06 07:20:16,633 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Day 2: Advanced Change Detection Strategies'
+2026-08-06 07:20:18,834 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 07:21:24,428 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Week 1 (Unlocked)'
+2026-08-06 07:21:24,466 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:21:28,944 - INFO - CACHE HIT (Fast Return): topic='Day 1: Angular Architecture & Ivy Compiler', subject='Week 1 (Unlocked)'
+2026-08-06 07:21:28,969 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:21:54,168 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 07:21:54,195 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:21:59,069 - INFO - CACHE HIT (Fast Return): topic='Day 1: Angular Architecture & Ivy Compiler', subject='None'
+2026-08-06 07:21:59,097 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:22:07,714 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 07:22:11,466 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 07:22:37,384 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 07:22:41,164 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 07:23:41,779 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 07:23:41,799 - INFO - CACHE HIT (Fast Return): topic='Day 1: Angular Architecture & Ivy Compiler', subject='None'
+2026-08-06 07:23:41,832 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:23:41,863 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:23:46,916 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 07:23:46,944 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:24:05,468 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-06 07:24:05,469 - INFO - DEBUG2 performances keys: ['OS Components and Services', 'System Calls']
+2026-08-06 07:24:05,469 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7e546df52e10>, <practice_models.TopicPerformance object at 0x7e546df52710>]
+2026-08-06 07:24:05,562 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-06 07:24:05,562 - INFO - DEBUG2 performances keys: ['OS Components and Services', 'System Calls']
+2026-08-06 07:24:05,562 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7e546df51950>, <practice_models.TopicPerformance object at 0x7e546df50910>]
+2026-08-06 07:24:13,520 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-06 07:24:13,551 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:24:16,737 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-08-06 07:24:16,747 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='OS Components and Services'
+2026-08-06 07:24:16,752 - INFO - [PracticeEngine] Master cache HIT: Retrieved 5 cached questions, filtered down to 0 non-repeated questions, returning 5
+2026-08-06 07:24:17,057 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:24:17,158 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:24:17,837 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='OS Components and Services'
+2026-08-06 07:24:21,773 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 82.35294117647058% | Sessions: 8 | Status: LEARNING
+2026-08-06 07:24:24,867 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 07:24:28,667 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 07:24:31,232 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 82.85714285714286% | Sessions: 8 | Status: LEARNING
+2026-08-06 07:24:43,640 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 83.33333333333334% | Sessions: 8 | Status: LEARNING
+2026-08-06 07:24:48,771 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 83.78378378378379% | Sessions: 8 | Status: LEARNING
+2026-08-06 07:24:56,179 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 84.21052631578947% | Sessions: 8 | Status: LEARNING
+2026-08-06 07:24:57,257 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 07:25:01,877 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:25:01,912 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:25:04,438 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 07:25:04,466 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:25:04,482 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 07:25:04,509 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 07:25:49,238 - ERROR - Error in get_cheatsheet: Expecting value: line 1 column 1 (char 0)
+2026-08-06 07:29:06,872 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='OS Components and Services'
+2026-08-06 07:29:06,872 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='OS Components and Services'
+2026-08-06 07:35:08,592 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-06 07:35:18,799 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-06 07:35:18,799 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-06 07:35:18,803 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='OS Components and Services' (total=5 questions)
+2026-08-06 13:03:50,324 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 13:03:50,324 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-06 13:03:50,373 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-06 13:03:50,405 - INFO - [PracticeEngine] Synchronized document custom topics for student 3

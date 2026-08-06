@@ -10,6 +10,7 @@ from services.analytics_engine import calculate_student_metrics
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+
 def relative_time(dt):
     if not dt:
         return "Never active"
@@ -175,3 +176,83 @@ def get_admin_system_status():
         "analytics": "healthy",
         "last_sync": "2 minutes ago"
     }
+
+
+@router.get("/classrooms-analytics")
+def get_classrooms_analytics(db: Session = Depends(get_db)):
+    """Return per-classroom performance stats for the admin analytics page."""
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    classrooms = db.query(Classroom).all()
+    result = []
+
+    for cls in classrooms:
+        # Get students enrolled in this classroom
+        enrollments = db.query(StudentClass).filter(StudentClass.class_id == cls.id).all()
+        student_ids = [e.student_id for e in enrollments]
+
+        if not student_ids:
+            result.append({
+                "id": cls.id,
+                "name": cls.name,
+                "code": cls.code,
+                "professor": cls.professor.name if cls.professor else "—",
+                "student_count": 0,
+                "avg_confidence": 0,
+                "avg_readiness": 0,
+                "active_students": 0,
+                "inactive_students": 0,
+                "status": "EMPTY",
+            })
+            continue
+
+        confidences = []
+        readinesses = []
+        active_count = 0
+        inactive_count = 0
+
+        for sid in student_ids:
+            metrics = calculate_student_metrics(sid, db)
+            conf = metrics.get("overall_confidence", 0.0)
+            readiness = metrics.get("overall_progress", 0.0)
+            confidences.append(conf)
+            readinesses.append(readiness)
+
+            has_activity = (
+                db.query(QuizHistory).filter(
+                    QuizHistory.student_id == sid,
+                    QuizHistory.created_at >= seven_days_ago
+                ).first() is not None
+                or db.query(PracticeSession).filter(
+                    PracticeSession.student_id == sid,
+                    PracticeSession.created_at >= seven_days_ago
+                ).first() is not None
+            )
+            if has_activity:
+                active_count += 1
+            else:
+                inactive_count += 1
+
+        avg_conf = round(sum(confidences) / len(confidences), 1) if confidences else 0.0
+        avg_ready = round(sum(readinesses) / len(readinesses), 1) if readinesses else 0.0
+
+        if avg_conf >= 75:
+            status = "STRONG"
+        elif avg_conf >= 50:
+            status = "STABLE"
+        else:
+            status = "NEEDS ATTENTION"
+
+        result.append({
+            "id": cls.id,
+            "name": cls.name,
+            "code": cls.code,
+            "professor": cls.professor.name if cls.professor else "—",
+            "student_count": len(student_ids),
+            "avg_confidence": avg_conf,
+            "avg_readiness": avg_ready,
+            "active_students": active_count,
+            "inactive_students": inactive_count,
+            "status": status,
+        })
+
+    return result

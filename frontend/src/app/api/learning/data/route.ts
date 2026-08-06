@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const source = searchParams.get("source");
     const roadmapId = searchParams.get("roadmap_id");
     const classId = searchParams.get("class_id");
+    const skipSidebar = searchParams.get("skip_sidebar");
     let url = `${BACKEND_URL}/learning/data`;
     const backendParams = new URLSearchParams();
     if (topic) backendParams.append("topic", topic);
@@ -21,6 +22,7 @@ export async function GET(request: Request) {
     if (source) backendParams.append("source", source);
     if (roadmapId) backendParams.append("roadmap_id", roadmapId);
     if (classId) backendParams.append("class_id", classId);
+    if (skipSidebar) backendParams.append("skip_sidebar", skipSidebar);
     
     const q = backendParams.toString();
     if (q) url += `?${q}`;

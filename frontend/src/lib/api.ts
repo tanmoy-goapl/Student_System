@@ -587,7 +587,8 @@ export async function getLearningData(
   roadmapId?: number, 
   source?: string, 
   classId?: number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  skipSidebar?: boolean
 ): Promise<LearningDataResponse> {
   let url = "/api/learning/data";
   const params = new URLSearchParams();
@@ -597,6 +598,7 @@ export async function getLearningData(
   if (roadmapId) params.append("roadmap_id", roadmapId.toString());
   if (source) params.append("source", source);
   if (classId) params.append("class_id", classId.toString());
+  if (skipSidebar) params.append("skip_sidebar", "true");
   
   const q = params.toString();
   if (q) url += `?${q}`;
@@ -676,9 +678,12 @@ export async function streamLearningContent(
   try {
     while (true) {
       if (signal?.aborted) {
-        break;
+        throw new DOMException("The user aborted a request.", "AbortError");
       }
       const { done, value } = await reader.read();
+      if (signal?.aborted) {
+        throw new DOMException("The user aborted a request.", "AbortError");
+      }
       if (done) break;
       const chunk = decoder.decode(value, { stream: true });
       fullText += chunk;

@@ -329,13 +329,43 @@ def generate_questions(
                 # "mixed" or "adaptive" or initial cache state: combine all pools
                 pool = bank.get("easy", []) + bank.get("medium", []) + bank.get("hard", [])
                 
+            # Fetch previously answered questions in practice sessions to avoid repeating them
+            recent_questions = (
+                db.query(PracticeQuestion.question_text)
+                .join(PracticeSession)
+                .filter(PracticeSession.student_id == student_id)
+                .filter(PracticeQuestion.topic == topic)
+                .all()
+            )
+            # Normalize answered questions thoroughly: lowercase, strip, and remove basic non-alphanumeric chars
+            answered_questions = {
+                re.sub(r'[^a-z0-9]', '', q.question_text.strip().lower())
+                for q in recent_questions
+            }
+
             if pool:
                 import random
                 shuffled_pool = list(pool)
                 random.shuffle(shuffled_pool)
                 
-                logger.info(f"[PracticeEngine] Master cache HIT: Retrieved {len(pool)} cached questions for topic='{topic}', difficulty='{difficulty}', returning {min(count, len(shuffled_pool))}")
-                return shuffled_pool[:count]
+                # Filter out questions already answered by the student using the normalized text
+                filtered_pool = []
+                for q in shuffled_pool:
+                    norm_q = re.sub(r'[^a-z0-9]', '', q["question"].strip().lower())
+                    # Check if the normalized question matches any of the answered questions
+                    is_repeated = False
+                    for aq in answered_questions:
+                        if aq in norm_q or norm_q in aq:
+                            is_repeated = True
+                            break
+                    if not is_repeated:
+                        filtered_pool.append(q)
+                
+                # Fallback to shuffled_pool ONLY if all questions in the pool have been answered
+                final_pool = filtered_pool if filtered_pool else shuffled_pool
+                
+                logger.info(f"[PracticeEngine] Master cache HIT: Retrieved {len(pool)} cached questions, filtered down to {len(filtered_pool)} non-repeated questions, returning {min(count, len(final_pool))}")
+                return final_pool[:count]
         except Exception as e:
             logger.error(f"[PracticeEngine] Failed to parse master question bank cache: {e}")
 

@@ -6,6 +6,7 @@ interface ActionButtonsProps {
   onSkip: () => void;
   onNext?: () => void;
   canProceed: boolean;
+  isLastQuestion?: boolean;
 }
 
 export default function ActionButtons({
@@ -16,6 +17,7 @@ export default function ActionButtons({
   onSkip,
   onNext,
   canProceed,
+  isLastQuestion = false,
 }: ActionButtonsProps) {
   return (
     <div className="flex items-center justify-between gap-4">
@@ -33,7 +35,7 @@ export default function ActionButtons({
             }
           `}
         >
-          Next Question
+          {isLastQuestion ? "Finish Practice" : "Next Question"}
         </button>
       ) : (
         <button

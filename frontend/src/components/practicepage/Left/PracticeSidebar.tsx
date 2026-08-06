@@ -112,7 +112,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
   // Filter subjects based on source
   const filteredSubjects = data?.subjects?.filter((subj) => {
     if (source === "personal") return subj.section === "documents" || subj.section === "roadmap";
-    return subj.section === "curriculum" || subj.section === "documents";
+    return subj.section === "curriculum";
   }) || [];
 
   const hasSubjects = filteredSubjects.length > 0;

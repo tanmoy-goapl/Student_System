@@ -186,9 +186,6 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
               Regenerate
             </button>
           )}
-          <span className="text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full font-medium">
-            Premium Notes
-          </span>
         </div>
       </div>
 

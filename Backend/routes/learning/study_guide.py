@@ -235,9 +235,8 @@ def stream_content(
             LearningContent.topic == topic
         ).first()
         
-        if not cached and subject:
+        if not cached:
             cached = db.query(LearningContent).filter(
-                LearningContent.student_id == student_id,
                 LearningContent.topic == topic
             ).first()
     

@@ -152,6 +152,9 @@ export default function LearningPage() {
     const abortControllerRef = useRef<AbortController | null>(null);
     const targetTextRef = useRef("");
     const typewriterIntervalRef = useRef<any>(null);
+    const hasSidebarRef = useRef(false);
+    const cachedSidebarRef = useRef<any>(null);
+    const prevSourceRef = useRef<string>(activeSource);
 
     const fetchData = async (forceRegenerate: boolean = false) => {
         // Cancel any previous pending requests and typewriter timers immediately
@@ -166,14 +169,22 @@ export default function LearningPage() {
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
 
-        // Set isContentLoading to true immediately to trigger local loading states
+        // Determine if we can skip sidebar rebuild (same source, sidebar already loaded)
+        const sourceChanged = prevSourceRef.current !== activeSource;
+        const canSkipSidebar = hasSidebarRef.current && !sourceChanged && !!activeTopic && !forceRegenerate;
+        prevSourceRef.current = activeSource;
+
+        // Only null out data and show skeleton on initial load or source change
+        if (!canSkipSidebar) {
+            setData(null);
+        }
         setIsContentLoading(true);
 
         const studentId = getStudentId();
         const roadmapId = searchParams?.get("roadmap_id") ? parseInt(searchParams.get("roadmap_id") as string) : undefined;
         try {
             setHasError(false);
-            const response = await getLearningData(activeTopic, studentId, activeSubject, roadmapId, activeSource, undefined, abortController.signal);
+            const response = await getLearningData(activeTopic, studentId, activeSubject, roadmapId, activeSource, undefined, abortController.signal, canSkipSidebar);
             
             if (abortController.signal.aborted) return;
             if (!response) {
@@ -197,6 +208,15 @@ export default function LearningPage() {
                 );
                 setActiveTopic(response.selectedTopic);
                 if (subjectId) setActiveSubject(subjectId);
+            }
+
+            // If we skipped sidebar, merge cached sidebar data back into the response
+            if (canSkipSidebar && cachedSidebarRef.current) {
+                response.sidebarData = cachedSidebarRef.current;
+            } else if (response.sidebarData) {
+                // Cache sidebar data for future topic switches
+                cachedSidebarRef.current = response.sidebarData;
+                hasSidebarRef.current = true;
             }
 
             // If topic is already cached, load it instantly and skip streaming
@@ -270,6 +290,7 @@ export default function LearningPage() {
 
             try {
                 await streamLearningContent(selectedTopic, studentId, activeSubject, (text) => {
+                    if (abortController.signal.aborted) return;
                     let displayMarkdown = text;
                     let revisionData = undefined;
                     if (text.includes("---REVISION---")) {
@@ -328,12 +349,19 @@ export default function LearningPage() {
         };
     }, [activeTopic, activeSubject, activeSource, refreshKey]);
 
-    // Fetch Cheat Sheet dynamically
+    // Fetch Cheat Sheet dynamically (deferred to avoid blocking topic switch)
+    const cheatsheetTimerRef = useRef<any>(null);
     useEffect(() => {
         const selectedTopic = data?.selectedTopic || activeTopic;
         if (!selectedTopic || typeof selectedTopic !== "string") return;
         
-        async function fetchCheatSheet() {
+        // Cancel any pending cheatsheet fetch
+        if (cheatsheetTimerRef.current) {
+            clearTimeout(cheatsheetTimerRef.current);
+        }
+
+        // Defer cheatsheet fetch by 1.5s so it doesn't compete with the main content load
+        cheatsheetTimerRef.current = setTimeout(async () => {
             try {
                 const studentId = getStudentId();
                 const res = await getCheatSheet(studentId, selectedTopic as string);
@@ -346,8 +374,13 @@ export default function LearningPage() {
             } catch (err) {
                 console.error("Failed to fetch cheatsheet:", err);
             }
-        }
-        fetchCheatSheet();
+        }, 1500);
+
+        return () => {
+            if (cheatsheetTimerRef.current) {
+                clearTimeout(cheatsheetTimerRef.current);
+            }
+        };
     }, [activeTopic, data?.selectedTopic]);
 
     const handleSuggestionClick = (id: string) => {
@@ -362,14 +395,6 @@ export default function LearningPage() {
 
     const handleMarkAsRead = async () => {
         if (!data?.selectedTopic) return;
-        
-        const sessionsVal = data.headerResponse?.data?.stats?.find((s: any) => s.label === "Sessions")?.value || "0";
-        const sessions = parseInt(sessionsVal, 10);
-        
-        if (sessions < 2) {
-            alert("Please complete the practice sessions first to mark this topic as read!");
-            return;
-        }
         
         setIsMarkingRead(true);
         try {
@@ -606,7 +631,7 @@ export default function LearningPage() {
     return (
         <div className="flex w-full h-[calc(100vh-4rem)] relative">
             <OfflineState />
-            <div className="w-[20vw] shrink-0 h-full overflow-y-auto purple-scrollbar border-r border-white/10">
+            <div className="w-[20vw] shrink-0 h-full border-r border-white/10">
                 <LearningSidebar data={data} onSelectTopic={handleSelectTopic} />
             </div>
 
