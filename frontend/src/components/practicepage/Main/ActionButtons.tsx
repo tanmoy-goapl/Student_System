@@ -54,16 +54,6 @@ export default function ActionButtons({
         </button>
       )}
 
-      {/* Hint Button */}
-      {!answered && (
-        <button
-          onClick={onHint}
-          className="px-6 py-3 rounded-xl border-2 border-amber-500/50 text-amber-400 font-semibold hover:bg-amber-500/10 hover:border-amber-500 transition-all duration-200"
-        >
-          💡 Hint
-        </button>
-      )}
-
       {/* Skip Button */}
       <button
         onClick={onSkip}

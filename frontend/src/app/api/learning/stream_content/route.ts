@@ -15,6 +15,8 @@ export async function GET(request: Request) {
     if (topic) backendParams.append("topic", topic);
     if (studentId) backendParams.append("student_id", studentId);
     if (subject) backendParams.append("subject", subject);
+    const bypassCache = searchParams.get("bypass_cache");
+    if (bypassCache) backendParams.append("bypass_cache", bypassCache);
     
     const q = backendParams.toString();
     if (q) url += `?${q}`;

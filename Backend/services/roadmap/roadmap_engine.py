@@ -9,7 +9,7 @@ from llm_state import get_provider
 
 logger = logging.getLogger(__name__)
 
-def _roadmap_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 8000) -> str:
+def _roadmap_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 4096) -> str:
     """Make an LLM call using the active provider with a fallback chain."""
     provider = get_provider()
     configs = []
@@ -28,23 +28,26 @@ def _roadmap_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 80
         else:
             logger.warning("[RoadmapEngine] Llama config missing API_KEY or BASE_URL")
 
+    def add_backup():
+        # Hardcoded active fallback to avoid timeouts when local gpt-oss is frozen
+        configs.append(("Backup-GPT", "4c8c56fede640bf281a7e36128fef8c18ad0b5f97a5a6bbb2e41e29d4f5a895d", "http://10.10.90.94:2026/v1", "gpt-4o-mini"))
+
     # Try preferred provider first, then fall back to the other if available.
     if provider == "gpt4o":
-        add_gpt()
-        add_llama()
+        add_gpt(); add_llama(); add_backup()
     elif provider == "llama":
-        add_llama()
-        add_gpt()
+        add_llama(); add_gpt(); add_backup()
     else:
-        add_gpt()
-        add_llama()
+        add_gpt(); add_llama(); add_backup()
 
     logger.info(f"[RoadmapEngine] Resolved configuration chain: {[c[0] for c in configs]}")
 
     for name, api_key, base_url, model in configs:
         try:
             logger.info(f"[RoadmapEngine] Trying provider '{name}' at {base_url} using model {model}...")
-            client = OpenAI(api_key=api_key, base_url=base_url)
+            # Use httpx.Timeout for proper connect + read timeout separation.
+            timeout = httpx.Timeout(15.0, connect=3.0)
+            client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
 
             response = client.chat.completions.create(
                 model=model,
@@ -53,8 +56,7 @@ def _roadmap_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 80
                     {"role": "user", "content": user_prompt}
                 ],
                 max_tokens=max_tokens,
-                temperature=0.7,
-                timeout=120.0
+                temperature=0.3,
             )
             logger.info(f"[RoadmapEngine] Success with provider '{name}'!")
             return response.choices[0].message.content or ""
@@ -123,45 +125,28 @@ def generate_roadmap_from_llm(goal: str, duration: str, document_context: str = 
     # Convert days to weeks for the week-by-week curriculum generator
     duration_lower = duration.lower()
     if "day" in duration_lower:
-        # Extract number of days
         days_match = re.search(r'\d+', duration_lower)
         if days_match:
             days = int(days_match.group(0))
-            # 5 days of study = 1 week milestone
             weeks = max(1, (days + 4) // 5)
             duration = f"{weeks} weeks"
 
-    system_prompt = f"""You are an expert curriculum designer. The user wants to learn "{goal}" over "{duration}".
+    # Cap weeks to avoid huge outputs that time out
+    weeks_match = re.search(r'(\d+)\s*week', duration.lower())
+    num_weeks = int(weeks_match.group(1)) if weeks_match else 4
+    if num_weeks > 12:
+        num_weeks = 12
+        duration = "12 weeks"
+
+    system_prompt = f"""You are an expert curriculum designer. Create a week-by-week roadmap for learning "{goal}" over "{duration}".
+Generate exactly {num_weeks} weeks with exactly 5 days per week.
+For placement/job/internship goals, include DSA, System Design, and project-building topics.
+
+Output ONLY valid JSON (no markdown, no comments, no extra whitespace). Do NOT include descriptions or subtopics.
+Format exactly like this:
+{{"title":"Roadmap Title","weeks":[{{"week_number":1,"focus_area":"Area","days":[{{"day_number":1,"topic":"Topic Name"}}]}}]}}"""
     
-    If the goal involves placements, internships, or job preparation, the roadmap MUST be highly rigorous. Do NOT generate generic "overview" or "basics" topics. Instead, include advanced Data Structures & Algorithms, System Design principles, and complex project building.
-    
-    Based on this, create a concise, logical, week-by-week learning roadmap.
-    You MUST generate exactly the number of weeks specified in the requested duration (e.g., if duration is "8 weeks", you must generate exactly 8 weeks; if duration is "10 weeks", you must generate exactly 10 weeks). If no specific duration or date is provided by the user, default to generating exactly 6 weeks.
-    For each week, provide exactly 5 achievable, technically deep learning units (Days).
-    
-    Output strictly in the following JSON format without Markdown formatting or code blocks.
-    CRITICAL JSON RULES:
-    1. DO NOT add any comments (// or /*).
-    2. ALL keys MUST be enclosed in double quotes (").
-    3. Use ONLY double quotes ("), never single quotes (').
-    
-    {{
-        "title": "A catchy title for this roadmap",
-        "weeks": [
-            {{
-                "week_number": 1,
-                "focus_area": "Introduction and Basics",
-                "days": [
-                    {{"day_number": 1, "topic": "Day 1: HTML Basics", "description": "Read about HTML structure", "subtopics": ["HTML Structure", "Common Tags"]}},
-                    {{"day_number": 2, "topic": "Day 2: Forms and Tables", "description": "Learn about forms", "subtopics": ["Forms", "Input Types"]}}
-                ]
-            }}
-        ]
-    }}
-    """
-    
-    # Send a prompt to ask to be concise so we don't hit 8000 tokens easily
-    user_prompt = f"Goal: {goal}\nDuration: {duration}\nKeep descriptions very brief to ensure you generate the complete JSON."
+    user_prompt = f"Goal: {goal}\nDuration: {duration}"
     
     content = _roadmap_llm_call(system_prompt, user_prompt)
     

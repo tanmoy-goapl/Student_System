@@ -606,9 +606,9 @@ function ChatBubble({ msg, isGenerating, onAsk }: { msg: Message, isGenerating?:
     <div className={`flex items-end gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       {isUser ? <UserAvatar /> : <Avatar initials="AI" />}
       <div
-        className={`max-w-[78%] px-4 py-2.5 text-sm border backdrop-blur-md whitespace-pre-wrap break-words
+        className={`max-w-[78%] px-4 py-2.5 text-sm border backdrop-blur-md break-words
           ${isUser
-            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white border-blue-400/20 rounded-2xl rounded-br-none shadow-lg shadow-blue-500/10"
+            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white border-blue-400/20 rounded-2xl rounded-br-none shadow-lg shadow-blue-500/10 whitespace-pre-wrap"
             : "bg-white/5 text-blue-100 border-white/10 rounded-2xl rounded-bl-none"
           }`}
       >

@@ -21,7 +21,14 @@ const PAGE_SIZE = 10;
 
 function formatRelativeTime(iso?: string | null): string {
   if (!iso) return "";
-  const date = new Date(iso);
+  
+  // Ensure the timestamp is treated as UTC if the backend didn't append the timezone
+  let safeIso = iso.replace(" ", "T");
+  if (!safeIso.endsWith("Z") && !safeIso.includes("+")) {
+    safeIso += "Z";
+  }
+  
+  const date = new Date(safeIso);
   if (Number.isNaN(date.getTime())) return "";
   const diffMs = Date.now() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);

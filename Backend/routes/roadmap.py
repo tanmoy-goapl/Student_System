@@ -90,7 +90,10 @@ def background_generate_roadmap(student_id: int, goal_id: int):
         db.commit()
     except Exception as e:
         import logging
+        import traceback
         logging.error(f"Background roadmap generation failed: {e}")
+        with open("/tmp/roadmap_error.log", "a") as f:
+            f.write(f"Roadmap Gen Error at {datetime.utcnow()}: {e}\n{traceback.format_exc()}\n")
         goal.status = "failed"
         db.commit()
     finally:

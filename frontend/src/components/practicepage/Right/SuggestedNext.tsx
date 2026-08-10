@@ -50,9 +50,11 @@ export default function SuggestedNext({ actions = [] }: SuggestedNextProps) {
     router.push(url);
   };
 
+  if (!actions || actions.length === 0) return null;
+
   return (
     <div className="px-4 py-3">
-      <h3 className="text-[10px] font-semibold text-white/50 uppercase tracking-widest mb-2.5">
+      <h3 className="text-[10px] font-semibold text-white/55 uppercase tracking-widest mb-2.5">
         Suggested Next
       </h3>
 

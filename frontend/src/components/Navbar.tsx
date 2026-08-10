@@ -76,7 +76,7 @@ export default function Navbar() {
   };
 
   return (
-    <aside className="w-64 h-screen border-r border-white/5 bg-[#090D1F] flex flex-col justify-between select-none shrink-0 text-white font-sans fixed left-0 top-0 z-50">
+    <aside className="w-56 h-screen border-r border-white/5 bg-[#090D1F] flex flex-col justify-between select-none shrink-0 text-white font-sans fixed left-0 top-0 z-50">
       {/* Fixed Logo Header */}
       <div className="p-5 shrink-0">
         <div className="flex items-center gap-3">

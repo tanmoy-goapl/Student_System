@@ -91,6 +91,7 @@ RULES:
         response_5 = _practice_llm_call(system_prompt_5, user_prompt_5, max_tokens=2000)
         
         initial_questions = []
+        seen_questions = set()
         if response_5:
             json_match_5 = re.search(r'\[[\s\S]*\]', response_5)
             if json_match_5:
@@ -98,15 +99,18 @@ RULES:
                     questions_5 = json.loads(json_match_5.group())
                     for q in questions_5:
                         if all(k in q for k in ("question", "options", "correct_answer", "difficulty")):
-                            initial_questions.append({
-                                "topic": q.get("topic", topic),
-                                "subtopic": q.get("subtopic", "General"),
-                                "difficulty": q["difficulty"].lower(),
-                                "question": q["question"],
-                                "options": q["options"][:4],
-                                "correct_answer": q["correct_answer"],
-                                "explanation": q.get("explanation", ""),
-                            })
+                            norm_q = re.sub(r'[^a-z0-9]', '', q["question"].strip().lower())
+                            if norm_q not in seen_questions:
+                                seen_questions.add(norm_q)
+                                initial_questions.append({
+                                    "topic": q.get("topic", topic),
+                                    "subtopic": q.get("subtopic", "General"),
+                                    "difficulty": q["difficulty"].lower(),
+                                    "question": q["question"],
+                                    "options": q["options"][:4],
+                                    "correct_answer": q["correct_answer"],
+                                    "explanation": q.get("explanation", ""),
+                                })
                 except Exception as e:
                     logger.error(f"[PracticeEngine] Failed to parse initial 5 questions JSON: {e}")
 
@@ -193,8 +197,9 @@ Return ONLY valid JSON array containing objects with a "difficulty" field:
                     questions_25 = json.loads(json_match_25.group())
                     for q in questions_25:
                         if all(k in q for k in ("question", "options", "correct_answer", "difficulty")):
-                            # Skip if duplicate of initial 5
-                            if q["question"][:80] not in avoid_list:
+                            norm_q = re.sub(r'[^a-z0-9]', '', q["question"].strip().lower())
+                            if norm_q not in seen_questions:
+                                seen_questions.add(norm_q)
                                 remaining_questions.append({
                                     "topic": q.get("topic", topic),
                                     "subtopic": q.get("subtopic", "General"),
@@ -350,8 +355,13 @@ def generate_questions(
                 
                 # Filter out questions already answered by the student using the normalized text
                 filtered_pool = []
+                seen_questions = set()
+                
                 for q in shuffled_pool:
                     norm_q = re.sub(r'[^a-z0-9]', '', q["question"].strip().lower())
+                    if norm_q in seen_questions:
+                        continue
+                        
                     # Check if the normalized question matches any of the answered questions
                     is_repeated = False
                     for aq in answered_questions:
@@ -359,13 +369,14 @@ def generate_questions(
                             is_repeated = True
                             break
                     if not is_repeated:
+                        seen_questions.add(norm_q)
                         filtered_pool.append(q)
                 
-                # Fallback to shuffled_pool ONLY if all questions in the pool have been answered
-                final_pool = filtered_pool if filtered_pool else shuffled_pool
+                if len(filtered_pool) >= count:
+                    logger.info(f"[PracticeEngine] Master cache HIT: Retrieved {len(pool)} cached questions, filtered down to {len(filtered_pool)} non-repeated questions, returning {count}")
+                    return filtered_pool[:count]
                 
-                logger.info(f"[PracticeEngine] Master cache HIT: Retrieved {len(pool)} cached questions, filtered down to {len(filtered_pool)} non-repeated questions, returning {min(count, len(final_pool))}")
-                return final_pool[:count]
+                logger.info(f"[PracticeEngine] Cache exhausted (only {len(filtered_pool)} unrepeated questions left). Falling through to dynamic generation.")
         except Exception as e:
             logger.error(f"[PracticeEngine] Failed to parse master question bank cache: {e}")
 
@@ -456,17 +467,21 @@ Return ONLY valid JSON array, no markdown fencing:
         if json_match:
             questions = json.loads(json_match.group())
             validated = []
+            seen_questions = set()
             for q in questions:
                 if all(k in q for k in ("question", "options", "correct_answer")):
-                    validated.append({
-                        "topic": q.get("topic", topic),
-                        "subtopic": q.get("subtopic", subtopic or "General"),
-                        "difficulty": q.get("difficulty", difficulty),
-                        "question": q["question"],
-                        "options": q["options"][:4],  # ensure max 4 options
-                        "correct_answer": q["correct_answer"],
-                        "explanation": q.get("explanation", ""),
-                    })
+                    norm_q = re.sub(r'[^a-z0-9]', '', q["question"].strip().lower())
+                    if norm_q not in seen_questions:
+                        seen_questions.add(norm_q)
+                        validated.append({
+                            "topic": q.get("topic", topic),
+                            "subtopic": q.get("subtopic", subtopic or "General"),
+                            "difficulty": q.get("difficulty", difficulty),
+                            "question": q["question"],
+                            "options": q["options"][:4],  # ensure max 4 options
+                            "correct_answer": q["correct_answer"],
+                            "explanation": q.get("explanation", ""),
+                        })
             if validated:
                 try:
                     from database import SessionLocal

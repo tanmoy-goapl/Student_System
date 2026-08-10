@@ -28,57 +28,74 @@ export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarP
 
   const { role } = useAuth();
 
+  const showToggle = ["/", "/courses", "/personal", "/learning", "/practice"].some(
+    p => pathname === p || pathname?.startsWith(p + "/")
+  );
+
+  const getPageTitle = () => {
+    if (pathname?.startsWith("/chat")) return "AI Chatbot";
+    if (pathname?.startsWith("/classroom") || pathname?.startsWith("/classes")) return "My Classes";
+    if (pathname?.startsWith("/documents")) return "My Documents";
+    if (pathname?.startsWith("/performance")) return "Performance Analytics";
+    if (pathname?.startsWith("/settings")) return "Settings";
+    return "";
+  };
+
   return (
     <div className="w-full h-full flex items-center justify-between px-6">
       {/* LEFT: Mode toggle (sliding pill selector) or Static Title */}
       <div className="flex-shrink-0">
         {role === "student" ? (
-          <div className="relative flex items-center bg-slate-900/60 border border-white/5 p-1 rounded-full w-52 h-9 shadow-inner select-none">
-            {/* Sliding indicator */}
-            <div
-              className={`absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/10 transition-all duration-300 ease-out ${
-                selectedMode === "courses" ? "left-1 w-[96px]" : "left-[104px] w-[96px]"
-              }`}
-            />
-            {/* Buttons */}
-            <button
-              onClick={() => {
-                // If on /personal dashboard or /courses dashboard, toggle home route
-                if (pathname === "/personal" || pathname === "/courses" || pathname === "/") {
-                  router.push("/courses");
-                } else {
-                  // Keep current sub-page (e.g. /learning, /practice) but change source to courses
-                  const params = new URLSearchParams(searchParams?.toString() || "");
-                  params.set("source", "courses");
-                  // Clear roadmap_id if switching to courses context to prevent conflict
-                  params.delete("roadmap_id");
-                  router.push(`${pathname}?${params.toString()}`);
-                }
-              }}
-              className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
-                selectedMode === "courses" ? "text-white" : "text-white/40 hover:text-white/70"
-              }`}
-            >
-              Courses
-            </button>
-            <button
-              onClick={() => {
-                if (pathname === "/personal" || pathname === "/courses" || pathname === "/") {
-                  router.push("/personal");
-                } else {
-                  // Keep current sub-page but change source to personal
-                  const params = new URLSearchParams(searchParams?.toString() || "");
-                  params.set("source", "personal");
-                  router.push(`${pathname}?${params.toString()}`);
-                }
-              }}
-              className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
-                selectedMode === "personal" ? "text-white" : "text-white/40 hover:text-white/70"
-              }`}
-            >
-              Personal
-            </button>
-          </div>
+          showToggle ? (
+            <div className="relative flex items-center bg-slate-900/60 border border-white/5 p-1 rounded-full w-52 h-9 shadow-inner select-none">
+              {/* Sliding indicator */}
+              <div
+                className={`absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/10 transition-all duration-300 ease-out ${
+                  selectedMode === "courses" ? "left-1 w-[96px]" : "left-[104px] w-[96px]"
+                }`}
+              />
+              {/* Buttons */}
+              <button
+                onClick={() => {
+                  if (pathname === "/personal" || pathname === "/courses" || pathname === "/") {
+                    router.push("/courses");
+                  } else {
+                    const params = new URLSearchParams(searchParams?.toString() || "");
+                    params.set("source", "courses");
+                    params.delete("roadmap_id");
+                    params.delete("topic");
+                    params.delete("subject");
+                    router.push(`${pathname}?${params.toString()}`);
+                  }
+                }}
+                className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
+                  selectedMode === "courses" ? "text-white" : "text-white/40 hover:text-white/70"
+                }`}
+              >
+                Courses
+              </button>
+              <button
+                onClick={() => {
+                  if (pathname === "/personal" || pathname === "/courses" || pathname === "/") {
+                    router.push("/personal");
+                  } else {
+                    const params = new URLSearchParams(searchParams?.toString() || "");
+                    params.set("source", "personal");
+                    params.delete("topic");
+                    params.delete("subject");
+                    router.push(`${pathname}?${params.toString()}`);
+                  }
+                }}
+                className={`relative z-10 flex-1 text-center text-[10px] font-bold tracking-wider uppercase transition-colors duration-200 ${
+                  selectedMode === "personal" ? "text-white" : "text-white/40 hover:text-white/70"
+                }`}
+              >
+                Personal
+              </button>
+            </div>
+          ) : (
+            <h2 className="text-white font-bold tracking-wider uppercase text-sm ml-2">{getPageTitle()}</h2>
+          )
         ) : role === "professor" ? (
           <h2 className="text-white font-bold tracking-wider uppercase text-sm ml-2">My Classes</h2>
         ) : role === "admin" ? (

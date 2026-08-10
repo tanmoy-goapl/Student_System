@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BookOpen, PlayCircle, ChevronRight, ChevronDown, ChevronUp, History } from 'lucide-react';
+import { BookOpen, PlayCircle, ChevronRight } from 'lucide-react';
 
 const GRADIENTS = [
   "from-blue-500/20 to-purple-500/20",
@@ -36,7 +36,6 @@ export default function CourseDashboard() {
   const [coursesData, setCoursesData] = useState<SemesterData[]>([]);
   const [currentSemesterNum, setCurrentSemesterNum] = useState<number>(1);
   const [loadingCourses, setLoadingCourses] = useState(true);
-  const [historyExpanded, setHistoryExpanded] = useState(false);
   const router = useRouter();
 
   const fetchCourses = async () => {
@@ -66,7 +65,6 @@ export default function CourseDashboard() {
   // currentSemesterNum is 1-indexed. Index in array is currentSemesterNum - 1
   const activeIndex = Math.max(0, currentSemesterNum - 1);
   const currentSemester = coursesData[activeIndex];
-  const historySemesters = coursesData.slice(0, activeIndex);
 
   const SubjectCard = ({ subject, index }: { subject: CourseSubject, index: number }) => {
     const healthColor = subject.subject_health === "GREEN" ? "text-emerald-400" :
@@ -173,48 +171,6 @@ export default function CourseDashboard() {
           )}
         </div>
       </div>
-
-      {/* Semester History Section */}
-      {!loadingCourses && historySemesters.length > 0 && (
-        <div className="space-y-4 bg-white/5 border border-white/5 rounded-2xl p-6">
-          <div 
-            className="flex items-center justify-between cursor-pointer select-none group"
-            onClick={() => setHistoryExpanded(!historyExpanded)}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300 group-hover:text-white group-hover:bg-white/20 transition-all">
-                <History className="w-4 h-4" />
-              </div>
-              <h2 className="text-sm font-semibold text-slate-300 group-hover:text-white transition-colors">
-                Semester History
-              </h2>
-              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">
-                {historySemesters.length} Completed
-              </span>
-            </div>
-            <div className="text-slate-400 group-hover:text-white transition-colors">
-              {historyExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </div>
-          </div>
-
-          {historyExpanded && (
-            <div className="pt-4 space-y-6 animate-in slide-in-from-top-2 fade-in duration-200">
-              {historySemesters.map((sem, sIdx) => (
-                <div key={sem.id} className="space-y-3">
-                  <h3 className="text-xs uppercase tracking-wider text-slate-400 pl-1">
-                    {sem.title}
-                  </h3>
-                  <div className="flex overflow-x-auto gap-4 snap-x purple-scrollbar pb-4 pt-1 px-1 w-full min-w-0 opacity-80 hover:opacity-100 transition-opacity">
-                    {sem.subjects.map((subject, index) => (
-                      <SubjectCard key={index} subject={subject} index={index + (sIdx * 4)} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </section>
   );
 }

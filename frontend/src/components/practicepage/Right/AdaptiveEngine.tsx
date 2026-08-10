@@ -12,13 +12,9 @@ interface AdaptiveEngineProps {
 }
 
 export default function AdaptiveEngine({
-  config = {
-    recommended_difficulty: "Medium",
-    study_pace: "Normal",
-    focus_topic: "Core Syllabus",
-    last_active: "Today",
-  },
+  config,
 }: AdaptiveEngineProps) {
+  if (!config) return null;
   const settings = [
     {
       label: "Recommended Difficulty",

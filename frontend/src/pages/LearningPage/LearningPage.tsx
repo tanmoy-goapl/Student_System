@@ -110,13 +110,17 @@ export default function LearningPage() {
     useEffect(() => {
         const urlTopic = searchParams?.get("topic");
         const targetSource = searchParams?.get("source") || "courses";
+        const currentRoadmapId = searchParams?.get("roadmap_id");
         if (!urlTopic) {
-            const lastTopic = localStorage.getItem(`last_learning_topic_${targetSource}`);
-            const lastSubject = localStorage.getItem(`last_learning_subject_${targetSource}`);
-            if (lastTopic) {
-                let query = `?topic=${encodeURIComponent(lastTopic)}&source=${targetSource}`;
-                if (lastSubject) query += `&subject=${encodeURIComponent(lastSubject)}`;
-                router.replace(`/learning${query}`);
+            // Only redirect to last topic if we are not switching to a specific roadmap
+            if (!currentRoadmapId) {
+                const lastTopic = localStorage.getItem(`last_learning_topic_${targetSource}`);
+                const lastSubject = localStorage.getItem(`last_learning_subject_${targetSource}`);
+                if (lastTopic) {
+                    let query = `?topic=${encodeURIComponent(lastTopic)}&source=${targetSource}`;
+                    if (lastSubject) query += `&subject=${encodeURIComponent(lastSubject)}`;
+                    router.replace(`/learning${query}`);
+                }
             }
         } else {
             localStorage.setItem(`last_learning_topic_${targetSource}`, urlTopic);
@@ -136,16 +140,9 @@ export default function LearningPage() {
     };
 
     const handleSelectTopic = (id: string, subjectId?: string) => {
-        setActiveTopic(id);
-        setActiveSubject(subjectId);
-        
         const query = roadmapIdParam ? `&roadmap_id=${roadmapIdParam}` : "";
         const subjQuery = subjectId ? `&subject=${encodeURIComponent(subjectId)}` : "";
-        window.history.pushState(
-            null, 
-            "", 
-            `/learning?topic=${encodeURIComponent(id)}${subjQuery}${query}&source=${activeSource}`
-        );
+        router.push(`/learning?topic=${encodeURIComponent(id)}${subjQuery}${query}&source=${activeSource}`);
     };
 
     const activeRequestTopicRef = useRef<string | null>(null);
@@ -157,157 +154,74 @@ export default function LearningPage() {
     const prevSourceRef = useRef<string>(activeSource);
 
     const fetchData = async (forceRegenerate: boolean = false) => {
-        // Cancel any previous pending requests and typewriter timers immediately
         if (abortControllerRef.current) {
-            console.log("Cancelling previous request.");
             abortControllerRef.current.abort();
         }
         if (typewriterIntervalRef.current) {
             clearInterval(typewriterIntervalRef.current);
         }
+        targetTextRef.current = ""; // Reset immediately to prevent old text leakage
 
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
 
-        // Determine if we can skip sidebar rebuild (same source, sidebar already loaded)
         const sourceChanged = prevSourceRef.current !== activeSource;
         const canSkipSidebar = hasSidebarRef.current && !sourceChanged && !!activeTopic && !forceRegenerate;
         prevSourceRef.current = activeSource;
 
-        // Only null out data and show skeleton on initial load or source change
         if (!canSkipSidebar) {
             setData(null);
+            setIsContentLoading(true);
+        } else {
+            setData(prev => {
+                if (!prev) return prev;
+                return { ...prev, notesResponse: { content: "" } };
+            });
         }
-        setIsContentLoading(true);
 
         const studentId = getStudentId();
         const roadmapId = searchParams?.get("roadmap_id") ? parseInt(searchParams.get("roadmap_id") as string) : undefined;
-        try {
-            setHasError(false);
-            const response = await getLearningData(activeTopic, studentId, activeSubject, roadmapId, activeSource, undefined, abortController.signal, canSkipSidebar);
+        setHasError(false);
+
+        let currentTypewriterLength = 0;
+        typewriterIntervalRef.current = setInterval(() => {
+            if (currentTypewriterLength < targetTextRef.current.length) {
+                const diff = targetTextRef.current.length - currentTypewriterLength;
+                const step = diff > 300 ? 35 : diff > 100 ? 18 : diff > 30 ? 8 : diff > 10 ? 4 : 2;
+                currentTypewriterLength += step;
+                const nextTextChunk = targetTextRef.current.slice(0, currentTypewriterLength);
+                
+                setData(prev => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        notesResponse: { content: nextTextChunk }
+                    };
+                });
+            }
+        }, 30);
+
+        const runStream = async (topicToStream: string) => {
+            activeRequestTopicRef.current = topicToStream;
             
-            if (abortController.signal.aborted) return;
-            if (!response) {
-                setHasError(true);
-                setIsContentLoading(false);
-                return;
-            }
-
-            const selectedTopic = response.selectedTopic || activeTopic || "General Topic";
-
-            // Sync URL parameters in the history state if the topic parameter was missing (e.g. on roadmap select)
-            const urlTopic = searchParams?.get("topic");
-            if (!urlTopic && response.selectedTopic) {
-                const query = roadmapIdParam ? `&roadmap_id=${roadmapIdParam}` : "";
-                const subjectId = response.selectedSubject || activeSubject;
-                const subjQuery = subjectId ? `&subject=${encodeURIComponent(subjectId)}` : "";
-                window.history.replaceState(
-                    null,
-                    "",
-                    `/learning?topic=${encodeURIComponent(response.selectedTopic)}${subjQuery}${query}&source=${activeSource}`
-                );
-                setActiveTopic(response.selectedTopic);
-                if (subjectId) setActiveSubject(subjectId);
-            }
-
-            // If we skipped sidebar, merge cached sidebar data back into the response
-            if (canSkipSidebar && cachedSidebarRef.current) {
-                response.sidebarData = cachedSidebarRef.current;
-            } else if (response.sidebarData) {
-                // Cache sidebar data for future topic switches
-                cachedSidebarRef.current = response.sidebarData;
-                hasSidebarRef.current = true;
-            }
-
-            // If topic is already cached, load it instantly and skip streaming
-            const hasCachedContent = response.notesResponse && 
-                                     typeof response.notesResponse.content === "string" && 
-                                     response.notesResponse.content.length > 0;
-
-            if (hasCachedContent && !forceRegenerate) {
-                setData(response);
-                setIsContentLoading(false);
-                activeRequestTopicRef.current = selectedTopic;
-                return;
-            }
-
-            setData(response);
-            setIsContentLoading(false);
-
-            // Prevent duplicate requests for the same topic
-            if (activeRequestTopicRef.current === selectedTopic && !forceRegenerate) {
-                console.log("Topic has not changed and no regeneration requested. Reusing explanation.");
-                return;
-            }
-
-            activeRequestTopicRef.current = selectedTopic;
-
-            // Reset notes content and typewriter target so the skeleton loader shows
-            targetTextRef.current = "";
-            setData(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    notesResponse: { content: "" }
-                };
-            });
-
-            // Start smooth typewriter interval
-            let currentTypewriterLength = 0;
-            typewriterIntervalRef.current = setInterval(() => {
-                if (currentTypewriterLength < targetTextRef.current.length) {
-                    const diff = targetTextRef.current.length - currentTypewriterLength;
-                    // Catch up step based on how far behind the typewriter is from the target stream text
-                    const step = diff > 300 ? 35 : diff > 100 ? 18 : diff > 30 ? 8 : diff > 10 ? 4 : 2;
-                    currentTypewriterLength += step;
-                    const nextTextChunk = targetTextRef.current.slice(0, currentTypewriterLength);
-                    
-                    setData(prev => {
-                        if (!prev) return prev;
-                        if (activeRequestTopicRef.current !== selectedTopic) return prev;
-                        return {
-                            ...prev,
-                            notesResponse: { content: nextTextChunk }
-                        };
-                    });
-                }
-            }, 30);
-
-            // If we are forcing regeneration, we call the clear cache endpoint first
-            if (forceRegenerate) {
-                try {
-                    await fetch(`/api/learning/content?student_id=${studentId}&topic=${encodeURIComponent(selectedTopic)}&subject=${encodeURIComponent(activeSubject || "")}&force=true&t=${Date.now()}`, {
-                        method: "GET",
-                        headers: {
-                            "Cache-Control": "no-cache",
-                            "Pragma": "no-cache"
-                        }
-                    });
-                } catch (err) {
-                    console.warn("Failed to clear backend content cache:", err);
-                }
-            }
-
             try {
-                await streamLearningContent(selectedTopic, studentId, activeSubject, (text) => {
+                await streamLearningContent(topicToStream, studentId, activeSubject, (text) => {
                     if (abortController.signal.aborted) return;
+                    if (activeRequestTopicRef.current !== topicToStream) return;
                     let displayMarkdown = text;
                     let revisionData = undefined;
                     if (text.includes("---REVISION---")) {
                         const parts = text.split("---REVISION---");
                         displayMarkdown = parts[0].trim();
-                        try {
-                            revisionData = JSON.parse(parts[1].trim());
-                        } catch (e) {}
+                        try { revisionData = JSON.parse(parts[1].trim()); } catch (e) {}
                     }
                     
-                    // Update the target text so the typewriter queue can pick it up and stream continuously
                     targetTextRef.current = displayMarkdown;
 
                     if (revisionData) {
                         setData(prev => {
                             if (!prev) return prev;
-                            if (activeRequestTopicRef.current !== selectedTopic) return prev;
+                            if (activeRequestTopicRef.current !== topicToStream) return prev;
                             return {
                                 ...prev,
                                 learningAssistantResponse: {
@@ -320,72 +234,137 @@ export default function LearningPage() {
                             };
                         });
                     }
-                }, abortController.signal);
+                }, abortController.signal, forceRegenerate);
             } catch (streamingError: any) {
-                if (streamingError.name === "AbortError") {
-                    console.log("Request successfully aborted.");
-                    return;
+                if (streamingError.name !== "AbortError") {
+                    setHasError(true);
                 }
-                console.warn("Streaming failed, letting user know:", streamingError);
-                // No fallback to synchronous REST calls - strictly streaming only!
-                setHasError(true);
             }
-        } catch (error: any) {
-            if (error.name === "AbortError" || (error instanceof DOMException && error.name === "AbortError")) {
-                console.log("Request successfully aborted.");
+        };
+
+        let streamPromise: Promise<void> | null = null;
+        if (activeTopic) {
+            streamPromise = runStream(activeTopic);
+        }
+
+        try {
+            const response = await getLearningData(activeTopic, studentId, activeSubject, roadmapId, activeSource, undefined, abortController.signal, canSkipSidebar);
+            
+            if (abortController.signal.aborted) return;
+            if (!response) {
+                setHasError(true);
+                setIsContentLoading(false);
                 return;
             }
-            console.error("Failed to load learning data:", error);
-            setHasError(true);
+
+            const selectedTopic = response.selectedTopic || activeTopic || "General Topic";
+
+            const urlTopic = searchParams?.get("topic");
+            if (!urlTopic && response.selectedTopic) {
+                const query = roadmapIdParam ? `&roadmap_id=${roadmapIdParam}` : "";
+                const subjectId = response.selectedSubject || activeSubject;
+                const subjQuery = subjectId ? `&subject=${encodeURIComponent(subjectId)}` : "";
+                router.replace(`/learning?topic=${encodeURIComponent(response.selectedTopic)}${subjQuery}${query}&source=${activeSource}`);
+            }
+
+            if (canSkipSidebar && cachedSidebarRef.current) {
+                response.sidebarData = cachedSidebarRef.current;
+            } else if (response.sidebarData) {
+                cachedSidebarRef.current = response.sidebarData;
+                hasSidebarRef.current = true;
+            }
+
+            const hasCachedContent = response.notesResponse && 
+                                     typeof response.notesResponse.content === "string" && 
+                                     response.notesResponse.content.length > 0;
+
+            if (hasCachedContent && !forceRegenerate) {
+                if (streamPromise) {
+                    abortController.abort();
+                }
+                setData(response);
+                setIsContentLoading(false);
+                activeRequestTopicRef.current = selectedTopic;
+                return;
+            }
+
+            if (streamPromise && targetTextRef.current) {
+                response.notesResponse.content = targetTextRef.current;
+            } else {
+                response.notesResponse.content = "";
+            }
+
+            setData(response);
+            setIsContentLoading(false);
+
+            if (!streamPromise) {
+                await runStream(selectedTopic);
+            } else {
+                await streamPromise;
+            }
+        } catch (e: any) {
+            if (e.name !== "AbortError") {
+                setHasError(true);
+                setIsContentLoading(false);
+            }
         }
     };
 
+    const debounceTimerRef = useRef<any>(null);
     useEffect(() => {
-        fetchData(false);
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+
+        debounceTimerRef.current = setTimeout(() => {
+            fetchData(false);
+        }, 150);
+
         return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
             }
         };
-    }, [activeTopic, activeSubject, activeSource, refreshKey]);
+    }, [activeTopic, activeSubject, activeSource, refreshKey, roadmapIdParam]);
 
     // Fetch Cheat Sheet dynamically (deferred to avoid blocking topic switch)
     const cheatsheetTimerRef = useRef<any>(null);
+    const cheatsheetAbortRef = useRef<AbortController | null>(null);
     useEffect(() => {
         const selectedTopic = data?.selectedTopic || activeTopic;
         if (!selectedTopic || typeof selectedTopic !== "string") return;
         
-        // Cancel any pending cheatsheet fetch
+        // Cancel any pending cheatsheet fetch AND in-flight request
         if (cheatsheetTimerRef.current) {
             clearTimeout(cheatsheetTimerRef.current);
         }
-
-        // Defer cheatsheet fetch by 1.5s so it doesn't compete with the main content load
-        cheatsheetTimerRef.current = setTimeout(async () => {
-            try {
-                const studentId = getStudentId();
-                const res = await getCheatSheet(studentId, selectedTopic as string);
-                if (res.success && res.data?.bullets) {
-                    setCheatsheetPoints(res.data.bullets.map((b: string, i: number) => ({
-                        id: String(i),
-                        text: b
-                    })));
-                }
-            } catch (err) {
-                console.error("Failed to fetch cheatsheet:", err);
-            }
-        }, 1500);
+        if (cheatsheetAbortRef.current) {
+            cheatsheetAbortRef.current.abort();
+        }
 
         return () => {
             if (cheatsheetTimerRef.current) {
                 clearTimeout(cheatsheetTimerRef.current);
+            }
+            if (cheatsheetAbortRef.current) {
+                cheatsheetAbortRef.current.abort();
             }
         };
     }, [activeTopic, data?.selectedTopic]);
 
     const handleSuggestionClick = (id: string) => {
         setSelectedSuggestion(id);
-        console.log("Suggestion clicked:", id);
+        const targetTopic = data?.selectedTopic || activeTopic || "";
+        if (id === "s1") {
+            // Standard Practice
+            router.push(`/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}&mode=topic`);
+        } else if (id === "s2") {
+            // Take short quiz
+            router.push(`/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}&mode=quiz`);
+        }
     };
  
     const handleDocumentClick = (id: string) => {
@@ -460,6 +439,7 @@ export default function LearningPage() {
     };
 
     const handleQuickActionClick = async (id: string) => {
+        if (id === 'mark_as_read') return;
         if (!data?.selectedTopic) return;
         const studentId = getStudentId();
         
@@ -589,19 +569,18 @@ export default function LearningPage() {
     const isBackendCompleted = data.headerResponse?.data?.is_completed;
     const isTopicCompleted = isBackendCompleted || isCompletedSession;
 
+    const actionDescriptions: Record<string, string> = {
+        simpler: "Get a simplified summary of the topic",
+        example: "See real-world applications and use cases",
+        flashcard: "Test your memory with active recall cards"
+    };
+
     const quickActions = [
         ...(data.learningAssistantResponse?.data?.actions?.map((action: any) => ({
             ...action,
+            description: actionDescriptions[action.id] || "",
             icon: ICON_MAP[action.iconName] || FileText
-        })) || []),
-        {
-            id: "mark_as_read",
-            icon: CheckCircle,
-            label: isTopicCompleted ? "Already Read" : isMarkingRead ? "Marking..." : "Mark as Read",
-            onClick: isTopicCompleted ? undefined : handleMarkAsRead,
-            primary: true,
-            variant: isTopicCompleted ? "green" : "primary"
-        }
+        })) || [])
     ];
 
     const learningActions = data.learningAssistantResponse?.data?.learningActions?.map((action: any) => ({
@@ -614,10 +593,12 @@ export default function LearningPage() {
         ...(data.rightSidebarData?.data || {}),
         aiSuggestions: {
             ...(data.rightSidebarData?.data?.aiSuggestions || {}),
-            suggestions: data.rightSidebarData?.data?.aiSuggestions?.suggestions?.map((s: any) => ({
-                ...s,
-                icon: ICON_MAP[s.iconName] || FileText
-            })) || []
+            suggestions: data.rightSidebarData?.data?.aiSuggestions?.suggestions
+                ?.filter((s: any) => s.id !== "s2")
+                ?.map((s: any) => ({
+                    ...s,
+                    icon: ICON_MAP[s.iconName] || FileText
+                })) || []
         },
         relatedDocuments: {
             ...(data.rightSidebarData?.data?.relatedDocuments || {}),
@@ -632,7 +613,7 @@ export default function LearningPage() {
         <div className="flex w-full h-[calc(100vh-4rem)] relative">
             <OfflineState />
             <div className="w-[20vw] shrink-0 h-full border-r border-white/10">
-                <LearningSidebar data={data} onSelectTopic={handleSelectTopic} />
+                <LearningSidebar data={data} onSelectTopic={handleSelectTopic} roadmapId={roadmapIdParam} />
             </div>
 
             <div id="learning-content-container" className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto purple-scrollbar relative">
@@ -645,12 +626,20 @@ export default function LearningPage() {
                     <div id="notes-section">
                         <NotesCard notesResponse={data.notesResponse} onRegenerate={() => fetchData(true)} />
                     </div>
-                    
-                    <QuickActions
-                        actions={quickActions}
-                        onActionClick={handleQuickActionClick}
-                    />
-                    
+
+                    <button
+                        onClick={isTopicCompleted ? undefined : handleMarkAsRead}
+                        disabled={isMarkingRead}
+                        className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                            isTopicCompleted 
+                                ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default" 
+                                : "bg-[#5B5FFF] hover:bg-[#4c4fdb] text-white border-[#7276ff]/20 hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-indigo-500/10"
+                        }`}
+                    >
+                        <CheckCircle className="h-4 w-4" />
+                        <span>{isTopicCompleted ? "Already Read" : isMarkingRead ? "Marking..." : "Mark as Read"}</span>
+                    </button>
+
                     <QuickRevisionCard
                         points={cheatsheetPoints.length > 0 ? cheatsheetPoints : (data.learningAssistantResponse?.data?.revision?.points || [])}
                         onSaveNotes={handleSaveNotes}
@@ -671,8 +660,9 @@ export default function LearningPage() {
             <div className="w-[20vw] shrink-0 h-full overflow-y-auto purple-scrollbar border-l border-white/10 bg-[#131826]">
                 <Sidebar 
                     data={rightSidebarData}
+                    quickActions={quickActions}
+                    onActionClick={handleQuickActionClick}
                     onSuggestionClick={handleSuggestionClick}
-                    onDocumentClick={handleDocumentClick}
                 />
             </div>
 

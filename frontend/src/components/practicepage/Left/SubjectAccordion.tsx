@@ -1,6 +1,7 @@
 import {
   ChevronRight,
   ChevronDown,
+  CheckCircle2,
 } from "lucide-react";
 
 import { Subject } from "@/constants/practicepage-data";
@@ -82,6 +83,7 @@ export default function SubjectAccordion({
           {(subject.topics || []).map((area, index) => {
             const isSelected = selectedTopic === area;
             const isWeak = (subject.weakAreas || []).includes(area);
+            const isPracticed = (subject.practicedTopics || []).includes(area);
 
             return (
               <button
@@ -99,33 +101,38 @@ export default function SubjectAccordion({
                   }
                 `}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 max-w-[70%]">
                   <div
-                    className="w-1.5 h-1.5 rounded-full"
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                     style={{ background: subject.color }}
                   />
-                  <span className="text-[0.7rem] text-white">
+                  <span className="text-[0.7rem] text-white truncate">
                     {area}
                   </span>
                 </div>
 
-                {(isSelected || isWeak) && (
-                  <span
-                    className={`
-                      text-[9px]
-                      font-semibold
-                      px-2 py-1 rounded-md
-                      tracking-wider
-                      ${
-                        isSelected
-                          ? "bg-white/20 text-white"
-                          : "bg-[#ff5c5c] text-white"
-                      }
-                    `}
-                  >
-                    {isSelected ? "Active" : "Weak"}
-                  </span>
-                )}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {(isSelected || isWeak) && (
+                    <span
+                      className={`
+                        text-[9px]
+                        font-semibold
+                        px-2 py-1 rounded-md
+                        tracking-wider
+                        ${
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-[#ff5c5c] text-white"
+                        }
+                      `}
+                    >
+                      {isSelected ? "Active" : "Weak"}
+                    </span>
+                  )}
+                  {isPracticed && (
+                    <CheckCircle2 size={13} className={isSelected ? "text-white" : "text-emerald-400"} />
+                  )}
+                </div>
               </button>
             );
           })}

@@ -164,7 +164,6 @@ def get_learning_data(
                 "commonMistakes": {"mistakes": [{"id": "m1", "text": "Review fundamentals for better accuracy.", "severity": "medium"}]},
                 "aiSuggestions": {"suggestions": [
                     {"id": "s1", "label": f"Practice {selected_topic}", "iconName": "BookOpen", "color": "indigo"},
-                    {"id": "s2", "label": "Take a short quiz", "iconName": "Zap", "color": "amber"},
                 ]},
                 "relatedDocuments": {"documents": [{"id": "d1", "title": "Reference Material", "type": "pdf", "iconName": "FileText"}]},
                 "timeSpent": {
@@ -253,11 +252,15 @@ def get_learning_data(
 
     # 1c. Roadmap Tasks
     from roadmap_models import LearningRoadmap, DailyTask
+    import logging
+    logger = logging.getLogger("chatbot")
+    logger.info(f"[get_learning_data] Requested roadmap_id={roadmap_id}, student_id={student_id}")
     if roadmap_id:
         roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.id == roadmap_id, LearningRoadmap.student_id == student_id).first()
     else:
         roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == student_id).order_by(desc(LearningRoadmap.created_at)).first()
     if roadmap:
+        logger.info(f"[get_learning_data] Retrieved roadmap id={roadmap.id}, title='{roadmap.title}'")
         all_tasks = db.query(DailyTask).filter(DailyTask.roadmap_id == roadmap.id).all()
         
         active_week = 1

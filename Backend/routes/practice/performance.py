@@ -407,10 +407,14 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
                 topic_names = [t["name"] for t in subj.get("topics", [])]
 
                 weak_areas = []
+                practiced_topics = []
                 for t_name in topic_names:
                     p = perf_map.get(t_name)
-                    if p and p.status == "WEAK":
-                        weak_areas.append(t_name)
+                    if p:
+                        if p.status == "WEAK":
+                            weak_areas.append(t_name)
+                        if p.sessions > 0:
+                            practiced_topics.append(t_name)
 
                 subjects.append({
                     "id": subj["name"].lower().replace(" ", "-"),
@@ -418,6 +422,7 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
                     "iconName": "Book",
                     "color": colors[i % len(colors)],
                     "weakAreas": weak_areas,
+                    "practicedTopics": practiced_topics,
                     "topics": topic_names,
                     "isExpanded": i == 0,
                     "section": "documents",
@@ -441,13 +446,17 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
                 topics_list = []
                 weeks[wn].sort(key=lambda x: x.day_number or 0)
                 weak_areas = []
+                practiced_topics = []
                 for t in weeks[wn]:
                     t_name = t.topic
                     if not t_name: continue
                     topics_list.append(t_name)
                     p = perf_map.get(t_name)
-                    if p and p.status == "WEAK":
-                        weak_areas.append(t_name)
+                    if p:
+                        if p.status == "WEAK":
+                            weak_areas.append(t_name)
+                        if p.sessions > 0:
+                            practiced_topics.append(t_name)
                         
                 if topics_list:
                     subjects.append({
@@ -456,6 +465,7 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
                         "iconName": "Map",
                         "color": colors[(wn + len(subjects)) % len(colors)],
                         "weakAreas": weak_areas,
+                        "practicedTopics": practiced_topics,
                         "topics": topics_list,
                         "isExpanded": wn == 1 and not has_documents,
                         "section": "roadmap",
@@ -472,11 +482,15 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
             for i, unit in enumerate(units):
                 topics_list = unit.get("topics", [])
                 weak_areas = []
+                practiced_topics = []
                 if student_id:
                     for t_name in topics_list:
                         p = perf_map.get(t_name)
-                        if p and p.status == "WEAK":
-                            weak_areas.append(t_name)
+                        if p:
+                            if p.status == "WEAK":
+                                weak_areas.append(t_name)
+                            if p.sessions > 0:
+                                practiced_topics.append(t_name)
                             
                 subjects.append({
                     "id": f"unit-{i}",
@@ -484,6 +498,7 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
                     "iconName": "Book",
                     "color": colors[i % len(colors)],
                     "weakAreas": weak_areas,
+                    "practicedTopics": practiced_topics,
                     "topics": topics_list,
                     "isExpanded": subject_name.lower() != "software engineering",
                     "section": "curriculum",
@@ -518,10 +533,14 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
                                     all_t.extend(u.get("topics", []))
                                     
                                 weak_areas = []
+                                practiced_topics = []
                                 for t_name in all_t:
                                     p = perf_map.get(t_name)
-                                    if p and p.status == "WEAK":
-                                        weak_areas.append(t_name)
+                                    if p:
+                                        if p.status == "WEAK":
+                                            weak_areas.append(t_name)
+                                        if p.sessions > 0:
+                                            practiced_topics.append(t_name)
                                         
                                 subjects.append({
                                     "id": subj_name.lower().replace(" ", "-"),
@@ -529,6 +548,7 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
                                     "iconName": "Book",
                                     "color": "#14b8a6",
                                     "weakAreas": weak_areas,
+                                    "practicedTopics": practiced_topics,
                                     "topics": all_t,
                                     "isExpanded": not has_documents and subj_name.lower() != "software engineering",
                                     "section": "curriculum",
@@ -548,11 +568,15 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
                             continue
                         
                         weak_areas = []
+                        practiced_topics = []
                         if student_id:
                             for t_name in topics_list:
                                 p = perf_map.get(t_name)
-                                if p and p.status == "WEAK":
-                                    weak_areas.append(t_name)
+                                if p:
+                                    if p.status == "WEAK":
+                                        weak_areas.append(t_name)
+                                    if p.sessions > 0:
+                                        practiced_topics.append(t_name)
                                     
                         subjects.append({
                             "id": subj_name.lower().replace(" ", "-"),
@@ -560,6 +584,7 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
                             "iconName": "Book",
                             "color": current_sem_data.get("color", "#14b8a6"),
                             "weakAreas": weak_areas,
+                            "practicedTopics": practiced_topics,
                             "topics": topics_list,
                             "isExpanded": not has_documents and subj_name.lower() != "software engineering",
                             "section": "curriculum",

@@ -3,7 +3,7 @@ import logging
 import re
 import os
 from typing import Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from fastapi.responses import StreamingResponse
@@ -19,7 +19,7 @@ from services.practice.base import _practice_llm_stream
 from practice_models import AICache
 
 @router.get("/explain/stream")
-def explain_topic_stream(student_id: int, topic_name: str, db: Session = Depends(get_db)):
+async def explain_topic_stream(request: Request, student_id: int, topic_name: str, db: Session = Depends(get_db)):
     cached = db.query(AICache).filter(
         AICache.topic == topic_name,
         AICache.action_type == "explain"
@@ -44,7 +44,7 @@ def explain_topic_stream(student_id: int, topic_name: str, db: Session = Depends
         )
 
     system_prompt = f"""You are a helpful teaching assistant.
-Explain the concept "{topic_name}" in extremely simple, friendly, and plain English.
+Explain the concept "{topic_name}" in extremely simple, friendly, and plain English. Keep it very short (~150 words).
 Use the following structure exactly. Do not add any other text outside these tags.
 Use '===' as the block separator. Keep the text concise and easy to read.
 
@@ -62,27 +62,45 @@ Provide a simple, relatable analogy here.
 Provide a single-sentence key takeaway here."""
     user_prompt = f"Explain the topic: {topic_name}"
 
+    import threading as _threading
+    import asyncio
+    cancel_event = _threading.Event()
+
+    async def monitor():
+        while not cancel_event.is_set():
+            if await request.is_disconnected():
+                cancel_event.set()
+                break
+            await asyncio.sleep(0.5)
+
+    asyncio.create_task(monitor())
+
     def generate_and_cache():
         full_text = ""
-        for chunk in _practice_llm_stream(system_prompt, user_prompt):
-            full_text += chunk
-            yield chunk
         try:
-            from database import SessionLocal
-            local_db = SessionLocal()
-            try:
-                local_db.add(AICache(
-                    student_id=student_id,
-                    topic=topic_name,
-                    action_type="explain",
-                    content=full_text
-                ))
-                local_db.commit()
-                logger.info(f"Cached explain action for topic='{topic_name}'")
-            finally:
-                local_db.close()
-        except Exception as e:
-            logger.error(f"Failed to cache explain action: {e}")
+            gen = _practice_llm_stream(system_prompt, user_prompt, max_tokens=1000, cancel_event=cancel_event)
+            for chunk in gen:
+                full_text += chunk
+                yield chunk
+        finally:
+            cancel_event.set()
+            if full_text.strip():
+                try:
+                    from database import SessionLocal
+                    local_db = SessionLocal()
+                    try:
+                        local_db.add(AICache(
+                            student_id=student_id,
+                            topic=topic_name,
+                            action_type="explain",
+                            content=full_text
+                        ))
+                        local_db.commit()
+                        logger.info(f"Cached explain action for topic='{topic_name}'")
+                    finally:
+                        local_db.close()
+                except Exception as e:
+                    logger.error(f"Failed to cache explain action: {e}")
 
     return StreamingResponse(
         generate_and_cache(),
@@ -91,7 +109,7 @@ Provide a single-sentence key takeaway here."""
     )
 
 @router.get("/examples/stream")
-def give_examples_stream(student_id: int, topic_name: str, db: Session = Depends(get_db)):
+async def give_examples_stream(request: Request, student_id: int, topic_name: str, db: Session = Depends(get_db)):
     cached = db.query(AICache).filter(
         AICache.topic == topic_name,
         AICache.action_type == "examples"
@@ -117,51 +135,71 @@ def give_examples_stream(student_id: int, topic_name: str, db: Session = Depends
 
 
     system_prompt = f"""You are a helpful teaching assistant.
-Provide exactly 3 highly relatable real-world examples for the concept "{topic_name}".
+Provide exactly 3 extremely practical, real-world examples of "{topic_name}". Keep each example very short.
 Use the following structure exactly. Do not add any other text outside these tags.
-Use '===' as the block separator. Keep descriptions concise.
+Use '===' as the block separator.
 
 [TITLE]
-1. Real-World Scenario
+Example 1 Title
+
 [CONTENT]
-A short, 2-3 sentence description of the example and why it applies.
+Short paragraph explaining the first example.
 
 ===
 
 [TITLE]
-2. Industry Application
+Example 2 Title
+
 [CONTENT]
-A short, 2-3 sentence description of the example and why it applies.
+Short paragraph explaining the second example.
 
 ===
 
 [TITLE]
-3. Everyday Analogy
+Example 3 Title
+
 [CONTENT]
-A short, 2-3 sentence description of the example and why it applies."""
-    user_prompt = f"Generate examples for the topic: {topic_name}"
+Short paragraph explaining the third example."""
+    user_prompt = f"Give examples for: {topic_name}"
+
+    import threading as _threading
+    import asyncio
+    cancel_event = _threading.Event()
+
+    async def monitor():
+        while not cancel_event.is_set():
+            if await request.is_disconnected():
+                cancel_event.set()
+                break
+            await asyncio.sleep(0.5)
+
+    asyncio.create_task(monitor())
 
     def generate_and_cache():
         full_text = ""
-        for chunk in _practice_llm_stream(system_prompt, user_prompt):
-            full_text += chunk
-            yield chunk
         try:
-            from database import SessionLocal
-            local_db = SessionLocal()
-            try:
-                local_db.add(AICache(
-                    student_id=student_id,
-                    topic=topic_name,
-                    action_type="examples",
-                    content=full_text
-                ))
-                local_db.commit()
-                logger.info(f"Cached examples action for topic='{topic_name}'")
-            finally:
-                local_db.close()
-        except Exception as e:
-            logger.error(f"Failed to cache examples action: {e}")
+            gen = _practice_llm_stream(system_prompt, user_prompt, max_tokens=1000, cancel_event=cancel_event)
+            for chunk in gen:
+                full_text += chunk
+                yield chunk
+        finally:
+            cancel_event.set()
+            if full_text.strip():
+                try:
+                    from database import SessionLocal
+                    local_db = SessionLocal()
+                    try:
+                        local_db.add(AICache(
+                            student_id=student_id,
+                            topic=topic_name,
+                            action_type="examples",
+                            content=full_text
+                        ))
+                        local_db.commit()
+                    finally:
+                        local_db.close()
+                except Exception as e:
+                    logger.error(f"Failed to cache examples action: {e}")
 
     return StreamingResponse(
         generate_and_cache(),
@@ -170,13 +208,13 @@ A short, 2-3 sentence description of the example and why it applies."""
     )
 
 @router.get("/flashcard/stream")
-def flashcard_topic_stream(student_id: int, topic_name: str, db: Session = Depends(get_db)):
+async def flashcard_topic_stream(request: Request, student_id: int, topic_name: str, db: Session = Depends(get_db)):
     cached = db.query(AICache).filter(
         AICache.topic == topic_name,
         AICache.action_type == "flashcard"
     ).first()
 
-    if cached and "[QUESTION]" not in cached.content:
+    if cached and ("[QUESTION]" not in cached.content or cached.content.count("[QUESTION]") < 5 or "\\" in cached.content):
         try:
             db.delete(cached)
             db.commit()
@@ -200,6 +238,7 @@ def flashcard_topic_stream(student_id: int, topic_name: str, db: Session = Depen
 Generate exactly 5 interactive exam flashcards for the concept "{topic_name}".
 Use the following structure exactly. Do not add any other text outside these tags.
 Use '===' as the block separator. Keep questions and answers concise.
+DO NOT use LaTeX formatting or complex math symbols like \\(\\), \\land, \\lor. Use plain English text or simple keyboard symbols (like AND, OR, NOT, ->) so it is highly readable in standard text.
 
 [QUESTION]
 Question 1 text here?
@@ -233,30 +272,38 @@ Answer 4 text here.
 Question 5 text here?
 [ANSWER]
 Answer 5 text here."""
-    user_prompt = f"Generate study flashcards for the topic: {topic_name}"
+    user_prompt = f"Generate flashcards for: {topic_name}"
 
+    import threading as _threading
+    cancel_event = _threading.Event()
 
-    def generate_and_cache():
+    async def generate_and_cache():
         full_text = ""
-        for chunk in _practice_llm_stream(system_prompt, user_prompt):
-            full_text += chunk
-            yield chunk
         try:
-            from database import SessionLocal
-            local_db = SessionLocal()
-            try:
-                local_db.add(AICache(
-                    student_id=student_id,
-                    topic=topic_name,
-                    action_type="flashcard",
-                    content=full_text
-                ))
-                local_db.commit()
-                logger.info(f"Cached flashcard action for topic='{topic_name}'")
-            finally:
-                local_db.close()
-        except Exception as e:
-            logger.error(f"Failed to cache flashcard action: {e}")
+            gen = _practice_llm_stream(system_prompt, user_prompt, max_tokens=1000, cancel_event=cancel_event)
+            for chunk in gen:
+                if await request.is_disconnected():
+                    cancel_event.set()
+                    return
+                full_text += chunk
+                yield chunk
+        finally:
+            if not cancel_event.is_set() and full_text.strip():
+                try:
+                    from database import SessionLocal
+                    local_db = SessionLocal()
+                    try:
+                        local_db.add(AICache(
+                            student_id=student_id,
+                            topic=topic_name,
+                            action_type="flashcard",
+                            content=full_text
+                        ))
+                        local_db.commit()
+                    finally:
+                        local_db.close()
+                except Exception as e:
+                    logger.error(f"Failed to cache flashcard action: {e}")
 
     return StreamingResponse(
         generate_and_cache(),
@@ -714,7 +761,7 @@ RULES:
                 if completed and len(buffer) <= read_offset:
                     break
             
-            time.sleep(0.1)
+            time.sleep(0.01)
 
     return StreamingResponse(
         generate_stream(),

@@ -213,7 +213,6 @@ def extract_topics_from_documents(student_id: int, db: Session) -> dict:
                 disk_cache = json.load(f)
                 if cache_key in disk_cache:
                     cached_data = disk_cache[cache_key]
-                    import threading
                     from database import SessionLocal
                     def sync_bg():
                         bg_db = SessionLocal()

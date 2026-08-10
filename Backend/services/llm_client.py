@@ -36,12 +36,16 @@ def _build_configs():
         if LLAMA_API_KEY and LLAMA_BASE_URL:
             configs.append(("Llama", LLAMA_API_KEY or GPT_API_KEY, LLAMA_BASE_URL, LLAMA_MODEL))
 
+    def add_backup():
+        # Hardcoded active fallback to avoid timeouts when local gpt-oss is frozen
+        configs.append(("Backup-GPT", "4c8c56fede640bf281a7e36128fef8c18ad0b5f97a5a6bbb2e41e29d4f5a895d", "http://10.10.90.94:2026/v1", "gpt-4o-mini"))
+
     if provider == "gpt4o":
-        add_gpt(); add_llama()
+        add_gpt(); add_llama(); add_backup()
     elif provider == "llama":
-        add_llama(); add_gpt()
+        add_llama(); add_gpt(); add_backup()
     else:
-        add_gpt(); add_llama()
+        add_gpt(); add_llama(); add_backup()
 
     return provider, configs
 

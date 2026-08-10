@@ -1,7 +1,6 @@
 import AIBehavioralInsights from "./AIBehavioralInsights";
 import WeakTopics from "./WeakTopics";
 import AdaptiveEngine from "./AdaptiveEngine";
-import SuggestedNext from "./SuggestedNext";
 
 interface PracticeSidebarProps {
   // Dynamic data from API
@@ -44,13 +43,6 @@ export default function PracticeSidebar({
         <WeakTopics topics={weakTopics} />
 
         <AdaptiveEngine config={adaptiveEngine} />
-      </div>
-
-      {/* Sticky Bottom Section */}
-      <div className="flex-shrink-0 border-t border-white/10 bg-gradient-to-t from-slate-950 to-transparent">
-        <SuggestedNext
-          actions={suggestedNext}
-        />
       </div>
 
       {/* Custom Scrollbar Styles */}

@@ -54,7 +54,8 @@ async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
     subjects = get_student_subjects(student_id, db)
     
     completed_topics_count = 0
-    mastered_topics_count = student_stats["mastered_topics"]
+    completed_topics_list = []
+    mastered_topics_list = []
     
     weak_topics = []
     medium_topics = []
@@ -67,6 +68,10 @@ async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
         
         if is_completed:
             completed_topics_count += 1
+            completed_topics_list.append(t.topic)
+            
+        if status == "STRONG":
+            mastered_topics_list.append(t.topic)
             
         # Weakness analysis (User rules: < 50% Weak, 50-75% Medium, > 75% Strong)
         if t.accuracy < 50:
@@ -222,7 +227,9 @@ async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
             "exposure": student_stats.get("overall_exposure", 0.0),
             "totalQuizAttempts": up.total_questions_attempted if up else 0,
             "topicsCompleted": completed_topics_count,
-            "masteredTopics": mastered_topics_count,
+            "topicsCompletedList": completed_topics_list,
+            "masteredTopics": len(mastered_topics_list),
+            "masteredTopicsList": mastered_topics_list,
             "activeRoadmaps": len(active_roadmaps)
         },
         "weeklyActivity": weekly_activity,

@@ -51,6 +51,8 @@ export default function HomeView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [classDropdownOpen, setClassDropdownOpen] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<{ title: string; placeholder: string; template: string } | null>(null);
+  const [topicInput, setTopicInput] = useState("");
 
   // Greeting based on time
   const getGreeting = () => {
@@ -350,21 +352,29 @@ export default function HomeView() {
                       <div
                         key={i}
                         onClick={() => {
-                          let initialQuery = "";
+                          let template = "";
+                          let placeholder = "";
                           if (act.title === "Generate Lesson") {
-                            initialQuery = "Create a detailed lesson plan on process scheduling, outlining objectives, core concepts, and interactive activities.";
+                            template = "Create a detailed lesson plan on {topic}, outlining objectives, core concepts, and interactive activities.";
+                            placeholder = "e.g. process scheduling, database normalization...";
                           } else if (act.title === "Create Quiz") {
-                            initialQuery = "Generate a multiple-choice practice quiz with 5 questions, options, and explanations on memory management.";
+                            template = "Generate a multiple-choice practice quiz with 5 questions, options, and explanations on {topic}.";
+                            placeholder = "e.g. memory management, Big-O notation...";
                           } else if (act.title === "Review Submissions") {
-                            initialQuery = "Analyze my students' latest submissions and give a summary of common conceptual errors and weak areas.";
+                            template = "Analyze my students' latest submissions for {topic} and give a summary of common conceptual errors and weak areas.";
+                            placeholder = "e.g. CSE-5A assignment 2, SQL project...";
                           } else if (act.title === "Generate Revision Notes") {
-                            initialQuery = "Produce concise, bulleted revision notes on the core differences between paging and segmentation.";
+                            template = "Produce concise, bulleted revision notes on the core concepts of {topic}.";
+                            placeholder = "e.g. paging and segmentation, red-black trees...";
                           } else if (act.title === "Simplify Topic") {
-                            initialQuery = "Explain the deadlock prevention banker's algorithm using a simple, relatable real-world analogy.";
+                            template = "Explain the core concepts of {topic} using a simple, relatable real-world analogy.";
+                            placeholder = "e.g. banker's algorithm, bubble sort...";
                           } else if (act.title === "Create Practice Set") {
-                            initialQuery = "Prepare a structured problem set focusing on CPU scheduling algorithm master calculations.";
+                            template = "Prepare a structured problem set focusing on {topic} calculations and exercises.";
+                            placeholder = "e.g. CPU scheduling math, binary search tree insertion...";
                           }
-                          router.push(`/professor/chatbot?query=${encodeURIComponent(initialQuery)}`);
+                          setSelectedAction({ title: act.title, placeholder, template });
+                          setTopicInput("");
                         }}
                         className="relative overflow-hidden rounded-2xl border border-white/5 bg-slate-900/20 p-5 backdrop-blur-xl group transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/30 hover:bg-slate-900/40 cursor-pointer flex flex-col justify-between min-h-[145px]"
                       >
@@ -479,6 +489,67 @@ export default function HomeView() {
           )}
         </main>
       </div>
+
+      {/* custom action generation topic input modal */}
+      {selectedAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+          <div className="bg-[#0b0f19] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-violet-400" />
+                {selectedAction.title}
+              </h3>
+              <button
+                onClick={() => setSelectedAction(null)}
+                className="text-white/45 hover:text-white transition-colors text-xs font-semibold px-2 py-1 rounded-lg hover:bg-white/5 cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">What topic would you like to generate this for?</label>
+              <input
+                type="text"
+                value={topicInput}
+                onChange={(e) => setTopicInput(e.target.value)}
+                placeholder={selectedAction.placeholder}
+                className="w-full bg-white/5 border border-[#1e293b] rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 transition-colors"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && topicInput.trim()) {
+                    const finalQuery = selectedAction.template.replace("{topic}", topicInput.trim());
+                    setSelectedAction(null);
+                    router.push(`/professor/chatbot?query=${encodeURIComponent(finalQuery)}`);
+                  }
+                }}
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setSelectedAction(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-white/70 hover:text-white hover:bg-white/5 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (topicInput.trim()) {
+                    const finalQuery = selectedAction.template.replace("{topic}", topicInput.trim());
+                    setSelectedAction(null);
+                    router.push(`/professor/chatbot?query=${encodeURIComponent(finalQuery)}`);
+                  }
+                }}
+                disabled={!topicInput.trim()}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-500/10 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+              >
+                Generate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

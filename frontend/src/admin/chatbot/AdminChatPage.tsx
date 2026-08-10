@@ -86,6 +86,8 @@ export default function AdminChatPage() {
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollThrottleRef = useRef<number>(0);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -120,7 +122,20 @@ export default function AdminChatPage() {
   ];
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollRef.current;
+    if (!el) return;
+    const now = Date.now();
+    if (now - scrollThrottleRef.current > 120) {
+      scrollThrottleRef.current = now;
+      const lastMsg = history[history.length - 1];
+      const isUserMsg = lastMsg && lastMsg.role === "user";
+      const threshold = 150;
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+
+      if (isUserMsg || nearBottom || loading) {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   }, [history, loading]);
 
   useEffect(() => {
@@ -270,7 +285,7 @@ export default function AdminChatPage() {
         </header>
 
         {/* Scrollable chat body */}
-        <div className="flex-1 overflow-y-auto purple-scrollbar p-6 space-y-6">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto purple-scrollbar p-6 space-y-6">
           {history.length === 0 ? (
             /* Welcome screen */
             <div className="h-full flex flex-col justify-center items-center max-w-2xl mx-auto space-y-8 select-none py-12">
@@ -301,9 +316,9 @@ export default function AdminChatPage() {
                       <Sparkles className="w-4 h-4 text-white" />
                     </div>
                   )}
-                  <div className={`p-4 rounded-2xl max-w-[80%] text-xs leading-relaxed border whitespace-pre-wrap break-words ${
+                  <div className={`p-4 rounded-2xl max-w-[80%] text-xs leading-relaxed border break-words ${
                     msg.role === "user" 
-                      ? "bg-violet-600/10 border-violet-500/25 text-white rounded-tr-none" 
+                      ? "bg-violet-600/10 border-violet-500/25 text-white rounded-tr-none whitespace-pre-wrap" 
                       : "bg-slate-900/50 border-white/5 text-slate-200 rounded-tl-none"
                   }`}>
                     <div className="markdown-body space-y-2">

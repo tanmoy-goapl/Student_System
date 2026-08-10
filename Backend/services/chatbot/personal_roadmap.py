@@ -179,28 +179,11 @@ def generate_personalized_roadmap(student_id: int, db: Session) -> dict:
     You MUST generate exactly the number of weeks corresponding to the duration ({duration_str}).
     Provide exactly 5 achievable learning units (Days) for each week.
     
-    Output strictly in the following JSON format without Markdown formatting or code blocks.
-    CRITICAL JSON RULES:
-    1. DO NOT add any comments (// or /*).
-    2. ALL keys MUST be enclosed in double quotes (").
-    3. Use ONLY double quotes ("), never single quotes (').
-    
-    {{
-        "title": "Catchy Roadmap Title matching Student's Goal",
-        "weeks": [
-            {{
-                "week_number": 1,
-                "focus_area": "Focus Area Title",
-                "days": [
-                    {{"day_number": 1, "topic": "Day 1: Topic Name", "description": "Topic description...", "subtopics": ["Subtopic 1", "Subtopic 2"]}},
-                    ...
-                ]
-            }}
-        ]
-    }}
-    """
+    Output ONLY valid JSON (no markdown, no comments, no extra whitespace). Do NOT include descriptions or subtopics.
+    Format exactly like this:
+    {{"title":"Catchy Roadmap Title matching Student's Goal","weeks":[{{"week_number":1,"focus_area":"Focus Area Title","days":[{{"day_number":1,"topic":"Topic Name"}}]}}]}}"""
 
-    user_prompt = f"Goal: {prefs.goal}. Keep descriptions brief to fit complete JSON."
+    user_prompt = f"Goal: {prefs.goal}"
     
     logger.info(f"[PersonalRoadmap] Generating personalized roadmap for student {student_id}")
     content = _roadmap_llm_call(system_prompt, user_prompt)

@@ -16,6 +16,8 @@ export default function WeakTopics({
 }: WeakTopicsProps) {
   const visibleTopics = topics.slice(0, maxTopics);
 
+  if (visibleTopics.length === 0) return null;
+
   const getAccuracyColor = (accuracy: number) => {
     if (accuracy === 0) return "bg-white/10";
     if (accuracy < 40) return "bg-red-500/60";

@@ -7,13 +7,14 @@ import { ChevronDown } from "lucide-react";
 interface LearningSidebarProps {
   data: LearningDataResponse | null;
   onSelectTopic: (id: string, subjectId?: string) => void;
+  roadmapId?: string;
 }
 
-const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic }: LearningSidebarProps) {
+const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic, roadmapId }: LearningSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const topicParam = searchParams?.get("topic");
-  const currentRoadmapId = searchParams?.get("roadmap_id") || "";
+  const currentRoadmapId = roadmapId || searchParams?.get("roadmap_id") || "";
   const source = searchParams?.get("source") || "courses";
 
   const [roadmaps, setRoadmaps] = useState<any[]>([]);
@@ -148,13 +149,25 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic }: L
               value={currentRoadmapId}
               onChange={(e) => {
                 const id = e.target.value;
-                const query = id ? `roadmap_id=${id}&source=personal` : "source=courses";
-                router.push(`/learning?${query}`);
+                const params = new URLSearchParams(searchParams?.toString() || "");
+                if (id) {
+                  params.set("roadmap_id", id);
+                  params.set("source", "personal");
+                  // Clear active topic/subject to let the workspace reload the new roadmap's first topic
+                  params.delete("topic");
+                  params.delete("subject");
+                } else {
+                  params.delete("roadmap_id");
+                  params.set("source", "courses");
+                  params.delete("topic");
+                  params.delete("subject");
+                }
+                router.push(`/learning?${params.toString()}`);
               }}
             >
               <option value="" className="bg-slate-900">All Topics (No Roadmap)</option>
               {roadmaps.map(rm => (
-                <option key={rm.id} value={rm.id} className="bg-slate-900">{rm.title}</option>
+                <option key={rm.id} value={rm.id.toString()} className="bg-slate-900">{rm.title}</option>
               ))}
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -163,14 +176,6 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic }: L
           </div>
         )}
 
-        <div className="flex justify-start">
-          <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-4 py-2 w-full">
-            <input
-              className="flex-1 w-full bg-transparent text-xs text-white placeholder:text-white/25 focus:outline-none"
-              placeholder="Search topics…"
-            />
-          </div>
-        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto purple-scrollbar px-2">

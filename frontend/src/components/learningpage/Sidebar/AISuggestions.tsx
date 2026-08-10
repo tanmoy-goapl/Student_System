@@ -11,37 +11,37 @@ function SuggestionCard({ suggestion, onClick }: SuggestionCardProps) {
 
   const colorConfig = {
     indigo: {
-      bg: "bg-indigo-500/10",
+      bg: "bg-gradient-to-r from-indigo-500/10 to-indigo-600/5",
       border: "border-indigo-500/30",
-      icon: "text-indigo-400",
-      hover: "hover:bg-indigo-500/20",
+      icon: "text-indigo-300",
+      hover: "hover:border-indigo-400/50 hover:from-indigo-500/20 hover:to-indigo-600/10",
     },
     amber: {
-      bg: "bg-amber-500/10",
+      bg: "bg-gradient-to-r from-amber-500/10 to-amber-600/5",
       border: "border-amber-500/30",
-      icon: "text-amber-400",
-      hover: "hover:bg-amber-500/20",
+      icon: "text-amber-300",
+      hover: "hover:border-amber-400/50 hover:from-amber-500/20 hover:to-amber-600/10",
     },
     cyan: {
-      bg: "bg-cyan-500/10",
+      bg: "bg-gradient-to-r from-cyan-500/10 to-cyan-600/5",
       border: "border-cyan-500/30",
-      icon: "text-cyan-400",
-      hover: "hover:bg-cyan-500/20",
+      icon: "text-cyan-300",
+      hover: "hover:border-cyan-400/50 hover:from-cyan-500/20 hover:to-cyan-600/10",
     },
   };
 
-  const config = colorConfig[suggestion.color];
+  const config = colorConfig[suggestion.color as keyof typeof colorConfig] || colorConfig.indigo;
 
   return (
     <button
       onClick={() => onClick?.(suggestion.id)}
-      className={`w-full flex items-center gap-3 rounded-lg border px-4 py-3 transition-all duration-200 ${config.bg} ${config.border} ${config.hover}`}
+      className={`w-full flex items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${config.bg} ${config.border} ${config.hover}`}
     >
       <Icon className={`h-4 w-4 flex-shrink-0 ${config.icon}`} />
-      <span className="flex-1 text-left text-xs text-slate-200">
+      <span className="flex-1 text-left text-xs font-semibold text-slate-200">
         {suggestion.label}
       </span>
-      <ArrowRight className={`h-4 w-4 flex-shrink-0 ${config.icon}`} />
+      <ArrowRight className={`h-3.5 w-3.5 flex-shrink-0 ${config.icon}`} />
     </button>
   );
 }

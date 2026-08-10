@@ -17,6 +17,7 @@ export interface Subject {
   icon: string;
   color: string;
   weakAreas?: string[];
+  practicedTopics?: string[];
   topics?: string[];
   isExpanded?: boolean;
   section?: string;

@@ -1,7 +1,7 @@
 import json
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -13,6 +13,7 @@ logger = logging.getLogger("chatbot")
 
 import threading
 bg_generation_lock = threading.Lock()
+active_streams = {}
 
 def pre_generate_questions_bg(student_id: int, topic: str, subject: Optional[str]):
     """Pre-generate the master question bank in the background."""
@@ -64,6 +65,16 @@ def pre_generate_questions_bg(student_id: int, topic: str, subject: Optional[str
         bg_generation_lock.release()
 
 router = APIRouter()
+
+@router.api_route("/clear_content_cache", methods=["GET", "DELETE"])
+def clear_content_cache(student_id: int = None, db: Session = Depends(get_db)):
+    """Delete all cached learning content (or for a specific student). Used to flush corrupted entries."""
+    if student_id:
+        count = db.query(LearningContent).filter(LearningContent.student_id == student_id).delete()
+    else:
+        count = db.query(LearningContent).delete()
+    db.commit()
+    return {"deleted": count}
 
 def resolve_standard_subject(topic: str, current_subject: Optional[str] = None) -> Optional[str]:
     if current_subject and current_subject != "undefined" and current_subject != "null":
@@ -211,7 +222,8 @@ def get_learning_content_endpoint(
     }
 
 @router.get("/stream_content")
-def stream_content(
+async def stream_content(
+    request: Request,
     topic: Optional[str] = None,
     student_id: int = 1,
     subject: Optional[str] = None,
@@ -219,7 +231,7 @@ def stream_content(
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
-    """Stream learning content progressively."""
+    """Stream learning content progressively. Detects client disconnect to abort LLM generation."""
     if not topic:
         return {"error": "Topic is required"}
         
@@ -240,9 +252,11 @@ def stream_content(
                 LearningContent.topic == topic
             ).first()
     
-    import threading
-    threading.Thread(target=pre_generate_questions_bg, args=(student_id, topic, subject), daemon=True).start()
     if cached:
+        # Only pre-generate questions for cached (instant) topics to avoid overloading
+        import threading as _threading
+        _threading.Thread(target=pre_generate_questions_bg, args=(student_id, topic, subject), daemon=True).start()
+
         def generate_cached():
             content = cached.content
             if isinstance(content, list):
@@ -271,8 +285,42 @@ def stream_content(
             headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
         )
 
+    # When regenerating, delete old cache so the new stream replaces it
+    if is_bypass:
+        db.query(LearningContent).filter(
+            LearningContent.topic == topic
+        ).delete()
+        db.commit()
+
+    import threading as _threading
+    import asyncio
+
+    key = f"{student_id}:{topic}"
+    if key in active_streams:
+        logger.info(f"[StreamContent] Cancelling duplicate active stream for {key}")
+        active_streams[key].set()
+        await asyncio.sleep(0.5)  # Give time for the previous stream to shut down
+
+    cancel_event = _threading.Event()
+    active_streams[key] = cancel_event
+
+    def cancellable_stream():
+        """Runs the sync generator and yields. FastAPI handles sync generators in a threadpool."""
+        gen = stream_learning_content(student_id, topic, db, subject=subject, cancel_event=cancel_event)
+        try:
+            for chunk in gen:
+                if cancel_event.is_set():
+                    break
+                yield chunk
+        except Exception as e:
+            logger.error(f"[StreamContent] Error during stream: {e}")
+        finally:
+            cancel_event.set()
+            if active_streams.get(key) == cancel_event:
+                active_streams.pop(key, None)
+
     return StreamingResponse(
-        stream_learning_content(student_id, topic, db, subject=subject),
+        cancellable_stream(),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
     )

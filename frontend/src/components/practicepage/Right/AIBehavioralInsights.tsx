@@ -33,18 +33,7 @@ export default function AIBehavioralInsights({
   insights = [],
 }: AIBehavioralInsightsProps) {
   if (insights.length === 0) {
-    return (
-      <div className="px-4 py-4 border-b border-white/10">
-        <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest mb-3">
-          🧠 AI Behavioral Insights
-        </h3>
-        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02]">
-          <p className="text-[10px] text-white/40 leading-relaxed">
-            Practice more questions to unlock AI-powered behavioral insights about your learning patterns.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

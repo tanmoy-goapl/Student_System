@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { 
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer 
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend 
 } from "recharts";
 import { 
   TrendingUp, Award, Target, BookOpen, Brain, 
@@ -16,7 +16,9 @@ interface AnalyticsData {
     averageAccuracy: number;
     totalQuizAttempts: number;
     topicsCompleted: number;
+    topicsCompletedList: string[];
     masteredTopics: number;
+    masteredTopicsList: string[];
     activeRoadmaps: number;
   };
   weeklyActivity: { date: string; attempts: number; accuracy: number }[];
@@ -139,8 +141,8 @@ export default function AnalyticsDashboard() {
         <StatCard icon={Activity} label="Current Streak" value={`${data.overview.currentStreak} Days`} color="text-orange-400" bg="bg-orange-500/10" />
         <StatCard icon={Target} label="Avg Accuracy" value={`${data.overview.averageAccuracy}%`} color="text-emerald-400" bg="bg-emerald-500/10" />
         <StatCard icon={TrendingUp} label="Quiz Attempts" value={data.overview.totalQuizAttempts} color="text-blue-400" bg="bg-blue-500/10" />
-        <StatCard icon={CheckCircle2} label="Topics Completed" value={data.overview.topicsCompleted} color="text-purple-400" bg="bg-purple-500/10" />
-        <StatCard icon={Award} label="Mastered Topics" value={data.overview.masteredTopics} color="text-yellow-400" bg="bg-yellow-500/10" />
+        <StatCard icon={CheckCircle2} label="Topics Completed" value={data.overview.topicsCompleted} color="text-purple-400" bg="bg-purple-500/10" tooltipList={data.overview.topicsCompletedList} />
+        <StatCard icon={Award} label="Mastered Topics" value={data.overview.masteredTopics} color="text-yellow-400" bg="bg-yellow-500/10" tooltipList={data.overview.masteredTopicsList} />
         <StatCard icon={BookOpen} label="Active Roadmaps" value={data.overview.activeRoadmaps} color="text-cyan-400" bg="bg-cyan-500/10" />
       </div>
 
@@ -165,6 +167,7 @@ export default function AnalyticsDashboard() {
                     contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
                     itemStyle={{ color: '#e2e8f0' }}
                   />
+                  <Legend verticalAlign="top" height={36} />
                   <Line yAxisId="left" type="monotone" dataKey="attempts" name="Quiz Attempts" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
                   <Line yAxisId="right" type="monotone" dataKey="accuracy" name="Accuracy %" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} activeDot={{ r: 6 }} />
                 </LineChart>
@@ -326,9 +329,9 @@ export default function AnalyticsDashboard() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, color, bg }: { icon: any, label: string, value: string | number, color: string, bg: string }) {
+function StatCard({ icon: Icon, label, value, color, bg, tooltipList }: { icon: any, label: string, value: string | number, color: string, bg: string, tooltipList?: string[] }) {
   return (
-    <div className="bg-[#1e293b]/50 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-2 backdrop-blur-sm transition-transform hover:scale-105 cursor-default">
+    <div className="group relative bg-[#1e293b]/50 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-2 backdrop-blur-sm transition-transform hover:scale-105 hover:z-50 cursor-default">
       <div className={`p-3 rounded-xl ${bg}`}>
         <Icon className={color} size={24} />
       </div>
@@ -336,6 +339,17 @@ function StatCard({ icon: Icon, label, value, color, bg }: { icon: any, label: s
         <p className="text-2xl font-bold text-white">{value}</p>
         <p className="text-xs text-slate-400 font-medium">{label}</p>
       </div>
+      
+      {tooltipList && tooltipList.length > 0 && (
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-[200px] bg-slate-900 border border-white/10 rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 shadow-2xl pointer-events-none">
+          <p className="text-xs font-semibold text-slate-300 mb-2 border-b border-white/5 pb-1 uppercase tracking-wider">{label}</p>
+          <ul className="text-xs text-slate-400 space-y-1 text-left list-disc list-inside">
+            {tooltipList.map((item, i) => (
+              <li key={i} className="truncate">{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
