@@ -79,6 +79,7 @@ export default function LearningPage() {
     const [showSummary, setShowSummary] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [isContentLoading, setIsContentLoading] = useState(false);
+    const [isTypewriting, setIsTypewriting] = useState(false);
 
     const [modalContent, setModalContent] = useState<{
         title: string;
@@ -97,10 +98,10 @@ export default function LearningPage() {
         const urlSubject = searchParams?.get("subject") || undefined;
         const urlSource = searchParams?.get("source") || "courses";
         
-        setActiveTopic(urlTopic);
-        setActiveSubject(urlSubject);
-        setActiveSource(urlSource);
-    }, [searchParams]);
+        if (urlTopic !== activeTopic) setActiveTopic(urlTopic);
+        if (urlSubject !== activeSubject) setActiveSubject(urlSubject);
+        if (urlSource !== activeSource) setActiveSource(urlSource);
+    }, [searchParams, activeTopic, activeSubject, activeSource]);
 
     useEffect(() => {
         setIsCompletedSession(false);
@@ -183,11 +184,13 @@ export default function LearningPage() {
         const roadmapId = searchParams?.get("roadmap_id") ? parseInt(searchParams.get("roadmap_id") as string) : undefined;
         setHasError(false);
 
+        setIsTypewriting(true);
         let currentTypewriterLength = 0;
         typewriterIntervalRef.current = setInterval(() => {
             if (currentTypewriterLength < targetTextRef.current.length) {
                 const diff = targetTextRef.current.length - currentTypewriterLength;
-                const step = diff > 300 ? 35 : diff > 100 ? 18 : diff > 30 ? 8 : diff > 10 ? 4 : 2;
+                // Faster catch-up steps so text flows continuously and doesn't lag behind fast streaming
+                const step = diff > 400 ? 120 : diff > 150 ? 50 : diff > 50 ? 20 : diff > 15 ? 8 : 3;
                 currentTypewriterLength += step;
                 const nextTextChunk = targetTextRef.current.slice(0, currentTypewriterLength);
                 
@@ -198,8 +201,10 @@ export default function LearningPage() {
                         notesResponse: { content: nextTextChunk }
                     };
                 });
+            } else if (targetTextRef.current.length > 0 && currentTypewriterLength >= targetTextRef.current.length) {
+                setIsTypewriting(false);
             }
-        }, 30);
+        }, 20); // Faster interval for fluid rendering
 
         const runStream = async (topicToStream: string) => {
             activeRequestTopicRef.current = topicToStream;
@@ -210,10 +215,20 @@ export default function LearningPage() {
                     if (activeRequestTopicRef.current !== topicToStream) return;
                     let displayMarkdown = text;
                     let revisionData = undefined;
-                    if (text.includes("---REVISION---")) {
-                        const parts = text.split("---REVISION---");
-                        displayMarkdown = parts[0].trim();
-                        try { revisionData = JSON.parse(parts[1].trim()); } catch (e) {}
+                    const revisionSeparatorIndex = text.lastIndexOf("---REVISION---");
+                    if (revisionSeparatorIndex >= 0) {
+                        displayMarkdown = text.slice(0, revisionSeparatorIndex).trim();
+                        let rawJson = text.slice(revisionSeparatorIndex + "---REVISION---".length).trim();
+                        if (rawJson.startsWith("```json")) {
+                            rawJson = rawJson.slice(7);
+                        } else if (rawJson.startsWith("```")) {
+                            rawJson = rawJson.slice(3);
+                        }
+                        if (rawJson.endsWith("```")) {
+                            rawJson = rawJson.slice(0, -3);
+                        }
+                        rawJson = rawJson.trim();
+                        try { revisionData = JSON.parse(rawJson); } catch (e) {}
                     }
                     
                     targetTextRef.current = displayMarkdown;
@@ -284,6 +299,7 @@ export default function LearningPage() {
                 }
                 setData(response);
                 setIsContentLoading(false);
+                setIsTypewriting(false);
                 activeRequestTopicRef.current = selectedTopic;
                 return;
             }
@@ -295,13 +311,13 @@ export default function LearningPage() {
             }
 
             setData(response);
-            setIsContentLoading(false);
 
             if (!streamPromise) {
                 await runStream(selectedTopic);
             } else {
                 await streamPromise;
             }
+            setIsContentLoading(false);
         } catch (e: any) {
             if (e.name !== "AbortError") {
                 setHasError(true);
@@ -627,18 +643,20 @@ export default function LearningPage() {
                         <NotesCard notesResponse={data.notesResponse} onRegenerate={() => fetchData(true)} />
                     </div>
 
-                    <button
-                        onClick={isTopicCompleted ? undefined : handleMarkAsRead}
-                        disabled={isMarkingRead}
-                        className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                            isTopicCompleted 
-                                ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default" 
-                                : "bg-[#5B5FFF] hover:bg-[#4c4fdb] text-white border-[#7276ff]/20 hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-indigo-500/10"
-                        }`}
-                    >
-                        <CheckCircle className="h-4 w-4" />
-                        <span>{isTopicCompleted ? "Already Read" : isMarkingRead ? "Marking..." : "Mark as Read"}</span>
-                    </button>
+                    {!isContentLoading && !isTypewriting && (
+                        <button
+                            onClick={isTopicCompleted ? undefined : handleMarkAsRead}
+                            disabled={isMarkingRead}
+                            className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                                isTopicCompleted 
+                                    ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default" 
+                                    : "bg-[#5B5FFF] hover:bg-[#4c4fdb] text-white border-[#7276ff]/20 hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-indigo-500/10"
+                            }`}
+                        >
+                            <CheckCircle className="h-4 w-4" />
+                            <span>{isTopicCompleted ? "Already Read" : isMarkingRead ? "Marking..." : "Mark as Read"}</span>
+                        </button>
+                    )}
 
                     <QuickRevisionCard
                         points={cheatsheetPoints.length > 0 ? cheatsheetPoints : (data.learningAssistantResponse?.data?.revision?.points || [])}

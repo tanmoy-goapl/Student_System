@@ -12,6 +12,109 @@ from services.practice.base import _practice_llm_call, _practice_llm_stream
 logger = logging.getLogger("chatbot")
 
 
+def _fallback_revision(topic: str, subject: Optional[str] = None) -> dict:
+    subject_name = subject or "the subject"
+    return {
+        "title": "Key Takeaways",
+        "points": [
+            {"id": 1, "text": f"Understand the core purpose and components of {topic}."},
+            {"id": 2, "text": f"Know how {topic} works in {subject_name}."},
+            {"id": 3, "text": f"Review the important uses, trade-offs, and exam points for {topic}."},
+        ],
+    }
+
+
+def _parse_json_object(raw_response: str):
+    """Parse JSON even when a model adds a short prefix or markdown fence."""
+    if not raw_response:
+        raise ValueError("Empty JSON response")
+
+    response = raw_response.strip()
+    fence = chr(96) * 3
+    if response.startswith(fence + "json"):
+        response = response[7:]
+    elif response.startswith(fence):
+        response = response[3:]
+    if response.endswith(fence):
+        response = response[:-3]
+    response = response.strip()
+
+    try:
+        return json.loads(response)
+    except json.JSONDecodeError:
+        start = response.find("{")
+        end = response.rfind("}")
+        if start < 0 or end <= start:
+            raise
+        return json.loads(response[start:end + 1])
+
+
+def normalize_revision(revision, topic: str = "the topic", subject: Optional[str] = None) -> dict:
+    """Return one predictable, non-empty three-point revision payload."""
+    points = revision.get("points") if isinstance(revision, dict) else revision
+    if isinstance(revision, dict) and not points:
+        points = revision.get("bullets")
+
+    normalized = []
+    if isinstance(points, list):
+        for point in points:
+            if isinstance(point, dict):
+                text = point.get("text") or point.get("point") or point.get("content")
+            else:
+                text = point
+            if isinstance(text, str) and text.strip():
+                normalized.append({"id": len(normalized) + 1, "text": text.strip()})
+
+    fallback_text = "review this topic later"
+    if len(normalized) < 3 or any(fallback_text in p["text"].lower() for p in normalized):
+        return _fallback_revision(topic, subject)
+
+    title = revision.get("title") if isinstance(revision, dict) else None
+    return {"title": title or "Key Takeaways", "points": normalized[:6]}
+
+
+def has_valid_revision(revision) -> bool:
+    """Identify old/corrupt cache entries that only contain the placeholder point."""
+    if not isinstance(revision, dict) or not isinstance(revision.get("points"), list):
+        return False
+    points = revision["points"]
+    return len(points) >= 3 and all(
+        isinstance(point, dict)
+        and isinstance(point.get("text"), str)
+        and point["text"].strip()
+        and "review this topic later" not in point["text"].lower()
+        for point in points[:3]
+    )
+
+
+def _generate_revision(topic: str, subject: Optional[str], markdown_content: str) -> dict:
+    """Generate the short revision payload separately from the long study guide."""
+    system_prompt = """You are a university professor creating a quick revision card.
+Return ONLY one valid JSON object with this exact shape:
+{"title":"Key Takeaways","points":[{"id":1,"text":"..."},{"id":2,"text":"..."},{"id":3,"text":"..."}]}
+Write exactly three concise, topic-specific takeaways. Do not use markdown, code fences, or commentary."""
+    user_prompt = (
+        f"SUBJECT: {subject or 'General Computer Science'}\nTOPIC: {topic}\n"
+        f"STUDY GUIDE:\n{markdown_content[-7000:]}"
+    )
+    try:
+        raw = _practice_llm_call(system_prompt, user_prompt, max_tokens=400)
+        return normalize_revision(_parse_json_object(raw), topic, subject)
+    except Exception as exc:
+        logger.warning(f"[PracticeEngine] Revision generation failed for '{topic}': {exc}")
+        return _fallback_revision(topic, subject)
+
+
+def _revision_from_response(full_response: str, topic: str, subject: Optional[str]) -> dict:
+    if "---REVISION---" in full_response:
+        try:
+            revision = normalize_revision(_parse_json_object(full_response.split("---REVISION---", 1)[1]), topic, subject)
+            if has_valid_revision(revision):
+                return revision
+        except Exception:
+            pass
+    return _generate_revision(topic, subject, full_response.split("---REVISION---", 1)[0].strip())
+
 def generate_learning_content(student_id: int, topic: str, db: Session, subject: Optional[str] = None) -> dict:
     """
     Generate learning content for a specific topic, returning Notes and Revision JSON.
@@ -80,7 +183,7 @@ JSON structure:
     max_retries = 2
     response = ""
     for attempt in range(max_retries):
-        response = _practice_llm_call(system_prompt, user_prompt, max_tokens=800)
+        response = _practice_llm_call(system_prompt, user_prompt, max_tokens=1800)
 
         if subject == "Programming Fundamentals":
             forbidden_words = [
@@ -102,10 +205,7 @@ JSON structure:
         {"type": "heading", "text": topic},
         {"type": "paragraph", "text": f"Content could not be generated. Debug info: {error_reason}"}
     ]
-    default_revision = {
-        "title": "Quick Revision",
-        "points": [{"id": 1, "text": "Review this topic later."}]
-    }
+    default_revision = _fallback_revision(topic, subject)
 
     try:
         if not response:
@@ -119,10 +219,14 @@ JSON structure:
         if response_str.endswith("```"):
             response_str = response_str[:-3]
 
-        parsed = json.loads(response_str)
+        parsed = _parse_json_object(response_str)
+        notes = parsed.get("notes", default_content)
+        revision = normalize_revision(parsed.get("revision"), topic, subject)
+        if not has_valid_revision(parsed.get("revision")):
+            revision = _generate_revision(topic, subject, json.dumps(notes))
         return {
-            "notesResponse": parsed.get("notes", default_content),
-            "revision": parsed.get("revision", default_revision)
+            "notesResponse": notes,
+            "revision": revision
         }
     except Exception as e:
         logger.error(f"[PracticeEngine] Failed to parse learning content JSON: {e}\nRaw Response:\n{response}")
@@ -238,35 +342,34 @@ def stream_learning_content(student_id: int, topic: str, db: Session, subject: O
     ctx_block = f"\n[REF]\n{context}" if context else ""
     user_prompt = f"Subject: {subject or 'General Computer Science'}\nTopic: {topic}{ctx_block}\n{extra}"
 
-    # --- Phase 1: Core Concepts (Fast) ---
-    sys_prompt_1 = f"""AI tutor. Explain "{topic}" (~150 words). Level: {proficiency}.
+    # --- Detailed Single Stream ---
+    sys_prompt = f"""You are a university professor explaining a complex concept to a student. Level: {proficiency}.
+Teach the topic "{topic}" in a highly readable, structured, and detailed learning note style. Be comprehensive and thorough, making it extremely helpful for the student. Provide a full, rich explanation.
+
 Use EXACTLY these markdown headings:
 # What is {topic}?
 ---
 ## Why is it important?
 ---
 ## How does it work?
-(Stop after this section)."""
-
-    # --- Phase 2: Examples & Revision (Background) ---
-    sys_prompt_2 = f"""AI tutor. Generate the second half of the study guide for "{topic}". Level: {proficiency}.
-Start EXACTLY with:
 ---
 ## Real-world Example
 💡 Example:
+[Insert your detailed real-world example here]
 
+After the example, you MUST append the revision section exactly in this format:
 ---REVISION---
-{{"title":"Key Takeaways","points":[{{"id":1,"text":"Tip 1"}},{{"id":2,"text":"Tip 2"}},{{"id":3,"text":"Tip 3"}}]}}
-No extra text. JSON exactly 3 points, no code fences."""
+{{"title":"Key Takeaways","points":[{{"id":1,"text":"First key point"}},{{"id":2,"text":"Second key point"}},{{"id":3,"text":"Third key point"}}]}}
 
-    logger.info(f"[Stream] Starting sequential streaming for {topic}")
+Ensure the JSON is valid and contains exactly 3 key takeaways. Do not wrap the JSON in markdown code blocks or code fences."""
+
+    logger.info(f"[Stream] Starting detailed streaming for {topic}")
     
     full_response = ""
     had_error = False
     
-    # 1. Stream Phase 1 to user
     try:
-        for chunk in _practice_llm_stream(sys_prompt_1, user_prompt, max_tokens=400, cancel_event=cancel_event):
+        for chunk in _practice_llm_stream(sys_prompt, user_prompt, max_tokens=4000, cancel_event=cancel_event):
             if cancel_event and cancel_event.is_set():
                 return
             if chunk.startswith("ERROR:"):
@@ -275,36 +378,24 @@ No extra text. JSON exactly 3 points, no code fences."""
             full_response += chunk
             yield chunk
     except Exception as e:
-        logger.error(f"[Phase1] Error: {e}")
+        logger.error(f"[Stream] Error: {e}")
         had_error = True
 
-    # 2. Stream Phase 2 (Sequential, no overlapping requests to avoid single-concurrency deadlock)
-    if not had_error:
-        # Yield newlines to prevent concatenating with Phase 1's last line
-        yield "\n\n"
-        full_response += "\n\n"
-        
-        try:
-            for chunk in _practice_llm_stream(sys_prompt_2, user_prompt, max_tokens=300, cancel_event=cancel_event):
-                if cancel_event and cancel_event.is_set():
-                    return
-                if chunk.startswith("ERROR:"):
-                    # Don't break the whole response if example fails, but log it
-                    logger.warning(f"[Phase2] Stream returned error: {chunk}")
-                    break
-                full_response += chunk
-                yield chunk
-        except Exception as e:
-            logger.error(f"[Phase2] Error: {e}")
-
-    # 3. Fallback only if catastrophic failure (nothing was generated)
+    # Fallback only if catastrophic failure (nothing was generated)
     if had_error or not full_response.strip() or len(full_response.strip()) < 50:
         logger.warning(f"[Stream] LLM failed entirely or generated too little. Using basic fallback.")
         full_response = generate_local_fallback_content(topic, subject, context)
         for i in range(0, len(full_response), 128):
             yield full_response[i:i+128]
 
-    # 4. Save to cache permanently
+    # Generate the short revision separately so a long guide cannot truncate it.
+    if not had_error and full_response.strip():
+        markdown_content = full_response.split("---REVISION---", 1)[0].strip()
+        revision_data = _revision_from_response(full_response, topic, subject)
+        full_response = f"{markdown_content}\n\n---REVISION---\n{json.dumps(revision_data)}"
+        yield f"\n\n---REVISION---\n{json.dumps(revision_data)}"
+
+    # Save to cache permanently
     if not (cancel_event and cancel_event.is_set()):
         _save_to_cache(student_id, topic, subject, full_response)
 
@@ -312,14 +403,25 @@ No extra text. JSON exactly 3 points, no code fences."""
 def _save_to_cache(student_id: int, topic: str, subject: Optional[str], full_response: str):
     """Parse the streamed response and save it permanently to the database."""
     try:
-        parts = full_response.split("---REVISION---")
+        parts = full_response.split("---REVISION---", 1)
         markdown_content = parts[0].strip()
-        revision_data = {"title": "Quick Revision", "points": [{"id": 1, "text": "Review this topic later."}]}
+        revision_data = _fallback_revision(topic, subject)
         if len(parts) > 1:
             try:
-                revision_data = json.loads(parts[1].strip())
-            except Exception:
-                pass
+                raw_json = parts[1].strip()
+                if raw_json.startswith("```json"):
+                    raw_json = raw_json[7:]
+                elif raw_json.startswith("```"):
+                    raw_json = raw_json[3:]
+                if raw_json.endswith("```"):
+                    raw_json = raw_json[:-3]
+                raw_json = raw_json.strip()
+                revision_data = normalize_revision(_parse_json_object(raw_json), topic, subject)
+            except Exception as e:
+                logger.error(f"[StreamContent] Failed to parse revision JSON: {e}")
+
+        if not has_valid_revision(revision_data):
+            revision_data = _generate_revision(topic, subject, markdown_content)
 
         from database import SessionLocal
         local_db = SessionLocal()

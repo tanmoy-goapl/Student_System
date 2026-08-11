@@ -1,0 +1,192 @@
+# Lesson Plan – Supervised Learning  
+**Course:** Machine Learning (Graduate/Upper‑level Undergraduate)  
+**Class Length:** 60 minutes  
+**Instructor:** *[Your Name]* – Senior Professor, Department of Computer Science  
+
+---
+
+## 1. Learning Objectives  
+
+By the end of this session students will be able to:  
+
+1. **Define** supervised learning and distinguish it from unsupervised, semi‑supervised, and reinforcement learning.  
+2. **Explain** the formal problem statement (input space, output space, hypothesis class, loss function, risk minimization).  
+3. **Identify** and **compare** the two major families of supervised models – **regression** and **classification** – with concrete examples.  
+4. **Describe** the workflow of a supervised learning pipeline (data collection → preprocessing → model selection → training → evaluation → deployment).  
+5. **Apply** at least one classic algorithm (e.g., linear regression or logistic regression) on a toy dataset using pseudo‑code or a high‑level library (scikit‑learn).  
+6. **Critically evaluate** model performance using appropriate metrics (MSE, MAE, accuracy, precision/recall, ROC‑AUC) and discuss over‑/under‑fitting.  
+7. **Formulate** a research‑oriented question that could be addressed with supervised learning and outline an experimental plan.
+
+---
+
+## 2. Lecture Timeline (60 min)
+
+| Time | Segment | Activity & Pedagogy |
+|------|---------|----------------------|
+| **0‑5 min** | **Opening & Motivation** | Quick poll (Mentimeter/hand‑raise): “Where have you seen machines make predictions?” – gather examples (spam filter, medical diagnosis, recommendation). |
+| **5‑12 min** | **What is Supervised Learning?** | Definition, formal notation, contrast with other paradigms. Use a simple “input‑output” diagram on board. |
+| **12‑22 min** | **Core Concepts** | 1️⃣ Target variable types (continuous vs categorical)  <br>2️⃣ Hypothesis space & model families  <br>3️⃣ Loss functions & risk  <br>4️⃣ Training vs test vs validation split. |
+| **22‑30 min** | **Algorithm Spotlight** – *Linear & Logistic Regression* | Derivation intuition, decision boundary, gradient descent sketch. Live coding snippet (Python) on projector. |
+| **30‑38 min** | **Evaluation & Model Selection** | Metrics for regression & classification, bias‑variance trade‑off, cross‑validation. Small group activity: compute metrics from a printed confusion matrix. |
+| **38‑48 min** | **In‑Class Hands‑On** | Students work in pairs on a Jupyter notebook (provided beforehand) to train a logistic regression on the *Iris* dataset, plot decision boundaries, and report accuracy. Instructor circulates, offers hints. |
+| **48‑55 min** | **Discussion & Critical Thinking** | Prompt questions (see Section 4). Students share insights; instructor synthesises key take‑aways. |
+| **55‑60 min** | **Wrap‑Up & Assignment** | Summarise “take‑home messages”, announce reading & homework (implement a supervised model on a new dataset). |
+
+---
+
+## 3. Core Concepts – Detailed Explanation  
+
+### 3.1 Formal Problem Statement  
+
+- **Input space** \(\mathcal{X}\): feature vectors \(x \in \mathbb{R}^d\) (or other structured representations).  
+- **Output space** \(\mathcal{Y}\):  
+  - *Regression*: \(\mathcal{Y} = \mathbb{R}\) (continuous).  
+  - *Classification*: \(\mathcal{Y} = \{1,\dots,K\}\) (discrete labels).  
+- **Training set** \(\mathcal{D} = \{(x_i, y_i)\}_{i=1}^n\) drawn i.i.d. from an unknown distribution \(P_{XY}\).  
+- **Hypothesis class** \(\mathcal{H} = \{h_\theta : \mathcal{X}\to\mathcal{Y}\}\) parameterised by \(\theta\).  
+- **Loss function** \(\ell(y, \hat y)\) quantifies error for a single example (e.g., squared loss, cross‑entropy).  
+- **Empirical risk** \( \hat R(\theta) = \frac{1}{n}\sum_{i=1}^n \ell(y_i, h_\theta(x_i))\).  
+- **Goal**: Find \(\theta^\* = \arg\min_{\theta\in\Theta} \hat R(\theta)\) (or regularised version).  
+
+### 3.2 Regression vs Classification  
+
+| Aspect | Regression | Classification |
+|--------|------------|----------------|
+| Output | Real‑valued scalar or vector | Discrete class label (binary or multi‑class) |
+| Typical loss | **MSE**, **MAE**, Huber | **0‑1 loss**, **cross‑entropy**, **hinge** |
+| Evaluation metrics | RMSE, R², MAE | Accuracy, Precision, Recall, F1, ROC‑AUC |
+| Example algorithms | Linear regression, SVR, Decision trees, Neural nets | Logistic regression, SVM, k‑NN, Random Forest, CNNs |
+
+### 3.3 Supervised Learning Pipeline  
+
+1. **Data acquisition** – source, labeling strategy, ethics.  
+2. **Pre‑processing** – cleaning, handling missing values, feature scaling, encoding categorical variables.  
+3. **Exploratory Data Analysis (EDA)** – visualise distributions, correlations, class imbalance.  
+4. **Model selection** – choose hypothesis class, consider capacity & interpretability.  
+5. **Training** – optimisation (gradient descent, closed‑form, convex solvers).  
+6. **Validation** – hold‑out set or K‑fold cross‑validation, hyper‑parameter tuning (grid/random search).  
+7. **Testing** – final unbiased performance estimate.  
+8. **Deployment** – model serialization, monitoring for data drift.  
+
+### 3.4 Over‑fitting, Under‑fitting & Regularisation  
+
+- **Under‑fitting**: high bias, model too simple → poor training & test performance.  
+- **Over‑fitting**: high variance, model memorises noise → low training error, high test error.  
+- **Regularisation**: add penalty \( \lambda \Omega(\theta) \) (e.g., L2 ridge, L1 Lasso) to control complexity.  
+
+### 3.5 Common Algorithms (Brief Overview)  
+
+| Algorithm | Core Idea | Typical Use‑case |
+|-----------|-----------|------------------|
+| **Linear Regression** | Solve normal equations or gradient descent for \(\hat y = w^\top x + b\). | Predict house prices, stock returns. |
+| **Logistic Regression** | Model \(P(y=1|x)=\sigma(w^\top x + b)\) with sigmoid; maximise likelihood. | Binary classification (spam vs ham). |
+| **k‑Nearest Neighbours** | Non‑parametric, label by majority of nearest neighbours. | Low‑dimensional, interpretable tasks. |
+| **Support Vector Machine** | Maximise margin, optionally kernelise. | Text categorisation, image recognition (small datasets). |
+| **Decision Trees / Random Forests** | Recursive partitioning, ensemble averaging. | Tabular data, handling mixed types. |
+| **Neural Networks (MLP)** | Stacked linear+non‑linear layers, trained by back‑prop. | Complex, high‑dimensional data (images, speech). |
+
+---
+
+## 4. Discussion Questions  
+
+1. **Conceptual:** Why does the availability of labelled data fundamentally change the learning problem compared to unsupervised learning?  
+2. **Practical:** In a medical diagnosis setting, would you optimise for accuracy or for recall? Justify with a cost‑sensitive perspective.  
+3. **Technical:** How does the choice of loss function affect the shape of the decision boundary in logistic regression?  
+4. **Ethical:** What are the risks of deploying a supervised model trained on historical hiring data? Propose mitigation strategies.  
+5. **Research‑oriented:** Imagine you have a massive dataset with noisy labels. Which supervised learning techniques (or hybrid approaches) could you employ to improve robustness?  
+
+*Students discuss in pairs for 3 minutes, then share highlights with the class.*
+
+---
+
+## 5. In‑Class Activities  
+
+### 5.1 Metric Computation Exercise (8 min)  
+
+- Hand out a small confusion matrix (e.g., TP=40, FP=10, FN=5, TN=45).  
+- Ask pairs to compute **accuracy**, **precision**, **recall**, **F1**, and **specificity** on a mini‑whiteboard.  
+- Quick debrief: emphasise trade‑offs and when each metric matters.
+
+### 5.2 Live Coding Lab (10 min)  
+
+**Goal:** Train a logistic regression on the Iris dataset (binary version: *setosa* vs *non‑setosa*).  
+
+```python
+import numpy as np, pandas as pd
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load data
+iris = datasets.load_iris()
+X = iris.data[iris.target != 2]          # keep only first two classes
+y = (iris.target[iris.target != 2] == 0).astype(int)  # setosa = 1
+
+# Split & scale
+X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                    test_size=0.3,
+                                                    random_state=42,
+                                                    stratify=y)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test  = scaler.transform(X_test)
+
+# Train
+clf = LogisticRegression()
+clf.fit(X_train, y_train)
+
+# Predict & evaluate
+y_pred = clf.predict(X_test)
+print('Accuracy:', accuracy_score(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+```
+
+- Instructor runs the code, points out each step, and visualises the decision boundary with `matplotlib`.  
+- Students replicate on their own laptops or on the provided cloud notebook.
+
+### 5.3 Mini‑Project Pitch (5 min)  
+
+- Each pair writes a one‑sentence research question that could be tackled with supervised learning (e.g., “Can we predict student dropout from early semester grades?”).  
+- Collect on a shared Padlet; later these become homework topics.
+
+---
+
+## 6. Assessment & Follow‑Up  
+
+| Assessment | Description | Due |
+|------------|-------------|-----|
+| **Homework** | Implement a supervised model (any algorithm) on a dataset of your choice (UCI repository recommended). Provide: data preprocessing steps, model description, evaluation metrics, and a short reflection on bias‑variance. | Next class |
+| **Quiz (in‑class, 5 min)** | 4 multiple‑choice items covering definitions, loss functions, and evaluation metrics. | End of today’s session |
+| **Participation** | Quality of contributions to discussion questions and activities. | Ongoing |
+
+---
+
+## 7. Required Materials  
+
+- **Slides** (PDF) – covering definitions, equations, and algorithm sketches.  
+- **Jupyter notebook** – pre‑populated with the Iris logistic regression example and placeholders for student code.  
+- **Handouts** – confusion‑matrix worksheet, summary table of loss functions & metrics.  
+- **Software** – Python 3.10+, `numpy`, `pandas`, `scikit-learn`, `matplotlib`.  
+
+---
+
+## 8. References & Further Reading  
+
+1. **Bishop, C. M.** *Pattern Recognition and Machine Learning.* Springer, 2006 – Chapters 1‑3.  
+2. **Goodfellow, I., Bengio, Y., Courville, A.** *Deep Learning.* MIT Press, 2016 – Section 5.1 (Supervised Learning).  
+3. **James, G., Witten, D., Hastie, T., Tibshirani, R.** *An Introduction to Statistical Learning.* Springer, 2013 – Chapter 2 (Linear Regression) & Chapter 4 (Classification).  
+4. **Kuhn, M., Johnson, K.** *Applied Predictive Modeling.* Springer, 2013 – Practical guidance on preprocessing and model evaluation.  
+
+---
+
+### Closing Thought  
+
+> *“Supervised learning is the art of teaching a machine to infer the hidden rule that maps observations to outcomes—provided we can show it enough correct examples.”*  
+
+Encourage students to view each labelled example as a **conversation** with the model: the more diverse and representative the dialogue, the better the model will understand the world.  
+
+--- 
+
+*End of Lesson Plan*

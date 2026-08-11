@@ -1,7 +1,26 @@
 from services.chatbot.chat_intent import RetrievalMode
 from llm_state import get_user_preferences
+from services.chatbot.student_scope_router import is_student_question_in_scope as semantic_scope_check
 
 MAX_CONTEXT_LEN = 12000
+
+
+# Student Chat is an academic mentor, not an unrestricted general-purpose
+# assistant. Keep this gate deterministic so an out-of-scope question is
+# rejected before document retrieval and before an LLM call adds latency.
+STUDENT_SCOPE_MESSAGE = (
+    "I’m MentorAI, focused on your studies and student goals. "
+    "I can help with coursework, academic concepts, coding, exams, "
+    "your documents, career preparation, and learning plans. "
+    "I can’t answer unrelated general-trivia or lifestyle questions. "
+    "Please rephrase your question around your learning or student needs."
+)
+
+
+
+def _is_student_question_in_scope(question: str) -> bool:
+    """Compatibility wrapper for the semantic Student Chat scope router."""
+    return semantic_scope_check(question)
 
 
 def get_role_instruction(role: str, user_name: str) -> str:
@@ -29,8 +48,9 @@ You are assisting a PROFESSOR named {user_name}.
 You are assisting a STUDENT ({user_name}).
 
 • You have access to universal documents, course-shared documents for enrolled courses, and your own private documents.
-• You can ask about study help, marks, improvement, and learning plans.
-• You can ask general knowledge, coding, and learning questions freely.
+• You can ask about coursework, academic concepts, coding, marks, improvement,
+  career preparation, and learning plans.
+• Keep questions connected to your education or student goals.
 • You MUST NOT reference documents that are private to professors or admins.
 """
     return ""
@@ -115,7 +135,9 @@ CRITICAL RULES:
 MODE: LEARNING MODE
 CRITICAL RULES:
 • Use educational documents from CONTEXT if they are relevant.
-• If educational documents are unavailable or irrelevant, answer using your broad general knowledge.
+• If educational documents are unavailable or irrelevant, answer only with educational background relevant to the student's question.
+• Do not answer unrelated trivia, entertainment, sports, animal, recipe, travel, or lifestyle questions.
+• If a question is outside the academic/student-support scope, politely refuse and redirect the student to coursework, coding, study help, documents, career preparation, or learning plans.
 • CLEARLY SEPARATE your answer into two distinct sections:
     1. 'Information from documents' (attribute chunks to source documents, e.g. 'Source: notes.pdf')
     2. 'Information from general knowledge'
@@ -184,6 +206,16 @@ GENERAL FORMATTING RULES:
 
 
 def apply_role_guardrails(role: str, question: str) -> str:
-    """Role guardrails are now minimal — role controls document visibility,
-    not question capability. All users can ask general knowledge questions."""
-    return ""  # allowed
+    """Apply the Student Chat domain boundary before retrieval/LLM execution.
+
+    The domain gate intentionally applies only to student chat. Professor and
+    admin flows retain their existing capability behavior; their role still
+    controls document visibility.
+    """
+    if (role or "").strip().lower() != "student":
+        return ""
+
+    if _is_student_question_in_scope(question):
+        return ""
+
+    return STUDENT_SCOPE_MESSAGE

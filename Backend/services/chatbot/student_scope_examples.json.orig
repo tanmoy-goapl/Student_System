@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "allowed": [
+    {
+      "category": "academic_learning",
+      "examples": [
+        "Explain a concept from my coursework.",
+        "What is a deadlock avoidance algorithm in operating systems?",
+        "Help me understand a difficult academic topic.",
+        "What is the difference between two computer science concepts?",
+        "Explain this topic in simple language for my class.",
+        "Explain a biology topic involving an animal for my assignment.",
+        "Explain an academic concept from biology or natural science.",
+        "How does a plant or tree grow from a biology perspective?",
+        "Explain the biology of an animal as a scientific topic."
+      ]
+    },
+    {
+      "category": "coding_and_computer_science",
+      "examples": [
+        "Help me understand an algorithm or data structure.",
+        "Why is my program producing this error?",
+        "Explain recursion, databases, or operating systems.",
+        "Help me prepare for a programming interview.",
+        "What is the time complexity of this code?"
+      ]
+    },
+    {
+      "category": "student_support",
+      "examples": [
+        "How can I improve my marks and study habits?",
+        "Help me prepare for my exams.",
+        "What does my attendance or academic record show?",
+        "Help me understand my uploaded study documents.",
+        "Create a learning plan for my career goal."
+      ]
+    },
+    {
+      "category": "career_and_roadmap",
+      "examples": [
+        "How should I prepare for a software engineering career?",
+        "Create a personalized learning roadmap.",
+        "Which skills should I learn for an internship?",
+        "Review my resume and suggest improvements.",
+        "How can I prepare for placement interviews?"
+      ]
+    }
+  ],
+  "blocked": [
+    {
+      "category": "general_trivia",
+      "examples": [
+        "What is a peacock?",
+        "Who is a famous actor?",
+        "Tell me an unrelated fun fact.",
+        "What is the capital of a country?",
+        "Tell me the latest celebrity news."
+      ]
+    },
+    {
+      "category": "lifestyle_and_entertainment",
+      "examples": [
+        "Give me a recipe for dinner.",
+        "What is today's weather forecast?",
+        "Who won the cricket match?",
+        "Plan my vacation trip.",
+        "Tell me a joke."
+      ]
+    }
+  ]
+}

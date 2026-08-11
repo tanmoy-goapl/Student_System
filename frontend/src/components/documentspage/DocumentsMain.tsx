@@ -454,15 +454,11 @@ export default function DocumentsMain({ documents, totalCount, kpis, onDelete }:
                 </button>
             </div>
 
-            {/* Doc count + Sort */}
+            {/* Doc count */}
             <div className="flex items-center justify-between">
                 <p className="text-sm text-white/55">
                     <span className="text-white font-medium">{tabFilteredDocs.length}</span> documents found
                 </p>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs text-white/55 hover:text-white/80 hover:bg-white/5 transition">
-                    <ArrowUpDown className="h-3 w-3" />
-                    Sort
-                </button>
             </div>
 
             {/* Document list */}

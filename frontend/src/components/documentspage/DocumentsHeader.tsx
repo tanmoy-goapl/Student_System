@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Search, Upload, Calendar } from 'lucide-react';
 
-export type FilterType = 'All' | 'PDF' | 'DOC' | 'TXT' | 'Date';
+export type FilterType = 'All' | 'PDF' | 'DOC' | 'TXT';
 
 type Props = {
     activeFilter: FilterType;
@@ -13,7 +13,7 @@ type Props = {
     onUpload: () => void;
 };
 
-const FILTERS: FilterType[] = ['All', 'PDF', 'DOC', 'TXT', 'Date'];
+const FILTERS: FilterType[] = ['All', 'PDF', 'DOC', 'TXT'];
 
 export default function DocumentsHeader({
     activeFilter,
@@ -56,7 +56,6 @@ export default function DocumentsHeader({
                                     : 'text-white/55 hover:text-white/80 hover:bg-white/5'
                             }`}
                         >
-                            {filter === 'Date' && <Calendar className="h-3 w-3" />}
                             {filter}
                         </button>
                     ))}

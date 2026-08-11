@@ -1,0 +1,181 @@
+## **AI – Basics of Artificial Intelligence**  
+*Subject: Artificial Intelligence*  
+*Length: ~750 words – bullet‑point format for quick revision*  
+
+---  
+
+### 1. What is AI?  
+
+| Term | Definition |
+|------|------------|
+| **Artificial Intelligence (AI)** | The field of computer science that designs machines (software or hardware) capable of performing tasks that normally require human intelligence – e.g., reasoning, learning, perception, language understanding, and decision‑making. |
+| **Narrow (Weak) AI** | Systems that excel at a single, well‑defined task (e.g., image classification, chess‑playing). |
+| **General (Strong) AI** | Hypothetical machines that possess the full range of human cognitive abilities and can transfer knowledge across domains. |
+| **Super‑intelligent AI** | AI that surpasses human performance in every cognitive domain (purely speculative at present). |
+
+> **Exam tip:** Always distinguish **AI** (the discipline) from **AI systems** (the actual software/hardware).  
+
+---  
+
+### 2. Core Pillars of AI  
+
+| Pillar | Key Concepts | Typical Techniques |
+|--------|--------------|--------------------|
+| **Machine Learning (ML)** | Algorithms that improve performance from data without explicit programming. | Supervised, unsupervised, semi‑supervised, reinforcement learning. |
+| **Knowledge Representation & Reasoning (KRR)** | Formal ways to encode facts, rules, and relationships so a machine can infer new knowledge. | Logic (propositional, first‑order), ontologies, semantic networks, rule‑based systems. |
+| **Perception** | Converting raw sensory input (vision, audio, touch) into structured information. | Computer vision, speech recognition, sensor fusion. |
+| **Natural Language Processing (NLP)** | Understanding and generating human language. | Tokenisation, parsing, embeddings, transformers. |
+| **Robotics & Embodied AI** | Physical agents that act in the real world, integrating perception, planning, and control. | Motion planning, SLAM, actuators, reinforcement learning for control. |
+| **Planning & Decision‑Making** | Selecting a sequence of actions to achieve a goal under constraints. | Classical planning, Markov Decision Processes (MDPs), Monte‑Carlo Tree Search. |
+
+> **Exam highlight:** AI is **not** just ML. A well‑rounded answer must mention at least three pillars (e.g., ML + KRR + NLP).  
+
+---  
+
+### 3. Machine Learning – The Engine of Modern AI  
+
+#### 3.1 Learning Paradigms  
+
+- **Supervised Learning** – Learn a mapping *f(x) → y* from labelled examples.  
+  - *Classification* (discrete output) – e.g., spam detection.  
+  - *Regression* (continuous output) – e.g., house‑price prediction.  
+
+- **Unsupervised Learning** – Discover structure from unlabelled data.  
+  - *Clustering* (k‑means, DBSCAN).  
+  - *Dimensionality reduction* (PCA, t‑SNE, autoencoders).  
+
+- **Semi‑Supervised Learning** – Small labelled set + large unlabelled set; leverages both.  
+
+- **Reinforcement Learning (RL)** – Agent learns by interacting with an environment, receiving **rewards**.  
+  - Core elements: **state**, **action**, **policy**, **reward**, **value function**.  
+  - Key algorithms: Q‑learning, SARSA, Policy Gradient, Deep Q‑Network (DQN), Proximal Policy Optimisation (PPO).  
+
+#### 3.2 Model Families  
+
+| Family | Typical Use‑Cases | Strengths | Weaknesses |
+|--------|------------------|----------|------------|
+| **Linear models** (logistic regression, linear regression) | Baseline, interpretable problems | Simplicity, fast training | Limited to linear relationships |
+| **Decision Trees & Ensembles** (Random Forest, Gradient Boosting) | Tabular data, mixed feature types | Handles non‑linearity, robust to outliers | Can overfit; ensembles lose interpretability |
+| **Support Vector Machines (SVM)** | Medium‑size, high‑dimensional data | Strong theoretical guarantees | Scaling issues, kernel selection |
+| **Neural Networks (NNs)** – shallow to deep | Images, speech, text, complex patterns | Universal function approximators | Data‑hungry, black‑box, require tuning |
+| **Probabilistic Graphical Models** (Bayes nets, CRFs) | Structured prediction, uncertainty | Explicit probabilistic reasoning | Inference can be intractable |
+
+> **Exam tip:** When asked to “compare two ML models,” use a **4‑point table** (use‑case, strength, weakness, typical algorithm).  
+
+---  
+
+### 4. Deep Learning – A Sub‑field of ML  
+
+- **Artificial Neural Network (ANN)** – Layers of **neurons** with weighted connections; activation functions introduce non‑linearity.  
+- **Convolutional Neural Networks (CNNs)** – Exploit spatial locality; dominant in computer vision.  
+  - Key layers: **convolution**, **pooling**, **batch‑norm**, **fully‑connected**.  
+- **Recurrent Neural Networks (RNNs)** – Model sequential data; variants: **LSTM**, **GRU** mitigate vanishing gradients.  
+- **Transformers** – Attention‑based architecture; **self‑attention** replaces recurrence. Basis of BERT, GPT, Vision Transformers.  
+- **Generative Models** – Learn data distribution to generate new samples.  
+  - **GANs** (Generator vs. Discriminator).  
+  - **VAEs** (Variational Autoencoders).  
+
+| Concept | Why it matters for exams |
+|---------|--------------------------|
+| **Back‑propagation** | Core learning rule; derive gradient of loss w.r.t. weights. |
+| **Overfitting / Underfitting** | Trade‑off; use **regularisation** (L2, dropout, early stopping). |
+| **Evaluation Metrics** | Accuracy, precision/recall/F1, ROC‑AUC (classification); MSE, MAE (regression); BLEU (NLP); IoU (segmentation). |
+| **Transfer Learning** | Re‑use pretrained models → less data, faster convergence. |
+
+---  
+
+### 5. Knowledge Representation & Reasoning  
+
+- **Logic‑based KR** – Facts (`cat(Tom)`), rules (`mammal(X) :- cat(X)`). Enables **deductive reasoning** (forward/backward chaining).  
+- **Ontologies** – Formal vocabularies (e.g., **OWL**, **RDF**) for domains; support **semantic web**.  
+- **Probabilistic KR** – **Bayesian Networks** encode conditional dependencies; allow **probabilistic inference**.  
+- **Rule‑based Expert Systems** – IF‑THEN rules; classic example: **MYCIN** (medical diagnosis).  
+
+> **Exam highlight:** Distinguish **symbolic AI** (logic, rules) from **sub‑symbolic AI** (neural nets).  
+
+---  
+
+### 6. Natural Language Processing (NLP) Essentials  
+
+| Component | Core Idea | Representative Models |
+|-----------|----------|------------------------|
+| **Tokenisation & Embedding** | Convert text → vectors. | Word2Vec, GloVe, FastText, BERT embeddings. |
+| **Sequence Modelling** | Capture order & context. | RNN/LSTM, Transformer (BERT, GPT). |
+| **Parsing & Syntax** | Grammatical structure. | Dependency parsers, constituency parsers. |
+| **Semantic Understanding** | Meaning extraction. | Named Entity Recognition (NER), sentiment analysis, QA. |
+| **Generation** | Produce human‑like text. | GPT‑3/4, T5, BART. |
+
+- **Evaluation** – BLEU (translation), ROUGE (summarisation), perplexity (language modelling).  
+
+---  
+
+### 7. Perception – Vision & Speech  
+
+- **Computer Vision Pipeline**  
+  1. **Pre‑processing** – Normalisation, data augmentation.  
+  2. **Feature Extraction** – CNN layers learn hierarchical features.  
+  3. **Task Heads** – Classification, detection (YOLO, Faster‑RCNN), segmentation (U‑Net, Mask‑RCNN).  
+
+- **Speech & Audio**  
+  - **Feature extraction** – MFCC, spectrograms.  
+  - **Models** – CNN‑RNN hybrids, Transformers (Wav2Vec, Whisper).  
+
+---  
+
+### 8. Planning & Decision‑Making  
+
+- **Classical Planning** – State‑space search (A*, Dijkstra).  
+- **MDPs** – Formalism for stochastic environments.  
+  - **Bellman Equation** – Foundation for value iteration & policy iteration.  
+- **Monte‑Carlo Tree Search (MCTS)** – Used in AlphaGo/AlphaZero.  
+
+> **Exam tip:** Be ready to write the **Bellman optimality equation** and explain its components.  
+
+---  
+
+### 9. Evaluation & Ethical Considerations  
+
+| Aspect | Concern | Mitigation |
+|--------|---------|------------|
+| **Bias & Fairness** | Models inherit societal biases from data. | Dataset audits, fairness metrics (DP, EO), debiasing techniques. |
+| **Explainability (XAI)** | Black‑box decisions hinder trust. | SHAP, LIME, counterfactual explanations, rule extraction. |
+| **Privacy** | Training on personal data may violate regulations. | Differential privacy, federated learning. |
+| **Safety & Robustness** | Adversarial attacks, distribution shift. | Adversarial training, robust optimisation, monitoring. |
+| **Legal/Regulatory** | GDPR, AI Act (EU), sector‑specific rules. | Compliance checks, impact assessments. |
+
+---  
+
+### 10. Quick‑Recall Cheat Sheet  
+
+- **AI vs. ML vs. DL** – AI (umbrella) → ML (learn from data) → DL (deep neural nets).  
+- **Three ML paradigms** – Supervised, Unsupervised, Reinforcement.  
+- **Key algorithms** – Linear regression, Decision Tree, SVM, k‑means, Q‑learning, DQN, Transformer.  
+- **Common loss functions** – Cross‑entropy (classification), MSE (regression), Hinge (SVM).  
+- **Regularisation** – L1/L2, Dropout, Early stopping.  
+- **Evaluation** – Confusion matrix → precision/recall/F1; ROC‑AUC for ranking; BLEU for translation.  
+- **Ethics** – Bias, Explainability, Privacy, Safety, Legal compliance.  
+
+---  
+
+### 11. Sample Exam Questions & Model Answers  
+
+| Q | Model Answer (bullet points) |
+|---|------------------------------|
+| **Define AI and differentiate it from ML.** | • AI = field aiming at intelligent behaviour. <br>• ML = subset of AI that learns patterns from data. <br>• AI includes symbolic reasoning, robotics, perception – not just learning. |
+| **List and briefly describe the four components of a Reinforcement Learning problem.** | • **State (s)** – representation of environment at a time step. <br>• **Action (a)** – set of possible moves the agent can take. <br>• **Reward (r)** – scalar feedback after an action. <br>• **Policy (π)** – mapping from states to action probabilities. |
+| **Compare a Decision Tree and a Neural Network for tabular data.** | • **Interpretability** – Tree: high; NN: low. <br>• **Training speed** – Tree: fast; NN: slower, needs many epochs. <br>• **Non‑linearity** – Both capture, but NN handles complex interactions better. <br>• **Overfitting** – Tree prone (deep trees); NN mitigated by regularisation. |
+| **Write the Bellman optimality equation for a deterministic MDP.** | \( V^{*}(s) = \max_{a} \big[ R(s,a) + \gamma \, V^{*}(s') \big] \) where \(s' = T(s,a)\). |
+| **State two ethical risks of deploying facial‑recognition systems and one mitigation.** | • **Bias** – higher error rates for certain demographics. <br>• **Privacy invasion** – mass surveillance. <br>• **Mitigation** – bias audits + differential privacy or opt‑out mechanisms. |
+
+---  
+
+### 12. Further Reading (for deep dive)  
+
+1. **Russell & Norvig – “Artificial Intelligence: A Modern Approach”** – definitive textbook.  
+2. **Goodfellow, Bengio & Courville – “Deep Learning”** – core DL concepts.  
+3. **Jurafsky & Martin – “Speech and Language Processing”** – NLP fundamentals.  
+4. **Sutton & Barto – “Reinforcement Learning: An Introduction”** – RL theory & algorithms.  
+
+---  
+
+**End of Revision Notes** – keep this sheet handy for rapid recall before the exam!

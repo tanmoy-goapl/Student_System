@@ -1,0 +1,82 @@
+STUDENT_SYSTEM/
+├── .env                         # Root environment file; values intentionally omitted
+├── .git/                        # Git metadata
+├── .vscode/                     # Editor/workspace settings
+├── docker-compose.yml           # PostgreSQL, FastAPI backend, and frontend services
+├── mentorai-documents.zip       # Document/seed artifact at the project root
+├── node_modules/                # Generated JavaScript dependencies; summarized
+├── Backend/
+│   ├── .env                     # Backend environment file; values intentionally omitted
+│   ├── Dockerfile               # Python 3.11 backend image
+│   ├── requirements.txt         # Python dependencies
+│   ├── main.py                  # FastAPI app, lifespan, router registration, health routes
+│   ├── config.py                # Environment-backed DB, LLM, auth, upload, and CORS settings
+│   ├── database.py              # SQLAlchemy engine/session, table creation, migrations/seeding
+│   ├── models.py                # Users, documents, document chunks, chat messages
+│   ├── practice_models.py       # Practice, performance, quiz, learning-cache models
+│   ├── roadmap_models.py        # Goals, roadmaps, tasks, learner preferences
+│   ├── classroom_models.py      # Classrooms, enrollment, resources, curricula
+│   ├── llm_state.py             # Process-local provider and preference state
+│   ├── chroma_store.py          # Persistent ChromaDB collection operations
+│   ├── routes/
+│   │   ├── auth.py              # Login, registration, admin user operations
+│   │   ├── chat.py              # Streaming chat, retrieval, history, roadmap handoff
+│   │   ├── upload.py            # File upload, extraction, classification, indexing
+│   │   ├── documents.py         # Role-filtered document listing and deletion
+│   │   ├── learning/            # Learning data, generated material, AI actions, revision
+│   │   ├── practice/            # Topics, sessions, answers, performance
+│   │   ├── roadmap.py           # Goals and roadmap lifecycle
+│   │   ├── classroom.py         # Classes, resources, curriculum upload/editing
+│   │   ├── professor.py         # Professor dashboards, class analytics, insights
+│   │   ├── admin.py             # Management dashboards and system summaries
+│   │   ├── homepage.py          # Student dashboard aggregation
+│   │   ├── performance.py       # Student performance views
+│   │   ├── analytics.py         # Student analytics endpoints
+│   │   ├── courses.py           # Curriculum/course views
+│   │   ├── career.py            # Career data endpoint
+│   │   ├── settings.py          # In-memory preferences and LLM selection
+│   │   └── documents.py         # Document workspace API
+│   ├── services/
+│   │   ├── llm_client.py        # General chat LLM client and fallback chain
+│   │   ├── embedding.py         # SentenceTransformer embedding model
+│   │   ├── extract.py           # PDF/TXT/DOCX/image extraction and chunking
+│   │   ├── chunk.py             # Alternate character-based chunker
+│   │   ├── search.py            # Document-scoped Chroma retrieval/reranking
+│   │   ├── context_builder.py   # Query rewrite, retrieval strategy, context assembly
+│   │   ├── document_resolver.py # Role/visibility document resolution
+│   │   ├── query_planner.py     # Retrieval strategy selection
+│   │   ├── chatbot/              # Intent, prompts, personalized roadmap helpers
+│   │   ├── practice/             # Question/content generation and practice analytics
+│   │   ├── roadmap/              # LLM roadmap generation
+│   │   ├── analytics_engine.py  # Student/topic/class metrics
+│   │   ├── homepage_engine.py    # Student dashboard calculations
+│   │   └── recommendation_engine.py # Recommendations and behavioral insights
+│   ├── schemas/                 # Pydantic request/response schemas
+│   ├── config/                  # Static curriculum, topic, and resource JSON
+│   ├── uploads/                 # Runtime/user/classroom document storage; summarized
+│   ├── chroma_db/               # Persistent vector index; summarized
+│   ├── data/                    # Runtime/cache/debug data; summarized
+│   ├── scratch/                 # Investigation and seed helper scripts
+│   ├── system_architecture_doc.md # Existing architecture/schema notes
+│   └── chatbot.log             # Runtime chat log; existing modified file left untouched
+└── frontend/
+    ├── package.json             # Next.js/React and UI dependencies
+    ├── package-lock.json        # Locked JavaScript dependency graph
+    ├── Dockerfile               # Node 20 multi-stage image
+    ├── next.config.ts           # Next.js configuration
+    ├── tsconfig.json            # TypeScript configuration
+    ├── eslint.config.mjs        # ESLint configuration
+    ├── src/app/                 # Next App Router pages and server proxy routes
+    │   ├── api/                 # Backend proxy handlers for product APIs
+    │   ├── professor/            # Professor page routes
+    │   ├── admin/                # Management/admin page routes
+    │   └── *.tsx/page.tsx        # Student, auth, chat, learning, practice, career, etc.
+    ├── src/components/          # Shared student UI and feature components
+    ├── src/professor/            # Professor feature components
+    ├── src/admin/                # Admin feature components
+    ├── src/pages/                # Legacy/page-level feature components
+    ├── src/lib/api.ts            # Browser-side API client using /api proxy routes
+    ├── src/hooks/                # Client hooks, including localStorage auth state
+    ├── src/types/                # Shared TypeScript types
+    ├── src/constants/            # UI/dashboard fixture and label data
+    └── public/                  # Static assets and logo

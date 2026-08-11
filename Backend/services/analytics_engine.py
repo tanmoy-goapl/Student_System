@@ -77,6 +77,15 @@ def calculate_topic_metrics(perf) -> dict:
     }
 
 def get_predefined_topics(student_id: int, subject_name: str, db: Session) -> list:
+    # Normalize subject name
+    subject_lower = subject_name.lower().strip()
+    if "dsa" in subject_lower or "structure" in subject_lower:
+        subject_name = "Data Structures"
+    elif "operating" in subject_lower or "os" in subject_lower:
+        subject_name = "Operating Systems"
+    elif "network" in subject_lower or "cn" in subject_lower:
+        subject_name = "Computer Networks"
+
     # 1. Try to find dynamic classroom curriculum first (highest priority)
     try:
         from classroom_models import ClassCurriculum, StudentClass
@@ -160,8 +169,8 @@ def get_student_subjects(student_id: int, db: Session) -> list:
             subjects.append(curr.subject_name)
     return subjects
 
-def calculate_subject_metrics(student_id: int, subject: str, db: Session) -> dict:
-    predefined_topics = get_predefined_topics(student_id, subject, db)
+def calculate_subject_metrics(student_id: int, subject: str, db: Session, topics_override=None) -> dict:
+    predefined_topics = topics_override if topics_override is not None else get_predefined_topics(student_id, subject, db)
     total_topics = len(predefined_topics)
     
     if predefined_topics:

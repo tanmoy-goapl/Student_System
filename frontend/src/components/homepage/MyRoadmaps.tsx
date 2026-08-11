@@ -25,6 +25,7 @@ interface Roadmap {
 
 interface CourseSubject {
   name: string;
+  class_id?: number;
   topics_completed: number;
   total_topics: number;
   accuracy: number;
@@ -92,8 +93,11 @@ export default function MyRoadmaps() {
     router.push(`/roadmap?roadmap_id=${roadmapId}`);
   };
   
-  const handleContinueCourse = (subjectName: string) => {
-    router.push(`/courses/subject/${encodeURIComponent(subjectName)}`);
+  const handleContinueCourse = (subject: CourseSubject) => {
+    const destination = subject.class_id
+      ? `/classes/${subject.class_id}`
+      : `/classes/subject/${encodeURIComponent(subject.name)}`;
+    router.push(destination);
   };
 
   const handleDelete = async (e: React.MouseEvent, id: number) => {
@@ -170,7 +174,7 @@ export default function MyRoadmaps() {
             ) : currentSemester?.subjects.map((subject, index) => (
               <div
                 key={index}
-                onClick={() => handleContinueCourse(subject.name)}
+                onClick={() => handleContinueCourse(subject)}
                 className={`group flex flex-col justify-between rounded-2xl cursor-pointer border border-white/10 bg-gradient-to-br ${GRADIENTS[index % GRADIENTS.length]} p-5 transition duration-300 hover:scale-[1.02] hover:border-blue-500/50 min-w-[320px] max-w-[320px] shrink-0 snap-start`}
               >
                 <div className="flex items-start justify-between mb-2">

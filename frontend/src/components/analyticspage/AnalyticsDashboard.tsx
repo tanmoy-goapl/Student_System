@@ -54,8 +54,10 @@ export default function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const fetchData = async () => {
       try {
         const studentId = localStorage.getItem("user_id");
@@ -131,7 +133,7 @@ export default function AnalyticsDashboard() {
           <BarChart3 className="text-blue-400" size={28} />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Comprehensive Analytics</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Performance</h1>
           <p className="text-slate-400">Real-time insights powered by your actual performance data.</p>
         </div>
       </div>
@@ -157,21 +159,23 @@ export default function AnalyticsDashboard() {
               Weekly Activity
             </h2>
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data.weeklyActivity} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                  <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis yAxisId="left" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis yAxisId="right" orientation="right" stroke="#10b981" fontSize={12} tickLine={false} axisLine={false} />
-                  <RechartsTooltip 
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
-                    itemStyle={{ color: '#e2e8f0' }}
-                  />
-                  <Legend verticalAlign="top" height={36} />
-                  <Line yAxisId="left" type="monotone" dataKey="attempts" name="Quiz Attempts" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
-                  <Line yAxisId="right" type="monotone" dataKey="accuracy" name="Accuracy %" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
+              {mounted && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data.weeklyActivity} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis yAxisId="left" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#10b981" fontSize={12} tickLine={false} axisLine={false} />
+                    <RechartsTooltip 
+                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
+                      itemStyle={{ color: '#e2e8f0' }}
+                    />
+                    <Legend verticalAlign="top" height={36} />
+                    <Line yAxisId="left" type="monotone" dataKey="attempts" name="Quiz Attempts" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
+                    <Line yAxisId="right" type="monotone" dataKey="accuracy" name="Accuracy %" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
@@ -181,7 +185,7 @@ export default function AnalyticsDashboard() {
               <BookOpen className="text-purple-400" size={20} />
               Subject Performance
             </h2>
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-[300px] overflow-y-auto pr-2 purple-scrollbar">
               {data.subjectPerformance.length > 0 ? (
                 data.subjectPerformance.map((subj, idx) => (
                   <div key={idx} className="space-y-2">
@@ -207,6 +211,30 @@ export default function AnalyticsDashboard() {
               )}
             </div>
           </div>
+
+          {/* ROADMAP PERFORMANCE */}
+          {data.roadmapPerformance.length > 0 && (
+            <div className="bg-[#1e293b]/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
+              <h2 className="text-lg font-semibold text-white mb-4">Active Roadmaps</h2>
+              <div className="space-y-4 max-h-[320px] overflow-y-auto pr-2 purple-scrollbar">
+                {data.roadmapPerformance.map((rm, idx) => (
+                  <div key={idx} className="bg-[#0f172a]/50 p-4 rounded-xl border border-white/5 space-y-3">
+                    <p className="text-sm font-semibold text-white">{rm.roadmapName}</p>
+                    <div className="flex justify-between text-xs text-slate-400">
+                      <span>Week {rm.currentWeek} • Day {rm.currentDay}</span>
+                      <span>{rm.remainingTasks} Tasks Left</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full"
+                        style={{ width: `${rm.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
 
@@ -260,7 +288,7 @@ export default function AnalyticsDashboard() {
           <div className="bg-[#1e293b]/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
             <h2 className="text-lg font-semibold text-white mb-4">Weakness Analysis</h2>
             
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 purple-scrollbar">
               <div>
                 <h3 className="text-xs font-semibold text-red-400 uppercase tracking-wider mb-2">Weak (&lt; 50%)</h3>
                 <div className="flex flex-wrap gap-2">
@@ -298,31 +326,6 @@ export default function AnalyticsDashboard() {
               </div>
             </div>
           </div>
-
-          {/* ROADMAP PERFORMANCE */}
-          {data.roadmapPerformance.length > 0 && (
-            <div className="bg-[#1e293b]/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
-              <h2 className="text-lg font-semibold text-white mb-4">Active Roadmaps</h2>
-              <div className="space-y-4">
-                {data.roadmapPerformance.map((rm, idx) => (
-                  <div key={idx} className="bg-[#0f172a]/50 p-4 rounded-xl border border-white/5 space-y-3">
-                    <p className="text-sm font-semibold text-white">{rm.roadmapName}</p>
-                    <div className="flex justify-between text-xs text-slate-400">
-                      <span>Week {rm.currentWeek} • Day {rm.currentDay}</span>
-                      <span>{rm.remainingTasks} Tasks Left</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-blue-500 rounded-full"
-                        style={{ width: `${rm.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
         </div>
       </div>
     </div>

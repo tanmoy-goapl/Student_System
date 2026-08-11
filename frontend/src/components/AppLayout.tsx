@@ -18,6 +18,7 @@ interface SidebarRoute {
  
 import ProfessorSidebar from "@/professor/components/ProfessorSidebar";
 import AdminSidebar from "@/admin/components/AdminSidebar";
+import ChatSessionProvider from "@/components/ChatSessionProvider";
 
 export default function AppLayout({
   children,
@@ -30,7 +31,7 @@ export default function AppLayout({
  
   const isLogin = pathname === "/login";
  
-  const { role, loading } = useAuth();
+  const { role, userId, userName, loading } = useAuth();
   const [rightOpen, setRightOpen] = useState(false);
  
   useEffect(() => {
@@ -83,7 +84,8 @@ export default function AppLayout({
   }
  
   return (
-    <div className="h-screen bg-[#020617] flex overflow-hidden">
+    <ChatSessionProvider userId={userId} role={role} userName={userName}>
+      <div className="h-screen bg-[#020617] flex overflow-hidden">
       {/* Main sidebar (left) */}
       {!isLogin && !isStudioRoute && (
         <Suspense fallback={<div className="fixed left-0 top-0 h-screen w-64 z-50 bg-slate-950/70" />}>
@@ -112,7 +114,7 @@ export default function AppLayout({
  
           {/* TopBar — sticky, shrink-0 */}
           {!isLogin && !isStudioRoute && (
-            <header className="sticky top-0 z-40 h-16 shrink-0 border-b border-white/5 bg-slate-950/70 backdrop-blur-md flex items-center">
+            <header className="sticky top-0 z-[100] h-16 shrink-0 border-b border-white/5 bg-slate-950/70 backdrop-blur-md flex items-center">
               <Suspense fallback={<div className="h-full w-full bg-[#020617]" />}>
                 <TopBar rightOpen={rightOpen} onRightOpenChange={setRightOpen} />
               </Suspense>
@@ -137,6 +139,7 @@ export default function AppLayout({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </ChatSessionProvider>
   );
 }

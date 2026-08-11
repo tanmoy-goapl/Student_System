@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from config import (
     GPT_API_KEY, GPT_BASE_URL, GPT_MODEL,
@@ -8,6 +9,17 @@ from llm_state import get_provider
 from openai import OpenAI
 
 logger = logging.getLogger(__name__)
+
+
+class LLMStreamTimeout(Exception):
+    """Raised when a chat generation exceeds its wall-clock budget."""
+
+
+def _chat_stream_budget() -> float:
+    try:
+        return max(10.0, float(os.getenv("CHAT_LLM_MAX_SECONDS", "90")))
+    except (TypeError, ValueError):
+        return 90.0
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  CACHED CLIENTS — avoids re-creating HTTP sessions + TLS on every call
@@ -92,8 +104,11 @@ def _call_llm_stream(system_prompt: str, history: list, question: str):
     provider, configs = _build_configs()
     logger.info(f"  [LLM Stream] Preferred provider: {provider}")
     logger.info(f"  [LLM Stream] Resolved configuration chain: {[c[0] for c in configs]}")
+    deadline = time.monotonic() + _chat_stream_budget()
 
     for name, api_key, base_url, model in configs:
+        if time.monotonic() >= deadline:
+            raise LLMStreamTimeout("chat generation exceeded its time limit")
         try:
             logger.info(f"  [LLM Stream] Trying provider '{name}' at {base_url} using model {model}...")
             client = _get_client(api_key, base_url)
@@ -115,6 +130,12 @@ def _call_llm_stream(system_prompt: str, history: list, question: str):
             
             first_byte_received = False
             for chunk in resp:
+                if time.monotonic() >= deadline:
+                    try:
+                        resp.close()
+                    except Exception:
+                        pass
+                    raise LLMStreamTimeout("chat generation exceeded its time limit")
                 if not first_byte_received:
                     t_first_byte = time.perf_counter()
                     logger.info(f"  [Timing] Network: LLM Request sent -> First byte received: {t_first_byte - t_sent:.3f}s")
@@ -128,6 +149,8 @@ def _call_llm_stream(system_prompt: str, history: list, question: str):
                     yield content
             logger.info(f"  [LLM Stream] Success with provider '{name}'!")
             return
+        except LLMStreamTimeout:
+            raise
         except Exception as e:
             import traceback
             logger.error(f"  [LLM Stream] ERROR trying provider '{name}' ({base_url} {model}): {e}")

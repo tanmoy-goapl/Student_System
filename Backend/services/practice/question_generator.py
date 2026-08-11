@@ -1,21 +1,22 @@
 import json
 import logging
 import re
+import threading
 from typing import Optional
 from sqlalchemy.orm import Session
 
 from models import Document
-from practice_models import PracticeQuestion, PracticeSession
+from practice_models import AICache, LearningContent, PracticeQuestion, PracticeSession
 from chroma_store import query_chunks
 from services.practice.base import _practice_llm_call
+from database import SessionLocal
 
 logger = logging.getLogger("chatbot")
 
 # Global lock to prevent duplicate background generation jobs for the same topic
 generating_topics = set()
+_generating_topics_lock = threading.Lock()
 
-from typing import Optional
-from database import SessionLocal
 
 def generate_master_question_bank(student_id: int, topic: str, db: Optional[Session] = None):
     """
@@ -24,11 +25,12 @@ def generate_master_question_bank(student_id: int, topic: str, db: Optional[Sess
     Stage 2: Continue generating the remaining 25 questions in the background.
     """
     cache_key = f"{student_id}_{topic}"
-    if cache_key in generating_topics:
-        logger.info(f"[PracticeEngine] Background generation already in progress for topic='{topic}'")
-        return
-        
-    generating_topics.add(cache_key)
+    with _generating_topics_lock:
+        if cache_key in generating_topics:
+            logger.info(f"[PracticeEngine] Background generation already in progress for topic='{topic}'")
+            return
+
+        generating_topics.add(cache_key)
     logger.info(f"[PracticeEngine] Starting background incremental generation of master question bank for topic='{topic}'")
     
     try:
@@ -249,9 +251,168 @@ Return ONLY valid JSON array containing objects with a "difficulty" field:
         import traceback
         logger.error(traceback.format_exc())
     finally:
-        generating_topics.discard(cache_key)
+        with _generating_topics_lock:
+            generating_topics.discard(cache_key)
 
 
+def _question_key(question: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", question.strip().lower())
+
+def _parse_quiz_questions(response: str, topic: str, difficulty: str, subtopic: Optional[str]) -> list[dict]:
+    """Parse and normalize a model response without doing another repair call."""
+    if not response or response.startswith("ERROR:"):
+        return []
+    match = re.search(r"\[[\s\S]*\]", response)
+    if not match:
+        return []
+    try:
+        payload = json.loads(match.group())
+    except (json.JSONDecodeError, TypeError):
+        return []
+    if not isinstance(payload, list):
+        return []
+
+    normalized = []
+    seen = set()
+    option_ids = ("A", "B", "C", "D")
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        question = str(item.get("question", "")).strip()
+        options = item.get("options")
+        if not question or not isinstance(options, list) or len(options) < 4:
+            continue
+        clean_options = []
+        for index, option in enumerate(options[:4]):
+            text = str(option.get("text", "") if isinstance(option, dict) else option).strip()
+            if not text:
+                break
+            clean_options.append({"id": option_ids[index], "text": text})
+        if len(clean_options) != 4:
+            continue
+        correct = str(item.get("correct_answer", "")).strip().upper()
+        if correct not in option_ids:
+            for option_id, option in zip(option_ids, clean_options):
+                if correct == option["text"].upper():
+                    correct = option_id
+                    break
+        if correct not in option_ids:
+            continue
+        key = _question_key(question)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        normalized.append({"topic": item.get("topic", topic), "subtopic": item.get("subtopic", subtopic or "General"), "difficulty": str(item.get("difficulty", difficulty)).lower(), "question": question, "options": clean_options, "correct_answer": correct, "explanation": str(item.get("explanation", "")).strip()})
+    return normalized
+def _read_fast_cache(student_id: int, topic: str, difficulty: str, count: int, db: Session) -> list[dict]:
+    cached = db.query(AICache).filter(
+        AICache.student_id == student_id,
+        AICache.topic == topic,
+        AICache.action_type == f"quiz_questions_{difficulty}",
+    ).order_by(AICache.created_at.desc()).first()
+    if not cached:
+        return []
+    try:
+        questions = json.loads(cached.content)
+        if isinstance(questions, list) and len(questions) >= count:
+            return questions[:count]
+    except (json.JSONDecodeError, TypeError):
+        logger.warning(f"[PracticeEngine] Ignoring malformed fast quiz cache for topic='{topic}'")
+    return []
+def _cache_fast_questions(student_id: int, topic: str, difficulty: str, questions: list[dict]) -> None:
+    if not questions:
+        return
+    local_db = SessionLocal()
+    try:
+        action_type = f"quiz_questions_{difficulty}"
+        local_db.query(AICache).filter(
+            AICache.student_id == student_id,
+            AICache.topic == topic,
+            AICache.action_type == action_type,
+        ).delete()
+        local_db.add(AICache(
+            student_id=student_id,
+            topic=topic,
+            action_type=action_type,
+            content=json.dumps(questions),
+        ))
+        local_db.commit()
+    except Exception as exc:
+        local_db.rollback()
+        logger.warning(f"[PracticeEngine] Fast quiz cache write failed: {exc}")
+    finally:
+        local_db.close()
+def _cached_learning_context(student_id: int, topic: str, db: Session) -> str:
+    """Use already-materialized learning notes; never cold-start Chroma on the request path."""
+    try:
+        cached = db.query(LearningContent).filter(
+            LearningContent.student_id == student_id,
+            LearningContent.topic == topic,
+        ).first()
+        if not cached:
+            cached = db.query(LearningContent).filter(LearningContent.topic == topic).first()
+        if cached and cached.content:
+            return json.dumps(cached.content, ensure_ascii=False)[:2500]
+    except Exception as exc:
+        logger.debug(f"[PracticeEngine] Cached learning context unavailable: {exc}")
+    return "(No cached learning notes available — use accurate general knowledge.)"
+def _generate_fast_questions(
+    student_id: int,
+    topic: str,
+    difficulty: str,
+    count: int,
+    db: Session,
+    subtopic: Optional[str] = None,
+) -> list[dict]:
+    cached = _read_fast_cache(student_id, topic, difficulty, count, db)
+    if cached:
+        return cached
+    guidance = {
+        "easy": "basic definitions and recall",
+        "medium": "understanding and practical application",
+        "hard": "deep reasoning and multi-step application",
+        "mixed": "a balanced mix of easy, medium, and hard",
+    }.get(difficulty.lower(), "a balanced mix of easy, medium, and hard")
+    context = _cached_learning_context(student_id, topic, db)
+    system_prompt = (
+        f"Create exactly {count} valid multiple-choice quiz questions about '{topic}'. "
+        f"Use {guidance}. Existing learning notes: {context} "
+        "Return ONLY a JSON array. Each item needs question, exactly four options with ids A/B/C/D, "
+        "correct_answer as one id, difficulty, and a brief explanation. Do not use markdown."
+    )
+    user_prompt = f"Create {count} concise MCQs for {topic}."
+    response = _practice_llm_call(
+        system_prompt,
+        user_prompt,
+        max_tokens=min(2200, max(1000, count * 240)),
+        timeout_seconds=6.5,
+        allow_fallback_chain=False,
+    )
+    questions = _parse_quiz_questions(response, topic, difficulty, subtopic)
+    if len(questions) < count:
+        existing_keys = {_question_key(q["question"]) for q in questions}
+        for fallback in generate_local_fallback_questions(topic, count):
+            if _question_key(fallback["question"]) not in existing_keys:
+                questions.append(fallback)
+                existing_keys.add(_question_key(fallback["question"]))
+            if len(questions) >= count:
+                break
+    result = questions[:count]
+    _cache_fast_questions(student_id, topic, difficulty, result)
+    return result
+def _start_master_generation(student_id: int, topic: str) -> None:
+    """Start document-grounded bank creation only after the fast response is ready."""
+    cache_key = f"{student_id}_{topic}"
+    with _generating_topics_lock:
+        if cache_key in generating_topics:
+            return
+    def run_in_background():
+        bg_db = SessionLocal()
+        try:
+            generate_master_question_bank(student_id, topic, bg_db)
+        finally:
+            bg_db.close()
+    threading.Thread(target=run_in_background, daemon=True, name="practice-bank-generator").start()
 def generate_questions(
     student_id: int,
     topic: str,
@@ -262,29 +423,17 @@ def generate_questions(
     mode: str = "topic",
 ) -> list[dict]:
     """
-    Generate quiz questions using LLM based on document content.
-    Uses ChromaDB to retrieve relevant chunks for the topic.
+    Return a cached bank immediately or generate a bounded first batch.
+    The full document-grounded bank is built asynchronously after the response.
     """
     # 1. Check for master question bank cache
     from practice_models import AICache
-    import time
     
-    # Start background generation if not already active
-    cache_key = f"{student_id}_{topic}"
-    if cache_key not in generating_topics:
-        import threading
-        from database import SessionLocal
-        def run_in_bg():
-            bg_db = SessionLocal()
-            try:
-                generate_master_question_bank(student_id, topic, bg_db)
-            finally:
-                bg_db.close()
-        threading.Thread(target=run_in_bg, daemon=True).start()
+    # Full document-grounded generation is deferred until the fast batch returns.
 
-    # Wait up to 1 second for Stage 1 (initial 5 questions) to generate and cache (2 iterations)
+    # Check for an already available Stage 1/full bank without adding request latency.
     master_cached = None
-    for _ in range(2):
+    for _ in range(1):
         db.expire_all()
         # 1. Try student-specific cache
         master_cached = db.query(AICache).filter(
@@ -317,7 +466,6 @@ def generate_questions(
                 
         if master_cached:
             break
-        time.sleep(0.5)
     
     if master_cached:
 
@@ -380,6 +528,16 @@ def generate_questions(
         except Exception as e:
             logger.error(f"[PracticeEngine] Failed to parse master question bank cache: {e}")
 
+    fast_questions = _generate_fast_questions(
+        student_id,
+        topic,
+        difficulty,
+        count,
+        db,
+        subtopic,
+    )
+    _start_master_generation(student_id, topic)
+    return fast_questions
     search_query = f"{topic} {subtopic or ''}"
     docs = db.query(Document).filter(Document.student_id == student_id).all()
     if not docs:

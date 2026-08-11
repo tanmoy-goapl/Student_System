@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   BookOpen, CheckCircle2, Clock, PlayCircle, Trophy, Target, ArrowLeft, 
-  FileText, ExternalLink, AlertTriangle, Award, Calendar, Percent
+  FileText, ExternalLink, AlertTriangle, Award, Calendar, Percent, Download, Users
 } from 'lucide-react';
 import Loader from '@/components/Loader';
 
@@ -44,27 +44,48 @@ interface ResourceData {
 
 interface SubjectDashboardProps {
   subjectName: string;
+  classId?: number;
+  hideBackButton?: boolean;
+  backRoute?: string;
+  backText?: string;
+  source?: 'courses' | 'personal' | 'classes';
 }
 
-export default function SubjectDashboard({ subjectName }: SubjectDashboardProps) {
+export default function SubjectDashboard({ subjectName, classId, hideBackButton, backRoute, backText, source: navigationSource }: SubjectDashboardProps) {
   const [topics, setTopics] = useState<TopicData[]>([]);
   const [progress, setProgress] = useState<SubjectProgress | null>(null);
   const [resources, setResources] = useState<ResourceData[]>([]);
+  const [classResources, setClassResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'topics' | 'analytics' | 'resources'>('topics');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const querySource = searchParams?.get('source');
+  const source = navigationSource || querySource;
+
+  const resolvedBackRoute = backRoute || (source === 'classes' ? '/classes' : '/courses');
+  const resolvedBackText = backText || (source === 'classes' ? 'Back to Classes' : 'Back to Dashboard');
+
+  const cleanTopicTitle = (title: string) =>
+    title
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/__(.*?)__/g, '$1')
+      .replace(/\*\*/g, '')
+      .trim();
 
   useEffect(() => {
     const fetchSubjectData = async () => {
       try {
         const studentId = localStorage.getItem("user_id");
         if (!studentId) return;
-        const res = await fetch(`/api/courses/subject/${encodeURIComponent(subjectName)}?student_id=${studentId}`);
+        const classQuery = classId ? `&class_id=${classId}` : "";
+        const res = await fetch(`/api/courses/subject/${encodeURIComponent(subjectName)}?student_id=${studentId}${classQuery}`);
         const data = await res.json();
         if (data.success) {
           setTopics(data.topics);
           setProgress(data.progress);
           setResources(data.resources || []);
+          setClassResources(data.class_resources || []);
         }
       } catch (err) {
         console.error("Failed to load subject data:", err);
@@ -73,10 +94,17 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
       }
     };
     fetchSubjectData();
-  }, [subjectName]);
+  }, [subjectName, classId]);
+
+  const downloadClassResource = (resourceId: number) => {
+    const studentId = localStorage.getItem("user_id");
+    window.open(`/api/classroom/resource/download/${resourceId}?user_id=${studentId}`, "_blank");
+  };
 
   const handleTopicClick = (topicName: string) => {
-    router.push(`/learning?topic=${encodeURIComponent(topicName)}&subject=${encodeURIComponent(subjectName)}&source=courses`);
+    const learningSource = source === 'classes' ? 'classes' : 'courses';
+    const classQuery = classId ? `&class_id=${classId}` : "";
+    router.push(`/learning?topic=${encodeURIComponent(topicName)}&subject=${encodeURIComponent(subjectName)}&source=${learningSource}${classQuery}`);
   };
 
   const openResource = (file: string) => {
@@ -114,14 +142,16 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
   const remainingTopics = topics.filter(t => t.status !== 'STRONG');
 
   return (
-    <div className="min-h-screen p-8 max-w-5xl mx-auto space-y-8">
+    <div className={`${hideBackButton ? '' : 'min-h-screen p-8'} max-w-5xl mx-auto space-y-8`}>
       {/* Header & Back Button */}
-      <button 
-        onClick={() => router.push('/courses')}
-        className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
-      >
-        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-      </button>
+      {!hideBackButton && (
+        <button
+          onClick={() => router.push(resolvedBackRoute)}
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
+        >
+          <ArrowLeft className="w-4 h-4" /> {resolvedBackText}
+        </button>
+      )}
 
       <div className="bg-white/5 border border-white/10 rounded-3xl p-8 relative overflow-hidden">
         {/* Background Gradients */}
@@ -180,7 +210,7 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
               activeTab === tab ? 'text-indigo-400' : 'text-slate-400 hover:text-white'
             }`}
           >
-            {tab === 'topics' ? 'Topics' : tab === 'analytics' ? 'Analytics' : 'Resources'}
+            {tab === 'topics' ? 'Learning' : tab === 'analytics' ? 'Analytics' : 'Resources'}
             {activeTab === tab && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
             )}
@@ -198,11 +228,18 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
               Module Topics
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {topics.length === 0 ? (
+              <div className="text-center py-12 bg-white/5 border border-white/10 rounded-2xl">
+                <BookOpen className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                <h3 className="text-base font-bold text-white">No Curriculum Topics Available</h3>
+                <p className="text-sm text-slate-400 mt-1">Your professor has not generated the curriculum for this class yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {topics.map((topic, i) => (
                 <div 
                   key={i}
-                  onClick={() => handleTopicClick(topic.title)}
+                  onClick={() => handleTopicClick(cleanTopicTitle(topic.title))}
                   className={`group bg-white/5 border rounded-2xl p-5 hover:bg-white/10 transition cursor-pointer relative overflow-hidden flex flex-col h-full ${topic.is_next_unfinished ? 'border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'border-white/10 hover:border-white/20'}`}
                 >
                   <div className="flex justify-between items-start mb-4">
@@ -212,7 +249,7 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
                           <Target className="w-3 h-3" /> Continue Learning
                         </div>
                       )}
-                      <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition line-clamp-2 pr-4">{topic.title}</h3>
+                      <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition line-clamp-2 pr-4">{cleanTopicTitle(topic.title)}</h3>
                     </div>
                     <div className={`px-2.5 py-1 rounded-md border flex items-center gap-1.5 text-[11px] font-semibold tracking-wide uppercase shrink-0 ${getStatusColor(topic.status)}`}>
                       {getStatusIcon(topic.status)}
@@ -258,7 +295,8 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -341,7 +379,7 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
                   <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
                     {weakTopics.map((topic, i) => (
                       <div key={i} className="flex justify-between items-center p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl">
-                        <span className="text-sm text-white font-medium truncate pr-4">{topic.title}</span>
+                        <span className="text-sm text-white font-medium truncate pr-4">{cleanTopicTitle(topic.title)}</span>
                         <div className="text-right shrink-0">
                           <span className="text-xs text-rose-400 font-semibold">{topic.accuracy}% accuracy</span>
                           <span className="text-[10px] text-slate-500 block">{topic.sessions} sessions</span>
@@ -365,10 +403,10 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
                     {remainingTopics.map((topic, i) => (
                       <div 
                         key={i} 
-                        onClick={() => handleTopicClick(topic.title)}
+                        onClick={() => handleTopicClick(cleanTopicTitle(topic.title))}
                         className="flex justify-between items-center p-3 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 rounded-xl cursor-pointer transition"
                       >
-                        <span className="text-sm text-slate-200 font-medium truncate pr-4">{topic.title}</span>
+                        <span className="text-sm text-slate-200 font-medium truncate pr-4">{cleanTopicTitle(topic.title)}</span>
                         <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 px-2 py-0.5 bg-white/5 border border-white/10 rounded">
                           {topic.status}
                         </span>
@@ -383,50 +421,60 @@ export default function SubjectDashboard({ subjectName }: SubjectDashboardProps)
 
         {/* 3. Resources Tab */}
         {activeTab === 'resources' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-400" />
-                Semester Resources
-              </h2>
-              <span className="text-xs text-slate-500">Provided by Course Instructors</span>
-            </div>
-
-            {resources.length === 0 ? (
-              <div className="text-center py-12 bg-white/5 border border-white/10 rounded-2xl">
-                <FileText className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                <h3 className="text-base font-bold text-white">No Resources Available</h3>
-                <p className="text-sm text-slate-400 mt-1">Instructors have not uploaded resources for this subject yet.</p>
+          <div className="space-y-10">
+            {/* Class Resources Section */}
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-indigo-400" />
+                  Class Resources
+                </h2>
+                <span className="text-xs text-slate-500">Shared in enrolled classroom</span>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {resources.map((res, i) => (
-                  <div 
-                    key={i}
-                    onClick={() => openResource(res.file)}
-                    className="group bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 transition rounded-2xl p-5 flex items-center gap-4 cursor-pointer relative overflow-hidden"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/20 transition shrink-0">
-                      <FileText className="w-6 h-6" />
-                    </div>
 
-                    <div className="flex-1 min-w-0 pr-6">
-                      <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition truncate">{res.title}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 uppercase border border-indigo-500/30">
-                          {res.type}
-                        </span>
-                        <span className="text-xs text-slate-500">Static Document</span>
+              {classResources.length === 0 ? (
+                <div className="text-center py-12 bg-white/5 border border-white/10 rounded-2xl">
+                  <FileText className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <h3 className="text-base font-bold text-white">No Resources Available</h3>
+                  <p className="text-sm text-slate-400 mt-1">Instructors have not uploaded resources for this class yet.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {classResources.map((res) => (
+                    <div
+                      key={res.id}
+                      onClick={() => downloadClassResource(res.id)}
+                      className="group bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 transition rounded-2xl p-5 flex flex-col justify-between cursor-pointer relative overflow-hidden"
+                    >
+                      <div>
+                        <div className="flex justify-between items-start mb-4">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold border border-indigo-500/30 bg-indigo-500/20 text-indigo-300 uppercase">
+                            {res.type}
+                          </span>
+                          <span className="text-[10px] text-slate-500 group-hover:text-indigo-400 transition flex items-center gap-1 font-semibold">
+                            <Download size={10} /> DOWNLOAD
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition line-clamp-2 leading-snug mb-3">
+                          {res.title}
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs text-slate-400 mt-2">
+                        <div className="flex items-center gap-1">
+                          <Calendar size={12} />
+                          <span>{res.uploaded_at ? new Date(res.uploaded_at).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users size={12} />
+                          <span>{res.uploaded_by_name || 'Instructor'}</span>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="absolute right-4 text-slate-500 group-hover:text-white transition">
-                      <ExternalLink className="w-4 h-4" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

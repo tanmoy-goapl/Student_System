@@ -64,7 +64,7 @@ export default function TopicItem({
           />
 
           <span className="text-[0.6rem] text-left whitespace-normal leading-tight">
-            {topic.title}
+            {topic.title?.replace(/\*\*/g, "")}
           </span>
         </div>
 
@@ -104,7 +104,7 @@ export default function TopicItem({
                 <span className={`text-[0.55rem] whitespace-normal leading-tight transition-colors ${
                   isSubSelected ? "text-white font-medium" : "text-white/60 group-hover:text-white"
                 }`}>
-                  {subtopic}
+                  {subtopic?.replace(/\*\*/g, "")}
                 </span>
               </button>
             );

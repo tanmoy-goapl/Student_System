@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { PlusCircle, FileText, Download, Trash2, Calendar, File, RefreshCw, Users } from "lucide-react";
+import { PlusCircle, FileText, Download, Trash2, Calendar, File, RefreshCw, Users, ExternalLink } from "lucide-react";
 import { getClassResources, uploadClassResource, deleteClassResource } from "@/lib/api";
 
 interface Resource {
@@ -19,8 +19,9 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
     pyq: { label: "Previous Year", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
 };
 
-export default function ResourcesTab({ classId, role, userId }: { classId: number; role: string; userId: number }) {
+export default function ResourcesTab({ classId, role, userId, subjectName }: { classId: number; role: string; userId: number; subjectName?: string }) {
     const [resources, setResources] = useState<Resource[]>([]);
+    const [semesterResources, setSemesterResources] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -33,7 +34,24 @@ export default function ResourcesTab({ classId, role, userId }: { classId: numbe
 
     useEffect(() => {
         fetchResources();
-    }, [classId, userId]);
+        if (subjectName) {
+            fetchSemesterResources();
+        }
+    }, [classId, userId, subjectName]);
+
+    const fetchSemesterResources = async () => {
+        try {
+            const res = await fetch(`/api/courses/subject/${encodeURIComponent(subjectName || "")}?student_id=${userId}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
+                    setSemesterResources(data.resources || []);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to fetch semester resources:", e);
+        }
+    };
 
     const fetchResources = async () => {
         setLoading(true);
@@ -87,38 +105,79 @@ export default function ResourcesTab({ classId, role, userId }: { classId: numbe
         window.open(`/api/classroom/resource/download/${resourceId}?user_id=${userId}`, "_blank");
     };
 
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-xl font-bold text-white mb-1">Class Resources</h2>
-                    <p className="text-slate-400 text-sm">Access learning materials, assignments, and past papers.</p>
-                </div>
-                {role === "professor" && (
-                    <button
-                        onClick={() => setShowUploadModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl transition-colors font-medium text-sm"
-                    >
-                        <PlusCircle size={18} />
-                        Upload Resource
-                    </button>
-                )}
-            </div>
+    const handleDownloadSemesterResource = (file: string) => {
+        window.open(`/api/documents/download?file=${encodeURIComponent(file)}`, "_blank");
+    };
 
-            {loading ? (
-                <div className="flex justify-center items-center py-20">
-                    <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin" />
+    return (
+        <div className="space-y-10">
+            {/* 1. Semester Resources Section */}
+            {semesterResources.length > 0 && (
+                <div className="space-y-6">
+                    <div className="border-b border-white/5 pb-3">
+                        <h2 className="text-xl font-bold text-white mb-1">Semester Resources</h2>
+                        <p className="text-slate-400 text-sm">Static curriculum documents provided by course instructors.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {semesterResources.map((res, i) => (
+                            <div 
+                                key={i}
+                                onClick={() => handleDownloadSemesterResource(res.file)}
+                                className="group bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 transition rounded-2xl p-5 flex items-center gap-4 cursor-pointer relative overflow-hidden"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/20 transition shrink-0">
+                                    <FileText className="w-6 h-6" />
+                                </div>
+                                <div className="flex-1 min-w-0 pr-6">
+                                    <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition truncate">{res.title}</h3>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 uppercase border border-indigo-500/30">
+                                            {res.type}
+                                        </span>
+                                        <span className="text-xs text-slate-500">Static Document</span>
+                                    </div>
+                                </div>
+                                <div className="absolute right-4 text-slate-500 group-hover:text-white transition">
+                                    <ExternalLink className="w-4 h-4" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            ) : resources.length === 0 ? (
-                <div className="bg-slate-800/20 border border-slate-700/50 rounded-2xl p-12 text-center">
-                    <FileText size={48} className="mx-auto text-slate-500 mb-4" />
-                    <h3 className="text-lg font-medium text-slate-300 mb-2">No resources available</h3>
-                    <p className="text-slate-500 text-sm">
-                        {role === "professor" ? "Upload your first document to share with students." : "Your professor hasn't uploaded any resources yet."}
-                    </p>
+            )}
+
+            {/* 2. Class Resources Section */}
+            <div className="space-y-6">
+                <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                    <div>
+                        <h2 className="text-xl font-bold text-white mb-1">Class Resources</h2>
+                        <p className="text-slate-400 text-sm">Dynamic learning materials, assignments, and quizzes uploaded specifically for this class.</p>
+                    </div>
+                    {role === "professor" && (
+                        <button
+                            onClick={() => setShowUploadModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl transition-colors font-medium text-sm"
+                        >
+                            <PlusCircle size={18} />
+                            Upload Resource
+                        </button>
+                    )}
                 </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                {loading ? (
+                    <div className="flex justify-center items-center py-20">
+                        <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin" />
+                    </div>
+                ) : resources.length === 0 ? (
+                    <div className="bg-slate-800/20 border border-slate-700/50 rounded-2xl p-12 text-center">
+                        <FileText size={48} className="mx-auto text-slate-500 mb-4" />
+                        <h3 className="text-lg font-medium text-slate-300 mb-2">No class resources available</h3>
+                        <p className="text-slate-500 text-sm">
+                            {role === "professor" ? "Upload your first document to share with students." : "Your professor hasn't uploaded any class resources yet."}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {resources.map((resource) => {
                         const typeCfg = TYPE_CONFIG[resource.type] || TYPE_CONFIG["notes"];
                         return (
@@ -162,6 +221,7 @@ export default function ResourcesTab({ classId, role, userId }: { classId: numbe
                     })}
                 </div>
             )}
+        </div>
 
             {/* Upload Modal */}
             {showUploadModal && role === "professor" && (

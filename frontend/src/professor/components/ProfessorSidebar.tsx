@@ -111,7 +111,7 @@ export default function ProfessorSidebar() {
     { label: "Classes", path: "/professor/classrooms", icon: BookOpen },
     { label: "Students", path: "/professor/students", icon: Users },
     { label: "Content Studio", path: "/professor/content", icon: FileText },
-    { label: "Assessments", path: "/professor/assessments", icon: ClipboardCheck },
+    // { label: "Assessments", path: "/professor/assessments", icon: ClipboardCheck },
     { label: "Insights", path: "/professor/insights", icon: BarChart3 },
     { label: "Settings", path: "/settings", icon: Settings },
   ];
@@ -204,7 +204,7 @@ export default function ProfessorSidebar() {
                     {isExpanded ? <ChevronDown className="w-3.5 h-3.5 opacity-60" /> : <ChevronRight className="w-3.5 h-3.5 opacity-60" />}
                   </div>
 
-                  {isExpanded && (
+                  {/* {isExpanded && (
                     <div className="pl-6 pr-2 py-2 space-y-1.5 bg-black/20 text-[10px] text-white/50 border-l border-white/5 mt-1 ml-3 rounded-lg">
                       <div className="flex justify-between items-center bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5">
                         <span>Action: Quick Quiz</span>
@@ -229,7 +229,7 @@ export default function ProfessorSidebar() {
                         </div>
                       )}
                     </div>
-                  )}
+                  )} */}
                 </div>
               );
             })}

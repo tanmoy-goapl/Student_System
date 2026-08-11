@@ -48,57 +48,185 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
 
   // Custom renderer for markdown paragraphs to detect callouts (💡, ⚠️, 🎯, 📌)
   const renderParagraph = ({ children }: any) => {
-    const textContent = React.Children.toArray(children).join("");
+    const childrenArray = React.Children.toArray(children);
+    const firstChild = childrenArray[0];
 
-    if (textContent.startsWith("💡 Example:")) {
-      return (
-        <div className="my-4 flex gap-3 rounded-xl border border-sky-500/20 bg-sky-500/5 p-4 text-sky-200 shadow-sm">
-          <Lightbulb className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
-          <div>
-            <strong className="text-sky-300 block mb-0.5">Example</strong>
-            <span className="text-zinc-300 text-sm">{textContent.replace("💡 Example:", "").trim()}</span>
+    if (typeof firstChild === "string") {
+      if (firstChild.startsWith("💡 Example:")) {
+        return (
+          <div className="my-4 flex gap-3 rounded-xl border border-sky-500/20 bg-sky-500/5 p-4 text-sky-200 shadow-sm">
+            <Lightbulb className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-sky-300 block mb-0.5">Example</strong>
+              <span className="text-zinc-300 text-sm">
+                {firstChild.replace("💡 Example:", "").trim()}
+                {childrenArray.slice(1)}
+              </span>
+            </div>
           </div>
-        </div>
-      );
-    }
+        );
+      }
 
-    if (textContent.startsWith("⚠️ Important:")) {
-      return (
-        <div className="my-4 flex gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-amber-200 shadow-sm">
-          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <strong className="text-amber-300 block mb-0.5">Important</strong>
-            <span className="text-zinc-300 text-sm">{textContent.replace("⚠️ Important:", "").trim()}</span>
+      if (firstChild.startsWith("⚠️ Important:")) {
+        return (
+          <div className="my-4 flex gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-amber-200 shadow-sm">
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-amber-300 block mb-0.5">Important</strong>
+              <span className="text-zinc-300 text-sm">
+                {firstChild.replace("⚠️ Important:", "").trim()}
+                {childrenArray.slice(1)}
+              </span>
+            </div>
           </div>
-        </div>
-      );
-    }
+        );
+      }
 
-    if (textContent.startsWith("🎯 Interview Tip:")) {
-      return (
-        <div className="my-4 flex gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4 text-rose-200 shadow-sm">
-          <Target className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-          <div>
-            <strong className="text-rose-300 block mb-0.5">Interview Tip</strong>
-            <span className="text-zinc-300 text-sm">{textContent.replace("🎯 Interview Tip:", "").trim()}</span>
+      if (firstChild.startsWith("🎯 Interview Tip:")) {
+        return (
+          <div className="my-4 flex gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4 text-rose-200 shadow-sm">
+            <Target className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-rose-300 block mb-0.5">Interview Tip</strong>
+              <span className="text-zinc-300 text-sm">
+                {firstChild.replace("🎯 Interview Tip:", "").trim()}
+                {childrenArray.slice(1)}
+              </span>
+            </div>
           </div>
-        </div>
-      );
-    }
+        );
+      }
 
-    if (textContent.startsWith("📌 Remember:")) {
-      return (
-        <div className="my-4 flex gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-emerald-200 shadow-sm">
-          <Pin className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-bounce" />
-          <div>
-            <strong className="text-emerald-300 block mb-0.5">Remember</strong>
-            <span className="text-zinc-300 text-sm">{textContent.replace("📌 Remember:", "").trim()}</span>
+      if (firstChild.startsWith("📌 Remember:")) {
+        return (
+          <div className="my-4 flex gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-emerald-200 shadow-sm">
+            <Pin className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-bounce" />
+            <div>
+              <strong className="text-emerald-300 block mb-0.5">Remember</strong>
+              <span className="text-zinc-300 text-sm">
+                {firstChild.replace("📌 Remember:", "").trim()}
+                {childrenArray.slice(1)}
+              </span>
+            </div>
           </div>
-        </div>
-      );
+        );
+      }
     }
 
     return <p className="text-zinc-300 text-sm leading-relaxed mb-4">{children}</p>;
+  };
+
+  // Custom Markdown Table parser/renderer
+  const parseMarkdownTable = (tableLines: string[], key: any) => {
+    if (tableLines.length < 2) return null;
+
+    // Header row
+    const headers = tableLines[0]
+      .split("|")
+      .map(x => x.trim())
+      .filter((_, i, arr) => i > 0 && i < arr.length - 1);
+
+    // Skip the separator row (tableLines[1])
+    
+    // Data rows
+    const rows = tableLines.slice(2).map(line => {
+      return line
+        .split("|")
+        .map(x => x.trim())
+        .filter((_, i, arr) => i > 0 && i < arr.length - 1);
+    });
+
+    return (
+      <div key={key} className="overflow-x-auto my-5 rounded-xl border border-white/10 bg-slate-950/20">
+        <table className="min-w-full divide-y divide-white/10 text-xs text-zinc-300">
+          <thead className="bg-white/[0.03]">
+            <tr>
+              {headers.map((h, i) => (
+                <th key={i} className="px-4 py-3 text-left font-bold text-zinc-100 uppercase tracking-wider">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+            {rows.map((row, ri) => (
+              <tr key={ri} className="hover:bg-white/[0.01] transition-colors">
+                {row.map((cell, ci) => {
+                  const cleanedCell = cell.replace(/<br\s*\/?>/gi, "\n");
+                  return (
+                    <td key={ci} className="px-4 py-3 whitespace-pre-wrap leading-relaxed">
+                      {cleanedCell.split(/(\*\*.*?\*\*)/g).map((part, idx) => {
+                        if (part.startsWith("**") && part.endsWith("**")) {
+                          return <strong key={idx} className="font-bold text-white">{part.slice(2, -2)}</strong>;
+                        }
+                        return part;
+                      })}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  // Renders text block or table block appropriately
+  const renderMixedContent = (markdownText: string) => {
+    const lines = markdownText.split("\n");
+    const blocks: ({ type: "text"; content: string } | { type: "table"; lines: string[] })[] = [];
+    let currentTextBlock: string[] = [];
+    let currentTableBlock: string[] = [];
+
+    const flushText = () => {
+      if (currentTextBlock.length > 0) {
+        blocks.push({ type: "text", content: currentTextBlock.join("\n") });
+        currentTextBlock = [];
+      }
+    };
+
+    const flushTable = () => {
+      if (currentTableBlock.length > 0) {
+        blocks.push({ type: "table", lines: [...currentTableBlock] });
+        currentTableBlock = [];
+      }
+    };
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      const isTableLine = trimmed.startsWith("|") && trimmed.endsWith("|");
+
+      if (isTableLine) {
+        flushText();
+        currentTableBlock.push(line);
+      } else {
+        flushTable();
+        currentTextBlock.push(line);
+      }
+    }
+    flushText();
+    flushTable();
+
+    return (
+      <>
+        {blocks.map((block, idx) => {
+          if (block.type === "table") {
+            return parseMarkdownTable(block.lines, idx) || (
+              <ReactMarkdown key={idx} components={{ p: renderParagraph }}>
+                {block.lines.join("\n")}
+              </ReactMarkdown>
+            );
+          } else {
+            return (
+              <ReactMarkdown key={idx} components={{ p: renderParagraph }}>
+                {block.content}
+              </ReactMarkdown>
+            );
+          }
+        })}
+      </>
+    );
   };
 
   // Group markdown text dynamically into Collapsible sections based on H2s (##)
@@ -107,13 +235,7 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
     if (!markdown.includes("## ")) {
       return (
         <div className="prose prose-invert prose-sm max-w-none prose-headings:text-zinc-100 prose-headings:font-bold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/10 prose-hr:border-white/5">
-          <ReactMarkdown
-            components={{
-              p: renderParagraph,
-            }}
-          >
-            {markdown}
-          </ReactMarkdown>
+          {renderMixedContent(markdown)}
         </div>
       );
     }
@@ -146,9 +268,7 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
         {/* Render Intro section if any */}
         {sections[0]?.title === "Introduction" && sections[0].markdown && (
           <div className="prose prose-invert prose-sm max-w-none mb-6">
-            <ReactMarkdown components={{ p: renderParagraph }}>
-              {sections[0].markdown}
-            </ReactMarkdown>
+            {renderMixedContent(sections[0].markdown)}
           </div>
         )}
 
@@ -158,9 +278,7 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
           return (
             <CollapsibleSection key={idx} title={sec.title}>
               <div className="prose prose-invert prose-sm max-w-none prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/10 prose-hr:border-white/5">
-                <ReactMarkdown components={{ p: renderParagraph }}>
-                  {sec.markdown}
-                </ReactMarkdown>
+                {renderMixedContent(sec.markdown)}
               </div>
             </CollapsibleSection>
           );
@@ -198,7 +316,13 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
           <p className="text-xs text-zinc-500 pt-3 italic font-light">Synthesizing topic explanations...</p>
         </div>
       ) : typeof notesResponse.content === "string" ? (
-        renderMarkdownContent(notesResponse.content)
+        renderMarkdownContent(
+          notesResponse.content
+            .replace(/💡 Example:\s*\n+/g, "💡 Example: ")
+            .replace(/⚠️ Important:\s*\n+/g, "⚠️ Important: ")
+            .replace(/🎯 Interview Tip:\s*\n+/g, "🎯 Interview Tip: ")
+            .replace(/📌 Remember:\s*\n+/g, "📌 Remember: ")
+        )
       ) : (
         <div className="text-zinc-400 text-sm italic">Failed to format premium guide content.</div>
       )}

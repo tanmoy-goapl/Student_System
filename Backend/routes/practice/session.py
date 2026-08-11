@@ -138,6 +138,7 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
 
         # Save questions to DB
         saved_questions = []
+        pending_questions = []
         for q in raw_questions:
             pq = PracticeQuestion(
                 session_id=session.id,
@@ -150,8 +151,9 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
                 explanation=q.get("explanation", ""),
             )
             db.add(pq)
-            db.commit()
-            db.refresh(pq)
+            pending_questions.append(pq)
+        db.flush()
+        for pq in pending_questions:
             saved_questions.append({
                 "id": pq.id,
                 "topic": pq.topic,
@@ -160,6 +162,7 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
                 "question": pq.question_text,
                 "options": pq.options,
             })
+        db.commit()
 
         return {
             "session_id": session.id,
@@ -283,6 +286,7 @@ def next_batch(session_id: int, db: Session = Depends(get_db)):
     )
 
     saved_questions = []
+    pending_questions = []
     for q in raw_questions:
         pq = PracticeQuestion(
             session_id=session.id,
@@ -295,8 +299,9 @@ def next_batch(session_id: int, db: Session = Depends(get_db)):
             explanation=q.get("explanation", ""),
         )
         db.add(pq)
-        db.commit()
-        db.refresh(pq)
+        pending_questions.append(pq)
+    db.flush()
+    for pq in pending_questions:
         saved_questions.append({
             "id": pq.id,
             "topic": pq.topic,
@@ -305,6 +310,7 @@ def next_batch(session_id: int, db: Session = Depends(get_db)):
             "question": pq.question_text,
             "options": pq.options,
         })
+    db.commit()
 
     return {
         "questions": saved_questions,

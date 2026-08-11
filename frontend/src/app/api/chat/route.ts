@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001"
+const BACKEND_URL = process.env.CHAT_BACKEND_URL || process.env.BACKEND_URL || "http://10.10.90.95:8001"
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: req.signal,
     });
 
     if (!response.ok) {

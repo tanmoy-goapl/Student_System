@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   FileText, Search, Upload, Sparkles, BookOpen, Clock, 
   TrendingUp, AlertTriangle, PlusCircle, CheckCircle, ChevronDown,
-  Trash2, X, Loader2, Download, Eye, AlertCircle
+  Trash2, X, Loader2, Download, Eye, AlertCircle, Lightbulb, GraduationCap
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
 import ReactMarkdown from "react-markdown";
@@ -55,6 +55,182 @@ const markdownComponents = {
 const parseAndRenderMarkdown = (text: string) => {
   if (!text) return null;
   
+  // Parse text into custom styled sections if it contains the [TAG] pattern
+  const hasCustomTags = text.includes("[CONCEPT]") || text.includes("[ANALOGY]") || text.includes("[ANALYZE]") || text.includes("[TAKEAWAY]") || text.includes("[QUESTION]") || text.includes("[ANSWER]") || text.includes("[TITLE]") || text.includes("[CONTENT]");
+
+  if (hasCustomTags) {
+    const blocks: { type: string; content: string }[] = [];
+    const lines = text.split("\n");
+    let currentType = "text";
+    let currentContent: string[] = [];
+
+    const flushBlock = () => {
+      const joined = currentContent.join("\n").trim();
+      if (joined) {
+        blocks.push({ type: currentType, content: joined });
+      }
+      currentContent = [];
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line === "===" || line === "---") {
+        flushBlock();
+        blocks.push({ type: "divider", content: "" });
+        currentType = "text";
+      } else if (line.startsWith("[CONCEPT]")) {
+        flushBlock();
+        currentType = "concept";
+        const rest = line.replace("[CONCEPT]", "").trim();
+        if (rest) currentContent.push(rest);
+      } else if (line.startsWith("[ANALOGY]")) {
+        flushBlock();
+        currentType = "analogy";
+        const rest = line.replace("[ANALOGY]", "").trim();
+        if (rest) currentContent.push(rest);
+      } else if (line.startsWith("[ANALYZE]")) {
+        flushBlock();
+        currentType = "analyze";
+        const rest = line.replace("[ANALYZE]", "").trim();
+        if (rest) currentContent.push(rest);
+      } else if (line.startsWith("[TAKEAWAY]")) {
+        flushBlock();
+        currentType = "takeaway";
+        const rest = line.replace("[TAKEAWAY]", "").trim();
+        if (rest) currentContent.push(rest);
+      } else if (line.startsWith("[QUESTION]")) {
+        flushBlock();
+        currentType = "question";
+        const rest = line.replace("[QUESTION]", "").trim();
+        if (rest) currentContent.push(rest);
+      } else if (line.startsWith("[ANSWER]")) {
+        flushBlock();
+        currentType = "answer";
+        const rest = line.replace("[ANSWER]", "").trim();
+        if (rest) currentContent.push(rest);
+      } else if (line.startsWith("[TITLE]")) {
+        flushBlock();
+        currentType = "title";
+        const rest = line.replace("[TITLE]", "").trim();
+        if (rest) currentContent.push(rest);
+      } else if (line.startsWith("[CONTENT]")) {
+        flushBlock();
+        currentType = "content";
+        const rest = line.replace("[CONTENT]", "").trim();
+        if (rest) currentContent.push(rest);
+      } else {
+        currentContent.push(lines[i]);
+      }
+    }
+    flushBlock();
+
+    return (
+      <div className="space-y-4 py-2 text-left">
+        {blocks.map((block, idx) => {
+          if (block.type === "divider") {
+            return <div key={idx} className="h-[1px] bg-white/5 my-4 shrink-0" />;
+          }
+
+          if (block.type === "concept") {
+            return (
+              <div key={idx} className="flex gap-3.5 rounded-2xl border border-sky-500/15 bg-sky-500/5 p-5 shadow-sm text-sky-200">
+                <BookOpen className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
+                <div className="space-y-1.5 min-w-0 flex-1 text-[11px]">
+                  <strong className="text-sky-300 font-extrabold uppercase tracking-wider text-[9px] block">Concept Definition</strong>
+                  <ReactMarkdown components={markdownComponents}>{block.content}</ReactMarkdown>
+                </div>
+              </div>
+            );
+          }
+
+          if (block.type === "analogy") {
+            return (
+              <div key={idx} className="flex gap-3.5 rounded-2xl border border-violet-500/15 bg-violet-500/5 p-5 shadow-sm text-violet-200">
+                <Lightbulb className="w-5 h-5 text-violet-400 shrink-0 mt-0.5" />
+                <div className="space-y-1.5 min-w-0 flex-1 text-[11px]">
+                  <strong className="text-violet-300 font-extrabold uppercase tracking-wider text-[9px] block">Real-World Analogy</strong>
+                  <ReactMarkdown components={markdownComponents}>{block.content}</ReactMarkdown>
+                </div>
+              </div>
+            );
+          }
+
+          if (block.type === "analyze") {
+            return (
+              <div key={idx} className="flex gap-3.5 rounded-2xl border border-violet-500/15 bg-violet-500/5 p-5 shadow-sm text-violet-200">
+                <Lightbulb className="w-5 h-5 text-violet-400 shrink-0 mt-0.5" />
+                <div className="space-y-1.5 min-w-0 flex-1 text-[11px]">
+                  <strong className="text-violet-300 font-extrabold uppercase tracking-wider text-[9px] block">Concept Analysis</strong>
+                  <ReactMarkdown components={markdownComponents}>{block.content}</ReactMarkdown>
+                </div>
+              </div>
+            );
+          }
+
+          if (block.type === "takeaway") {
+            return (
+              <div key={idx} className="flex gap-3.5 rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-5 shadow-sm text-emerald-200">
+                <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="space-y-1.5 min-w-0 flex-1 text-[11px]">
+                  <strong className="text-emerald-300 font-extrabold uppercase tracking-wider text-[9px] block">Key Takeaway</strong>
+                  <ReactMarkdown components={markdownComponents}>{block.content}</ReactMarkdown>
+                </div>
+              </div>
+            );
+          }
+
+          if (block.type === "question") {
+            return (
+              <div key={idx} className="flex gap-3.5 rounded-2xl border border-amber-500/15 bg-amber-500/5 p-5 shadow-sm text-amber-200">
+                <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1.5 min-w-0 flex-1 text-[11px]">
+                  <strong className="text-amber-300 font-extrabold uppercase tracking-wider text-[9px] block">Question</strong>
+                  <ReactMarkdown components={markdownComponents}>{block.content}</ReactMarkdown>
+                </div>
+              </div>
+            );
+          }
+
+          if (block.type === "answer") {
+            return (
+              <div key={idx} className="flex gap-3.5 rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-5 shadow-sm text-indigo-200">
+                <GraduationCap className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+                <div className="space-y-1.5 min-w-0 flex-1 text-[11px]">
+                  <strong className="text-indigo-300 font-extrabold uppercase tracking-wider text-[9px] block">Model Answer</strong>
+                  <ReactMarkdown components={markdownComponents}>{block.content}</ReactMarkdown>
+                </div>
+              </div>
+            );
+          }
+
+          if (block.type === "title") {
+            return (
+              <div key={idx} className="flex items-center gap-2 mt-4 pb-1 border-b border-white/5">
+                <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                <h4 className="text-[11px] font-extrabold text-white tracking-wide uppercase">{block.content}</h4>
+              </div>
+            );
+          }
+
+          if (block.type === "content") {
+            return (
+              <div key={idx} className="pl-5 text-[11px] text-slate-300 leading-relaxed">
+                <ReactMarkdown components={markdownComponents}>{block.content}</ReactMarkdown>
+              </div>
+            );
+          }
+
+          return (
+            <ReactMarkdown key={idx} components={markdownComponents}>
+              {block.content}
+            </ReactMarkdown>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Fallback to standard Markdown + Table parser
   const lines = text.split("\n");
   const elements: React.ReactNode[] = [];
   let currentTableRows: string[][] = [];
@@ -182,6 +358,88 @@ export default function ContentPage() {
   const [textLoading, setTextLoading] = useState<boolean>(false);
   const [textError, setTextError] = useState<string | null>(null);
   const [isPreviewPdf, setIsPreviewPdf] = useState<boolean>(false);
+
+  const [publishingDoc, setPublishingDoc] = useState<any | null>(null);
+  const [publishClassId, setPublishClassId] = useState<string>("");
+  const [isPublishing, setIsPublishing] = useState<boolean>(false);
+
+  const [katexLoaded, setKatexLoaded] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if ((window as any).renderMathInElement) {
+      setKatexLoaded(true);
+      return;
+    }
+    if (!document.getElementById("katex-css")) {
+      const link = document.createElement("link");
+      link.id = "katex-css";
+      link.rel = "stylesheet";
+      link.href = "https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css";
+      document.head.appendChild(link);
+    }
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js";
+    script.async = true;
+    script.onload = () => {
+      const autoRenderScript = document.createElement("script");
+      autoRenderScript.src = "https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js";
+      autoRenderScript.async = true;
+      autoRenderScript.onload = () => {
+        setKatexLoaded(true);
+      };
+      document.head.appendChild(autoRenderScript);
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).renderMathInElement && previewRef.current) {
+      try {
+        (window as any).renderMathInElement(previewRef.current, {
+          delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "$", right: "$", display: false},
+            {left: "\\(", right: "\\)", display: false},
+            {left: "\\[", right: "\\]", display: true}
+          ],
+          throwOnError: false
+        });
+      } catch (err) {
+        console.error("Katex auto-render failed:", err);
+      }
+    }
+  }, [textContent, textLoading, previewDoc, katexLoaded]);
+
+  useEffect(() => {
+    if (classes && classes.length > 0) {
+      setPublishClassId(classes[0].id.toString());
+    }
+  }, [classes]);
+
+  const handlePublish = async () => {
+    if (!publishingDoc || !publishClassId) return;
+    setIsPublishing(true);
+    try {
+      const professorId = localStorage.getItem("user_id") || "2";
+      const res = await fetch(`/api/documents/publish?document_id=${publishingDoc.id}&classroom_id=${publishClassId}&user_id=${professorId}`, {
+        method: "POST"
+      });
+      if (res.ok) {
+        alert("Document successfully uploaded/published to class!");
+        setPublishingDoc(null);
+        loadData(Number(professorId));
+      } else {
+        alert("Failed to publish document.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while publishing.");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   // Load user, classes, and materials on mount
   useEffect(() => {
@@ -479,15 +737,7 @@ export default function ContentPage() {
     },
   ];
 
-  const aiActions = [
-    { title: "Summarize Chapter", desc: "Extract key concepts and generate summaries", badge: "SUMMARY", color: "text-blue-400 border-blue-500/20 bg-blue-500/10", action: "summarize" },
-    { title: "Simplify Topic", desc: "Break down complex topics into simple terms", badge: "EXPLAIN", color: "text-cyan-400 border-cyan-500/20 bg-cyan-500/10", action: "simplify" },
-  ];
 
-  const recommendations = [
-    { type: "CONTENT GENERATION", title: "Simplify Wave Optics", desc: "Automatically extract key topics and structure notes.", action: "simplify", docName: "Wave Optics Study Files.pdf" },
-    { type: "CHAPTER SUMMARY", title: "Summarize Thermodynamics", desc: "Create a fast summary and key takeaways.", action: "summarize", docName: "Thermodynamics Guide.pdf" },
-  ];
 
   return (
     <div className="h-screen bg-[#020617] flex overflow-hidden text-white font-sans">
@@ -566,40 +816,7 @@ export default function ContentPage() {
                 })}
               </div>
 
-              {/* AI Content Actions */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">AI Content Actions</h2>
-                  <span className="flex items-center gap-1 px-2 py-0.5 text-[8px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-full">
-                    <Sparkles className="w-2.5 h-2.5 animate-pulse" /> Powered by Academic Engine
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {aiActions.map((act, idx) => (
-                    <div 
-                      key={idx} 
-                      onClick={() => {
-                        if (materials.length > 0) {
-                          triggerAIAction(act.action as any, materials[0].name);
-                        } else {
-                          alert("Please upload a document to run AI actions.");
-                        }
-                      }}
-                      className="rounded-2xl border border-white/5 bg-slate-900/20 p-5 flex flex-col justify-between hover:border-blue-500/20 hover:bg-slate-900/35 transition cursor-pointer min-h-[110px]"
-                    >
-                      <div>
-                        <div className="flex justify-between items-center">
-                          <h4 className="text-[12px] font-bold text-white">{act.title}</h4>
-                          <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold tracking-wider border ${act.color}`}>
-                            {act.badge}
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">{act.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+
 
               {/* Materials Library */}
               <div className="space-y-4">
@@ -629,16 +846,22 @@ export default function ContentPage() {
                     {filteredMaterials.map(mat => {
                       const classroom = classes.find(c => String(c.id) === String(mat.classroom_id));
                       return (
-                        <div key={mat.id} className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 flex flex-col justify-between min-h-[220px] backdrop-blur-sm group hover:border-blue-500/30 hover:bg-slate-900/60 transition duration-300 relative">
+                        <div 
+                          key={mat.id} 
+                          onClick={() => handlePreview(mat)}
+                          className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 flex flex-col justify-between min-h-[220px] backdrop-blur-sm group hover:border-blue-500/30 hover:bg-slate-900/60 transition duration-300 relative cursor-pointer"
+                        >
                           {/* Card Action Buttons (Hover State) */}
                           <div className="absolute top-4 right-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition duration-200">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handlePreview(mat); }}
-                              className="p-1.5 rounded-lg bg-slate-900 border border-white/5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/20 transition cursor-pointer"
-                              title="View / Preview File"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
+                            {mat.visibility === "private" && (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setPublishingDoc(mat); }}
+                                className="p-1.5 rounded-lg bg-slate-900 border border-white/5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/20 transition cursor-pointer"
+                                title="Publish to Class"
+                              >
+                                <Upload className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleDownload(mat); }}
                               className="p-1.5 rounded-lg bg-slate-900 border border-white/5 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/20 transition cursor-pointer"
@@ -694,13 +917,13 @@ export default function ContentPage() {
 
                           <div className="flex gap-2 pt-4 border-t border-white/5 mt-4">
                             <button 
-                              onClick={() => triggerAIAction("simplify", mat.name)}
+                              onClick={(e) => { e.stopPropagation(); triggerAIAction("simplify", mat.name); }}
                               className="flex-1 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-[9px] font-bold uppercase tracking-wider text-white transition shadow shadow-blue-500/10 cursor-pointer"
                             >
                               Simplify
                             </button>
                             <button 
-                              onClick={() => triggerAIAction("summarize", mat.name)}
+                              onClick={(e) => { e.stopPropagation(); triggerAIAction("summarize", mat.name); }}
                               className="flex-1 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-[9px] font-bold uppercase tracking-wider transition cursor-pointer"
                             >
                               Summarize
@@ -713,38 +936,7 @@ export default function ContentPage() {
                 )}
               </div>
 
-              {/* AI Recommendations */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">AI Recommendations</h2>
-                  <span className="flex items-center gap-1 px-2 py-0.5 text-[8px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-full">
-                    <Sparkles className="w-2.5 h-2.5" /> Based on Content Activity
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {recommendations.map((rec, idx) => (
-                    <div key={idx} className="rounded-xl border border-white/5 bg-slate-900/40 p-4 flex flex-col md:flex-row justify-between md:items-center gap-4 transition hover:border-white/10">
-                      <div className="flex items-start gap-3">
-                        <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-violet-400 bg-violet-500/10 border border-violet-500/20">
-                          <Sparkles className="w-4 h-4 animate-pulse" />
-                        </div>
-                        <div>
-                          <span className="text-[8px] font-extrabold uppercase tracking-widest text-slate-400 block">{rec.type}</span>
-                          <h4 className="text-[11px] font-bold text-white mt-1 leading-snug">{rec.title}</h4>
-                          <p className="text-[9px] text-slate-400 mt-0.5 leading-none">{rec.desc}</p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => triggerAIAction(rec.action as any, rec.docName)}
-                        className="px-3.5 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-[9px] font-bold uppercase tracking-wider transition self-end md:self-center shrink-0 cursor-pointer"
-                      >
-                        Generate Now
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
               {/* Filter & Organize Section */}
               <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-sm space-y-4">
@@ -1093,7 +1285,7 @@ export default function ContentPage() {
 
                 if (textContent !== null) {
                   return (
-                    <div className="w-full h-full text-xs leading-relaxed text-slate-200 bg-slate-950 p-6 rounded-xl border border-white/5 overflow-auto select-text purple-scrollbar text-left max-w-none space-y-5">
+                    <div ref={previewRef} className="w-full h-full text-xs leading-relaxed text-slate-200 bg-slate-950 p-6 rounded-xl border border-white/5 overflow-auto select-text purple-scrollbar text-left max-w-none space-y-5">
                       {parseAndRenderMarkdown(textContent)}
                     </div>
                   );
@@ -1119,6 +1311,70 @@ export default function ContentPage() {
                 className="px-4 py-2 bg-slate-900 border border-white/10 hover:border-white/20 text-[10px] font-bold text-white rounded-xl transition cursor-pointer"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── PUBLISH DOCUMENT TO CLASSROOM MODAL ────────────────── */}
+      {publishingDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+          <div className="bg-[#0b0f19] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Upload className="w-4 h-4 text-blue-400" />
+                Publish to Classroom
+              </h3>
+              <button
+                onClick={() => setPublishingDoc(null)}
+                className="text-white/45 hover:text-white transition-colors text-xs font-semibold px-2 py-1 rounded-lg hover:bg-white/5 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-4 py-2">
+              <p className="text-[10.5px] text-slate-400 leading-relaxed text-left">
+                Publishing <strong className="text-white">"{publishingDoc.name}"</strong> will share it publicly with the students in the selected classroom.
+              </p>
+
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Select Class / Course</label>
+                <select
+                  value={publishClassId}
+                  onChange={(e) => setPublishClassId(e.target.value)}
+                  className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-colors"
+                >
+                  {classes.map((cls) => (
+                    <option key={cls.id} value={cls.id} className="bg-[#0b0f19]">
+                      {cls.name} ({cls.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
+              <button
+                onClick={() => setPublishingDoc(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-white/70 hover:text-white hover:bg-white/5 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={isPublishing || !publishClassId}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-550 text-white shadow-lg transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1.5"
+              >
+                {isPublishing ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Publishing...</span>
+                  </>
+                ) : (
+                  <span>Publish to Class</span>
+                )}
               </button>
             </div>
           </div>

@@ -36,6 +36,26 @@ services:
       - /home/galaxy/.cache/huggingface:/root/.cache/huggingface
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
 
+  mentor_ai:
+    image: student_system-backend:latest
+    container_name: student_mentor_ai
+    depends_on:
+      db:
+        condition: service_healthy
+    network_mode: "host"
+    env_file:
+      - ./Backend/.env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5451/student_rag
+      - HF_HUB_OFFLINE=1
+      - CHAT_LLM_MAX_SECONDS=90
+    volumes:
+      - ./Backend:/app
+      - ./mentorai-documents.zip:/app/mentorai-documents.zip
+      - /home/galaxy/.cache/huggingface:/root/.cache/huggingface
+    cpus: "4.0"
+    command: ["uvicorn", "chat_main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
+
   frontend:
     build:
       context: ./frontend
@@ -48,6 +68,7 @@ services:
     environment:
       # Reach backend directly via host loopback network
       - BACKEND_URL=http://127.0.0.1:8001
+      - CHAT_BACKEND_URL=http://127.0.0.1:8002
       - NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8001
 
 volumes:

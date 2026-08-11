@@ -382,17 +382,41 @@ export default function PracticePage({
                                     <div className="text-xs text-slate-400">Best Streak</div>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => {
-                                    setSessionStarted(false);
-                                    setSessionComplete(false);
-                                    setQuestions([]);
-                                    setCurrentQuestionIndex(0);
-                                }}
-                                className="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-white rounded-xl font-medium hover:opacity-95 active:scale-[0.98] transition-all shadow-lg shadow-violet-500/10"
-                            >
-                                Start New Session
-                            </button>
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    onClick={() => {
+                                        const topicParam = searchParams?.get("topic");
+                                        const subjectParam = searchParams?.get("subject");
+                                        if (topicParam) {
+                                            let query = `?topic=${encodeURIComponent(topicParam)}&source=${source}`;
+                                            if (subjectParam) query += `&subject=${encodeURIComponent(subjectParam)}`;
+                                            router.push(`/learning${query}`);
+                                        } else {
+                                            setSessionStarted(false);
+                                            setSessionComplete(false);
+                                            setQuestions([]);
+                                            setCurrentQuestionIndex(0);
+                                        }
+                                    }}
+                                    className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium hover:opacity-95 active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/10"
+                                >
+                                    {searchParams?.get("topic") ? "Back to Learning" : "Start New Session"}
+                                </button>
+
+                                {searchParams?.get("topic") && (
+                                    <button
+                                        onClick={() => {
+                                            setSessionStarted(false);
+                                            setSessionComplete(false);
+                                            setQuestions([]);
+                                            setCurrentQuestionIndex(0);
+                                        }}
+                                        className="w-full py-3 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl font-medium active:scale-[0.98] transition-all border border-white/10"
+                                    >
+                                        Start New Session
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -456,10 +480,20 @@ export default function PracticePage({
             <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto">
                 <div className="flex-1 space-y-4 px-6 py-4 max-w-3xl mx-auto w-full">
                     <button 
-                        onClick={() => router.push(source === 'personal' ? '/personal' : '/courses')}
+                        onClick={() => {
+                            const topicParam = searchParams?.get("topic");
+                            const subjectParam = searchParams?.get("subject");
+                            if (topicParam) {
+                                let query = `?topic=${encodeURIComponent(topicParam)}&source=${source}`;
+                                if (subjectParam) query += `&subject=${encodeURIComponent(subjectParam)}`;
+                                router.push(`/learning${query}`);
+                            } else {
+                                router.push(source === 'personal' ? '/personal' : '/courses');
+                            }
+                        }}
                         className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition mb-2"
                     >
-                        <ArrowLeft className="w-4 h-4" /> Back to {source === 'personal' ? 'Personal Roadmaps' : 'Courses'}
+                        <ArrowLeft className="w-4 h-4" /> Back to {searchParams?.get("topic") ? 'Learning' : (source === 'personal' ? 'Personal Roadmaps' : 'Courses')}
                     </button>
                     <QuestionHeader question={questionForComponents} />
                     <QuestionContent question={questionForComponents} />
@@ -509,12 +543,6 @@ export default function PracticePage({
                         onNext={answered ? handleNextQuestion : undefined}
                         canProceed={true}
                         isLastQuestion={isLastQuestion}
-                    />
-
-                    <AIHelpSection
-                        query={aiQuery}
-                        onQueryChange={setAiQuery}
-                        onSubmitQuery={handleAIHelp}
                     />
                 </div>
             </div>

@@ -252,7 +252,7 @@ export default function AdminChatPage() {
           </div>
 
           {/* Mode switch */}
-          <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+          {/* <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
             {(["Analytics", "Guidance", "Quick Answer"] as const).map(mode => (
               <button
                 key={mode}
@@ -264,13 +264,13 @@ export default function AdminChatPage() {
                 {mode}
               </button>
             ))}
-          </div>
+          </div> */}
 
           <div className="flex items-center gap-3">
-            <button className="h-8 w-8 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-slate-350 hover:bg-white/10 transition relative">
+            {/* <button className="h-8 w-8 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-slate-350 hover:bg-white/10 transition relative">
               <Bell className="w-4 h-4" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500" />
-            </button>
+            </button> */}
             <button
               onClick={() => setRightDrawerOpen(!rightDrawerOpen)}
               className={`h-8 w-8 rounded-xl border flex items-center justify-center transition ${

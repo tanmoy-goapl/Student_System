@@ -39,7 +39,7 @@ export default function CategorySection({
       >
         <div className="flex items-center gap-2">
           <span className="font-medium text-[0.7rem]">
-            {category.title}
+            {category.title?.replace(/\*\*/g, "")}
           </span>
         </div>
 

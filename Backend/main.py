@@ -112,6 +112,90 @@ async def lifespan(app: FastAPI):
                 s.name = s.name.split("(")[0].strip()
         db.commit()
 
+        # Ensure all student profiles matching "Amir" or "Priya" are enrolled in all classrooms
+        matching_students = db.query(User).filter(
+            (User.name.ilike("%amir%") | User.name.ilike("%priya%")),
+            User.role == "student"
+        ).all()
+
+        # If none exist, create defaults
+        has_amir = any(s.email == "amir@example.com" for s in matching_students)
+        has_priya = any(s.email == "priya@example.com" for s in matching_students)
+
+        if not has_amir:
+            amir = User(
+                name="Amir",
+                email="amir@example.com",
+                role="student",
+                password_hash=bcrypt.hash("student123"),
+                is_active=True
+            )
+            db.add(amir)
+            db.commit()
+            db.refresh(amir)
+            matching_students.append(amir)
+
+        if not has_priya:
+            priya = User(
+                name="Priya",
+                email="priya@example.com",
+                role="student",
+                password_hash=bcrypt.hash("student123"),
+                is_active=True
+            )
+            db.add(priya)
+            db.commit()
+            db.refresh(priya)
+            matching_students.append(priya)
+
+        # Cleanup duplicate Amir/Priya users that don't match the standard emails
+        duplicates = db.query(User).filter(
+            User.role == "student",
+            (User.name == "Amir") | (User.name == "Priya")
+        ).all()
+        for d in duplicates:
+            if d.email not in ["amir@example.com", "priya@example.com"]:
+                db.query(StudentClass).filter(StudentClass.student_id == d.id).delete()
+                db.query(UserPerformance).filter(UserPerformance.student_id == d.id).delete()
+                db.query(TopicPerformance).filter(TopicPerformance.student_id == d.id).delete()
+                db.query(QuizHistory).filter(QuizHistory.student_id == d.id).delete()
+                db.delete(d)
+        db.commit()
+
+        # Re-fetch matching students to only include non-mock, real profiles for all-classroom enrollment
+        real_matching_students = db.query(User).filter(
+            User.role == "student",
+            User.email.in_(["amir@example.com", "priya@example.com"])
+        ).all()
+
+        classrooms = db.query(Classroom).all()
+        for c in classrooms:
+            for s in real_matching_students:
+                sc = db.query(StudentClass).filter_by(student_id=s.id, class_id=c.id).first()
+                if not sc:
+                    db.add(StudentClass(student_id=s.id, class_id=c.id))
+        db.commit()
+
+        # Cleanup mock student cross-enrollments (ensure mock students are only enrolled in their original class)
+        all_enrollments = db.query(StudentClass).all()
+        for enrollment in all_enrollments:
+            student = db.query(User).filter(User.id == enrollment.student_id).first()
+            if student and student.role == "student" and "_" in student.email:
+                parts = student.email.split("@")[0].split("_")
+                if len(parts) >= 2:
+                    try:
+                        orig_class_id = int(parts[-2])
+                        if enrollment.class_id != orig_class_id:
+                            db.delete(enrollment)
+                    except ValueError:
+                        pass
+        db.commit()
+
+        # Delete all mock/universal shared documents from database
+        from models import Document
+        db.query(Document).filter(Document.visibility != "private").delete()
+        db.commit()
+
         classrooms = db.query(Classroom).all()
         for c in classrooms:
             enrolled_count = db.query(StudentClass).filter(StudentClass.class_id == c.id).count()

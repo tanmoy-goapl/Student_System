@@ -30,11 +30,11 @@ export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarP
 
   const showToggle = ["/", "/courses", "/personal", "/learning", "/practice"].some(
     p => pathname === p || pathname?.startsWith(p + "/")
-  );
+  ) && sourceParam !== "classes";
 
   const getPageTitle = () => {
     if (pathname?.startsWith("/chat")) return "AI Chatbot";
-    if (pathname?.startsWith("/classroom") || pathname?.startsWith("/classes")) return "My Classes";
+    if (pathname?.startsWith("/classroom") || pathname?.startsWith("/classes") || sourceParam === "classes") return "My Classes";
     if (pathname?.startsWith("/documents")) return "My Documents";
     if (pathname?.startsWith("/performance")) return "Performance Analytics";
     if (pathname?.startsWith("/settings")) return "Settings";
@@ -129,27 +129,26 @@ export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarP
             <BarChart3 className="w-4 h-4 text-white/50 group-hover:text-white transition-colors duration-200" />
           </div>
           {/* Tooltip */}
-          <span className="pointer-events-none absolute top-full right-0 mt-2 z-[60] px-2 py-1 rounded-md bg-slate-950 border border-white/5 shadow-xl text-white text-[10px] font-medium whitespace-nowrap opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
+          <span className="pointer-events-none absolute top-full right-0 mt-2 z-[999] px-2 py-1 rounded-md bg-slate-950 border border-white/5 shadow-xl text-white text-[10px] font-medium whitespace-nowrap opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
             Analytics
           </span>
         </Link>
 
-        <button className="group relative">
+        {/* <button className="group relative">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/0 border border-transparent hover:bg-white/5 hover:border-white/5 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer">
             <Bell className="w-4 h-4 text-white/50 group-hover:text-white transition-colors duration-200" />
           </div>
-          {/* Tooltip */}
-          <span className="pointer-events-none absolute top-full right-0 mt-2 z-[60] px-2 py-1 rounded-md bg-slate-950 border border-white/5 shadow-xl text-white text-[10px] font-medium whitespace-nowrap opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
+          <span className="pointer-events-none absolute top-full right-0 mt-2 z-[999] px-2 py-1 rounded-md bg-slate-950 border border-white/5 shadow-xl text-white text-[10px] font-medium whitespace-nowrap opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
             Notifications
           </span>
-        </button>
+        </button> */}
 
         <Link href="/profile" className="group relative">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/0 border border-transparent hover:bg-white/5 hover:border-white/5 hover:scale-105 active:scale-95 transition-all duration-200">
             <User className="w-4 h-4 text-white/50 group-hover:text-white transition-colors duration-200" />
           </div>
           {/* Tooltip */}
-          <span className="pointer-events-none absolute top-full right-0 mt-2 z-[60] px-2 py-1 rounded-md bg-slate-950 border border-white/5 shadow-xl text-white text-[10px] font-medium whitespace-nowrap opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
+          <span className="pointer-events-none absolute top-full right-0 mt-2 z-[999] px-2 py-1 rounded-md bg-slate-950 border border-white/5 shadow-xl text-white text-[10px] font-medium whitespace-nowrap opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
             Profile
           </span>
         </Link>

@@ -24,6 +24,7 @@ export async function GET(request: Request) {
     const response = await fetch(url, {
       method: "GET",
       cache: "no-store",
+      signal: request.signal,
     });
 
     if (!response.ok) {

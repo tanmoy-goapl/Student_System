@@ -10,6 +10,7 @@ const iconMap: Record<string, any> = {
 };
 
 export default function TopicMastery({ masteryData }: { masteryData: PerformanceMainResponse["mastery"] }) {
+    if (!masteryData || !Array.isArray(masteryData)) return null;
     const [expandedSubjects, setExpandedSubjects] =
         useState<string[]>(['physics']);
 

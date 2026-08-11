@@ -517,22 +517,21 @@ def save_notes(req: SaveNotesRequest, db: Session = Depends(get_db)):
     db.commit()
     return {"success": True, "message": "Notes saved."}
 
-
 @router.get("/generate_material/stream")
 def generate_material_stream(
     topic: str,
     subject: str = "Computer Science",
     user_id: int = 1,
     classroom_id: Optional[int] = None,
+    action_type: Optional[str] = "notes", # "notes", "quiz", "lesson_plan", "revision", "simplify", "practice"
     db: Session = Depends(get_db)
 ):
     """
     Professor-only: Generate comprehensive, in-depth study material from scratch.
-    This is a completely separate pipeline from the student study guide generator.
-    Always generates fresh content via LLM — never uses cache.
-    Saves to a real physical file in UPLOAD_DIR for download support.
+    Always generates fresh content via LLM and saves to Content Studio.
     """
 
+    doc_name = f"AI Study Material - {topic}.txt"
     system_prompt = f"""You are a senior university professor and published textbook author preparing comprehensive lecture notes for distribution to students.
 
 Generate an extremely detailed, rigorous, and well-structured study material document for the topic: "{topic}" under the subject "{subject}".
@@ -589,9 +588,36 @@ RULES:
 - Every section must have real, detailed content — no placeholders or one-liners.
 """
 
-    user_prompt = f"Generate the complete, in-depth study material for the topic \"{topic}\" in the subject \"{subject}\". Be extremely thorough and detailed."
+    if action_type == "lesson_plan":
+        doc_name = f"AI Lesson Plan - {topic}.txt"
+        system_prompt = f"""You are a senior university professor preparing a comprehensive, structured lesson plan for the topic: "{topic}" under the subject "{subject}".
+        Include learning objectives, lecture timeline (breakdown of a 60-minute class), core concepts explanation, discussion questions, and in-class activities.
+        Write in clear markdown. Aim for 800-1000 words."""
+    elif action_type == "quiz":
+        doc_name = f"AI Quiz - {topic}.txt"
+        system_prompt = f"""You are an expert examiner. Generate a comprehensive multiple-choice quiz on the topic: "{topic}" under the subject "{subject}".
+        Generate exactly 5 detailed multiple-choice questions with 4 options (A, B, C, D) each.
+        Specify the correct answer and a thorough, educational explanation for each question.
+        Write in clear markdown. Aim for 600-800 words."""
+    elif action_type == "revision":
+        doc_name = f"AI Revision Notes - {topic}.txt"
+        system_prompt = f"""You are a senior tutor. Generate concise, fact-packed revision notes on the topic: "{topic}" under the subject "{subject}".
+        Focus on key definitions, core concepts, comparisons, and exam highlights. Use bullet points and bold formatting for rapid review.
+        Write in clear markdown. Aim for 600-800 words."""
+    elif action_type == "simplify":
+        doc_name = f"AI Explained Simpler - {topic}.txt"
+        system_prompt = f"""You are a creative educator. Explain the complex topic: "{topic}" under the subject "{subject}" using simple, everyday language and relatable real-world analogies.
+        Break down the core principles without jargon so that a beginner can grasp it instantly.
+        Write in clear markdown. Aim for 600-800 words."""
+    elif action_type == "practice":
+        doc_name = f"AI Practice Set - {topic}.txt"
+        system_prompt = f"""You are a university professor. Generate a structured practice problem set with calculations, exercises, or analysis tasks on the topic: "{topic}" under the subject "{subject}".
+        Include 3-4 problem scenarios, follow-up questions, and detailed step-by-step model solutions for each.
+        Write in clear markdown. Aim for 800-1000 words."""
 
-    logger.info(f"[ProfessorGen] Generating fresh study material for topic='{topic}', subject='{subject}', user_id={user_id}, classroom_id={classroom_id}")
+    user_prompt = f"Generate the complete document for the topic \"{topic}\" in the subject \"{subject}\". Be extremely thorough and detailed."
+
+    logger.info(f"[ProfessorGen] Generating fresh material for topic='{topic}', subject='{subject}', user_id={user_id}, classroom_id={classroom_id}")
 
     # Generate a unique key for tracking this task
     import threading
@@ -606,7 +632,7 @@ RULES:
     bg_lock = generate_material_stream._bg_lock
     
     task_key = f"{user_id}_{classroom_id or 0}_{topic.replace(' ', '_').lower()}"
-
+ 
     def bg_worker():
         logger.info(f"[BgGen] Worker thread started for key: {task_key}")
         full_text = ""
@@ -627,19 +653,18 @@ RULES:
                 import datetime
                 from models import Document
                 from config import UPLOAD_DIR
-
+ 
                 local_db = SessionLocal()
                 try:
-                    doc_name = f"AI Study Material - {topic}.md"
                     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                     safe_name = f"{user_id}_{timestamp}_{doc_name}"
                     file_path = os.path.join(UPLOAD_DIR, safe_name)
-
+ 
                     # Save text to markdown file
                     os.makedirs(UPLOAD_DIR, exist_ok=True)
                     with open(file_path, "w", encoding="utf-8") as f:
                         f.write(full_text)
-
+ 
                     # Remove old generated doc duplicate
                     existing = local_db.query(Document).filter(
                         Document.student_id == user_id,
@@ -653,27 +678,29 @@ RULES:
                                 pass
                         local_db.delete(existing)
                         local_db.commit()
-
+ 
                     # Save new Document metadata
                     new_doc = Document(
                         student_id=user_id,
+                        owner_id=user_id,
+                        owner_role="professor",
                         filename=doc_name,
                         file_path=file_path,
                         category="Studies",
                         subject=subject,
                         uploaded_at=datetime.datetime.now(),
-                        visibility="course_shared",
+                        visibility="private",
                         document_type="notes",
-                        classroom_id=classroom_id,
-                        document_format="MD",
+                        classroom_id=None,
+                        document_format="TXT",
                         file_size=os.path.getsize(file_path),
                         pages=max(1, len(full_text) // 3000),
-                        title=f"AI Study Material - {topic}"
+                        title=doc_name.replace(".txt", "")
                     )
                     local_db.add(new_doc)
                     local_db.commit()
                     local_db.refresh(new_doc)
-
+ 
                     # Index generated notes into Chroma vector store
                     try:
                         from services.extract import chunk_text
@@ -689,32 +716,8 @@ RULES:
                         extract_topics_from_documents(user_id, local_db)
                     except Exception as e:
                         logger.error(f"[BgGen] Failed to index generated notes in Chroma: {e}")
-
-                    # Save classroom resource association
-                    if classroom_id:
-                        from classroom_models import ClassResource
-                        
-                        existing_res = local_db.query(ClassResource).filter(
-                            ClassResource.class_id == classroom_id,
-                            ClassResource.title == f"AI Study Material - {topic}"
-                        ).first()
-                        if existing_res:
-                            local_db.delete(existing_res)
-                            local_db.commit()
-
-                        new_resource = ClassResource(
-                            class_id=classroom_id,
-                            title=f"AI Study Material - {topic}",
-                            type="notes",
-                            file_path=file_path,
-                            uploaded_by=user_id,
-                            uploaded_at=datetime.datetime.now()
-                        )
-                        local_db.add(new_resource)
-                        local_db.commit()
-                        logger.info(f"[BgGen] Saved generated resource in class_resources for classroom_id={classroom_id}")
-
-                    logger.info(f"[BgGen] Saved generated material as document & file: '{doc_name}' associated with classroom={classroom_id}")
+ 
+                    logger.info(f"[BgGen] Saved generated material as document & file: '{doc_name}' privately in Content Studio")
                 finally:
                     local_db.close()
         except Exception as e:

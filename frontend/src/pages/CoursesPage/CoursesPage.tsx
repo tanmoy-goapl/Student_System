@@ -40,7 +40,6 @@ export default function CoursesPage() {
             <StudyPlanCard studyPlan={data.studyPlan} />
           </div>
           <PerformanceSnapshots snapshots={data.performanceSnapshots} />
-          <AIAlertCard alerts={data.aiAlerts} />
         </>
       ) : (
         <div className="space-y-4 animate-pulse">

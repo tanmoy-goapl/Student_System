@@ -54,7 +54,7 @@ export default function DocumentsSidebar({ workspaces, activeWorkspace, onSelect
     };
 
     return (
-        <aside className="w-52 flex-shrink-0 border-r border-white/5 py-4 px-3 space-y-1">
+        <aside className="w-52 flex-shrink-0 border-r border-white/5 py-4 px-3 space-y-1 overflow-y-auto purple-scrollbar">
             <p className="text-[0.6rem] font-semibold tracking-[0.2em] uppercase text-white/35 px-2 mb-3">
                 Workspaces
             </p>

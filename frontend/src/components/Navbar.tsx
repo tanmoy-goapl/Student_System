@@ -60,6 +60,11 @@ export default function Navbar() {
   };
 
   const isActive = (path: string) => {
+    if (searchParams?.get('source') === 'classes') {
+      if (path.startsWith('/classes')) return true;
+      if (path.startsWith('/courses') || path === '/') return false;
+    }
+
     if (path === "/") return pathname === "/";
     const pathBase = path.split('?')[0];
     const pathQuery = path.split('?')[1];

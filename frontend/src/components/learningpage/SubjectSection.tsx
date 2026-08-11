@@ -48,7 +48,7 @@ export default function SubjectSection({
           />
 
           <span className="text-[0.65rem] font-medium flex items-center gap-1.5">
-            {subject.title}
+            {subject.title?.replace(/\*\*/g, "")}
             {subject.locked && <Lock size={12} className="text-zinc-500" />}
           </span>
         </div>

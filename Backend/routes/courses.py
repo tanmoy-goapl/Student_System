@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import glob
+from typing import Optional
 import re
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -47,6 +48,36 @@ def _load_subject_resources():
     except Exception as e:
         logger.error(f"Failed to load subject_resources: {e}")
         return {}
+
+def _clean_curriculum_topic(topic: str) -> str:
+    """Remove literal Markdown emphasis markers from generated topic labels."""
+    cleaned = re.sub(r"\*\*(.*?)\*\*", r"\1", topic)
+    cleaned = re.sub(r"__(.*?)__", r"\1", cleaned)
+    return cleaned.strip()
+
+def _extract_curriculum_topics(curriculum_json):
+    """Flatten a generated classroom curriculum into unique topic names."""
+    if not isinstance(curriculum_json, dict):
+        return []
+
+    raw_topics = []
+    for unit in curriculum_json.get("units", []):
+        raw_topics.extend(unit.get("topics", []))
+
+    # Keep compatibility with older generated curriculum shapes.
+    if not raw_topics:
+        for semester in curriculum_json.get("semesters", []):
+            for course in semester.get("courses", []):
+                raw_topics.extend(course.get("topics", []))
+
+    topics = []
+    seen = set()
+    for topic in raw_topics:
+        cleaned_topic = _clean_curriculum_topic(topic) if isinstance(topic, str) else ""
+        if cleaned_topic and cleaned_topic not in seen:
+            seen.add(cleaned_topic)
+            topics.append(cleaned_topic)
+    return topics
 
 @router.get("/data/{student_id}")
 def get_courses_data(student_id: int, db: Session = Depends(get_db)):
@@ -106,7 +137,7 @@ def get_courses_data(student_id: int, db: Session = Depends(get_db)):
                             
                             subject_perf = perf_map.get(subject_name, [])
                             
-                            metrics = calculate_subject_metrics(student_id, subject_name, db)
+                            metrics = calculate_subject_metrics(student_id, subject_name, db, topics_override=actual_topics)
                             
                             current_topic = actual_topics[0] if actual_topics else ""
                             for topic_name in actual_topics:
@@ -118,6 +149,7 @@ def get_courses_data(student_id: int, db: Session = Depends(get_db)):
                                 
                             dynamic_subjects_list.append({
                                 "name": subject_name,
+                                "class_id": curr.class_id,
                                 "topics_mastered": metrics["mastered_topics"],
                                 "topics_completed": metrics["mastered_topics"],
                                 "total_topics": metrics["total_topics"],
@@ -142,10 +174,37 @@ def get_courses_data(student_id: int, db: Session = Depends(get_db)):
     }
 
 @router.get("/subject/{subject_name}/{student_id}")
-def get_subject_data(subject_name: str, student_id: int, db: Session = Depends(get_db)):
+def get_subject_data(subject_name: str, student_id: int, db: Session = Depends(get_db), class_id: Optional[int] = None):
     """Fetch predefined topics for a subject and attach individual performance data."""
+    # Normalize subject name
+    original_subject_name = subject_name
+    subject_lower = subject_name.lower().strip()
+    if "dsa" in subject_lower or "structure" in subject_lower:
+        subject_name = "Data Structures"
+    elif "operating" in subject_lower or "os" in subject_lower:
+        subject_name = "Operating Systems"
+    elif "network" in subject_lower or "cn" in subject_lower:
+        subject_name = "Computer Networks"
+
     predefined_topics = get_predefined_topics(student_id, subject_name, db)
-    if not predefined_topics:
+    from classroom_models import Classroom, StudentClass, ClassCurriculum, ClassResource
+    classroom = None
+    if class_id is not None:
+        classroom = db.query(Classroom).filter(Classroom.id == class_id).first()
+        if not classroom:
+            raise HTTPException(status_code=404, detail="Classroom not found")
+
+        student_in_class = db.query(StudentClass).filter(
+            StudentClass.class_id == class_id,
+            StudentClass.student_id == student_id
+        ).first()
+        if not student_in_class:
+            raise HTTPException(status_code=403, detail="Not enrolled in this class")
+
+        curriculum = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == class_id).first()
+        predefined_topics = _extract_curriculum_topics(curriculum.curriculum_json) if curriculum else []
+        subject_name = (curriculum.subject_name if curriculum and curriculum.subject_name else classroom.name)
+    if not predefined_topics and class_id is None:
         raise HTTPException(status_code=404, detail="Subject not found in curriculum")
         
     # Query performances for this subject
@@ -159,7 +218,7 @@ def get_subject_data(subject_name: str, student_id: int, db: Session = Depends(g
     logger.info(f"DEBUG2 performances keys: {list(perf_dict.keys())}")
     logger.info(f"DEBUG2 matched perfs: {[perf_dict.get(t) for t in predefined_topics if perf_dict.get(t)]}")
 
-    subject_metrics = calculate_subject_metrics(student_id, subject_name, db)
+    subject_metrics = calculate_subject_metrics(student_id, subject_name, db, topics_override=predefined_topics)
     
     topics_data = []
     found_unfinished = False
@@ -190,6 +249,27 @@ def get_subject_data(subject_name: str, student_id: int, db: Session = Depends(g
         topic_data["is_next_unfinished"] = is_next_unfinished
         topics_data.append(topic_data)
             
+    # Find classroom enrolled by student for this subject
+    if classroom is None:
+        classroom = db.query(Classroom).join(StudentClass, StudentClass.class_id == Classroom.id).filter(
+            StudentClass.student_id == student_id,
+            (Classroom.name == original_subject_name) | (Classroom.name == subject_name)
+        ).first()
+
+    class_resources_list = []
+    if classroom:
+        db_resources = db.query(ClassResource).filter(ClassResource.class_id == classroom.id).order_by(ClassResource.uploaded_at.desc()).all()
+        class_resources_list = [
+            {
+                "id": r.id,
+                "title": r.title,
+                "type": r.type,
+                "uploaded_at": r.uploaded_at.isoformat() if r.uploaded_at else None,
+                "uploaded_by_name": r.uploader.name or "Professor",
+                "is_class_resource": True
+            } for r in db_resources
+        ]
+
     resources_dict = _load_subject_resources()
     resources_list = resources_dict.get(subject_name, resources_dict.get("default", []))
     
@@ -210,7 +290,8 @@ def get_subject_data(subject_name: str, student_id: int, db: Session = Depends(g
             "subject_health": subject_metrics["health"]
         },
         "topics": topics_data,
-        "resources": resources_list
+        "resources": resources_list,
+        "class_resources": class_resources_list
     }
 
 @router.get("/analytics/{student_id}")

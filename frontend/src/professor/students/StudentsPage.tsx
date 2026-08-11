@@ -81,6 +81,12 @@ export default function StudentsPage() {
             let badgeBg = "bg-amber-400";
             let note = "Needs assistance with calculus. Suggest remedial material.";
 
+            const lastPracticed = st.last_practiced_at ? new Date(st.last_practiced_at) : null;
+            const daysSinceActive = lastPracticed 
+              ? (new Date().getTime() - lastPracticed.getTime()) / (1000 * 3600 * 24) 
+              : 999;
+            const isInactive = daysSinceActive > 7;
+
             if (st.is_at_risk) {
               badge = "AT RISK";
               badgeColor = "text-rose-400 border-rose-500/20 bg-rose-500/10";
@@ -91,7 +97,7 @@ export default function StudentsPage() {
               badgeColor = "text-emerald-400 border-emerald-500/20 bg-emerald-500/10";
               badgeBg = "bg-emerald-400";
               note = "Ready for advanced problem sets. Keep up the good work!";
-            } else if (progress < 10) {
+            } else if (isInactive) {
               badge = "INACTIVE";
               badgeColor = "text-slate-400 border-slate-500/20 bg-slate-500/10";
               badgeBg = "bg-slate-400";
@@ -454,7 +460,7 @@ export default function StudentsPage() {
               </div>
 
               {/* Student Segmentation Section */}
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Student Segmentation</h2>
                   <span className="px-2 py-0.5 text-[8px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
@@ -463,15 +469,13 @@ export default function StudentsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* High Performers */}
                   <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-5 space-y-4 flex flex-col justify-between">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <h3 className="text-xs font-bold text-emerald-400">High Performers</h3>
                         <span className="text-[10px] text-slate-500 font-semibold">{activeClassStats.topPerformer} Students</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 leading-relaxed">75%+ correctness scores with consistent engagement</p>
-                      {/* Avatars */}
+                      <p className="text-[10px] text-slate-400 leading-relaxed">75%+: correctness scores with consistent engagement</p>
                       <div className="flex -space-x-2 overflow-hidden">
                         {currentClassStudents.filter(s => s.badge === "TOP PERFORMER").slice(0, 4).map((st, idx) => (
                           <div key={idx} className="inline-block h-6 w-6 rounded-full border border-[#090b1f] bg-slate-800 text-[8px] font-bold flex items-center justify-center">
@@ -491,7 +495,6 @@ export default function StudentsPage() {
                     </button>
                   </div>
 
-                  {/* Needs Attention */}
                   <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-5 space-y-4 flex flex-col justify-between">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
@@ -499,7 +502,6 @@ export default function StudentsPage() {
                         <span className="text-[10px] text-slate-500 font-semibold">{activeClassStats.needsAttention} Students</span>
                       </div>
                       <p className="text-[10px] text-slate-400 leading-relaxed">Underperforming concepts requiring guided support</p>
-                      {/* Avatars */}
                       <div className="flex -space-x-2 overflow-hidden">
                         {currentClassStudents.filter(s => s.badge === "NEEDS ATTENTION").slice(0, 4).map((st, idx) => (
                           <div key={idx} className="inline-block h-6 w-6 rounded-full border border-[#090b1f] bg-slate-800 text-[8px] font-bold flex items-center justify-center">
@@ -519,7 +521,6 @@ export default function StudentsPage() {
                     </button>
                   </div>
 
-                  {/* At Risk */}
                   <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-5 space-y-4 flex flex-col justify-between">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
@@ -527,7 +528,6 @@ export default function StudentsPage() {
                         <span className="text-[10px] text-slate-500 font-semibold">{activeClassStats.atRisk} Students</span>
                       </div>
                       <p className="text-[10px] text-slate-400 leading-relaxed">Immediate intervention required</p>
-                      {/* Avatars */}
                       <div className="flex -space-x-2 overflow-hidden">
                         {currentClassStudents.filter(s => s.badge === "AT RISK").slice(0, 4).map((st, idx) => (
                           <div key={idx} className="inline-block h-6 w-6 rounded-full border border-[#090b1f] bg-slate-800 text-[8px] font-bold flex items-center justify-center">
@@ -547,7 +547,7 @@ export default function StudentsPage() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Quick Actions Footer */}
               <div className="space-y-4">

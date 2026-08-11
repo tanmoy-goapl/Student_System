@@ -11,7 +11,13 @@ logger = logging.getLogger("chatbot")
 CACHE_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "topics_cache.json")
 
 
-def _practice_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 2048) -> str:
+def _practice_llm_call(
+    system_prompt: str,
+    user_prompt: str,
+    max_tokens: int = 2048,
+    timeout_seconds: float = 15.0,
+    allow_fallback_chain: bool = True,
+) -> str:
     """Call the LLM with a system + user prompt. Returns raw text response."""
     provider = get_provider()
     configs = []
@@ -35,6 +41,9 @@ def _practice_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 2
     else:
         add_gpt(); add_llama(); add_backup()
 
+    if not allow_fallback_chain:
+        configs = configs[:1]
+
     last_error = "No configurations available"
     for name, api_key, base_url, model in configs:
         try:
@@ -49,7 +58,7 @@ def _practice_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 2
                 ],
                 max_tokens=max_tokens,
                 temperature=0.3,
-                timeout=15.0,
+                timeout=timeout_seconds,
             )
             content = resp.choices[0].message.content
             if not content:
@@ -104,7 +113,7 @@ def _practice_llm_stream(system_prompt: str, user_prompt: str, max_tokens: int =
                 ],
                 max_tokens=max_tokens,
                 temperature=0.3,
-                timeout=httpx.Timeout(15.0, connect=3.0),
+                timeout=httpx.Timeout(15.0, connect=1.5),
                 stream=True,
             )
             for chunk in resp:

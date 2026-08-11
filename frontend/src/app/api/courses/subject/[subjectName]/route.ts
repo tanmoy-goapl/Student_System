@@ -12,6 +12,7 @@ export async function GET(
     // Extract student_id from the query string
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("student_id");
+    const classId = searchParams.get("class_id");
     
     if (!studentId) {
       return NextResponse.json(
@@ -20,8 +21,9 @@ export async function GET(
       );
     }
     
+    const classQuery = classId ? `?class_id=${encodeURIComponent(classId)}` : "";
     const response = await fetch(
-      `${BACKEND_URL}/courses/subject/${encodeURIComponent(subjectName)}/${studentId}`,
+      `${BACKEND_URL}/courses/subject/${encodeURIComponent(subjectName)}/${studentId}${classQuery}`,
       {
         method: "GET",
         headers: {

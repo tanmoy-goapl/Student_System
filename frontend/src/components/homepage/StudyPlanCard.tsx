@@ -61,7 +61,7 @@ export default function StudyPlanCard({ studyPlan }: { studyPlan: HomepageDataRe
 
                             {!session.completed && (
                                 <button 
-                                    onClick={() => window.location.href = `/practice?topic=${encodeURIComponent(session.topic)}`}
+                                    onClick={() => window.location.href = `/learning?topic=${encodeURIComponent(session.topic)}&subject=${encodeURIComponent(session.tag)}&source=dashboard`}
                                     className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-white/40 transition hover:bg-violet-500 hover:text-white cursor-pointer"
                                 >
                                     <Play className="ml-0.5 h-3.5 w-3.5" />

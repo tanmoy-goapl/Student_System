@@ -7,6 +7,7 @@ import { getClassDetails } from "@/lib/api";
 import { ArrowLeft, Users, FileText, BarChart, BookOpen, CheckSquare, TrendingUp, ListTree } from "lucide-react";
 import ResourcesTab from "@/components/classroom/ResourcesTab";
 import CurriculumTab from "@/components/classroom/CurriculumTab";
+import SubjectDashboard from "@/pages/SubjectDashboard/SubjectDashboard";
 import Loader from "@/components/Loader";
 
 export default function ClassDetailsPage() {
@@ -62,6 +63,21 @@ export default function ClassDetailsPage() {
 
     const tabs = role === "professor" ? professorTabs : studentTabs;
 
+    if (role === "student") {
+        return (
+            <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-slate-900 to-slate-950 text-white w-full purple-scrollbar">
+                <SubjectDashboard 
+                    subjectName={classDetails.name} 
+                    classId={Number(params!.classId)}
+                    hideBackButton={false} 
+                    backRoute="/classes" 
+                    backText="Back to Classes" 
+                    source="classes"
+                />
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden text-white w-full">
             {/* Header */}
@@ -87,7 +103,6 @@ export default function ClassDetailsPage() {
                             <span className="px-2 py-1 bg-indigo-500/10 text-indigo-400 rounded text-sm font-mono tracking-wider border border-indigo-500/20">
                                 {classDetails.code}
                             </span>
-                            {role === "student" && <span>• Prof. {classDetails.professor_name}</span>}
                         </p>
                     </div>
                 </div>
@@ -121,10 +136,14 @@ export default function ClassDetailsPage() {
             <div className="flex-1 overflow-y-auto p-6 purple-scrollbar">
                 <div className="max-w-5xl mx-auto">
                     {activeTab === "resources" && (
-                        <ResourcesTab classId={Number(params!.classId)} role={role || "student"} userId={Number(userId || "0")} />
+                        <ResourcesTab classId={Number(params!.classId)} role={role || "student"} userId={Number(userId || "0")} subjectName={classDetails.name} />
                     )}
                     {activeTab === "curriculum" && (
-                        <CurriculumTab classId={Number(params!.classId)} role={role || "student"} userId={Number(userId || "0")} />
+                        role === "professor" ? (
+                            <CurriculumTab classId={Number(params!.classId)} role={role} userId={Number(userId || "0")} />
+                        ) : (
+                            <SubjectDashboard subjectName={classDetails.name} classId={Number(params!.classId)} hideBackButton={true} source="classes" />
+                        )
                     )}
                     {activeTab !== "resources" && activeTab !== "curriculum" && (
                         <div className="flex flex-col items-center justify-center h-64 bg-slate-800/20 rounded-2xl border border-slate-700/30 border-dashed">

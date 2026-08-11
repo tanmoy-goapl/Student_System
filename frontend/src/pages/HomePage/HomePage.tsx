@@ -108,7 +108,6 @@ export default function HomePage() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-6">
-              <AIAlertCard alerts={data.aiAlerts} />
               <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-xl hover:bg-slate-900/60 transition-colors">
                 <AIBehavioralInsights insights={data.aiBehavioralInsights || []} />
               </div>

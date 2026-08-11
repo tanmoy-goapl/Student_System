@@ -37,56 +37,65 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic, roa
 
   useEffect(() => {
     if (data && data.sidebarData) {
-      setExpandedCategories((prev) => {
-        const catExpanded: Record<string, boolean> = {};
-        const currentTopic = data.selectedTopic || topicParam;
-        
-        data.sidebarData.forEach((category: any) => {
-          let hasSelectedTopic = false;
-          if (category.subjects) {
-            hasSelectedTopic = category.subjects.some((subj: any) =>
-              subj.topics?.some(
-                (t: any) =>
-                  t.id === currentTopic ||
-                  t.subtopics?.includes(currentTopic)
-              )
-            );
-          } else if (category.topics) {
-            hasSelectedTopic = category.topics.some(
+      const currentTopic = data.selectedTopic || topicParam;
+      
+      const newCatExpanded: Record<string, boolean> = {};
+      data.sidebarData.forEach((category: any) => {
+        let hasSelectedTopic = false;
+        if (category.subjects) {
+          hasSelectedTopic = category.subjects.some((subj: any) =>
+            subj.topics?.some(
+              (t: any) =>
+                t.id === currentTopic ||
+                t.subtopics?.includes(currentTopic)
+            )
+          );
+        } else if (category.topics) {
+          hasSelectedTopic = category.topics.some(
+            (t: any) =>
+              t.id === currentTopic ||
+              t.subtopics?.includes(currentTopic)
+          );
+        }
+        if (hasSelectedTopic) {
+          newCatExpanded[category.id] = true;
+        }
+      });
+
+      const newSubjExpanded: Record<string, boolean> = {};
+      data.sidebarData.forEach((category: any) => {
+        if (category.subjects) {
+          category.subjects.forEach((subj: any) => {
+            const hasSelectedTopic = subj.topics?.some(
               (t: any) =>
                 t.id === currentTopic ||
                 t.subtopics?.includes(currentTopic)
             );
-          }
-          if (hasSelectedTopic) {
-            catExpanded[category.id] = true;
-          }
-        });
-        return catExpanded;
+            if (hasSelectedTopic) {
+              newSubjExpanded[subj.id] = true;
+            }
+          });
+        }
+      });
+
+      // Only update state if values actually changed
+      setExpandedCategories((prev) => {
+        const keysNew = Object.keys(newCatExpanded);
+        const keysPrev = Object.keys(prev);
+        if (keysNew.length !== keysPrev.length) return newCatExpanded;
+        const hasDifference = keysNew.some((k) => prev[k] !== newCatExpanded[k]);
+        return hasDifference ? newCatExpanded : prev;
       });
 
       setExpandedSubjects((prev) => {
-        const docExpanded: Record<string, boolean> = {};
-        const currentTopic = data.selectedTopic || topicParam;
-        
-        data.sidebarData.forEach((category: any) => {
-          if (category.subjects) {
-            category.subjects.forEach((subj: any) => {
-              const hasSelectedTopic = subj.topics?.some(
-                (t: any) =>
-                  t.id === currentTopic ||
-                  t.subtopics?.includes(currentTopic)
-              );
-              if (hasSelectedTopic) {
-                docExpanded[subj.id] = true;
-              }
-            });
-          }
-        });
-        return docExpanded;
+        const keysNew = Object.keys(newSubjExpanded);
+        const keysPrev = Object.keys(prev);
+        if (keysNew.length !== keysPrev.length) return newSubjExpanded;
+        const hasDifference = keysNew.some((k) => prev[k] !== newSubjExpanded[k]);
+        return hasDifference ? newSubjExpanded : prev;
       });
     }
-  }, [data, topicParam]);
+  }, [data?.selectedTopic, data?.sidebarData, topicParam]);
 
   const getStudentId = (): number => {
     if (typeof window !== "undefined") {
@@ -165,7 +174,7 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic, roa
                 router.push(`/learning?${params.toString()}`);
               }}
             >
-              <option value="" className="bg-slate-900">All Topics (No Roadmap)</option>
+              <option value="" className="bg-slate-900">All Topics</option>
               {roadmaps.map(rm => (
                 <option key={rm.id} value={rm.id.toString()} className="bg-slate-900">{rm.title}</option>
               ))}

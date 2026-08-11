@@ -1,0 +1,122 @@
+## Deadlocks in Operating Systems  
+*Subject: Operating Systems*  
+
+---
+
+### 1. Introduction  
+
+A **deadlock** is a situation in a multiprogramming environment where a set of processes are each waiting for an event that can only be caused by another process in the same set. Because none of the involved processes can proceed, the system becomes stuck, wasting CPU cycles and resources. Deadlocks are a classic problem in concurrent computing and appear wherever resources are shared—e.g., files, memory blocks, printers, semaphores, sockets, or database rows.
+
+---
+
+### 2. Formal Definition  
+
+A deadlock occurs when the following four conditions **hold simultaneously** for a set of processes **P = {P₁, P₂, …, Pₙ}** and a set of resources **R = {R₁, R₂, …, Rₘ}**:
+
+| Condition | Description |
+|-----------|-------------|
+| **Mutual Exclusion** | At least one resource is **non‑shareable**; only one process can use it at a time. |
+| **Hold and Wait** | A process **holds** at least one resource while **waiting** to acquire additional resources that are currently held by other processes. |
+| **No Preemption** | Resources cannot be forcibly taken away from a process; they must be released voluntarily. |
+| **Circular Wait** | There exists a circular chain of processes **P₁ → P₂ → … → Pₙ → P₁**, where each process **Pᵢ** is waiting for a resource held by **Pᵢ₊₁** (mod n). |
+
+If any one of these conditions is broken, deadlock cannot arise.
+
+---
+
+### 3. Resource‑Allocation Graph (RAG)  
+
+A **resource‑allocation graph** is a directed bipartite graph used to model the state of resource allocation:
+
+- **Process nodes** (circles) → **request edges** (→) point from a process to a resource it needs.  
+- **Resource nodes** (squares) → **assignment edges** (→) point from a resource to the process that currently holds it.
+
+**Key properties**
+
+| Situation | Graph Feature | Interpretation |
+|-----------|---------------|----------------|
+| No cycles | Acyclic RAG | No deadlock possible. |
+| Cycle with **single‑instance** resources | Cycle → **deadlock** (all processes in the cycle are blocked). |
+| Cycle with **multiple‑instance** resources | Cycle → **possible deadlock** (needs further analysis, e.g., using the Banker's safety algorithm). |
+
+---
+
+### 4. Deadlock Handling Strategies  
+
+Operating systems typically adopt one of three broad strategies:
+
+| Strategy | Goal | Typical Techniques |
+|----------|------|---------------------|
+| **Prevention** | Ensure that **at least one** of the four necessary conditions can never hold. | • Enforce a total ordering of resources (break circular wait). <br>• Require processes to request **all** needed resources at once (break hold‑and‑wait). <br>• Use preemptible resources (break no‑preemption). |
+| **Avoidance** | Dynamically examine each request and decide whether granting it could lead to an unsafe state. | • **Banker’s Algorithm** (requires knowledge of maximum demand). <br>• **Safe sequence** detection – only grant if a safe sequence still exists. |
+| **Detection & Recovery** | Allow deadlocks to occur, then detect them and take corrective action. | • Periodic **deadlock detection** using RAG cycle detection or resource‑allocation matrices. <br>• **Recovery**: <br> - **Process termination** (abort one or more processes). <br> - **Resource preemption** (rollback, checkpointing). |
+| **Ignore (Ostrich)** | Assume deadlocks are rare and tolerate them; the system may simply be rebooted. | Used in many embedded or low‑cost systems where implementing detection is too expensive. |
+
+---
+
+### 5. Detailed Example – Banker's Algorithm  
+
+The **Banker’s algorithm** (named after a bank that only grants loans if it can still satisfy all customers) works as follows:
+
+1. **Data structures**  
+   - `Available[ m ]` – number of each resource type currently free.  
+   - `Max[ n ][ m ]` – maximum demand of each process.  
+   - `Allocation[ n ][ m ]` – current allocation to each process.  
+   - `Need[ n ][ m ] = Max - Allocation`.
+
+2. **Safety test** (run after a tentative allocation)  
+   - Initialize `Work = Available`, `Finish[i] = false`.  
+   - Find a process `i` with `Finish[i] = false` and `Need[i] ≤ Work`.  
+   - If found, set `Work = Work + Allocation[i]`, `Finish[i] = true`, repeat.  
+   - If all `Finish[i]` become true → **safe state**; otherwise **unsafe** (potential deadlock).
+
+3. **Granting a request**  
+   - If `Request ≤ Need` and `Request ≤ Available` **and** the resulting state is safe, grant it; otherwise, the process must wait.
+
+**Pros**: Guarantees deadlock‑free execution.  
+**Cons**: Requires processes to declare maximum needs up front; overhead grows with number of processes and resource types.
+
+---
+
+### 6. Real‑World Manifestations  
+
+| Domain | Typical Resources | Deadlock Example |
+|--------|-------------------|------------------|
+| **Operating System** | Files, I/O devices, memory pages | Two processes each lock a file and then request the other file. |
+| **Database Systems** | Row/table locks, transaction logs | Two transactions each hold a lock on one row and request a lock on the other. |
+| **Distributed Systems** | Network sockets, distributed locks | Two services on different nodes each hold a lock on a local resource while waiting for a remote lock. |
+| **Multithreaded Applications** | Mutexes, semaphores | Thread A locks mutex M1 then tries M2; Thread B locks M2 then tries M1 → classic circular wait. |
+
+---
+
+### 7. Designing Deadlock‑Free Systems  
+
+1. **Resource hierarchy** – Assign a global ordering to all lockable resources; a process must acquire locks in increasing order only.  
+2. **Lock timeout & retry** – If a lock cannot be obtained within a bounded time, release held locks and retry, reducing the chance of circular wait.  
+3. **Two‑phase locking (2PL)** – In databases, a transaction first **grows** (acquires all needed locks) and then **shrinks** (releases them), preventing hold‑and‑wait.  
+4. **Avoid nested locks** – Keep critical sections short and avoid acquiring a second lock while holding the first.  
+5. **Use lock‑free or wait‑free algorithms** – Where possible, replace mutexes with atomic operations (e.g., compare‑and‑swap) to eliminate mutual exclusion.
+
+---
+
+### 8. Summary  
+
+- A deadlock is a set of processes each waiting for resources held by another in the set.  
+- Four necessary conditions (mutual exclusion, hold‑and‑wait, no preemption, circular wait) must all hold.  
+- Resource‑allocation graphs help visualize and detect cycles.  
+- Strategies: **prevention** (break a condition), **avoidance** (Banker’s algorithm), **detection & recovery** (periodic checks + abort/preempt), or **ignore**.  
+- Good system design—resource ordering, two‑phase locking, timeouts, and lock‑free structures—greatly reduces the likelihood of deadlocks.
+
+Understanding deadlocks is essential for OS designers, database administrators, and developers of concurrent software, because the ability to reason about resource sharing directly impacts reliability, performance, and user experience.
+
+---  
+
+### 9. Further Reading  
+
+1. **Silberschatz, Galvin & Gagne**, *Operating System Concepts*, 10th ed., Chapter 7 – “Deadlocks”.  
+2. **Andrew S. Tanenbaum**, *Modern Operating Systems*, 4th ed., Section 7.4 – “Deadlock Detection”.  
+3. **M. Herlihy & N. Shavit**, *The Art of Multiprocessor Programming*, Chapter 6 – “Lock‑Free Algorithms”.  
+
+---  
+
+*Prepared for the Operating Systems curriculum – comprehensive coverage of deadlock theory, detection, and handling.*

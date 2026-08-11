@@ -1,6 +1,7 @@
 import { PerformanceMainResponse } from "@/lib/api";
 
 export default function AccuracyTrend({ trendData }: { trendData: PerformanceMainResponse["trend"] }) {
+    if (!trendData || !trendData.labels || !trendData.accuracy) return null;
     return (
         <div className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-sm p-5 overflow-hidden relative">
             <div className="flex items-start justify-between mb-2">
@@ -41,12 +42,14 @@ export default function AccuracyTrend({ trendData }: { trendData: PerformanceMai
                                     <div className="w-3 h-3 rounded-full bg-indigo-400 border-[3px] border-slate-950" />
                                 </div>
 
-                                <div
-                                    className="absolute w-full border-t-2 border-dashed border-emerald-400/80"
-                                    style={{
-                                        bottom: `${trendData.practiceVolume[index]}%`,
-                                    }}
-                                />
+                                {trendData.practiceVolume && trendData.practiceVolume[index] !== undefined && (
+                                    <div
+                                        className="absolute w-full border-t-2 border-dashed border-emerald-400/80"
+                                        style={{
+                                            bottom: `${trendData.practiceVolume[index]}%`,
+                                        }}
+                                    />
+                                )}
 
                                 {index !==
                                     trendData.labels

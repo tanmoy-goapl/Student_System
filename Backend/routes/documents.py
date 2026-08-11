@@ -213,3 +213,36 @@ def delete_document(document_id: int, db: Session = Depends(get_db)):
         print(f"Error synchronizing topics after deletion: {sync_err}")
         
     return {"message": "Document deleted successfully"}
+
+
+@router.post("/publish")
+def publish_document(document_id: str, classroom_id: int, user_id: int, db: Session = Depends(get_db)):
+    doc_db_id = int(document_id.replace("db-", ""))
+    
+    doc = db.query(Document).filter(Document.id == doc_db_id).first()
+    if not doc:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    doc.classroom_id = classroom_id
+    doc.visibility = "course_shared"
+    
+    # Check if ClassResource already exists
+    from classroom_models import ClassResource
+    existing = db.query(ClassResource).filter(
+        ClassResource.class_id == classroom_id,
+        ClassResource.file_path == doc.file_path
+    ).first()
+    
+    if not existing:
+        resource = ClassResource(
+            class_id=classroom_id,
+            title=doc.title or doc.filename,
+            type=doc.document_format or "TXT",
+            file_path=doc.file_path,
+            uploaded_by=user_id
+        )
+        db.add(resource)
+        
+    db.commit()
+    return {"success": True, "message": "Document published to classroom successfully"}

@@ -32,6 +32,7 @@ from schemas.chat import ChatRequest, Message, ChatResponse
 from services.chatbot.chat_intent import RetrievalMode, detect_retrieval_mode
 from services.chatbot.chat_prompts import _build_system_prompt, apply_role_guardrails
 from services.llm_client import _call_llm, _call_llm_stream
+from services.llm_client import LLMStreamTimeout
 from services.query_planner import plan_retrieval_strategy
 from services.document_resolver import resolve_documents, get_role_visible_docs
 from services.context_builder import build_context
@@ -397,30 +398,48 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
 
         # ── Stream LLM response ──────────────────────────────────────────────
         full_answer = ""
+        assistant_persisted = False
+
+        def persist_assistant_reply():
+            nonlocal assistant_persisted
+            if assistant_persisted or not full_answer:
+                return
+            try:
+                db.add(ChatMessage(
+                    student_id=request.student_id, role="assistant", content=full_answer,
+                    session_id=session_id, session_title=session_title
+                ))
+                db.commit()
+                assistant_persisted = True
+            except Exception as e:
+                logger.error(f"Failed to persist assistant reply: {e}")
+
         first_chunk = True
         t_llm_start = time.perf_counter()
-        for chunk in _call_llm_stream(system_prompt, history_for_llm, request.question):
-            if first_chunk:
-                t_first_token = time.perf_counter()
-                logger.info(f"  [Timing] Backend First Token Loop hit: {t_first_token - t_llm_start:.3f}s since LLM call")
-                logger.info(f"  [Timing] Total TTFT (user → first token loop): {t_first_token - t0:.3f}s")
-                first_chunk = False
-            full_answer += chunk
-            yield json.dumps({"content": chunk}) + "\n"
+        try:
+            for chunk in _call_llm_stream(system_prompt, history_for_llm, request.question):
+                if first_chunk:
+                    t_first_token = time.perf_counter()
+                    logger.info(f"  [Timing] Backend First Token Loop hit: {t_first_token - t_llm_start:.3f}s since LLM call")
+                    logger.info(f"  [Timing] Total TTFT (user → first token loop): {t_first_token - t0:.3f}s")
+                    first_chunk = False
+                full_answer += chunk
+                yield json.dumps({"content": chunk}) + "\n"
+        except LLMStreamTimeout:
+            timeout_message = (
+                "\n\n⚠️ I stopped this response because it took too long. "
+                "Please try the question again."
+            )
+            full_answer += timeout_message
+            yield json.dumps({"content": timeout_message}) + "\n"
+        finally:
+            # Persist completed or partial output if the client disconnects.
+            persist_assistant_reply()
             
         t_stream_end = time.perf_counter()
         logger.info(f"  [Timing] LLM Streaming Duration: {t_stream_end - t_llm_start:.3f}s")
         logger.info(f"  [Timing] Total Response Time: {t_stream_end - t0:.3f}s")
 
-        # ── Persist assistant reply ──────────────────────────────────────────
-        try:
-            db.add(ChatMessage(
-                student_id=request.student_id, role="assistant", content=full_answer,
-                session_id=session_id, session_title=session_title
-            ))
-            db.commit()
-        except Exception as e:
-            logger.error(f"Failed to persist assistant reply: {e}")
 
         # ── Final metadata ───────────────────────────────────────────────────
         yield json.dumps({"status": ""}) + "\n"

@@ -7,13 +7,85 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from practice_models import LearningContent
-from services.practice.content_generator import generate_learning_content, stream_learning_content
+from services.practice.content_generator import generate_learning_content, stream_learning_content, has_valid_revision
 
 logger = logging.getLogger("chatbot")
 
 import threading
 bg_generation_lock = threading.Lock()
-active_streams = {}
+class _GenerationJob:
+    """A process-local stream buffer that survives a browser navigation."""
+
+    def __init__(self):
+        self.condition = threading.Condition()
+        self.chunks = []
+        self.done = False
+        self.error = None
+        self.cancel_event = threading.Event()
+
+generation_jobs = {}
+generation_jobs_lock = threading.Lock()
+
+def _run_generation_job(job, student_id: int, topic: str, subject: Optional[str], key: str):
+    from database import SessionLocal
+
+    local_db = SessionLocal()
+    try:
+        for chunk in stream_learning_content(
+            student_id,
+            topic,
+            local_db,
+            subject=subject,
+            cancel_event=job.cancel_event,
+        ):
+            with job.condition:
+                job.chunks.append(chunk)
+                job.condition.notify_all()
+    except Exception as exc:
+        job.error = exc
+        logger.error(f"[StreamContent] Background generation failed for '{topic}': {exc}")
+    finally:
+        local_db.close()
+        with job.condition:
+            job.done = True
+            job.condition.notify_all()
+        with generation_jobs_lock:
+            if generation_jobs.get(key) is job:
+                generation_jobs.pop(key, None)
+
+def _stream_generation_job(job):
+    cursor = 0
+    while True:
+        with job.condition:
+            while cursor >= len(job.chunks) and not job.done:
+                job.condition.wait(timeout=1)
+            pending = job.chunks[cursor:]
+            cursor = len(job.chunks)
+            done = job.done
+
+        for chunk in pending:
+            yield chunk
+
+        if done:
+            return
+
+
+def _get_generation_job(student_id: int, topic: str, subject: Optional[str], key: str, replace: bool = False):
+    with generation_jobs_lock:
+        if replace and key in generation_jobs:
+            generation_jobs[key].cancel_event.set()
+            generation_jobs.pop(key, None)
+
+        job = generation_jobs.get(key)
+        if job is None:
+            job = _GenerationJob()
+            generation_jobs[key] = job
+            threading.Thread(
+                target=_run_generation_job,
+                args=(job, student_id, topic, subject, key),
+                daemon=True,
+            ).start()
+        return job
 
 def pre_generate_questions_bg(student_id: int, topic: str, subject: Optional[str]):
     """Pre-generate the master question bank in the background."""
@@ -141,6 +213,12 @@ def get_learning_content_endpoint(
             LearningContent.topic == topic
         ).first()
     
+    if cached and not has_valid_revision(cached.revision):
+        logger.info(f"INVALIDATING incomplete revision cache: topic='{topic}', subject='{subject}'")
+        db.delete(cached)
+        db.commit()
+        cached = None
+
     if force:
         logger.info(f"FORCE REGENERATION: Deleting all cached content for topic='{topic}'")
         db.query(LearningContent).filter(
@@ -252,6 +330,12 @@ async def stream_content(
                 LearningContent.topic == topic
             ).first()
     
+    if cached and not has_valid_revision(cached.revision):
+        logger.info(f"INVALIDATING incomplete revision stream cache: topic='{topic}', subject='{subject}'")
+        db.delete(cached)
+        db.commit()
+        cached = None
+
     if cached:
         # Only pre-generate questions for cached (instant) topics to avoid overloading
         import threading as _threading
@@ -292,35 +376,10 @@ async def stream_content(
         ).delete()
         db.commit()
 
-    import threading as _threading
-    import asyncio
-
-    key = f"{student_id}:{topic}"
-    if key in active_streams:
-        logger.info(f"[StreamContent] Cancelling duplicate active stream for {key}")
-        active_streams[key].set()
-        await asyncio.sleep(0.5)  # Give time for the previous stream to shut down
-
-    cancel_event = _threading.Event()
-    active_streams[key] = cancel_event
-
-    def cancellable_stream():
-        """Runs the sync generator and yields. FastAPI handles sync generators in a threadpool."""
-        gen = stream_learning_content(student_id, topic, db, subject=subject, cancel_event=cancel_event)
-        try:
-            for chunk in gen:
-                if cancel_event.is_set():
-                    break
-                yield chunk
-        except Exception as e:
-            logger.error(f"[StreamContent] Error during stream: {e}")
-        finally:
-            cancel_event.set()
-            if active_streams.get(key) == cancel_event:
-                active_streams.pop(key, None)
-
+    key = f"{student_id}:{subject or ''}:{topic}"
+    job = _get_generation_job(student_id, topic, subject, key, replace=is_bypass)
     return StreamingResponse(
-        cancellable_stream(),
+        _stream_generation_job(job),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
     )

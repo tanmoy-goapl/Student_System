@@ -24,6 +24,7 @@ export async function GET(
         method: "GET",
         headers: { "Accept": "text/event-stream" },
         cache: "no-store",
+        signal: req.signal,
       });
       return new Response(response.body, {
         status: response.status,

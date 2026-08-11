@@ -10,6 +10,7 @@ const iconMap: Record<string, any> = {
 };
 
 export default function StatsGrid({ stats }: { stats: PerformanceMainResponse["stats"] }) {
+    if (!stats || !Array.isArray(stats)) return null;
     return (
         <div className="grid grid-cols-4 gap-2">
             {stats.map((stat) => (

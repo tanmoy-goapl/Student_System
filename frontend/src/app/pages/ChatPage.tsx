@@ -1,70 +1,46 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import ChatHistorySidebar from "@/components/ChatHistorySidebar";
+import { useChatSession, type ChatMessage } from "@/components/ChatSessionProvider";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
 import { Paperclip, Send, Square, CheckCircle2, ChevronRight, Activity, CalendarDays, Sparkles, History, Plus } from "lucide-react";
-import RightSidebar from "@/components/RightSidebar";
 import { getChatSidebarData, uploadDocument } from "@/lib/api";
 import Link from "next/link";
 import { OfflineState, ChatThinking } from "@/components/UIStateSystem";
 
-type Message = { 
-  role: string; 
-  content: string; 
-  created_at?: string | null;
-  intent?: string;
-  roadmap_metadata?: { title: string; duration: string; weeks: number; tasks: number };
-  suggest_roadmap?: boolean;
-  options?: string[];
-};
+type RoleSuggestion = { h: string; t?: string };
 
-function getStoredUser() {
-  const id = parseInt(localStorage.getItem("user_id") || "0", 10);
-  const role = (localStorage.getItem("role") || "student") as "admin" | "student" | "professor";
-  const name =
-    localStorage.getItem("user_name") ||
-    (localStorage.getItem("user_email") || "").split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) ||
-    "User";
-  return { id, role, name };
-}
+
 
 export default function ChatPage() {
-  const [question, setQuestion] = useState("");
-  const [history, setHistory] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [streamStatus, setStreamStatus] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [error, setError] = useState("");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [resetNext, setResetNext] = useState(false);
-  const [user, setUser] = useState<{ id: number; role: string; name: string } | null>(null);
-  const [roleSuggestions, setRoleSuggestions] = useState<any>(null);
+  const [roleSuggestions, setRoleSuggestions] = useState<Record<string, RoleSuggestion[]> | null>(null);
   const [fileUploading, setFileUploading] = useState(false);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const targetChatTextRef = useRef("");
-  const chatTypewriterIntervalRef = useRef<any>(null);
+
+  const {
+    user,
+    question,
+    setQuestion,
+    history,
+    loading,
+    streamStatus,
+    isStreaming,
+    error,
+    setError,
+    activeSessionId,
+    handleAsk,
+    handleStop,
+    handleNewChat,
+    handleSelectSession,
+    appendAssistantMessage,
+  } = useChatSession();
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    setUser(getStoredUser());
-    return () => {
-      if (chatTypewriterIntervalRef.current) clearInterval(chatTypewriterIntervalRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    // AI chatbot always starts with a new chat on page load
-    setHistory([]);
-    setActiveSessionId(null);
-    setResetNext(true);
-  }, [user]);
 
   useEffect(() => {
     getChatSidebarData().then(data => {
@@ -72,31 +48,25 @@ export default function ChatPage() {
     }).catch(err => console.error("Failed to fetch suggestions", err));
   }, []);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("chat_input");
-    if (saved) setQuestion(saved);
-  }, []);
 
-  useEffect(() => {
-    localStorage.setItem("chat_input", question);
-  }, [question]);
-
-  const scrollThrottleRef = useRef<number>(0);
-  useEffect(() => {
+  const initialScrollPendingRef = useRef(true);
+  useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const now = Date.now();
-    if (now - scrollThrottleRef.current > 120) {
-      scrollThrottleRef.current = now;
-      const lastMsg = history[history.length - 1];
-      const isUserMsg = lastMsg && lastMsg.role === "user";
-      const threshold = 150;
-      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    const lastMsg = history[history.length - 1];
+    const isUserMsg = lastMsg?.role === "user";
+    const threshold = 150;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    const isInitialRestore = initialScrollPendingRef.current && history.length > 0;
 
-      if (isUserMsg || nearBottom || loading) {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      }
+    if (isInitialRestore || isUserMsg || nearBottom || loading) {
+      const behavior = isInitialRestore ? "auto" : "smooth";
+      requestAnimationFrame(() => {
+        if (scrollRef.current !== el) return;
+        el.scrollTo({ top: el.scrollHeight, behavior });
+      });
     }
+    if (isInitialRestore) initialScrollPendingRef.current = false;
   }, [history, loading]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,268 +76,12 @@ export default function ChatPage() {
     setFileUploading(true);
     try {
       const res = await uploadDocument(user.id, file, "owner");
-      setHistory(prev => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `📁 **Uploaded "${res.filename}"** (${res.chunks_created} chunks processed). I have parsed it and added it to my knowledge. You can now ask questions about it!`,
-        },
-      ]);
-    } catch (err: any) {
-      setError(err.message || "Failed to upload document");
+      appendAssistantMessage(`📁 **Uploaded "${res.filename}"** (${res.chunks_created} chunks processed). I have parsed it and added it to my knowledge. You can now ask questions about it!`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to upload document");
     } finally {
       setFileUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const handleAsk = async () => {
-    const q = question.trim();
-    if (!q || !user?.id) return;
-
-    setError("");
-    setHistory(prev => [...prev, { role: "user", content: q }]);
-    setQuestion("");
-    localStorage.removeItem("chat_input");
-    setLoading(true);
-    setIsStreaming(true);
-
-    const t_click = performance.now();
-    console.log(`\n--- NEW REQUEST ---`);
-    console.log(`[Timing] Request started at ${t_click.toFixed(1)}ms`);
-
-    try {
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_id: user.id,
-          question: q,
-          role: user.role,
-          reset: resetNext,
-          session_id: activeSessionId || undefined,
-        }),
-        signal: controller.signal,
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.detail || `Error ${res.status}`);
-      }
-
-      console.log(`[Timing] Headers received from Next.js proxy: ${(performance.now() - t_click).toFixed(1)}ms`);
-      setLoading(false); // remove initial typing dots indicator
-
-      const reader = res.body?.getReader();
-      if (!reader) {
-        throw new Error("No response stream available");
-      }
-
-      // Prepend an empty assistant message which we will fill progressively
-      setHistory(prev => [...prev, { role: "assistant", content: "" }]);
-
-      targetChatTextRef.current = "";
-      if (chatTypewriterIntervalRef.current) {
-        clearInterval(chatTypewriterIntervalRef.current);
-      }
-
-      const decoder = new TextDecoder();
-      let done = false;
-      let finalIntent = "";
-      let finalMetadata = null;
-      let finalSuggest = false;
-      let finalSessionId = "";
-      let finalOptions = undefined;
-      let buffer = "";
-      let contentStarted = false;
-      let firstChunkReceived = false;
-
-      // Start typewriter ticker loop
-      let currentTypewriterLength = 0;
-      chatTypewriterIntervalRef.current = setInterval(() => {
-        if (currentTypewriterLength < targetChatTextRef.current.length) {
-          const diff = targetChatTextRef.current.length - currentTypewriterLength;
-          const step = diff > 150 ? 10 : diff > 40 ? 4 : diff > 10 ? 2 : 1;
-          currentTypewriterLength += step;
-          const textChunk = targetChatTextRef.current.slice(0, currentTypewriterLength);
-          
-          setHistory(prev => {
-            const copy = [...prev];
-            if (copy.length > 0) {
-              copy[copy.length - 1] = {
-                ...copy[copy.length - 1],
-                content: textChunk,
-              };
-            }
-            return copy;
-          });
-        }
-      }, 20);
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        if (value) {
-          if (!firstChunkReceived) {
-            console.log(`[Timing] Network: First byte received by browser: ${(performance.now() - t_click).toFixed(1)}ms`);
-            firstChunkReceived = true;
-          }
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) continue;
-            try {
-              const parsed = JSON.parse(trimmed);
-              if (parsed.error) {
-                throw new Error(parsed.error);
-              }
-              if (parsed.status !== undefined) {
-                setStreamStatus(parsed.status);
-              }
-              if (parsed.content) {
-                if (!contentStarted) {
-                  console.log(`[Timing] React: First token parsed and state update triggered: ${(performance.now() - t_click).toFixed(1)}ms`);
-                  contentStarted = true;
-                  setStreamStatus("");
-                }
-                targetChatTextRef.current += parsed.content;
-              }
-              if (parsed.intent) {
-                finalIntent = parsed.intent;
-              }
-              if (parsed.roadmap_metadata) {
-                finalMetadata = parsed.roadmap_metadata;
-              }
-              if (parsed.suggest_roadmap) {
-                finalSuggest = true;
-              }
-              if (parsed.options) {
-                finalOptions = parsed.options;
-              }
-              if (parsed.session_id) {
-                finalSessionId = parsed.session_id;
-              }
-            } catch (err) {
-              console.error("Error parsing stream line:", err);
-            }
-          }
-        }
-      }
-
-      // Final state updates and cleanup
-      if (chatTypewriterIntervalRef.current) {
-        clearInterval(chatTypewriterIntervalRef.current);
-      }
-      setHistory(prev => {
-        const copy = [...prev];
-        if (copy.length > 0) {
-          copy[copy.length - 1] = {
-            ...copy[copy.length - 1],
-            content: targetChatTextRef.current,
-            intent: finalIntent,
-            roadmap_metadata: finalMetadata,
-            suggest_roadmap: finalSuggest,
-            options: finalOptions,
-          };
-        }
-        return copy;
-      });
-
-      if (finalSessionId) {
-        setActiveSessionId(finalSessionId);
-      }
-
-      if (!targetChatTextRef.current && !finalMetadata) {
-        setError("No response received. Please try again.");
-        setHistory(prev => prev.slice(0, -1));
-      }
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        // Handle stop gracefully
-        setStreamStatus("");
-      } else {
-        setError(err.message || "Failed to get answer. Please try again.");
-        setHistory(prev => prev.slice(0, -1));
-      }
-    } finally {
-      setLoading(false);
-      setStreamStatus("");
-      setIsStreaming(false);
-      abortControllerRef.current = null;
-      if (resetNext) setResetNext(false);
-    }
-  };
-
-  const handleStop = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-  };
-
-  useEffect(() => {
-    const handleNewChat = () => {
-      setHistory([]);
-      setQuestion("");
-      setError("");
-      setResetNext(true);
-      setActiveSessionId(null);
-    };
-
-    window.addEventListener("new-chat", handleNewChat);
-    return () => {
-      window.removeEventListener("new-chat", handleNewChat);
-    };
-  }, []);
-
-  const handleSelectSession = async (sessionId: string) => {
-    if (!user?.id) return;
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/chat/history?student_id=${user.id}&session_id=${sessionId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setHistory(data || []);
-        setActiveSessionId(sessionId);
-      }
-    } catch (err) {
-      console.error("Failed to load session history:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSelectHistoryEntry = async (item: { content: string; created_at?: string | null }) => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/chat/history?student_id=${user.id}`);
-      if (!res.ok) return;
-      const data: Message[] = await res.json();
-
-      let idx = item.created_at
-        ? data.findIndex(m => m.role === "user" && m.created_at === item.created_at)
-        : -1;
-
-      if (idx === -1) {
-        for (let i = data.length - 1; i >= 0; i--) {
-          if (data[i].role === "user" && data[i].content === item.content) { idx = i; break; }
-        }
-      }
-
-      if (idx === -1) { setHistory(data); return; }
-
-      let end = data.length;
-      for (let i = idx + 1; i < data.length; i++) {
-        if (data[i].role === "user") { end = i; break; }
-      }
-      setHistory(data.slice(idx, end));
-    } catch {
-      // silent
     }
   };
 
@@ -403,9 +117,7 @@ export default function ChatPage() {
           <div className="flex items-center gap-2">
 
             <button
-              onClick={() => {
-                window.dispatchEvent(new Event("new-chat"));
-              }}
+              onClick={handleNewChat}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/10 transition cursor-pointer text-white"
               title="Start New Conversation"
             >
@@ -429,7 +141,7 @@ export default function ChatPage() {
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-3 w-full max-w-2xl">
-                {roleSuggestions?.[user?.role as keyof typeof roleSuggestions]?.map((item: any, i: number) => (
+                {roleSuggestions?.[user?.role || ""]?.map((item, i) => (
                   <button
                     key={i}
                     onClick={() => setQuestion(item.h)}
@@ -595,7 +307,7 @@ function parseMarkdownAndTables(text: string): TableBlock[] {
   return blocks;
 }
 
-function ChatBubble({ msg, isGenerating, onAsk }: { msg: Message, isGenerating?: boolean, onAsk?: (q: string) => void }) {
+function ChatBubble({ msg, isGenerating, onAsk }: { msg: ChatMessage, isGenerating?: boolean, onAsk?: (q: string) => void }) {
   const isUser = msg.role === "user";
   
   if (!isUser && !msg.content && !msg.roadmap_metadata && !isGenerating) {
@@ -720,7 +432,7 @@ function ChatBubble({ msg, isGenerating, onAsk }: { msg: Message, isGenerating?:
         {/* Quick Reply Options */}
         {msg.options && msg.options.length > 0 && onAsk && (
           <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-white/10 animate-in fade-in duration-300">
-            {msg.options.map((opt, optIdx) => (
+            {msg.options.map((opt: string, optIdx: number) => (
               <button
                 key={optIdx}
                 onClick={() => onAsk(opt)}

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -9,6 +10,7 @@ from sqlalchemy import desc
 from database import get_db
 from practice_models import TopicPerformance, LearningContent
 from services.practice.topic_extractor import extract_topics_from_documents
+from services.practice.content_generator import has_valid_revision
 
 logger = logging.getLogger("chatbot")
 
@@ -16,6 +18,11 @@ router = APIRouter()
 
 _DEFAULT_CURRICULUM_CACHE = None
 _SUBJECT_TOPICS_CACHE = None
+
+def _clean_topic_label(topic: str) -> str:
+    cleaned = re.sub(r"\*\*(.*?)\*\*", r"\1", topic)
+    cleaned = re.sub(r"__(.*?)__", r"\1", cleaned)
+    return cleaned.strip()
 
 def resolve_standard_subject(topic: str, current_subject: Optional[str] = None) -> Optional[str]:
     if current_subject and current_subject != "undefined" and current_subject != "null":
@@ -191,6 +198,12 @@ def get_learning_data(
                 LearningContent.topic == selected_topic
             ).first()
         
+        if cached_content and not has_valid_revision(cached_content.revision):
+            logger.info(f"INVALIDATING incomplete revision cache: topic='{selected_topic}', subject='{subject}'")
+            db.delete(cached_content)
+            db.commit()
+            cached_content = None
+
         is_old_format = False
         if cached_content:
             cached_str = str(cached_content.content)
@@ -258,7 +271,10 @@ def get_learning_data(
     if roadmap_id:
         roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.id == roadmap_id, LearningRoadmap.student_id == student_id).first()
     else:
-        roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == student_id).order_by(desc(LearningRoadmap.created_at)).first()
+        if source == "personal":
+            roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == student_id).order_by(desc(LearningRoadmap.created_at)).first()
+        else:
+            roadmap = None
     if roadmap:
         logger.info(f"[get_learning_data] Retrieved roadmap id={roadmap.id}, title='{roadmap.title}'")
         all_tasks = db.query(DailyTask).filter(DailyTask.roadmap_id == roadmap.id).all()
@@ -300,14 +316,14 @@ def get_learning_data(
             
             subjects.append({
                 "id": f"week-{wn}",
-                "title": f"Week {wn} {status_text}",
+                "title": f"Week {wn}",
                 "color": "#f97316",
                 "topics": topics_list
             })
             
         sidebar_data.append({
             "id": "roadmap",
-            "title": "Your Learning Roadmap",
+            "title": roadmap.title,
             "remark": "Recommended",
             "subjects": subjects
         })
@@ -350,7 +366,7 @@ def get_learning_data(
             
             for i, unit in enumerate(units):
                 color = colors[i % len(colors)]
-                unit_topics = [{"id": t, "title": t} for t in unit.get("topics", [])]
+                unit_topics = [{"id": _clean_topic_label(t), "title": _clean_topic_label(t)} for t in unit.get("topics", [])]
                 curriculum_subjects.append({
                     "id": f"unit-{i}",
                     "title": unit.get("title", f"Unit {i+1}"),
@@ -396,7 +412,7 @@ def get_learning_data(
                                 subject_topic_items = []
                                 for unit in curr.curriculum_json["units"]:
                                     unit_title = unit.get("title", "Unit")
-                                    unit_topics = unit.get("topics", [])
+                                    unit_topics = [_clean_topic_label(t) for t in unit.get("topics", [])]
                                     subject_topic_items.append({
                                         "id": f"{subject_name_curr}-{unit_title}",
                                         "title": unit_title,
@@ -692,6 +708,12 @@ def get_learning_data(
         cached_content = db.query(LearningContent).filter(
             LearningContent.topic == selected_topic
         ).first()
+
+    if cached_content and not has_valid_revision(cached_content.revision):
+        logger.info(f"INVALIDATING incomplete revision cache: topic='{selected_topic}', subject='{subject}'")
+        db.delete(cached_content)
+        db.commit()
+        cached_content = None
 
     is_old_format = False
     if cached_content:
