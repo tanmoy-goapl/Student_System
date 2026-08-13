@@ -32,6 +32,7 @@ export default function SubjectAccordion({
       {/* Subject Header */}
       <button
         onClick={onToggle}
+        title={subject.title}
         className="
           w-full flex items-center justify-between
           px-3 py-2 rounded-lg
@@ -89,6 +90,7 @@ export default function SubjectAccordion({
               <button
                 key={`${area}-${index}`}
                 onClick={() => onSelectTopic(area)}
+                title={area}
                 className={`
                   w-full flex items-center justify-between
                   px-3 py-2 rounded-lg

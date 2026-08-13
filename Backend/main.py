@@ -31,6 +31,7 @@ async def lifespan(app: FastAPI):
 
     # 1. Classrooms migrations
     run_sql("ALTER TABLE classrooms ADD COLUMN course_code VARCHAR")
+    run_sql("ALTER TABLE classrooms ADD COLUMN department VARCHAR")
 
     # 1b. Documents metadata migrations
     run_sql("ALTER TABLE documents ADD COLUMN document_type VARCHAR")
@@ -80,12 +81,15 @@ async def lifespan(app: FastAPI):
     run_sql("UPDATE classrooms SET course_code = 'DSA104' WHERE name ILIKE '%DSA%' AND course_code IS NULL")
     run_sql("UPDATE classrooms SET course_code = 'CN105' WHERE (name ILIKE '%CN%' OR name ILIKE '%NETWORK%') AND course_code IS NULL")
     run_sql("UPDATE classrooms SET course_code = 'CS' || FLOOR(RANDOM() * 900 + 100)::INT::VARCHAR WHERE course_code IS NULL")
+    run_sql("UPDATE classrooms SET department = 'AI' WHERE department IS NULL AND (course_code ILIKE 'AI%' OR course_code ILIKE 'ML%' OR name ILIKE 'AI' OR name ILIKE 'AI %' OR name ILIKE 'Artificial Intelligence%' OR name ILIKE 'Machine Learning%')")
+    run_sql("UPDATE classrooms SET department = 'CS' WHERE department IS NULL")
         
     try:
         db = SessionLocal()
-        from models import User
+        from models import User, Department
         from classroom_models import Classroom, StudentClass, ClassCurriculum
         from practice_models import UserPerformance, QuizHistory, TopicPerformance
+        from services.departments import normalize_department_code
         from passlib.hash import bcrypt
         import random
         
@@ -97,6 +101,20 @@ async def lifespan(app: FastAPI):
             "Kabir Shah", "Myra Gill", "Ishaan Dutta", "Diya Pillai", "Aryan Bose",
             "Kiara Saxena", "Vivaan Desai", "Anika Choudhury", "Kabir Lal", "Aanya Sodhi"
         ]
+
+        default_departments = {
+            "CS": "CS Department",
+            "AI": "AI Department",
+        }
+        department_rows = {}
+        for code, name in default_departments.items():
+            department = db.query(Department).filter(Department.code == code).first()
+            if not department:
+                department = Department(code=code, name=name, is_active=True)
+                db.add(department)
+                db.flush()
+            department_rows[code] = department
+        db.commit()
         
         # First, clean up and rename any existing students in the database
         existing_students = db.query(User).filter(User.role == "student").all()
@@ -112,89 +130,110 @@ async def lifespan(app: FastAPI):
                 s.name = s.name.split("(")[0].strip()
         db.commit()
 
-        # Ensure all student profiles matching "Amir" or "Priya" are enrolled in all classrooms
-        matching_students = db.query(User).filter(
-            (User.name.ilike("%amir%") | User.name.ilike("%priya%")),
-            User.role == "student"
-        ).all()
+        # Backfill primary departments for existing accounts without changing
+        # their enrollment. A student with classes in multiple departments is
+        # assigned to the first joined class as their primary department.
+        all_classrooms = db.query(Classroom).order_by(Classroom.id).all()
+        for user in db.query(User).filter(User.role.in_(["student", "professor"])).all():
+            current_code = normalize_department_code(user.department)
+            if current_code in department_rows:
+                user.department = current_code
+                continue
 
-        # If none exist, create defaults
-        has_amir = any(s.email == "amir@example.com" for s in matching_students)
-        has_priya = any(s.email == "priya@example.com" for s in matching_students)
-
-        if not has_amir:
-            amir = User(
-                name="Amir",
-                email="amir@example.com",
-                role="student",
-                password_hash=bcrypt.hash("student123"),
-                is_active=True
-            )
-            db.add(amir)
-            db.commit()
-            db.refresh(amir)
-            matching_students.append(amir)
-
-        if not has_priya:
-            priya = User(
-                name="Priya",
-                email="priya@example.com",
-                role="student",
-                password_hash=bcrypt.hash("student123"),
-                is_active=True
-            )
-            db.add(priya)
-            db.commit()
-            db.refresh(priya)
-            matching_students.append(priya)
-
-        # Cleanup duplicate Amir/Priya users that don't match the standard emails
-        duplicates = db.query(User).filter(
-            User.role == "student",
-            (User.name == "Amir") | (User.name == "Priya")
-        ).all()
-        for d in duplicates:
-            if d.email not in ["amir@example.com", "priya@example.com"]:
-                db.query(StudentClass).filter(StudentClass.student_id == d.id).delete()
-                db.query(UserPerformance).filter(UserPerformance.student_id == d.id).delete()
-                db.query(TopicPerformance).filter(TopicPerformance.student_id == d.id).delete()
-                db.query(QuizHistory).filter(QuizHistory.student_id == d.id).delete()
-                db.delete(d)
+            if user.role == "student":
+                enrollment = (
+                    db.query(StudentClass)
+                    .filter(StudentClass.student_id == user.id)
+                    .order_by(StudentClass.id.asc())
+                    .first()
+                )
+                if enrollment:
+                    classroom = next((item for item in all_classrooms if item.id == enrollment.class_id), None)
+                    classroom_code = normalize_department_code(classroom.department if classroom else None)
+                    if classroom_code:
+                        user.department = classroom_code
+            else:
+                class_codes = {
+                    normalize_department_code(classroom.department)
+                    for classroom in all_classrooms
+                    if classroom.professor_id == user.id and normalize_department_code(classroom.department)
+                }
+                if len(class_codes) == 1:
+                    user.department = next(iter(class_codes))
+                elif class_codes:
+                    user.department = ",".join(sorted(class_codes))
         db.commit()
 
-        # Re-fetch matching students to only include non-mock, real profiles for all-classroom enrollment
-        real_matching_students = db.query(User).filter(
-            User.role == "student",
-            User.email.in_(["amir@example.com", "priya@example.com"])
-        ).all()
+        # Enrollment is managed by the classroom workflows. Do not auto-enroll
+        # students by name or recreate synthetic cross-class memberships here.
 
-        classrooms = db.query(Classroom).all()
-        for c in classrooms:
-            for s in real_matching_students:
-                sc = db.query(StudentClass).filter_by(student_id=s.id, class_id=c.id).first()
-                if not sc:
-                    db.add(StudentClass(student_id=s.id, class_id=c.id))
-        db.commit()
-
-        # Cleanup mock student cross-enrollments (ensure mock students are only enrolled in their original class)
-        all_enrollments = db.query(StudentClass).all()
-        for enrollment in all_enrollments:
-            student = db.query(User).filter(User.id == enrollment.student_id).first()
-            if student and student.role == "student" and "_" in student.email:
-                parts = student.email.split("@")[0].split("_")
-                if len(parts) >= 2:
-                    try:
-                        orig_class_id = int(parts[-2])
-                        if enrollment.class_id != orig_class_id:
-                            db.delete(enrollment)
-                    except ValueError:
-                        pass
-        db.commit()
-
-        # Delete all mock/universal shared documents from database
+        # Self-healing: scan uploads directory and restore database entries for files
         from models import Document
-        db.query(Document).filter(Document.visibility != "private").delete()
-        db.commit()
+        uploads_path = "uploads"
+        if os.path.exists(uploads_path):
+            # Uploaded files are stored with a generated prefix, while the
+            # document filename keeps the original client filename. Match on
+            # both values so a restart does not create duplicate private rows
+            # for documents that already have metadata (including shared
+            # visibility and classroom ownership).
+            existing_docs = db.query(Document).all()
+            docs_by_name = {
+                doc.filename: doc
+                for doc in existing_docs
+                if doc.filename
+            }
+            docs_by_storage_name = {
+                os.path.basename(doc.file_path): doc
+                for doc in existing_docs
+                if doc.file_path
+            }
+
+            files = [f for f in os.listdir(uploads_path) if os.path.isfile(os.path.join(uploads_path, f))]
+            for filename in files:
+                if filename in ("extract_log.txt", ".DS_Store"):
+                    continue
+                
+                existing_doc = docs_by_name.get(filename) or docs_by_storage_name.get(filename)
+                if not existing_doc:
+                    student_id = 1
+                    parts = filename.split("_")
+                    if parts[0].isdigit():
+                        student_id = int(parts[0])
+                    
+                    file_path = os.path.join(uploads_path, filename)
+                    file_size = os.path.getsize(file_path)
+                    
+                    category = "Personal Learning"
+                    if "resume" in filename.lower() or "cv" in filename.lower() or "portfolio" in filename.lower():
+                        category = "Resume & Interview"
+                    elif "notes" in filename.lower() or "lecture" in filename.lower() or "syllabus" in filename.lower() or "marks" in filename.lower() or "grade" in filename.lower() or "rule" in filename.lower():
+                        category = "Studies"
+                        
+                    ext = os.path.splitext(filename)[1].lower()
+                    doc_format = "PDF"
+                    if ext == ".txt":
+                        doc_format = "TXT"
+                    elif ext in (".doc", ".docx"):
+                        doc_format = "DOC"
+                    elif ext == ".md":
+                        doc_format = "MD"
+                        
+                    doc = Document(
+                        student_id=student_id,
+                        filename=filename,
+                        file_path=file_path,
+                        file_size=file_size,
+                        file_type="application/pdf" if ext == ".pdf" else "text/plain",
+                        document_format=doc_format,
+                        category=category,
+                        visibility="private",
+                        owner_role="student",
+                        owner_id=student_id
+                    )
+                    db.add(doc)
+                    docs_by_name[filename] = doc
+                    docs_by_storage_name[filename] = doc
+            db.commit()
 
         classrooms = db.query(Classroom).all()
         for c in classrooms:
@@ -223,7 +262,7 @@ async def lifespan(app: FastAPI):
                 for i in range(1, 11):
                     name_idx = (c.id * 10 + i) % len(REAL_NAMES)
                     student_name = REAL_NAMES[name_idx]
-                    email = f"{REAL_NAMES[name_idx].lower().replace(' ', '')}_{c.id}_{i}@example.com"
+                    email = f"{''.join(ch for ch in student_name.lower() if ch.isalnum())}@gmail.com"
                     
                     student = db.query(User).filter(User.email == email).first()
                     if not student:

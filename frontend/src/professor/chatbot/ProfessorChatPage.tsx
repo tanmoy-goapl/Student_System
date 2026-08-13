@@ -11,6 +11,7 @@ import { ChatThinking } from "@/components/UIStateSystem";
 import ReactMarkdown from "react-markdown";
 import ChatHistorySidebar from "@/components/ChatHistorySidebar";
 import { uploadDocument } from "@/lib/api";
+import { useChatSession } from "@/components/ChatSessionProvider";
 
 type Message = {
   role: "user" | "assistant";
@@ -81,16 +82,25 @@ function parseMarkdownAndTables(text: string): TableBlock[] {
 }
 
 export default function ProfessorChatPage() {
-  const [question, setQuestion] = useState("");
-  const [history, setHistory] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
+  const {
+    question,
+    setQuestion,
+    history,
+    loading,
+    streamStatus,
+    isStreaming,
+    error,
+    setError,
+    activeSessionId,
+    handleAsk,
+    handleSelectSession,
+    handleNewChat,
+    appendAssistantMessage,
+  } = useChatSession();
+
   const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
-  const [activeMode, setActiveMode] = useState<"Analytics" | "Guidance" | "Quick Answer">("Analytics");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [resetNext, setResetNext] = useState(false);
   const [fileUploading, setFileUploading] = useState(false);
-  const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -104,13 +114,7 @@ export default function ProfessorChatPage() {
     setFileUploading(true);
     try {
       const res = await uploadDocument(userId, file, "owner");
-      setHistory(prev => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `📁 **Uploaded "${res.filename}"** (${res.chunks_created} chunks processed). I have parsed it and added it to my knowledge. You can now ask questions about it!`,
-        },
-      ]);
+      appendAssistantMessage(`📁 **Uploaded "${res.filename}"** (${res.chunks_created} chunks processed). I have parsed it and added it to my knowledge. You can now ask questions about it!`);
     } catch (err: any) {
       setError(err.message || "Failed to upload document");
     } finally {
@@ -146,14 +150,6 @@ export default function ProfessorChatPage() {
   }, [history, loading]);
 
   useEffect(() => {
-    const handleNewChat = () => {
-      setHistory([]);
-      setActiveSessionId(null);
-      setResetNext(true);
-    };
-    handleNewChat();
-    window.addEventListener("new-chat", handleNewChat);
-    
     // Parse query parameter from URL and auto-run
     const searchParams = new URLSearchParams(window.location.search);
     const initialQuery = searchParams.get("query");
@@ -162,113 +158,19 @@ export default function ProfessorChatPage() {
       window.history.replaceState(null, "", window.location.pathname);
       // Small timeout to allow state to settle
       setTimeout(() => {
-        handleAsk(initialQuery);
+        triggerAsk(initialQuery);
       }, 300);
     }
-
-    return () => window.removeEventListener("new-chat", handleNewChat);
   }, []);
 
-  const handleSelectSession = async (sessionId: string) => {
-    const userId = Number(localStorage.getItem("user_id") || 0);
-    if (!userId) return;
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/chat/history?student_id=${userId}&session_id=${sessionId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setHistory(data || []);
-        setActiveSessionId(sessionId);
-      }
-    } catch (err) {
-      console.error("Failed to load session history:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAsk = async (queryText?: string) => {
-    const q = (queryText || question).trim();
-    if (!q) return;
-
-    setHistory(prev => [...prev, { role: "user", content: q }]);
-    setQuestion("");
-    setLoading(true);
-
-    try {
-      const professorId = Number(localStorage.getItem("user_id") || 0);
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_id: professorId,
-          question: q,
-          role: "professor",
-          reset: resetNext,
-          session_id: activeSessionId || undefined,
-        })
-      });
-      setResetNext(false);
-
-      if (!res.ok) {
-        throw new Error(`Error ${res.status}`);
-      }
-
-      setLoading(false);
-      setHistory(prev => [...prev, { role: "assistant", content: "" }]);
-
-      const reader = res.body?.getReader();
-      if (!reader) {
-        throw new Error("No response stream available");
-      }
-
-      const decoder = new TextDecoder();
-      let done = false;
-      let assistantAnswer = "";
-      let buffer = "";
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        if (value) {
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) continue;
-            try {
-              const parsed = JSON.parse(trimmed);
-              if (parsed.error) {
-                throw new Error(parsed.error);
-              }
-              if (parsed.content) {
-                assistantAnswer += parsed.content;
-                setHistory(prev => {
-                  const copy = [...prev];
-                  if (copy.length > 0) {
-                    copy[copy.length - 1] = {
-                      ...copy[copy.length - 1],
-                      content: assistantAnswer,
-                    };
-                  }
-                  return copy;
-                });
-              }
-              if (parsed.session_id) {
-                setActiveSessionId(parsed.session_id);
-              }
-            } catch (e) {
-              // Ignore parse errors on partial lines
-            }
-          }
-        }
-      }
-    } catch (err) {
-      setHistory(prev => [...prev, { role: "assistant", content: "⚠️ Sorry, I encountered an error communicating with the AI model." }]);
-    } finally {
-      setLoading(false);
+  const triggerAsk = (query?: string) => {
+    if (query) {
+      setQuestion(query);
+      setTimeout(() => {
+        handleAsk();
+      }, 50);
+    } else {
+      handleAsk();
     }
   };
 
@@ -334,11 +236,7 @@ export default function ProfessorChatPage() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => {
-                setHistory([]);
-                setActiveSessionId(null);
-                setResetNext(true);
-              }}
+              onClick={handleNewChat}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/10 transition cursor-pointer text-white mr-2"
               title="Start New Conversation"
             >
@@ -387,66 +285,78 @@ export default function ProfessorChatPage() {
           ) : (
             /* Active message history */
             <div className="max-w-5xl w-full mx-auto space-y-6">
-              {history.map((msg, idx) => (
-                <div key={idx} className={`flex gap-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {msg.role === "assistant" && (
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shrink-0">
-                      <Sparkles className="w-4 h-4 text-white" />
-                    </div>
-                  )}
-                  <div className={`p-4 rounded-2xl max-w-[90%] text-xs leading-relaxed border break-words ${
-                    msg.role === "user" 
-                      ? "bg-blue-600/10 border-blue-500/25 text-white rounded-tr-none whitespace-pre-wrap" 
-                      : "bg-slate-900/50 border-white/5 text-slate-200 rounded-tl-none"
-                  }`}>
-                    <div className="markdown-body space-y-2">
-                      {parseMarkdownAndTables(msg.content).map((block, bIdx) => {
-                        if (block.type === "table" && block.tableData) {
-                          return (
-                            <div key={bIdx} className="overflow-x-auto my-3">
-                              <table className="min-w-full border-collapse border border-white/10 text-[10px] rounded-xl overflow-hidden">
-                                <thead className="bg-white/5">
-                                  <tr className="border-b border-white/5">
-                                    {block.tableData.headers.map((h, hIdx) => (
-                                      <th key={hIdx} className="border border-white/10 px-3 py-2 font-bold text-left text-white">{h}</th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {block.tableData.rows.map((row, rIdx) => (
-                                    <tr key={rIdx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                                      {row.map((cell, cIdx) => (
-                                        <td key={cIdx} className="border border-white/10 px-3 py-2 text-slate-350">
-                                          <ReactMarkdown
-                                            components={{
-                                              p: ({ children }) => <span className="text-slate-350">{children}</span>,
-                                              strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>
-                                            }}
-                                          >
-                                            {cell}
-                                          </ReactMarkdown>
-                                        </td>
+              {history.map((msg, idx) => {
+                if (msg.role === "assistant" && !msg.content) {
+                  return null;
+                }
+                return (
+                  <div key={idx} className={`flex gap-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                    {msg.role === "assistant" && (
+                      <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                    <div className={`p-4 rounded-2xl max-w-[90%] text-xs leading-relaxed border break-words ${
+                      msg.role === "user" 
+                        ? "bg-blue-600/10 border-blue-500/25 text-white rounded-tr-none whitespace-pre-wrap" 
+                        : "bg-slate-900/50 border-white/5 text-slate-200 rounded-tl-none"
+                    }`}>
+                      <div className="markdown-body space-y-2">
+                        {parseMarkdownAndTables(msg.content).map((block, bIdx) => {
+                          if (block.type === "table" && block.tableData) {
+                            return (
+                              <div key={bIdx} className="overflow-x-auto my-3">
+                                <table className="min-w-full border-collapse border border-white/10 text-[10px] rounded-xl overflow-hidden">
+                                  <thead className="bg-white/5">
+                                    <tr className="border-b border-white/5">
+                                      {block.tableData.headers.map((h, hIdx) => (
+                                        <th key={hIdx} className="border border-white/10 px-3 py-2 font-bold text-left text-white">{h}</th>
                                       ))}
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
+                                  </thead>
+                                  <tbody>
+                                    {block.tableData.rows.map((row, rIdx) => (
+                                      <tr key={rIdx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                                        {row.map((cell, cIdx) => (
+                                          <td key={cIdx} className="border border-white/10 px-3 py-2 text-slate-355">
+                                            <ReactMarkdown
+                                              components={{
+                                                p: ({ children }) => <span className="text-slate-355">{children}</span>,
+                                                strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>
+                                              }}
+                                            >
+                                              {cell}
+                                            </ReactMarkdown>
+                                          </td>
+                                        ))}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            );
+                          }
+                          return (
+                            <ReactMarkdown key={bIdx}>
+                              {block.content}
+                            </ReactMarkdown>
                           );
-                        }
-                        return (
-                          <ReactMarkdown key={bIdx}>
-                            {block.content}
-                          </ReactMarkdown>
-                        );
-                      })}
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              {loading && (
-                <div className="flex gap-3 justify-start items-start animate-in fade-in duration-300">
-                  <ChatThinking />
+                );
+              })}
+              {(loading || (isStreaming && history.length > 0 && history[history.length - 1].role === "assistant" && !history[history.length - 1].content)) && (
+                <div className="flex gap-4 justify-start items-start animate-in fade-in duration-300">
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shrink-0 shadow-md">
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="bg-slate-900/50 border border-white/5 rounded-2xl rounded-tl-none p-4 flex items-center gap-1.5 shrink-0">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-bounce shadow-[0_0_8px_rgba(96,165,250,0.6)]" style={{ animationDelay: "0ms", animationDuration: "1s" }} />
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-bounce shadow-[0_0_8px_rgba(129,140,248,0.6)]" style={{ animationDelay: "150ms", animationDuration: "1s" }} />
+                    <span className="w-2.5 h-2.5 rounded-full bg-pink-400 animate-bounce shadow-[0_0_8px_rgba(244,114,182,0.6)]" style={{ animationDelay: "300ms", animationDuration: "1s" }} />
+                  </div>
                 </div>
               )}
               <div ref={bottomRef} />

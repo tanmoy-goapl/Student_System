@@ -137,7 +137,7 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic, roa
 
   if (!data) {
     return (
-      <div className="bg-[#131826] w-[20vw] h-screen p-4 space-y-4 animate-pulse">
+      <div className="bg-[#090D1F] w-[20vw] h-screen p-4 space-y-4 animate-pulse">
         <div className="h-10 bg-white/5 rounded-lg"></div>
         <div className="h-64 bg-white/5 rounded-lg"></div>
       </div>
@@ -145,7 +145,7 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic, roa
   }
 
   return (
-    <div className="bg-[#131826] w-[20vw] h-full flex flex-col">
+    <div className="bg-[#090D1F] w-[20vw] h-full flex flex-col">
       <div className="py-4 px-4 shrink-0 space-y-3 border-b border-white/20 pb-4">
         <h2 className="text-[0.6rem] text-left uppercase tracking-[0.22em] text-white/55">
           Topic Navigator
@@ -167,7 +167,7 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic, roa
                   params.delete("subject");
                 } else {
                   params.delete("roadmap_id");
-                  params.set("source", "courses");
+                  params.set("source", "personal");
                   params.delete("topic");
                   params.delete("subject");
                 }
@@ -191,7 +191,7 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic, roa
         {data?.sidebarData
           ?.filter((category: any) => {
             if (source === "personal") {
-              return category.id === "roadmap" || category.id === "documents";
+              return category.id.startsWith("roadmap") || category.id === "documents";
             } else {
               return category.id === "curriculum" || category.id === "current" || category.id === "history" || category.id === "class";
             }

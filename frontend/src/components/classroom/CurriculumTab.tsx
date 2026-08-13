@@ -1,9 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Upload, Book, RefreshCw, FileText, Play, CheckCircle, Zap } from "lucide-react";
-import { getClassCurriculum, uploadClassCurriculum, regenerateClassCurriculum, updateClassCurriculum } from "@/lib/api";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Upload, Book, RefreshCw, Play, Zap } from "lucide-react";
+import { getClassCurriculum, uploadClassCurriculum, regenerateClassCurriculum } from "@/lib/api";
 import { useRouter } from "next/navigation";
+
+interface CurriculumUnit {
+    title: string;
+    topics: string[];
+}
+
+interface CurriculumData {
+    subject_name?: string;
+    units: CurriculumUnit[];
+}
 
 export default function CurriculumTab({ classId, role, userId }: { classId: number; role: string; userId: number }) {
     const router = useRouter();
@@ -11,14 +21,11 @@ export default function CurriculumTab({ classId, role, userId }: { classId: numb
     const [uploading, setUploading] = useState(false);
     const [regenerating, setRegenerating] = useState(false);
     
-    const [curriculum, setCurriculum] = useState<any>(null);
+    const [curriculum, setCurriculum] = useState<CurriculumData | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        fetchCurriculum();
-    }, [classId, userId]);
 
-    const fetchCurriculum = async () => {
+    const fetchCurriculum = useCallback(async () => {
         setLoading(true);
         try {
             const res = await getClassCurriculum(classId, userId);
@@ -32,7 +39,11 @@ export default function CurriculumTab({ classId, role, userId }: { classId: numb
         } finally {
             setLoading(false);
         }
-    };
+    }, [classId, userId]);
+
+    useEffect(() => {
+        fetchCurriculum();
+    }, [fetchCurriculum]);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -83,14 +94,14 @@ export default function CurriculumTab({ classId, role, userId }: { classId: numb
                 <h3 className="text-lg font-medium text-slate-300 mb-2">No Curriculum Available</h3>
                 <p className="text-slate-500 text-sm mb-6 max-w-md mx-auto">
                     {role === "professor" 
-                        ? "Upload a syllabus PDF to automatically extract the course units and topics using AI." 
+                        ? "Upload a syllabus document (PDF, TXT, DOC, or DOCX) to automatically extract the course units and topics using AI."
                         : "Your professor hasn't generated the curriculum for this class yet."}
                 </p>
                 {role === "professor" && (
                     <div>
                         <input 
                             type="file" 
-                            accept=".pdf,.txt" 
+                            accept=".pdf,.txt,.doc,.docx"
                             className="hidden" 
                             ref={fileInputRef} 
                             onChange={handleUpload} 
@@ -108,7 +119,7 @@ export default function CurriculumTab({ classId, role, userId }: { classId: numb
                             ) : (
                                 <>
                                     <Upload size={18} />
-                                    Upload Syllabus PDF
+                                    Upload Syllabus
                                 </>
                             )}
                         </button>
@@ -140,7 +151,7 @@ export default function CurriculumTab({ classId, role, userId }: { classId: numb
             </div>
 
             <div className="space-y-6">
-                {(curriculum.units || []).map((unit: any, idx: number) => (
+                {curriculum.units.map((unit, idx) => (
                     <div key={idx} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
                         <div className="bg-slate-800/50 px-6 py-4 border-b border-slate-800 flex justify-between items-center">
                             <h3 className="font-semibold text-lg text-white">{unit.title}</h3>

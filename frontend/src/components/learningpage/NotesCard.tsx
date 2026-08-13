@@ -16,6 +16,7 @@ import {
 interface NotesCardProps {
   notesResponse: any;
   onRegenerate?: () => void;
+  isGenerating?: boolean;
 }
 
 // Custom Collapsible Section Component
@@ -43,7 +44,61 @@ function CollapsibleSection({ title, children }: { title: string; children: Reac
   );
 }
 
-export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProps) {
+function formatLatexToUnicode(text: string): string {
+  if (!text) return text;
+  
+  let formatted = text;
+  
+  // 1. Replace block formulas \[ ... \] or [ \hat{y} ... ]
+  formatted = formatted.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (_, formula) => `\n\n\`\`\`math\n${formula}\n\`\`\`\n\n`);
+  formatted = formatted.replace(/\[\s*(\\hat[\s\S]*?)\s*\]/g, (_, formula) => `\n\n\`\`\`math\n${formula}\n\`\`\`\n\n`);
+  
+  // Clean up inline latex parens \( ... \)
+  formatted = formatted.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, "$1");
+  formatted = formatted.replace(/\\\(|\\\)/g, "");
+
+  // 2. Replace common symbols
+  const replacements: Record<string, string> = {
+    "\\hat{y}": "ŷ",
+    "\\hat{x}": "x̂",
+    "\\beta_0": "β₀",
+    "\\beta_1": "β₁",
+    "\\beta_2": "β₂",
+    "\\beta_p": "βₚ",
+    "\\beta_i": "βᵢ",
+    "\\beta": "β",
+    "\\alpha": "α",
+    "\\lambda": "λ",
+    "\\sigma": "σ",
+    "\\mu": "μ",
+    "\\dots": "…",
+    "\\cdots": "…",
+    "\\times": "×",
+    "\\cdot": "·",
+    "\\le": "≤",
+    "\\ge": "≥",
+    "\\neq": "≠",
+    "\\approx": "≈"
+  };
+
+  for (const [key, value] of Object.entries(replacements)) {
+    const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    formatted = formatted.replace(new RegExp(escapedKey, 'g'), value);
+  }
+
+  // Replace remaining subscripts like _j, _k, _n etc
+  formatted = formatted.replace(/_([0-9a-zₚᵢₙₖₓ])/g, (_, sub) => {
+    const subMap: Record<string, string> = {
+      "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉",
+      "p": "ₚ", "i": "ᵢ", "n": "ₙ", "k": "ₖ", "x": "ₓ", "j": "ⱼ"
+    };
+    return subMap[sub] || `_${sub}`;
+  });
+
+  return formatted;
+}
+
+export default function NotesCard({ notesResponse, onRegenerate, isGenerating = false }: NotesCardProps) {
   const isLoading = !notesResponse.content || notesResponse.content.length === 0;
 
   // Custom renderer for markdown paragraphs to detect callouts (💡, ⚠️, 🎯, 📌)
@@ -99,10 +154,10 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
 
       if (firstChild.startsWith("📌 Remember:")) {
         return (
-          <div className="my-4 flex gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-emerald-200 shadow-sm">
-            <Pin className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5 animate-bounce" />
+          <div className="my-4 flex gap-3 rounded-xl border border-violet-500/20 bg-violet-500/5 p-4 text-violet-200 shadow-sm">
+            <Pin className="w-5 h-5 text-violet-400 shrink-0 mt-0.5" />
             <div>
-              <strong className="text-emerald-300 block mb-0.5">Remember</strong>
+              <strong className="text-violet-300 block mb-0.5">Remember</strong>
               <span className="text-zinc-300 text-sm">
                 {firstChild.replace("📌 Remember:", "").trim()}
                 {childrenArray.slice(1)}
@@ -117,31 +172,28 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
   };
 
   // Custom Markdown Table parser/renderer
-  const parseMarkdownTable = (tableLines: string[], key: any) => {
+  const parseMarkdownTable = (tableLines: any[], key: any) => {
+    const parseRow = (line: string) => {
+      const parts = line.split("|").map(x => x.trim());
+      if (parts[0] === "") parts.shift();
+      if (parts[parts.length - 1] === "") parts.pop();
+      return parts;
+    };
+
     if (tableLines.length < 2) return null;
 
     // Header row
-    const headers = tableLines[0]
-      .split("|")
-      .map(x => x.trim())
-      .filter((_, i, arr) => i > 0 && i < arr.length - 1);
-
-    // Skip the separator row (tableLines[1])
+    const headers = parseRow(tableLines[0]);
     
-    // Data rows
-    const rows = tableLines.slice(2).map(line => {
-      return line
-        .split("|")
-        .map(x => x.trim())
-        .filter((_, i, arr) => i > 0 && i < arr.length - 1);
-    });
+    // Data rows (skip index 1 since it is the separator row like |---|---|)
+    const rows = tableLines.slice(2).map((line: string) => parseRow(line));
 
     return (
       <div key={key} className="overflow-x-auto my-5 rounded-xl border border-white/10 bg-slate-950/20">
         <table className="min-w-full divide-y divide-white/10 text-xs text-zinc-300">
           <thead className="bg-white/[0.03]">
             <tr>
-              {headers.map((h, i) => (
+              {headers.map((h: string, i: number) => (
                 <th key={i} className="px-4 py-3 text-left font-bold text-zinc-100 uppercase tracking-wider">
                   {h}
                 </th>
@@ -149,13 +201,13 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {rows.map((row, ri) => (
+            {rows.map((row: string[], ri: number) => (
               <tr key={ri} className="hover:bg-white/[0.01] transition-colors">
-                {row.map((cell, ci) => {
+                {row.map((cell: string, ci: number) => {
                   const cleanedCell = cell.replace(/<br\s*\/?>/gi, "\n");
                   return (
                     <td key={ci} className="px-4 py-3 whitespace-pre-wrap leading-relaxed">
-                      {cleanedCell.split(/(\*\*.*?\*\*)/g).map((part, idx) => {
+                      {cleanedCell.split(/(\*\*.*?\*\*)/g).map((part: string, idx: number) => {
                         if (part.startsWith("**") && part.endsWith("**")) {
                           return <strong key={idx} className="font-bold text-white">{part.slice(2, -2)}</strong>;
                         }
@@ -195,7 +247,7 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
 
     for (const line of lines) {
       const trimmed = line.trim();
-      const isTableLine = trimmed.startsWith("|") && trimmed.endsWith("|");
+      const isTableLine = trimmed.startsWith("|");
 
       if (isTableLine) {
         flushText();
@@ -290,10 +342,18 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
   return (
     <div className="w-full rounded-2xl border border-white/10 bg-slate-900/40 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
       <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
-        <h2 className="text-white text-md font-bold tracking-tight flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-indigo-400" />
-          <span>Interactive Study Guide</span>
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-white text-md font-bold tracking-tight flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-indigo-400" />
+            <span>Interactive Study Guide</span>
+          </h2>
+          {!isLoading && isGenerating && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[10px] font-semibold uppercase tracking-wider animate-pulse">
+              <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-ping" />
+              Generating
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {onRegenerate && (
             <button
@@ -317,7 +377,7 @@ export default function NotesCard({ notesResponse, onRegenerate }: NotesCardProp
         </div>
       ) : typeof notesResponse.content === "string" ? (
         renderMarkdownContent(
-          notesResponse.content
+          formatLatexToUnicode(notesResponse.content + (isGenerating ? " ▋" : ""))
             .replace(/💡 Example:\s*\n+/g, "💡 Example: ")
             .replace(/⚠️ Important:\s*\n+/g, "⚠️ Important: ")
             .replace(/🎯 Interview Tip:\s*\n+/g, "🎯 Interview Tip: ")

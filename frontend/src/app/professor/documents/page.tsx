@@ -431,16 +431,7 @@ export default function ProfessorDocumentsPage() {
             </button>
           </div>
 
-          {/* Alert Note */}
-          <div className="flex gap-3 bg-blue-950/20 border border-blue-500/20 rounded-2xl p-4 text-sm text-blue-300">
-            <Info className="w-5 h-5 shrink-0 text-blue-400" />
-            <div>
-              <p className="font-semibold text-white">Student RAG Access Policy</p>
-              <p className="mt-0.5 text-xs text-blue-300/80">
-                Documents published under <strong>Course Materials</strong> (Course Shared or Universal) are added to the semantic search index of the designated classes. Private folders remain encrypted and invisible to students.
-              </p>
-            </div>
-          </div>
+
 
           {/* Filter Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">

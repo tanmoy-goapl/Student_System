@@ -8,6 +8,9 @@ interface ProfessorData {
   id: number;
   name: string;
   classes: number;
+  email?: string;
+  department?: string | null;
+  department_name?: string | null;
 }
 
 export default function ProfessorsPage() {
@@ -34,7 +37,9 @@ export default function ProfessorsPage() {
   }, []);
 
   const filteredProfessors = professors.filter(p =>
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.department_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.department?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -75,6 +80,7 @@ export default function ProfessorsPage() {
                 <thead>
                   <tr className="bg-slate-950/50 text-slate-400 text-xs uppercase tracking-wider border-b border-white/5">
                     <th className="px-6 py-5 font-semibold">Professor Name</th>
+                    <th className="px-6 py-5 font-semibold">Department</th>
                     <th className="px-6 py-5 font-semibold text-right">Assigned Classes</th>
                   </tr>
                 </thead>
@@ -83,6 +89,9 @@ export default function ProfessorsPage() {
                     filteredProfessors.map((prof) => (
                       <tr key={prof.id} className="hover:bg-white/[0.02] transition-colors">
                         <td className="px-6 py-5 font-semibold text-white">{prof.name}</td>
+                        <td className="px-6 py-5 text-sm text-cyan-300">
+                          {prof.department_name || prof.department || "Unassigned"}
+                        </td>
                         <td className="px-6 py-5 text-indigo-400 font-bold text-right">
                           {prof.classes}
                         </td>
@@ -90,7 +99,7 @@ export default function ProfessorsPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={2} className="px-6 py-12 text-center text-slate-500">
+                      <td colSpan={3} className="px-6 py-12 text-center text-slate-500">
                         No professors found matching search term.
                       </td>
                     </tr>

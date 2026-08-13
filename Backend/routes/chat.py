@@ -35,7 +35,7 @@ from services.llm_client import _call_llm, _call_llm_stream
 from services.llm_client import LLMStreamTimeout
 from services.query_planner import plan_retrieval_strategy
 from services.document_resolver import resolve_documents, get_role_visible_docs
-from services.context_builder import build_context
+from services.context_builder import build_context, format_context
 
 import os
 import logging
@@ -59,8 +59,61 @@ if not logger.handlers:
 router = APIRouter()
 
 HISTORY_LIMIT   = 4
-MAX_CONTEXT_LEN = 8000
+LLM_HISTORY_LIMIT = 2
+HISTORY_MESSAGE_MAX_CHARS = 1200
+MAX_CONTEXT_LEN = 6000
 
+
+def _message_sources(message: ChatMessage) -> list[str]:
+    """Read persisted source metadata without breaking older/corrupt rows."""
+    raw_sources = getattr(message, "source_documents", None)
+    if not raw_sources:
+        return []
+    try:
+        parsed = json.loads(raw_sources)
+    except (TypeError, ValueError):
+        return []
+    return [str(source) for source in parsed if source] if isinstance(parsed, list) else []
+
+
+def _needs_conversation_context(question: str) -> bool:
+    """Return whether a query likely refers to the immediately prior topic."""
+    normalized = re.sub(r"\s+", " ", question.lower()).strip()
+    if not normalized:
+        return False
+
+    follow_up_terms = {
+        "it", "this", "that", "same", "above", "previous", "more",
+        "definition", "meaning", "explain", "elaborate", "example",
+        "simplify", "why", "how does", "how do",
+    }
+    return any(
+        re.search(rf"\b{re.escape(term)}\b", normalized)
+        for term in follow_up_terms
+    )
+
+def _build_retrieval_question(question: str, previous_messages: list[ChatMessage]) -> str:
+    """Add the prior topic to an anaphoric follow-up without changing the user query."""
+    if not previous_messages or not _needs_conversation_context(question):
+        return question
+
+    previous_user = next(
+        (message.content.strip() for message in reversed(previous_messages) if message.role == "user"),
+        "",
+    )
+    previous_assistant = next(
+        (message.content.strip() for message in reversed(previous_messages) if message.role == "assistant"),
+        "",
+    )
+    if not previous_user and not previous_assistant:
+        return question
+
+    parts = [f"Current follow-up: {question}"]
+    if previous_user:
+        parts.append(f"Previous topic: {previous_user[:500]}")
+    if previous_assistant:
+        parts.append(f"Previous answer excerpt: {previous_assistant[:800]}")
+    return "\n".join(parts)
 
 # ═════════════════════════════════════════════════════════════════════════════
 #  ADAPTIVE SIMILARITY FILTER
@@ -180,6 +233,18 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         t_docs = time.perf_counter()
         all_docs = get_role_visible_docs(request.student_id, request.role, db)
 
+        selected_doc = None
+        if request.document_id is not None:
+            selected_doc = next((doc for doc in all_docs if doc.id == request.document_id), None)
+            if selected_doc is None:
+                access_msg = (
+                    "I can't access that document in your current account. "
+                    "Please return to Documents and choose it again."
+                )
+                yield json.dumps({"content": access_msg}) + "\n"
+                yield json.dumps({"intent": "restricted", "sources": []}) + "\n"
+                return
+
         # ── Detect mode ──────────────────────────────────────────────────────
         mode = detect_retrieval_mode(request.question, db, request.student_id)
         logger.info(f"  Detected Mode: {mode.value}")
@@ -191,6 +256,21 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         if not session_title:
             session_title = request.question[:40] + ("..." if len(request.question) > 40 else "")
 
+
+        previous_messages: list[ChatMessage] = []
+        if not request.reset:
+            previous_messages = (
+                db.query(ChatMessage)
+                .filter(ChatMessage.student_id == request.student_id)
+                .filter(ChatMessage.session_id == session_id)
+                .order_by(ChatMessage.id.desc())
+                .limit(HISTORY_LIMIT)
+                .all()
+            )
+            previous_messages.reverse()
+        retrieval_question = _build_retrieval_question(request.question, previous_messages)
+        if retrieval_question != request.question:
+            logger.info("  Retrieval query enriched with previous conversation topic")
         # ── Persist user message ─────────────────────────────────────────────
         try:
             db.add(ChatMessage(
@@ -314,13 +394,18 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         # mode is already resolved by detect_retrieval_mode
 
         # ── STAGE 2 & 3: Document Resolution ────────────────────────────────
-        target_docs, searched_docs = resolve_documents(
-            mode=mode,
-            question=request.question,
-            student_id=request.student_id,
-            role=request.role,
-            db=db
-        )
+        if selected_doc is not None:
+            target_docs = [selected_doc]
+            searched_docs = [selected_doc]
+            logger.info(f"[DocumentResolver] Explicit document target: {selected_doc.filename} ({selected_doc.id})")
+        else:
+            target_docs, searched_docs = resolve_documents(
+                mode=mode,
+                question=request.question,
+                student_id=request.student_id,
+                role=request.role,
+                db=db
+            )
 
         all_docs = get_role_visible_docs(request.student_id, request.role, db)
 
@@ -351,11 +436,33 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         t_retrieval_start = time.perf_counter()
         chunks, searched_doc_names, retrieved_doc_names, context = build_context(
             strategy=strategy,
-            question=request.question,
+            question=retrieval_question,
             target_docs=target_docs,
             searched_docs=searched_docs,
             db=db
         )
+
+        # The context builder returns ranked chunks, including neighboring
+        # chunks for continuity. Apply the relevance gate before prompting the
+        # model so a merely plausible retrieval cannot be mistaken for proof
+        # that the documents answer the question.
+        grounded_chunks = _adaptive_filter(chunks, mode)
+        if grounded_chunks:
+            context = format_context(grounded_chunks)
+            retrieved_doc_names = list(dict.fromkeys(
+                c["document"] for c in grounded_chunks if c.get("document")
+            ))
+        else:
+            context = ""
+            retrieved_doc_names = []
+
+        # Learning mode lets the model distinguish direct document support
+        # from merely related passages. Explicit document sessions remain
+        # strict even when that document does not contain the answer.
+        answer_mode = mode
+        if selected_doc is not None:
+            answer_mode = RetrievalMode.STRICT_DOCUMENT
+
         t_retrieval_end = time.perf_counter()
         logger.info(f"  [Timing] Retrieval & Context Building: {t_retrieval_end - t_retrieval_start:.3f}s")
 
@@ -368,7 +475,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         proficiency = prefs.proficiency if prefs else None
 
         system_prompt = _build_system_prompt(
-            mode=mode,
+            mode=answer_mode,
             doc_names=searched_doc_names,
             context=context,
             role=request.role,
@@ -384,14 +491,17 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             .filter(ChatMessage.session_id == session_id)
             .order_by(ChatMessage.created_at.asc())
             .all()
-        )[-HISTORY_LIMIT:]
+        )[-LLM_HISTORY_LIMIT:]
 
-        system_prompt = _build_system_prompt(mode, searched_doc_names, context, request.role, student_name, proficiency=proficiency)
+        system_prompt = _build_system_prompt(answer_mode, searched_doc_names, context, request.role, student_name, proficiency=proficiency)
 
         if request.reset:
             history_for_llm: list[Message] = []
         else:
-            history_for_llm = [Message(role=m.role, content=m.content) for m in history]
+            history_for_llm = [
+                Message(role=m.role, content=m.content[:HISTORY_MESSAGE_MAX_CHARS])
+                for m in history
+            ]
 
         t_prompt_end = time.perf_counter()
         logger.info(f"  [Timing] Context + Prompt Building: {t_prompt_end - t_prompt_start:.3f}s")
@@ -407,7 +517,8 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             try:
                 db.add(ChatMessage(
                     student_id=request.student_id, role="assistant", content=full_answer,
-                    session_id=session_id, session_title=session_title
+                    session_id=session_id, session_title=session_title,
+                    source_documents=json.dumps(source_docs)
                 ))
                 db.commit()
                 assistant_persisted = True
@@ -426,12 +537,11 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
                 full_answer += chunk
                 yield json.dumps({"content": chunk}) + "\n"
         except LLMStreamTimeout:
-            timeout_message = (
-                "\n\n⚠️ I stopped this response because it took too long. "
-                "Please try the question again."
-            )
-            full_answer += timeout_message
-            yield json.dumps({"content": timeout_message}) + "\n"
+            logger.warning("LLM response reached the time budget; preserving the response generated so far")
+            if not full_answer:
+                fallback_message = "I could not complete that explanation in time. Please ask for a shorter answer."
+                full_answer = fallback_message
+                yield json.dumps({"content": fallback_message}) + "\n"
         finally:
             # Persist completed or partial output if the client disconnects.
             persist_assistant_reply()
@@ -445,7 +555,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         yield json.dumps({"status": ""}) + "\n"
 
         final_payload = {
-            "intent": mode.value,
+            "intent": answer_mode.value,
             "sources": source_docs,
             "session_id": session_id,
             "session_title": session_title
@@ -608,7 +718,8 @@ def get_sessions(student_id: int, db: Session = Depends(get_db)):
     subq = (
         db.query(
             ChatMessage.session_id,
-            func.max(ChatMessage.created_at).label("latest_ts")
+            func.max(ChatMessage.created_at).label("latest_ts"),
+            func.max(ChatMessage.id).label("latest_id")
         )
         .filter(ChatMessage.student_id == student_id)
         .filter(ChatMessage.session_id.isnot(None))
@@ -625,7 +736,7 @@ def get_sessions(student_id: int, db: Session = Depends(get_db)):
         )
         .join(subq, ChatMessage.session_id == subq.c.session_id)
         .filter(ChatMessage.created_at == subq.c.latest_ts)
-        .order_by(subq.c.latest_ts.desc())
+        .order_by(subq.c.latest_ts.desc(), subq.c.latest_id.desc())
         .all()
     )
 
@@ -650,7 +761,7 @@ def get_history(student_id: int, session_id: Optional[str] = None, db: Session =
             db.query(ChatMessage.session_id)
             .filter(ChatMessage.student_id == student_id)
             .filter(ChatMessage.session_id.isnot(None))
-            .order_by(ChatMessage.created_at.desc())
+            .order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc())
             .first()
         )
         if latest and latest[0]:
@@ -658,13 +769,14 @@ def get_history(student_id: int, session_id: Optional[str] = None, db: Session =
         else:
             return []
 
-    msgs = query.order_by(ChatMessage.created_at.asc()).all()
+    msgs = query.order_by(ChatMessage.created_at.asc(), ChatMessage.id.asc()).all()
     return [
         Message(
             role=m.role,
             content=m.content,
             created_at=m.created_at.isoformat() if m.created_at else None,
-            session_id=m.session_id
+            session_id=m.session_id,
+            sources=_message_sources(m)
         )
         for m in msgs
     ]

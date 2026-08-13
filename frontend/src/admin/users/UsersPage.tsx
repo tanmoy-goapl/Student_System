@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createUser, listUsers, deleteUser } from "@/lib/api";
+import { createDepartment, createUser, DepartmentOption, listAdminDepartments, listUsers, updateUserDepartment, deleteUser } from "@/lib/api";
 import Loader from "@/components/Loader";
 import AdminSidebar from "../components/AdminSidebar";
 
@@ -9,6 +9,7 @@ export type UserRow = {
   id: number;
   name: string | null;
   department?: string | null;
+  department_name?: string | null;
   email: string;
   role: string;
 };
@@ -22,11 +23,13 @@ const roleBadge: Record<string, string> = {
 };
 
 function UserTable({
-  users, loading, onDelete,
+  users, loading, departments, onDelete, onDepartmentChange,
 }: {
   users: UserRow[];
   loading: boolean;
+  departments: DepartmentOption[];
   onDelete: (u: UserRow) => void;
+  onDepartmentChange: (u: UserRow, department: string | null) => void;
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10">
@@ -66,7 +69,24 @@ function UserTable({
                 return (
                   <tr key={u.id} className="border-b border-white/5 transition hover:bg-slate-800/40">
                     <td className="px-5 py-3.5 text-sm font-medium text-slate-200">{displayName}</td>
-                    <td className="px-5 py-3.5 text-sm text-slate-400">{u.department?.trim() || "—"}</td>
+                    <td className="px-5 py-3.5">
+                      <select
+                        value={u.department || ""}
+                        onChange={(e) => onDepartmentChange(u, e.target.value || null)}
+                        className="rounded-lg border border-white/10 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 focus:border-cyan-500/50 focus:outline-none"
+                        aria-label={"Department for " + displayName}
+                      >
+                        <option value="">Unassigned</option>
+                        {u.department && !departments.some((department) => department.code === u.department) && (
+                          <option value={u.department}>{u.department_name || u.department}</option>
+                        )}
+                        {departments.map((department) => (
+                          <option key={department.code} value={department.code}>
+                            {department.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="px-5 py-3.5 text-sm text-slate-400">{u.email}</td>
                     <td className="px-5 py-3.5">
                       <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${roleBadge[u.role] ?? "bg-slate-700 text-slate-300"}`}>
@@ -100,9 +120,12 @@ export default function UsersPage() {
   const [filteredUsers, setFilteredUsers] = useState<UserRow[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [usersLoading, setUsersLoading] = useState(false);
+  const [departments, setDepartments] = useState<DepartmentOption[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDepartment, setNewDepartment] = useState("");
+  const [departmentCode, setDepartmentCode] = useState("");
+  const [departmentName, setDepartmentName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState<UserRole>("student");
@@ -116,8 +139,9 @@ export default function UsersPage() {
     (async () => {
       setUsersLoading(true); setUserError("");
       try {
-        const data = await listUsers(adminId);
+        const [data, departmentRows] = await Promise.all([listUsers(adminId), listAdminDepartments(adminId)]);
         setUsers(data); setFilteredUsers(data);
+        setDepartments(departmentRows);
       } catch (err: any) { setUserError(err.message || "Failed to load users"); }
       finally { setUsersLoading(false); }
     })();
@@ -128,10 +152,47 @@ export default function UsersPage() {
     const q = searchQuery.toLowerCase();
     setFilteredUsers(users.filter((u) =>
       (u.name?.toLowerCase().includes(q) || false) ||
+      (u.department_name?.toLowerCase().includes(q) || false) ||
       (u.department?.toLowerCase().includes(q) || false) ||
       u.email.toLowerCase().includes(q)
     ));
   }, [searchQuery, users]);
+
+  const handleDepartmentChange = async (user: UserRow, department: string | null) => {
+    const adminId = Number(localStorage.getItem("user_id") || 0);
+    if (!adminId) { setUserError("Admin session expired."); return; }
+    try {
+      const result = await updateUserDepartment(adminId, user.id, department);
+      setUsers((current) => current.map((item) => item.id === user.id
+        ? { ...item, department: result.department, department_name: result.department_name }
+        : item
+      ));
+      setDepartments(await listAdminDepartments(adminId));
+    } catch (err: any) {
+      setUserError(err.message || "Failed to update department");
+    }
+  };
+
+  const handleCreateDepartment = async () => {
+    if (!departmentCode.trim() || !departmentName.trim()) {
+      setUserError("Department code and name are required.");
+      return;
+    }
+    const adminId = Number(localStorage.getItem("user_id") || 0);
+    if (!adminId) { setUserError("Admin session expired."); return; }
+    setUserError(""); setUserMsg(""); setUserLoading(true);
+    try {
+      const created = await createDepartment(adminId, departmentCode.trim(), departmentName.trim());
+      setDepartments((current) => [...current.filter((item) => item.code !== created.code), created]);
+      setNewDepartment(created.code);
+      setDepartmentCode(""); setDepartmentName("");
+      setUserMsg(created.name + " is now available for account and class assignment.");
+    } catch (err: any) {
+      setUserError(err.message || "Failed to create department");
+    } finally {
+      setUserLoading(false);
+    }
+  };
 
   const handleCreateUser = async () => {
     if (!newEmail || !newPassword) { setUserError("Email and password are required"); return; }
@@ -142,8 +203,9 @@ export default function UsersPage() {
       await createUser(adminId, newEmail, newPassword, newRole, newName || undefined, newDepartment || undefined);
       setUserMsg(`User "${newEmail}" created.`);
       setNewName(""); setNewDepartment(""); setNewEmail(""); setNewPassword("");
-      const data = await listUsers(adminId);
+      const [data, departmentRows] = await Promise.all([listUsers(adminId), listAdminDepartments(adminId)]);
       setUsers(data); setFilteredUsers(data);
+      setDepartments(departmentRows);
     } catch (err: any) { setUserError(err.message || "Failed to create user"); }
     finally { setUserLoading(false); }
   };
@@ -202,11 +264,62 @@ export default function UsersPage() {
             />
           </div>
 
+          {/* Department management */}
+          <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <h3 className="text-base font-semibold text-white">Departments</h3>
+                <p className="mt-1 text-xs text-slate-400">Create departments and assign them to existing students or faculty below.</p>
+              </div>
+              <div className="grid w-full gap-2 sm:grid-cols-[120px_minmax(180px,1fr)_auto] lg:max-w-xl">
+                <input
+                  value={departmentCode}
+                  onChange={(e) => setDepartmentCode(e.target.value.toUpperCase())}
+                  placeholder="Code"
+                  className={inputCls}
+                  maxLength={24}
+                />
+                <input
+                  value={departmentName}
+                  onChange={(e) => setDepartmentName(e.target.value)}
+                  placeholder="Department name"
+                  className={inputCls}
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateDepartment}
+                  disabled={userLoading}
+                  className="rounded-xl bg-cyan-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-40"
+                >
+                  Add Department
+                </button>
+              </div>
+            </div>
+            {userMsg && <p className="mt-3 text-xs text-cyan-300">{userMsg}</p>}
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {departments.map((department) => (
+                <div key={department.code} className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
+                  <p className="text-sm font-semibold text-white">{department.name}</p>
+                  <p className="mt-1 text-[11px] text-slate-500">{department.code}</p>
+                  <p className="mt-3 text-[11px] text-slate-400">
+                    {department.student_count ?? 0} students · {department.professor_count ?? 0} faculty · {department.course_count ?? 0} classes
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
           {userError && !showCreateForm && (
             <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">{userError}</div>
           )}
 
-          <UserTable users={filteredUsers} loading={usersLoading} onDelete={handleDelete} />
+          <UserTable
+            users={filteredUsers}
+            loading={usersLoading}
+            departments={departments}
+            onDelete={handleDelete}
+            onDepartmentChange={handleDepartmentChange}
+          />
 
           {/* Create form */}
           {showCreateForm && (
@@ -227,7 +340,12 @@ export default function UsersPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-slate-400">Department (Optional)</label>
-                  <input type="text" className={inputCls} value={newDepartment} onChange={(e) => setNewDepartment(e.target.value)} placeholder="Computer Science" />
+                  <select className={inputCls} value={newDepartment} onChange={(e) => setNewDepartment(e.target.value)}>
+                    <option value="">Unassigned</option>
+                    {departments.map((department) => (
+                      <option key={department.code} value={department.code}>{department.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-slate-400">Email</label>

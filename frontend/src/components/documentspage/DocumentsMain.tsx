@@ -6,6 +6,8 @@ import {
   Eye, Download, Sparkles, X, AlertCircle, FileCode, Loader2
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useRouter } from 'next/navigation';
+import { useChatSession } from '@/components/ChatSessionProvider';
 
 export type DocumentStatus = 'ready' | 'processing';
 
@@ -349,6 +351,8 @@ export default function DocumentsMain({ documents, totalCount, kpis, onDelete }:
     const [textError, setTextError] = useState<string | null>(null);
     const [isPreviewPdf, setIsPreviewPdf] = useState<boolean>(false);
     const [activeTab, setActiveTab] = useState<'universal' | 'private'>('universal');
+    const router = useRouter();
+    const { startDocumentChat } = useChatSession();
 
     const cleanId = (id: string) => id.replace("db-", "");
 
@@ -393,14 +397,18 @@ export default function DocumentsMain({ documents, totalCount, kpis, onDelete }:
     };
 
     const handleAskAI = (doc: DocumentItem) => {
-        localStorage.setItem("chat_input", `Summarize this document: "${doc.name}"`);
         const role = localStorage.getItem("role") || "student";
         if (role === "admin") {
+            localStorage.setItem("chat_input", `Summarize this document: "${doc.name}"`);
             window.location.href = "/admin/chatbot";
         } else if (role === "professor") {
+            localStorage.setItem("chat_input", `Summarize this document: "${doc.name}"`);
             window.location.href = "/professor/chatbot";
         } else {
-            window.location.href = "/chat";
+            const documentId = Number(cleanId(doc.id));
+            if (!Number.isInteger(documentId) || documentId <= 0) return;
+            startDocumentChat({ documentId, documentName: doc.name });
+            router.push("/chat");
         }
     };
 

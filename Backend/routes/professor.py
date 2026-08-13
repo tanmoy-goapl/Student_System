@@ -22,6 +22,7 @@ def get_professor_classes(professor_id: int, db: Session = Depends(get_db)):
             "name": c.name,
             "code": c.code,
             "course_code": c.course_code,
+            "department": c.department,
             "students": student_count
         })
     return {"success": True, "classes": result}
@@ -112,7 +113,8 @@ def get_class_analytics(class_id: int, db: Session = Depends(get_db)):
             active_students_count += 1
         else:
             inactive_students_count += 1
-            
+
+        is_active = bool(last_active and last_active > thirty_days_ago)
         is_at_risk = student_accuracy < 50 and progress_pct > 0
         
         recent_quiz = db.query(QuizHistory).filter(QuizHistory.student_id == student.id).order_by(QuizHistory.created_at.desc()).first()
@@ -127,6 +129,7 @@ def get_class_analytics(class_id: int, db: Session = Depends(get_db)):
             "status": status,
             "topics_completed": metrics["mastered_topics"],
             "is_at_risk": is_at_risk,
+            "is_active": is_active,
             "streak": perf.current_streak if perf else 0,
             "last_practiced_at": perf.last_practiced.isoformat() if perf and perf.last_practiced else None,
             "recent_quiz": {"topic": recent_quiz.topic, "score": recent_quiz.score_percentage} if recent_quiz else None
@@ -229,7 +232,30 @@ def get_class_analytics(class_id: int, db: Session = Depends(get_db)):
             "time": q.created_at.isoformat()
         })
 
-    # 5. Alerts
+    # 5. Performance momentum (last 7 days vs the preceding 23-day window)
+    # Keep this separate from the current average so the Classes page can show
+    # whether each class is improving, stable, or declining.
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    recent_score = db.query(func.avg(QuizHistory.score_percentage)).filter(
+        QuizHistory.student_id.in_(student_ids),
+        QuizHistory.created_at >= seven_days_ago
+    ).scalar() if student_ids else None
+    previous_score = db.query(func.avg(QuizHistory.score_percentage)).filter(
+        QuizHistory.student_id.in_(student_ids),
+        QuizHistory.created_at >= thirty_days_ago,
+        QuizHistory.created_at < seven_days_ago
+    ).scalar() if student_ids else None
+    score_delta = (
+        round(float(recent_score) - float(previous_score), 1)
+        if recent_score is not None and previous_score is not None
+        else None
+    )
+    recent_quiz_count = db.query(QuizHistory).filter(
+        QuizHistory.student_id.in_(student_ids),
+        QuizHistory.created_at >= seven_days_ago
+    ).count() if student_ids else 0
+
+    # 6. Alerts
     alerts = []
     for wt in weak_topics[:3]:
         if wt["score"] < 50:
@@ -246,10 +272,15 @@ def get_class_analytics(class_id: int, db: Session = Depends(get_db)):
             "studentCount": student_count,
             "activeStudents": active_students_count,
             "inactiveStudents": inactive_students_count,
+            "engagementRate": round((active_students_count / student_count) * 100, 1) if student_count > 0 else 0,
             "averageAccuracy": average_accuracy,
             "averageConfidence": average_confidence,
             "averageExposure": average_exposure,
             "completionRate": completion_rate,
+            "recentAverageScore": round(float(recent_score), 1) if recent_score is not None else None,
+            "previousAverageScore": round(float(previous_score), 1) if previous_score is not None else None,
+            "scoreDelta": score_delta,
+            "recentQuizCount": recent_quiz_count,
             "weakTopics": weak_topics[:5],
             "strongTopics": strong_topics[:5],
             "alerts": alerts
@@ -264,7 +295,154 @@ def get_class_analytics(class_id: int, db: Session = Depends(get_db)):
 # ─────────────────────────────────────────────────────────────
 # Insights Aggregation  (across ALL professor classes)
 # ─────────────────────────────────────────────────────────────
-@router.get("/insights/{professor_id}")
+@router.get("/student/{student_id}/profile")
+def get_student_profile(student_id: int, professor_id: int, db: Session = Depends(get_db)):
+    """Return live profile data for a student enrolled in this professor's classes."""
+    student = db.query(User).filter(User.id == student_id, User.role == "student").first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    classrooms = (
+        db.query(Classroom)
+        .join(StudentClass, StudentClass.class_id == Classroom.id)
+        .filter(
+            Classroom.professor_id == professor_id,
+            StudentClass.student_id == student_id,
+        )
+        .order_by(Classroom.id)
+        .all()
+    )
+    if not classrooms:
+        raise HTTPException(status_code=404, detail="Student is not enrolled in this professor's classes")
+
+    from services.analytics_engine import calculate_subject_metrics, calculate_topic_metrics, get_predefined_topics
+
+    class_breakdown = []
+    allowed_topics = set()
+    total_topics = 0
+    attempted_topics = 0
+    mastered_topics = 0
+    weighted_accuracy = 0.0
+    weighted_confidence = 0.0
+
+    for classroom in classrooms:
+        curriculum = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == classroom.id).first()
+        subject_name = curriculum.subject_name if curriculum and curriculum.subject_name else classroom.name
+        metrics = calculate_subject_metrics(student_id, subject_name, db)
+        class_topics = get_predefined_topics(student_id, subject_name, db)
+        allowed_topics.update(class_topics)
+
+        class_attempted = metrics.get("attempted_topics", 0)
+        total_topics += metrics.get("total_topics", 0)
+        attempted_topics += class_attempted
+        mastered_topics += metrics.get("mastered_topics", 0)
+        weighted_accuracy += metrics.get("average_accuracy", 0.0) * class_attempted
+        weighted_confidence += metrics.get("average_confidence", 0.0) * class_attempted
+
+        class_breakdown.append({
+            "id": classroom.id,
+            "name": classroom.name,
+            "code": classroom.course_code or classroom.code,
+            "subject": subject_name,
+            "performance": metrics.get("average_accuracy", 0.0),
+            "progress": metrics.get("progress", 0),
+            "exposure": metrics.get("exposure", 0),
+            "confidence": metrics.get("average_confidence", 0.0),
+            "attemptedTopics": class_attempted,
+            "masteredTopics": metrics.get("mastered_topics", 0),
+            "totalTopics": metrics.get("total_topics", 0),
+        })
+
+    topic_performances = db.query(TopicPerformance).filter(
+        TopicPerformance.student_id == student_id
+    ).all()
+    topic_by_name = {performance.topic: performance for performance in topic_performances}
+    topic_breakdown = []
+    for topic in allowed_topics:
+        performance = topic_by_name.get(topic)
+        topic_metrics = calculate_topic_metrics(performance)
+        if topic_metrics["sessions"] == 0 and topic_metrics["questions_attempted"] == 0:
+            continue
+        last_practiced_at = topic_metrics.get("last_practiced_at")
+        topic_breakdown.append({
+            "name": topic,
+            "accuracy": topic_metrics["accuracy"],
+            "confidence": topic_metrics["confidence"],
+            "status": topic_metrics["status"],
+            "sessions": topic_metrics["sessions"],
+            "questionsAttempted": topic_metrics["questions_attempted"],
+            "lastPracticedAt": last_practiced_at.isoformat() if last_practiced_at else None,
+        })
+    topic_breakdown.sort(key=lambda topic: (topic["accuracy"], topic["name"]))
+
+    lifetime = db.query(UserPerformance).filter(UserPerformance.student_id == student_id).first()
+    quizzes = (
+        db.query(QuizHistory)
+        .filter(QuizHistory.student_id == student_id)
+        .order_by(QuizHistory.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    total_quizzes = db.query(QuizHistory).filter(QuizHistory.student_id == student_id).count()
+    average_quiz_score = db.query(func.avg(QuizHistory.score_percentage)).filter(
+        QuizHistory.student_id == student_id
+    ).scalar()
+
+    last_practiced = lifetime.last_practiced if lifetime and lifetime.last_practiced else None
+    if not last_practiced and quizzes:
+        last_practiced = quizzes[0].created_at
+    if not last_practiced:
+        last_practiced = student.created_at
+    if last_practiced:
+        last_practiced = last_practiced.replace(tzinfo=None)
+
+    now = datetime.utcnow()
+    overall_accuracy = weighted_accuracy / attempted_topics if attempted_topics else 0.0
+    overall_confidence = weighted_confidence / attempted_topics if attempted_topics else 0.0
+    overall_progress = (mastered_topics / total_topics * 100) if total_topics else 0.0
+    overall_exposure = (attempted_topics / total_topics * 100) if total_topics else 0.0
+
+    return {
+        "student": {
+            "id": student.id,
+            "name": student.name or f"Student {student.id}",
+            "email": student.email,
+            "role": student.role,
+        },
+        "overview": {
+            "performance": round(overall_accuracy, 1),
+            "progress": round(overall_progress),
+            "exposure": round(overall_exposure),
+            "confidence": round(overall_confidence, 1),
+            "attemptedTopics": attempted_topics,
+            "masteredTopics": mastered_topics,
+            "totalTopics": total_topics,
+            "isAtRisk": overall_accuracy < 50 and attempted_topics > 0,
+            "isActive": bool(last_practiced and last_practiced > now - timedelta(days=30)),
+        },
+        "stats": {
+            "totalQuizzes": total_quizzes,
+            "averageQuizScore": round(float(average_quiz_score), 1) if average_quiz_score is not None else 0,
+            "currentStreak": lifetime.current_streak if lifetime else 0,
+            "longestStreak": lifetime.longest_streak if lifetime else 0,
+            "lastPracticedAt": last_practiced.isoformat() if last_practiced else None,
+        },
+        "classes": class_breakdown,
+        "topics": topic_breakdown[:12],
+        "recentActivity": [
+            {
+                "id": quiz.id,
+                "topic": quiz.topic,
+                "score": round(float(quiz.score_percentage or 0), 1),
+                "questionsAttempted": quiz.questions_attempted or 0,
+                "createdAt": quiz.created_at.isoformat() if quiz.created_at else None,
+            }
+            for quiz in quizzes
+        ],
+    }
+
+
+@router.get("/insights-legacy/{professor_id}")
 def get_professor_insights(professor_id: int, class_id: int = 0, db: Session = Depends(get_db)):
     """
     Aggregated insights dashboard for a professor.
@@ -621,6 +799,496 @@ def get_professor_insights(professor_id: int, class_id: int = 0, db: Session = D
     }
 
 
+@router.get("/insights/{professor_id}")
+def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Session = Depends(get_db)):
+    """
+    Return live, class-scoped professor insights from completed activity and
+    stored topic performance. No deterministic or ID-based synthetic values
+    are generated here.
+    """
+    from services.analytics_engine import calculate_subject_metrics, get_predefined_topics
+
+    professor = db.query(User).filter(
+        User.id == professor_id,
+        User.role == "professor",
+    ).first()
+    if not professor:
+        raise HTTPException(status_code=403, detail="Professor access required")
+
+    all_classrooms = (
+        db.query(Classroom)
+        .filter(Classroom.professor_id == professor_id)
+        .order_by(Classroom.id)
+        .all()
+    )
+    class_list = [{"id": c.id, "name": c.name} for c in all_classrooms]
+
+    def empty_payload():
+        return {
+            "classes": class_list,
+            "overview": {
+                "avgScore": 0,
+                "engagementRate": 0,
+                "atRiskStudents": 0,
+                "topicMastery": 0,
+            },
+            "aiInsights": [],
+            "topicMastery": [],
+            "riskAnalysis": {"high": [], "medium": [], "improving": []},
+            "engagement": {
+                "attendance": 0,
+                "quizParticipation": 0,
+                "revisionConsistency": 0,
+                "contentInteraction": 0,
+            },
+        }
+
+    if not all_classrooms:
+        return empty_payload()
+
+    if class_id > 0:
+        classrooms = [classroom for classroom in all_classrooms if classroom.id == class_id]
+        if not classrooms:
+            raise HTTPException(status_code=404, detail="Class not found for this professor")
+    else:
+        classrooms = all_classrooms
+
+    def get_class_topics(classroom):
+        curriculum = (
+            db.query(ClassCurriculum)
+            .filter(ClassCurriculum.class_id == classroom.id)
+            .first()
+        )
+        subject_name = (
+            curriculum.subject_name
+            if curriculum and curriculum.subject_name
+            else classroom.name
+        )
+        topics = []
+        curriculum_json = curriculum.curriculum_json if curriculum else None
+        if isinstance(curriculum_json, dict):
+            if "semesters" in curriculum_json:
+                for semester in curriculum_json["semesters"]:
+                    for course in semester.get("courses", []):
+                        topics.extend(course.get("topics", []))
+            elif "units" in curriculum_json:
+                for unit in curriculum_json["units"]:
+                    topics.extend(unit.get("topics", []))
+
+        if not topics:
+            representative = (
+                db.query(StudentClass.student_id)
+                .filter(StudentClass.class_id == classroom.id)
+                .first()
+            )
+            representative_id = representative[0] if representative else 0
+            topics = get_predefined_topics(representative_id, subject_name, db)
+
+        unique_topics = list(dict.fromkeys(
+            topic for topic in topics if isinstance(topic, str) and topic.strip()
+        ))
+        return subject_name, unique_topics
+
+    contexts = []
+    selected_student_ids = set()
+    for classroom in classrooms:
+        enrolled_ids = sorted({
+            row.student_id
+            for row in db.query(StudentClass)
+            .filter(StudentClass.class_id == classroom.id)
+            .all()
+        })
+        subject_name, topics = get_class_topics(classroom)
+        contexts.append({
+            "classroom": classroom,
+            "student_ids": enrolled_ids,
+            "subject": subject_name,
+            "topics": topics,
+        })
+        selected_student_ids.update(enrolled_ids)
+
+    student_ids = sorted(selected_student_ids)
+    if not student_ids:
+        return empty_payload()
+
+    students = (
+        db.query(User)
+        .filter(User.id.in_(student_ids), User.role == "student")
+        .all()
+    )
+    student_ids = sorted(student.id for student in students)
+    if not student_ids:
+        return empty_payload()
+
+    student_map = {student.id: student for student in students}
+
+    topic_rows = (
+        db.query(TopicPerformance)
+        .filter(TopicPerformance.student_id.in_(student_ids))
+        .all()
+    )
+    topic_map = {}
+    for row in topic_rows:
+        topic_map.setdefault((row.student_id, row.topic), []).append(row)
+
+    all_topic_names = sorted({
+        topic
+        for context in contexts
+        for topic in context["topics"]
+    })
+
+    completed_quizzes = []
+    if all_topic_names:
+        completed_quizzes = (
+            db.query(QuizHistory)
+            .filter(
+                QuizHistory.student_id.in_(student_ids),
+                QuizHistory.topic.in_(all_topic_names),
+                QuizHistory.questions_attempted > 0,
+            )
+            .all()
+        )
+
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    recent_quiz_participants = {
+        quiz.student_id
+        for quiz in completed_quizzes
+        if quiz.created_at and quiz.created_at >= thirty_days_ago
+    }
+
+    class_metrics = {}
+    for context in contexts:
+        for student_id in context["student_ids"]:
+            if student_id not in student_map:
+                continue
+            class_metrics[(context["classroom"].id, student_id)] = (
+                calculate_subject_metrics(
+                    student_id,
+                    context["subject"],
+                    db,
+                    topics_override=context["topics"],
+                )
+            )
+
+    all_student_data = []
+    at_risk_count = 0
+    total_accuracy = 0.0
+    total_progress = 0.0
+    valid_accuracy_count = 0
+
+    for student_id in student_ids:
+        student_contexts = [
+            context for context in contexts
+            if student_id in context["student_ids"]
+        ]
+        metric_values = [
+            class_metrics[(context["classroom"].id, student_id)]
+            for context in student_contexts
+        ]
+        attempted_topics = sum(
+            metric.get("attempted_topics", 0) for metric in metric_values
+        )
+        total_topics = sum(
+            metric.get("total_topics", 0) for metric in metric_values
+        )
+        mastered_topics = sum(
+            metric.get("mastered_topics", 0) for metric in metric_values
+        )
+        accuracy_weight = sum(
+            metric.get("average_accuracy", 0.0)
+            * metric.get("attempted_topics", 0)
+            for metric in metric_values
+        )
+        student_accuracy = (
+            accuracy_weight / attempted_topics if attempted_topics else 0.0
+        )
+        student_progress = (
+            mastered_topics / total_topics * 100 if total_topics else 0.0
+        )
+
+        if attempted_topics == 0:
+            status = "Red"
+            is_at_risk = True
+        elif student_accuracy < 50:
+            status = "Red"
+            is_at_risk = True
+        elif student_accuracy <= 70:
+            status = "Yellow"
+            is_at_risk = False
+        else:
+            status = "Green"
+            is_at_risk = False
+
+        if is_at_risk:
+            at_risk_count += 1
+        total_accuracy += student_accuracy
+        valid_accuracy_count += 1
+        total_progress += student_progress
+
+        if len(student_contexts) == 1:
+            class_name = student_contexts[0]["classroom"].name
+        else:
+            class_name = "Multiple classes"
+
+        all_student_data.append({
+            "student_id": student_id,
+            "name": student_map[student_id].name or f"Student {student_id}",
+            "accuracy": round(student_accuracy, 1),
+            "progress": round(student_progress, 1),
+            "status": status,
+            "is_at_risk": is_at_risk,
+            "class_name": class_name,
+            "active": student_id in recent_quiz_participants,
+        })
+
+    student_count = len(all_student_data)
+    avg_accuracy = (
+        round(total_accuracy / valid_accuracy_count, 1)
+        if valid_accuracy_count
+        else 0
+    )
+    avg_progress = (
+        round(total_progress / student_count, 1)
+        if student_count
+        else 0
+    )
+
+    def topic_rows_for(student_id, topic):
+        return [
+            row for row in topic_map.get((student_id, topic), [])
+            if (row.sessions or 0) > 0 or (row.questions_attempted or 0) > 0
+        ]
+
+    topic_activity_students = set()
+    topic_mastery_out = []
+    all_active_topic_scores = []
+
+    for context in contexts:
+        class_topics = []
+        active_class_scores = []
+        for topic in context["topics"]:
+            scores = []
+            for student_id in context["student_ids"]:
+                rows = topic_rows_for(student_id, topic)
+                if not rows:
+                    continue
+                questions = sum(max(row.questions_attempted or 0, 0) for row in rows)
+                correct = sum(max(row.correct_answers or 0, 0) for row in rows)
+                if questions > 0:
+                    score = (correct / questions) * 100
+                else:
+                    score = sum(float(row.accuracy or 0) for row in rows) / len(rows)
+                score = max(0.0, min(100.0, score))
+                scores.append(score)
+                topic_activity_students.add(student_id)
+
+            if scores:
+                score = round(sum(scores) / len(scores), 1)
+                active_class_scores.append(score)
+                all_active_topic_scores.extend(scores)
+                if score <= 40:
+                    status = "WEAK"
+                elif score <= 80:
+                    status = "AVERAGE"
+                else:
+                    status = "GOOD"
+            else:
+                score = 0
+                status = "NOT_STARTED"
+
+            class_topics.append({
+                "name": topic,
+                "score": score,
+                "status": status,
+            })
+
+        class_average = (
+            round(sum(active_class_scores) / len(active_class_scores), 1)
+            if active_class_scores
+            else 0
+        )
+        topic_mastery_out.append({
+            "className": context["classroom"].name,
+            "avgScore": class_average,
+            "topics": sorted(class_topics, key=lambda topic: (
+                topic["status"] == "NOT_STARTED",
+                topic["score"],
+            )),
+        })
+
+    all_topics_flat = [
+        {**topic, "className": class_group["className"]}
+        for class_group in topic_mastery_out
+        for topic in class_group["topics"]
+        if topic["status"] != "NOT_STARTED"
+    ]
+    all_topics_flat.sort(key=lambda topic: topic["score"])
+
+    ai_insights = []
+    if all_topics_flat and all_topics_flat[0]["score"] < 65:
+        weakest = all_topics_flat[0]
+        weak_student_count = sum(
+            1 for student in all_student_data if student["accuracy"] < 55
+        )
+        ai_insights.append({
+            "title": f"Students Struggle with {weakest['name']}",
+            "desc": (
+                f"Class: {weakest['className']} | "
+                f"Avg score {weakest['score']}% | "
+                f"{weak_student_count} students below threshold"
+            ),
+            "badge": "DATA INSIGHT",
+            "badgeType": "critical",
+        })
+
+    recent_score = 0.0
+    previous_score = 0.0
+    if all_topic_names and student_ids:
+        recent_score = (
+            db.query(func.avg(QuizHistory.score_percentage))
+            .filter(
+                QuizHistory.student_id.in_(student_ids),
+                QuizHistory.topic.in_(all_topic_names),
+                QuizHistory.questions_attempted > 0,
+                QuizHistory.created_at >= seven_days_ago,
+            )
+            .scalar()
+            or 0.0
+        )
+        previous_score = (
+            db.query(func.avg(QuizHistory.score_percentage))
+            .filter(
+                QuizHistory.student_id.in_(student_ids),
+                QuizHistory.topic.in_(all_topic_names),
+                QuizHistory.questions_attempted > 0,
+                QuizHistory.created_at >= thirty_days_ago,
+                QuizHistory.created_at < seven_days_ago,
+            )
+            .scalar()
+            or 0.0
+        )
+
+    if recent_score > 0 and previous_score > 0:
+        delta = round(float(recent_score) - float(previous_score), 1)
+        if delta < -5:
+            ai_insights.append({
+                "title": f"Quiz Performance Dropped by {abs(delta)}% This Week",
+                "desc": "Completed quiz scores declined versus the previous period",
+                "badge": "PERFORMANCE TREND",
+                "badgeType": "warning",
+            })
+        elif delta > 5:
+            ai_insights.append({
+                "title": f"Quiz Performance Improved by {delta}% This Week",
+                "desc": "Completed quiz scores improved versus the previous period",
+                "badge": "POSITIVE IMPACT",
+                "badgeType": "success",
+            })
+
+    if at_risk_count > 0:
+        risk_percentage = round((at_risk_count / student_count) * 100) if student_count else 0
+        ai_insights.append({
+            "title": f"{at_risk_count} Students Are At Risk ({risk_percentage}% of enrollment)",
+            "desc": "Students have no recorded topic attempts or accuracy below 50%",
+            "badge": "AT-RISK ALERT",
+            "badgeType": "critical",
+        })
+
+    quiz_rate = (
+        round((len(recent_quiz_participants) / student_count) * 100)
+        if student_count
+        else 0
+    )
+    if quiz_rate >= 60:
+        ai_insights.append({
+            "title": f"{quiz_rate}% Completed Quiz Participation This Month",
+            "desc": "Most students have completed at least one tracked quiz",
+            "badge": "POSITIVE IMPACT",
+            "badgeType": "success",
+        })
+    elif quiz_rate < 40 and student_count:
+        ai_insights.append({
+            "title": f"Only {quiz_rate}% Students Completed Quizzes This Month",
+            "desc": "Completed quiz activity is low and may need support",
+            "badge": "BEHAVIORAL INSIGHT",
+            "badgeType": "info",
+        })
+
+    if len(ai_insights) < 2:
+        ai_insights.append({
+            "title": f"Monitoring {student_count} Students Across {len(classrooms)} Classes",
+            "desc": (
+                f"Average accuracy is {avg_accuracy}% with "
+                f"{avg_progress}% curriculum completion"
+            ),
+            "badge": "OVERVIEW",
+            "badgeType": "info",
+        })
+
+    high_risk = sorted(
+        [student for student in all_student_data if student["status"] == "Red"],
+        key=lambda student: student["accuracy"],
+    )
+    medium_risk = sorted(
+        [student for student in all_student_data if student["status"] == "Yellow"],
+        key=lambda student: student["accuracy"],
+    )
+    improving = sorted(
+        [student for student in all_student_data if student["status"] == "Green"],
+        key=lambda student: -student["accuracy"],
+    )
+
+    active_rate = (
+        round((len(recent_quiz_participants) / student_count) * 100)
+        if student_count
+        else 0
+    )
+    topic_activity_rate = (
+        round((len(topic_activity_students) / student_count) * 100)
+        if student_count
+        else 0
+    )
+    engagement_rate = round((active_rate + quiz_rate) / 2, 1)
+
+    return {
+        "classes": class_list,
+        "overview": {
+            "avgScore": avg_accuracy,
+            "engagementRate": engagement_rate,
+            "atRiskStudents": at_risk_count,
+            "topicMastery": (
+                round(sum(all_active_topic_scores) / len(all_active_topic_scores), 1)
+                if all_active_topic_scores
+                else 0
+            ),
+        },
+        "aiInsights": ai_insights[:4],
+        "topicMastery": topic_mastery_out,
+        "riskAnalysis": {
+            "high": [
+                {"name": student["name"], "score": student["accuracy"]}
+                for student in high_risk
+            ],
+            "medium": [
+                {"name": student["name"], "score": student["accuracy"]}
+                for student in medium_risk
+            ],
+            "improving": [
+                {"name": student["name"], "score": student["accuracy"]}
+                for student in improving
+            ],
+        },
+        "engagement": {
+            "attendance": active_rate,
+            "quizParticipation": quiz_rate,
+            "revisionConsistency": int(round(avg_progress)),
+            "contentInteraction": topic_activity_rate,
+        },
+    }
+
+
+
 # ─────────────────────────────────────────────────────────────
 # Professor Dashboard  (home page summary)
 # ─────────────────────────────────────────────────────────────
@@ -645,7 +1313,7 @@ def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
             "totalStudents": 0,
         }
 
-    class_list = [{"id": c.id, "name": c.name, "code": c.code, "course_code": c.course_code} for c in classrooms]
+    class_list = [{"id": c.id, "name": c.name, "code": c.code, "course_code": c.course_code, "department": c.department} for c in classrooms]
     class_ids = [c.id for c in classrooms]
 
     # 2. Get all students

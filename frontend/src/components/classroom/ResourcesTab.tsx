@@ -111,40 +111,7 @@ export default function ResourcesTab({ classId, role, userId, subjectName }: { c
 
     return (
         <div className="space-y-10">
-            {/* 1. Semester Resources Section */}
-            {semesterResources.length > 0 && (
-                <div className="space-y-6">
-                    <div className="border-b border-white/5 pb-3">
-                        <h2 className="text-xl font-bold text-white mb-1">Semester Resources</h2>
-                        <p className="text-slate-400 text-sm">Static curriculum documents provided by course instructors.</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {semesterResources.map((res, i) => (
-                            <div 
-                                key={i}
-                                onClick={() => handleDownloadSemesterResource(res.file)}
-                                className="group bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 transition rounded-2xl p-5 flex items-center gap-4 cursor-pointer relative overflow-hidden"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/20 transition shrink-0">
-                                    <FileText className="w-6 h-6" />
-                                </div>
-                                <div className="flex-1 min-w-0 pr-6">
-                                    <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition truncate">{res.title}</h3>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 uppercase border border-indigo-500/30">
-                                            {res.type}
-                                        </span>
-                                        <span className="text-xs text-slate-500">Static Document</span>
-                                    </div>
-                                </div>
-                                <div className="absolute right-4 text-slate-500 group-hover:text-white transition">
-                                    <ExternalLink className="w-4 h-4" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+
 
             {/* 2. Class Resources Section */}
             <div className="space-y-6">

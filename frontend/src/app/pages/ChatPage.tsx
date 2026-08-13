@@ -382,6 +382,18 @@ function ChatBubble({ msg, isGenerating, onAsk }: { msg: ChatMessage, isGenerati
           })
         )}
 
+        {!isUser && msg.sources && msg.sources.length > 0 && (
+          <div className="mt-2 flex items-start gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-2.5 py-2 text-[11px]">
+            <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />
+            <div className="min-w-0">
+              <div className="font-semibold text-emerald-200">Relevant content found in your documents</div>
+              <div className="mt-0.5 truncate text-slate-300" title={msg.sources.join(" · ")}>
+                {msg.sources.join(" · ")}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Custom Success Card for Roadmap Creation */}
         {msg.intent === "ROADMAP_CREATION" && msg.roadmap_metadata && (
           <div className="mt-4 bg-[#0a0f1e]/80 border border-blue-500/20 rounded-xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-xl shadow-blue-500/5">

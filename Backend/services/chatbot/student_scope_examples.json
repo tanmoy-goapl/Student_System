@@ -23,7 +23,10 @@
         "Explain recursion, databases, or operating systems.",
         "Help me prepare for a programming interview.",
         "What is the time complexity of this code?",
-        "What is an algorithm or computing method?"
+        "What is an algorithm or computing method?",
+        "What is ChatGPT or Ollama in an AI project?",
+        "Explain how an AI tool or language model works for my studies.",
+        "Compare tools used to run or build AI models."
       ]
     },
     {

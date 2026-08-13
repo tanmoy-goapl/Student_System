@@ -8,12 +8,14 @@ class ChatRequest(BaseModel):
     reset: bool = False
     session_id: Optional[str] = None
     session_title: Optional[str] = None
+    document_id: Optional[int] = None
 
 class Message(BaseModel):
     role: str
     content: str
     created_at: Optional[str] = None
     session_id: Optional[str] = None
+    sources: Optional[List[str]] = []
 
 class ChatResponse(BaseModel):
     answer: str

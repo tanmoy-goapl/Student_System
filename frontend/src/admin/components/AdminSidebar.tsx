@@ -5,22 +5,36 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
   Home, Users, BarChart3, Briefcase, GraduationCap, 
-  FileSpreadsheet, Settings, Sparkles, MessageSquare, LogOut
+  FileSpreadsheet, Settings, Sparkles, MessageSquare, LogOut,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
+import { prepareChatForLogout } from "@/components/ChatSessionProvider";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const [userName, setUserName] = useState("Management");
   const [userEmail, setUserEmail] = useState("rg@gmail.com");
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setUserName(localStorage.getItem("user_name") || "Management");
       setUserEmail(localStorage.getItem("user_email") || "rg@gmail.com");
+      const saved = localStorage.getItem("admin_sidebar_collapsed");
+      if (saved === "true") {
+        setCollapsed(true);
+      }
     }
   }, []);
 
+  const handleToggle = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    localStorage.setItem("admin_sidebar_collapsed", String(next));
+  };
+
   const handleLogout = () => {
+    prepareChatForLogout();
     localStorage.removeItem("role");
     localStorage.removeItem("user_id");
     localStorage.removeItem("user_name");
@@ -36,7 +50,7 @@ export default function AdminSidebar() {
     { label: "Users & Faculty", path: "/admin/users", icon: Users },
     { label: "Analytics", path: "/admin/analytics", icon: BarChart3 },
     { label: "Placements", path: "/admin/placements", icon: Briefcase },
-    { label: "Reports", path: "/admin/reports", icon: FileSpreadsheet },
+    // { label: "Reports", path: "/admin/reports", icon: FileSpreadsheet },
     { label: "Settings", path: "/settings", icon: Settings },
   ];
 
@@ -50,24 +64,35 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside className="w-56 h-screen border-r border-white/5 bg-[#090D1F] flex flex-col justify-between select-none shrink-0 text-white font-sans">
+    <aside className={`h-screen border-r border-white/5 bg-[#090D1F] flex flex-col justify-between select-none shrink-0 text-white font-sans transition-all duration-300 ${collapsed ? "w-20" : "w-56"}`}>
       {/* Fixed Logo Header */}
-      <div className="p-5 shrink-0">
+      <div className={`p-5 shrink-0 flex ${collapsed ? "flex-col items-center gap-3" : "items-center justify-between"}`}>
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-500/20 shrink-0">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <div>
-            <h1 className="text-sm font-bold tracking-wider text-white">Mentor AI</h1>
-            <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest leading-none">Admin Studio</p>
-          </div>
+          {!collapsed && (
+            <div>
+              <h1 className="text-sm font-bold tracking-wider text-white">Mentor AI</h1>
+              <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest leading-none">Admin Studio</p>
+            </div>
+          )}
         </div>
+        <button 
+          onClick={handleToggle}
+          className="p-1.5 rounded-lg hover:bg-white/5 text-white/50 hover:text-white transition"
+          title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
       </div>
 
       {/* Scrollable Navigation */}
-      <div className="flex-1 overflow-y-auto purple-scrollbar px-5 pb-5 space-y-6">
+      <div className={`flex-1 overflow-y-auto purple-scrollbar px-5 pb-5 space-y-6 ${collapsed ? "scrollbar-none" : ""}`}>
         <div>
-          <h2 className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold mb-3 px-1">Navigation</h2>
+          {!collapsed && (
+            <h2 className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold mb-3 px-1">Navigation</h2>
+          )}
           <nav className="space-y-1">
             {navItems.map(item => {
               const active = pathname === item.path || (item.path !== "/admin" && pathname?.startsWith(item.path));
@@ -75,14 +100,17 @@ export default function AdminSidebar() {
                 <Link
                   key={item.label}
                   href={item.path}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
+                  title={collapsed ? item.label : undefined}
+                  className={`flex items-center rounded-xl text-xs font-semibold transition ${
+                    collapsed ? "justify-center py-3 px-0 mx-auto w-12" : "gap-3 px-3 py-2.5"
+                  } ${
                     active
                       ? "bg-gradient-to-r from-violet-600/20 to-indigo-650/10 text-white border border-violet-500/20 shadow-[0_0_12px_rgba(139,92,246,0.1)]"
                       : "text-white/50 hover:bg-white/5 hover:text-white"
                   }`}
                 >
-                  <item.icon size={15} strokeWidth={active ? 2.2 : 1.8} />
-                  <span>{item.label}</span>
+                  <item.icon size={15} strokeWidth={active ? 2.2 : 1.8} className="shrink-0" />
+                  {!collapsed && <span>{item.label}</span>}
                 </Link>
               );
             })}
@@ -91,15 +119,17 @@ export default function AdminSidebar() {
       </div>
 
       {/* Footer Profile */}
-      <div className="p-4 border-t border-white/5 bg-black/10 flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-2.5 truncate">
+      <div className={`p-4 border-t border-white/5 bg-black/10 flex shrink-0 ${collapsed ? "flex-col items-center gap-4" : "items-center justify-between gap-3"}`}>
+        <div className="flex items-center gap-2.5 truncate max-w-full">
           <div className="h-9 w-9 rounded-full bg-gradient-to-br from-violet-600 to-indigo-650 flex items-center justify-center text-white text-xs font-bold shadow-[0_0_12px_rgba(139,92,246,0.15)] shrink-0">
             {getInitials(userName)}
           </div>
-          <div className="truncate">
-            <h4 className="text-xs font-bold text-white leading-tight truncate">{userName}</h4>
-            <p className="text-[9px] text-white/40 truncate">{userEmail}</p>
-          </div>
+          {!collapsed && (
+            <div className="truncate">
+              <h4 className="text-xs font-bold text-white leading-tight truncate">{userName}</h4>
+              <p className="text-[9px] text-white/40 truncate">{userEmail}</p>
+            </div>
+          )}
         </div>
         <button 
           onClick={handleLogout}

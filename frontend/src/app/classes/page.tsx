@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyClasses, createClass, joinClass, deleteClassroom } from "@/lib/api";
+import { DepartmentOption, getMyClasses, createClass, joinClass, deleteClassroom, listClassroomDepartments } from "@/lib/api";
 import { PlusCircle, LogIn, Users, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
@@ -16,6 +16,8 @@ export default function ClassesPage() {
     
     const [newClassName, setNewClassName] = useState("");
     const [newCourseCode, setNewCourseCode] = useState("");
+    const [newDepartment, setNewDepartment] = useState("CS");
+    const [departments, setDepartments] = useState<DepartmentOption[]>([]);
     const [joinCode, setJoinCode] = useState("");
     const [actionLoading, setActionLoading] = useState(false);
 
@@ -24,6 +26,18 @@ export default function ClassesPage() {
             loadClasses();
         }
     }, [authLoading, userId]);
+
+    useEffect(() => {
+        listClassroomDepartments(userId ? parseInt(userId, 10) : undefined)
+            .then((rows) => {
+                setDepartments(rows);
+                if (rows.length > 0) setNewDepartment((current) => rows.some((row) => row.code === current) ? current : rows[0].code);
+            })
+            .catch(() => setDepartments([
+                { id: "cs", code: "CS", name: "CS Department" },
+                { id: "ai", code: "AI", name: "AI Department" },
+            ]));
+    }, []);
 
     const loadClasses = async () => {
         if (!userId) return;
@@ -44,11 +58,12 @@ export default function ClassesPage() {
         if (!newClassName.trim() || !newCourseCode.trim() || !userId) return;
         setActionLoading(true);
         try {
-            const res = await createClass({ name: newClassName, course_code: newCourseCode, professor_id: parseInt(userId, 10) });
+            const res = await createClass({ name: newClassName, course_code: newCourseCode, department: newDepartment, professor_id: parseInt(userId, 10) });
             if (res.success) {
                 setShowCreateModal(false);
                 setNewClassName("");
                 setNewCourseCode("");
+                setNewDepartment("CS");
                 loadClasses();
             }
         } catch (error) {
@@ -141,6 +156,9 @@ export default function ClassesPage() {
                         <Link href={`/classes/${cls.id}`} key={idx}>
                             <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50 hover:border-indigo-500/30 transition-colors h-full cursor-pointer">
                                 <h3 className="text-xl font-semibold text-white mb-2">{cls.name} <span className="text-sm font-normal text-slate-400">({cls.course_code})</span></h3>
+                                <span className="inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-300">
+                                    {cls.department || "CS"} Department
+                                </span>
                                 
                                 {role === "professor" ? (
                                     <div className="space-y-3 mt-4">
@@ -203,6 +221,16 @@ export default function ClassesPage() {
                             onChange={(e) => setNewClassName(e.target.value)}
                             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white mb-6 focus:outline-none focus:border-indigo-500"
                         />
+                        <select
+                            value={newDepartment}
+                            onChange={(e) => setNewDepartment(e.target.value)}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white mb-6 focus:outline-none focus:border-indigo-500"
+                        >
+                            {departments.length === 0 && <option value="CS">CS Department</option>}
+                            {departments.map((department) => (
+                                <option key={department.code} value={department.code}>{department.name}</option>
+                            ))}
+                        </select>
                         <div className="flex justify-end gap-3">
                             <button 
                                 onClick={() => setShowCreateModal(false)}

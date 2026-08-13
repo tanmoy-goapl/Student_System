@@ -8,20 +8,41 @@ STOP_WORDS = {
 }
 
 def rewrite_query(question: str) -> list[str]:
-    # Ensure original question is included and normalized
+    # Keep the user's wording as one query, then add a small number of
+    # deterministic linguistic variants. Do not add unrelated fallback
+    # queries: those can retrieve plausible-looking but irrelevant passages.
     original = question.strip()
     if not original:
         return []
 
     queries = [original]
 
-    # Normalize words
-    words = re.findall(r'\b\w+\b', original.lower())
+    # Normalize possessives and common shorthand without embedding any
+    # answer-specific knowledge in the retriever. This lets queries such as
+    # "Banker's algo" reach documents that say "Banker’s algorithm".
+    normalized_text = re.sub(r"\b([\w-]+)['’]s\b", r"\1", original.lower())
+    words = re.findall(r'\b\w+\b', normalized_text)
     keywords = [w for w in words if w not in STOP_WORDS]
     keywords_str = " ".join(keywords)
 
     if keywords_str and keywords_str != original.lower():
         queries.append(keywords_str)
+
+    canonical_words = []
+    for word in keywords:
+        if word == "algo":
+            word = "algorithm"
+        elif word == "algos":
+            word = "algorithms"
+        elif len(word) > 4 and word.endswith("s") and not word.endswith(("ss", "us", "is")):
+            # Lightweight singular normalization for retrieval only.
+            word = word[:-1]
+        canonical_words.append(word)
+
+    canonical_query = " ".join(canonical_words)
+    if canonical_query and canonical_query not in {q.lower() for q in queries}:
+        queries.append(canonical_query)
+
 
     # Detect categories
     is_placement = any(w in words for w in ['placement', 'placements', 'recruit', 'recruitment', 'job', 'jobs', 'placed', 'eligible', 'eligibility', 'company', 'companies'])
@@ -75,14 +96,6 @@ def rewrite_query(question: str) -> list[str]:
             "data table statistics"
         ])
 
-    # Fallback to make sure we have at least 3 queries
-    fallback_pool = [
-        "student profile overview",
-        "academic records database",
-        "university info handbook",
-        "performance metrics report"
-    ]
-    
     # Deduplicate preserving order
     unique_queries = []
     seen = set()
@@ -96,13 +109,5 @@ def rewrite_query(question: str) -> list[str]:
             else:
                 unique_queries.append(q)
 
-    # Fill up if less than 3
-    for fb in fallback_pool:
-        if len(unique_queries) >= 3:
-            break
-        if fb.lower() not in seen:
-            unique_queries.append(fb)
-            seen.add(fb.lower())
-
-    # Limit between 3 and 6
+    # Limit the number of meaningful variants to keep retrieval predictable.
     return unique_queries[:6]

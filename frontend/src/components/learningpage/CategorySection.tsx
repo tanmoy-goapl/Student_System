@@ -28,6 +28,7 @@ export default function CategorySection({
         onClick={() =>
           onToggleCategory(category.id)
         }
+        title={category.title?.replace(/\*\*/g, "")}
         className={`
           w-full flex items-center justify-between
           px-3 py-2 rounded-xl

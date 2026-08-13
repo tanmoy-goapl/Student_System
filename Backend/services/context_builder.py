@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 PER_DOC_QUOTA = 5
 GLOBAL_TOP_K = 20
-MAX_CONTEXT_LEN = 12000
+MAX_CONTEXT_LEN = 6000
 
 
 def build_context(
@@ -112,7 +112,11 @@ def build_context(
         'which', 'that', 'this', 'these', 'those', 'where', 'when', 'why', 'can', 'you',
         'please', 'tell', 'show', 'get', 'give', 'list', 'find', 'about', 'some', 'any'
     }
-    q_words = set(re.findall(r'\b\w+\b', question.lower()))
+    # Rank against every meaningful query variant. The original query is
+    # still included, while normalized variants help with abbreviations and
+    # possessives such as "bankers algo" / "Banker’s algorithm".
+    ranking_text = " ".join(queries)
+    q_words = set(re.findall(r'\b\w+\b', ranking_text.lower()))
     q_keywords = {w for w in q_words if w not in STOP_WORDS}
 
     for c in chunks:
@@ -233,6 +237,11 @@ def build_context(
 
     logger.info(f"[ContextBuilder] Retrieved {len(chunks)} chunks from {len(retrieved_doc_names)} doc(s): {retrieved_doc_names}")
     return chunks, searched_doc_names, retrieved_doc_names, context_str
+
+def format_context(chunks: list[dict]) -> str:
+    """Format an already-filtered chunk list for the grounded prompt."""
+    return _format_context_string(chunks)
+
 
 
 def _format_context_string(chunks: list[dict]) -> str:

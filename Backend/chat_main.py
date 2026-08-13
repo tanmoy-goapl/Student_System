@@ -9,6 +9,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import ALLOWED_ORIGINS
+
+# Register the model modules required by User's string relationships before
+# SQLAlchemy configures mappers. Keep this import-only; do not import main.py,
+# which also runs dashboard migrations and seed work.
+from models import User, Document, DocumentChunk, ChatMessage  # noqa: F401
+from classroom_models import Classroom, StudentClass, ClassResource, ClassCurriculum  # noqa: F401
+
 from routes import chat
 
 

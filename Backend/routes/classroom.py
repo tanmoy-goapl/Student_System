@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import random
 import string
@@ -8,26 +9,144 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database import get_db
 from models import User
+from models import Department
 from classroom_models import Classroom, StudentClass, ClassResource, ClassCurriculum
 from services.extract import extract_text_from_pdf
 from services.practice.base import _practice_llm_call
+from services.departments import normalize_department_code, split_department_codes
 import json
 
 router = APIRouter(prefix="/classroom", tags=["Classroom"])
 
+ALLOWED_CURRICULUM_EXTENSIONS = {".pdf", ".txt", ".docx", ".doc"}
+
+
+def _get_user(user_id: int, db: Session) -> User:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+def _get_classroom(class_id: int, db: Session) -> Classroom:
+    classroom = db.query(Classroom).filter(Classroom.id == class_id).first()
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    return classroom
+
+
+def _ensure_class_access(classroom: Classroom, user: User, db: Session) -> None:
+    """Allow only the owning professor or an enrolled student to access a class."""
+    if user.role == "professor":
+        if classroom.professor_id != user.id:
+            raise HTTPException(status_code=403, detail="Not your class")
+        return
+
+    if user.role == "student":
+        enrolled = db.query(StudentClass).filter(
+            StudentClass.class_id == classroom.id,
+            StudentClass.student_id == user.id,
+        ).first()
+        if not enrolled:
+            raise HTTPException(status_code=403, detail="Not enrolled in this class")
+        return
+
+    raise HTTPException(status_code=403, detail="Unauthorized")
+
+
+def _get_professor_class(class_id: int, user_id: int, db: Session) -> tuple[User, Classroom]:
+    user = _get_user(user_id, db)
+    if user.role != "professor":
+        raise HTTPException(status_code=403, detail="Only professors can manage classes")
+
+    classroom = _get_classroom(class_id, db)
+    if classroom.professor_id != user.id:
+        raise HTTPException(status_code=403, detail="Not your class")
+    return user, classroom
+
+
+def _safe_filename(filename: str | None, fallback: str) -> str:
+    original = os.path.basename(filename or fallback)
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", original).strip("._")
+    return cleaned or fallback
+
+
+def _normalise_curriculum(payload: object, default_subject: str) -> dict:
+    """Validate and normalise the strict curriculum shape returned by the LLM."""
+    if not isinstance(payload, dict):
+        raise ValueError("Curriculum response must be a JSON object")
+
+    subject_name = str(payload.get("subject_name") or default_subject).strip()
+    raw_units = payload.get("units")
+    if not subject_name or not isinstance(raw_units, list):
+        raise ValueError("Curriculum must contain a subject_name and units list")
+
+    units = []
+    for raw_unit in raw_units:
+        if not isinstance(raw_unit, dict):
+            continue
+        title = str(raw_unit.get("title") or "").strip()
+        raw_topics = raw_unit.get("topics")
+        if not title or not isinstance(raw_topics, list):
+            continue
+        topics = [str(topic).strip() for topic in raw_topics if str(topic).strip()]
+        if topics:
+            units.append({"title": title, "topics": topics})
+
+    if not units:
+        raise ValueError("Curriculum did not contain any units with topics")
+
+    return {"subject_name": subject_name, "units": units}
+
 def generate_class_code(length=6):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+
+@router.get("/departments")
+def get_classroom_departments(professor_id: int | None = None, db: Session = Depends(get_db)):
+    departments = db.query(Department).filter(
+        Department.is_active == True
+    ).order_by(Department.name.asc()).all()
+    if professor_id:
+        professor = db.query(User).filter(User.id == professor_id, User.role == "professor").first()
+        assigned_codes = split_department_codes(professor.department if professor else None)
+        if assigned_codes:
+            departments = [department for department in departments if department.code in assigned_codes]
+    return {
+        "departments": [
+            {"id": department.id, "code": department.code, "name": department.name}
+            for department in departments
+        ]
+    }
+
 
 class CreateClassRequest(BaseModel):
     name: str
     course_code: str
     professor_id: int
+    department: str | None = None
 
 @router.post("/create")
 def create_class(req: CreateClassRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == req.professor_id).first()
     if not user or user.role != "professor":
         raise HTTPException(status_code=403, detail="Only professors can create classes.")
+
+    assigned_departments = split_department_codes(user.department)
+    requested_department = normalize_department_code(req.department)
+    department_code = requested_department
+    if not department_code:
+        department_code = next(iter(assigned_departments), "CS") if len(assigned_departments) == 1 else "CS"
+
+    department = db.query(Department).filter(
+        Department.code == department_code,
+        Department.is_active == True,
+    ).first()
+    if not department:
+        raise HTTPException(status_code=422, detail="Select an active department.")
+
+    if assigned_departments and department_code not in assigned_departments:
+        raise HTTPException(status_code=403, detail="This professor is assigned to a different department.")
     
     # Generate unique join code
     code = generate_class_code()
@@ -38,13 +157,14 @@ def create_class(req: CreateClassRequest, db: Session = Depends(get_db)):
         name=req.name,
         code=code,
         course_code=req.course_code,
+        department=department_code,
         professor_id=req.professor_id
     )
     db.add(new_class)
     db.commit()
     db.refresh(new_class)
     
-    return {"success": True, "class_id": new_class.id, "code": new_class.code, "course_code": new_class.course_code, "name": new_class.name}
+    return {"success": True, "class_id": new_class.id, "code": new_class.code, "course_code": new_class.course_code, "department": new_class.department, "name": new_class.name}
 
 
 class JoinClassRequest(BaseModel):
@@ -53,9 +173,9 @@ class JoinClassRequest(BaseModel):
 
 @router.post("/join")
 def join_class(req: JoinClassRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == req.student_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = _get_user(req.student_id, db)
+    if user.role != "student":
+        raise HTTPException(status_code=403, detail="Only students can join classes")
         
     classroom = db.query(Classroom).filter(Classroom.code == req.code.upper()).first()
     if not classroom:
@@ -82,10 +202,7 @@ def join_class(req: JoinClassRequest, db: Session = Depends(get_db)):
 
 @router.get("/my_classes/{user_id}")
 def get_my_classes(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-        
+    user = _get_user(user_id, db)
     if user.role == "professor":
         classes = db.query(Classroom).filter(Classroom.professor_id == user_id).all()
         return {
@@ -97,22 +214,13 @@ def get_my_classes(user_id: int, db: Session = Depends(get_db)):
                     "name": c.name,
                     "code": c.code,
                     "course_code": c.course_code,
+                    "department": c.department,
                     "created_at": c.created_at,
                     "student_count": len(c.students)
                 } for c in classes
             ]
         }
-    else:
-        # Self-healing clean-up: if student is enrolled in DBMS, un-enroll them since they un-enrolled
-        dbms_enrollments = db.query(StudentClass).join(Classroom).filter(
-            StudentClass.student_id == user_id,
-            (Classroom.name.ilike("%DBMS%") | Classroom.code.ilike("%CSE101%"))
-        ).all()
-        if dbms_enrollments:
-            for sc in dbms_enrollments:
-                db.delete(sc)
-            db.commit()
-            
+    elif user.role == "student":
         student_classes = db.query(StudentClass).filter(StudentClass.student_id == user_id).all()
         return {
             "success": True,
@@ -123,11 +231,14 @@ def get_my_classes(user_id: int, db: Session = Depends(get_db)):
                     "name": sc.classroom.name,
                     "code": sc.classroom.code,
                     "course_code": sc.classroom.course_code,
+                    "department": sc.classroom.department,
                     "professor_name": sc.classroom.professor.name,
                     "joined_at": sc.joined_at
                 } for sc in student_classes
             ]
         }
+    else:
+        raise HTTPException(status_code=403, detail="Unauthorized")
 
 
 # ==========================================
@@ -136,33 +247,17 @@ def get_my_classes(user_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{class_id}")
 def get_class_details(class_id: int, user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-        
-    classroom = db.query(Classroom).filter(Classroom.id == class_id).first()
-    if not classroom:
-        raise HTTPException(status_code=404, detail="Classroom not found")
-        
-    # Check access
-    if user.role == "professor":
-        if classroom.professor_id != user_id:
-            raise HTTPException(status_code=403, detail="Not your class")
-    elif user.role == "student":
-        student_in_class = db.query(StudentClass).filter(
-            StudentClass.class_id == class_id,
-            StudentClass.student_id == user_id
-        ).first()
-        if not student_in_class:
-            raise HTTPException(status_code=403, detail="Not enrolled in this class")
-    else:
-        raise HTTPException(status_code=403, detail="Unauthorized")
+    user = _get_user(user_id, db)
+    classroom = _get_classroom(class_id, db)
+    _ensure_class_access(classroom, user, db)
         
     return {
         "success": True,
         "class_id": classroom.id,
         "name": classroom.name,
         "code": classroom.code,
+        "course_code": classroom.course_code,
+        "department": classroom.department,
         "professor_name": classroom.professor.name or "Professor",
         "student_count": len(classroom.students),
         "created_at": classroom.created_at
@@ -181,16 +276,11 @@ def upload_class_resource(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user or user.role != "professor":
-        raise HTTPException(status_code=403, detail="Only professors can upload resources.")
-        
-    classroom = db.query(Classroom).filter(Classroom.id == class_id).first()
-    if not classroom or classroom.professor_id != user_id:
-        raise HTTPException(status_code=403, detail="Not your class")
+    user, classroom = _get_professor_class(class_id, user_id, db)
         
     # Save file
-    safe_filename = f"{class_id}_{random.randint(1000,9999)}_{file.filename}"
+    original_filename = _safe_filename(file.filename, "resource")
+    safe_filename = f"{class_id}_{random.randint(1000,9999)}_{original_filename}"
     file_path = os.path.join(UPLOAD_DIR, safe_filename)
     
     with open(file_path, "wb") as buffer:
@@ -213,25 +303,9 @@ def upload_class_resource(
 
 @router.get("/{class_id}/resources")
 def get_class_resources(class_id: int, user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-        
-    classroom = db.query(Classroom).filter(Classroom.id == class_id).first()
-    if not classroom:
-        raise HTTPException(status_code=404, detail="Classroom not found")
-        
-    # Check access
-    if user.role == "professor":
-        if classroom.professor_id != user_id:
-            raise HTTPException(status_code=403, detail="Not your class")
-    elif user.role == "student":
-        student_in_class = db.query(StudentClass).filter(
-            StudentClass.class_id == class_id,
-            StudentClass.student_id == user_id
-        ).first()
-        if not student_in_class:
-            raise HTTPException(status_code=403, detail="Not enrolled in this class")
+    user = _get_user(user_id, db)
+    classroom = _get_classroom(class_id, db)
+    _ensure_class_access(classroom, user, db)
             
     resources = db.query(ClassResource).filter(ClassResource.class_id == class_id).order_by(ClassResource.uploaded_at.desc()).all()
     
@@ -251,19 +325,15 @@ def get_class_resources(class_id: int, user_id: int, db: Session = Depends(get_d
 
 @router.delete("/resource/{resource_id}")
 def delete_class_resource(resource_id: int, user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user or user.role != "professor":
+    user = _get_user(user_id, db)
+    if user.role != "professor":
         raise HTTPException(status_code=403, detail="Unauthorized")
         
     resource = db.query(ClassResource).filter(ClassResource.id == resource_id).first()
     if not resource:
         raise HTTPException(status_code=404, detail="Resource not found")
         
-    # Must own the class
-    classroom = db.query(Classroom).filter(Classroom.id == resource.class_id).first()
-    if classroom.professor_id != user_id:
-        raise HTTPException(status_code=403, detail="Not your class")
-        
+    _, classroom = _get_professor_class(resource.class_id, user_id, db)
     # Delete physical file
     if os.path.exists(resource.file_path):
         os.remove(resource.file_path)
@@ -277,17 +347,13 @@ def delete_class_resource(resource_id: int, user_id: int, db: Session = Depends(
 
 @router.delete("/delete-classroom/{class_id}")
 def delete_classroom(class_id: int, user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user or user.role != "professor":
+    user = _get_user(user_id, db)
+    if user.role != "professor":
         raise HTTPException(status_code=403, detail="Unauthorized")
         
-    classroom = db.query(Classroom).filter(Classroom.id == class_id).first()
-    if not classroom:
-        raise HTTPException(status_code=404, detail="Classroom not found")
-        
+    classroom = _get_classroom(class_id, db)
     if classroom.professor_id != user_id:
         raise HTTPException(status_code=403, detail="Not your classroom")
-        
     # Delete associated files physically
     for resource in classroom.resources:
         if os.path.exists(resource.file_path):
@@ -312,17 +378,8 @@ def download_class_resource(resource_id: int, user_id: int, db: Session = Depend
     if not resource:
         raise HTTPException(status_code=404, detail="Resource not found")
         
-    # Check access
-    classroom = db.query(Classroom).filter(Classroom.id == resource.class_id).first()
-    if user.role == "professor" and classroom.professor_id != user_id:
-        raise HTTPException(status_code=403, detail="Not your class")
-    elif user.role == "student":
-        student_in_class = db.query(StudentClass).filter(
-            StudentClass.class_id == classroom.id,
-            StudentClass.student_id == user_id
-        ).first()
-        if not student_in_class:
-            raise HTTPException(status_code=403, detail="Not enrolled in this class")
+    classroom = _get_classroom(resource.class_id, db)
+    _ensure_class_access(classroom, user, db)
             
     if not os.path.exists(resource.file_path):
         raise HTTPException(status_code=404, detail="File missing on disk")
@@ -373,17 +430,11 @@ def upload_curriculum(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user or user.role != "professor":
-        raise HTTPException(status_code=403, detail="Unauthorized")
+    user, classroom = _get_professor_class(class_id, user_id, db)
         
-    classroom = db.query(Classroom).filter(Classroom.id == class_id).first()
-    if not classroom or classroom.professor_id != user_id:
-        raise HTTPException(status_code=403, detail="Not your class")
-        
-    ext = os.path.splitext(file.filename)[1].lower()
-    if ext not in [".pdf", ".txt", ".docx", ".doc"]:
-        ext = ".txt" # fallback
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in ALLOWED_CURRICULUM_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Unsupported curriculum file type. Use PDF, TXT, DOC, or DOCX.")
     safe_filename = f"curriculum_{class_id}_{random.randint(1000,9999)}{ext}"
     file_path = os.path.join(UPLOAD_DIR, safe_filename)
     
@@ -393,19 +444,24 @@ def upload_curriculum(
     # Extract text
     try:
         from services.extract import extract_text
-        extracted_text = extract_text(file_path)
+        extracted_text = extract_text(file_path).strip()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF extraction failed: {str(e)}")
+
+    if not extracted_text:
+        raise HTTPException(status_code=400, detail="The uploaded curriculum contains no readable text.")
         
     # Send to LLM
     try:
         llm_response = _practice_llm_call(CURRICULUM_PROMPT, extracted_text)
         cleaned_json = _clean_json_response(llm_response)
-        parsed_curriculum = json.loads(cleaned_json)
+        parsed_curriculum = _normalise_curriculum(json.loads(cleaned_json), classroom.name)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"AI returned an invalid curriculum format: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM generation failed: {str(e)}")
         
-    subject_name = parsed_curriculum.get("subject_name", classroom.name)
+    subject_name = parsed_curriculum["subject_name"]
     
     # Save to DB
     curr = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == class_id).first()
@@ -424,9 +480,7 @@ def upload_curriculum(
 @router.post("/{class_id}/regenerate_curriculum")
 def regenerate_curriculum(class_id: int, req: dict, db: Session = Depends(get_db)):
     user_id = req.get("user_id")
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user or user.role != "professor":
-        raise HTTPException(status_code=403, detail="Unauthorized")
+    user, classroom = _get_professor_class(class_id, user_id, db)
         
     curr = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == class_id).first()
     if not curr or not curr.extracted_text:
@@ -436,12 +490,14 @@ def regenerate_curriculum(class_id: int, req: dict, db: Session = Depends(get_db
     try:
         llm_response = _practice_llm_call(CURRICULUM_PROMPT, curr.extracted_text)
         cleaned_json = _clean_json_response(llm_response)
-        parsed_curriculum = json.loads(cleaned_json)
+        parsed_curriculum = _normalise_curriculum(json.loads(cleaned_json), classroom.name)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"AI returned an invalid curriculum format: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM generation failed: {str(e)}")
         
     curr.curriculum_json = parsed_curriculum
-    curr.subject_name = parsed_curriculum.get("subject_name", curr.subject_name)
+    curr.subject_name = parsed_curriculum["subject_name"]
     db.commit()
     
     return {"success": True, "curriculum": parsed_curriculum}
@@ -449,6 +505,9 @@ def regenerate_curriculum(class_id: int, req: dict, db: Session = Depends(get_db
 
 @router.get("/{class_id}/curriculum")
 def get_curriculum(class_id: int, user_id: int, db: Session = Depends(get_db)):
+    user = _get_user(user_id, db)
+    classroom = _get_classroom(class_id, db)
+    _ensure_class_access(classroom, user, db)
     curr = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == class_id).first()
     if not curr:
         return {"success": True, "curriculum": None}
@@ -459,10 +518,12 @@ def get_curriculum(class_id: int, user_id: int, db: Session = Depends(get_db)):
 def update_curriculum(class_id: int, req: dict, db: Session = Depends(get_db)):
     user_id = req.get("user_id")
     curriculum_data = req.get("curriculum")
-    
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user or user.role != "professor":
-        raise HTTPException(status_code=403, detail="Unauthorized")
+    user, classroom = _get_professor_class(class_id, user_id, db)
+
+    try:
+        curriculum_data = _normalise_curriculum(curriculum_data, classroom.name)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"Invalid curriculum format: {str(e)}")
         
     curr = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == class_id).first()
     if not curr:

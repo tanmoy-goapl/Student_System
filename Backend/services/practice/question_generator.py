@@ -5,7 +5,7 @@ import threading
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from models import Document
+from models import Document, DocumentChunk
 from practice_models import AICache, LearningContent, PracticeQuestion, PracticeSession
 from chroma_store import query_chunks
 from services.practice.base import _practice_llm_call
@@ -257,6 +257,77 @@ Return ONLY valid JSON array containing objects with a "difficulty" field:
 
 def _question_key(question: str) -> str:
     return re.sub(r"[^a-z0-9]", "", question.strip().lower())
+_GENERIC_FALLBACK_MARKERS = (
+    "best defines the primary purpose of",
+    "when implementing",
+    "standard best practice when analyzing",
+    "in a production system, how is",
+    "performance bottleneck points associated with",
+)
+
+
+def _is_generic_fallback(question: str) -> bool:
+    normalized = question.strip().lower()
+    return any(marker in normalized for marker in _GENERIC_FALLBACK_MARKERS)
+
+
+def _used_question_keys(student_id: int, topic: str, db: Session) -> set[str]:
+    rows = (
+        db.query(PracticeQuestion.question_text)
+        .join(PracticeSession)
+        .filter(
+            PracticeSession.student_id == student_id,
+            PracticeQuestion.topic == topic,
+        )
+        .all()
+    )
+    return {_question_key(row.question_text) for row in rows if row.question_text}
+
+
+def _context_text(value) -> str:
+    """Flatten cached JSON/markdown into prompt and fallback-friendly text."""
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if parsed != value:
+                return _context_text(parsed)
+        except (json.JSONDecodeError, TypeError):
+            pass
+        return value
+    if isinstance(value, dict):
+        parts = []
+        if isinstance(value.get("notes"), list):
+            parts.append(_context_text(value["notes"]))
+        for level in ("easy", "medium", "hard"):
+            for question in value.get(level, []) or []:
+                if isinstance(question, dict):
+                    parts.append(
+                        f"{question.get('subtopic', 'Topic')}: {question.get('question', '')} "
+                        f"Correct explanation: {question.get('explanation', '')} "
+                        f"Options: {'; '.join(str(o.get('text', '')) for o in question.get('options', []) if isinstance(o, dict))}"
+                    )
+        if parts:
+            return "\n".join(parts)
+        return "\n".join(f"{key}: {_context_text(item)}" for key, item in value.items())
+    if isinstance(value, list):
+        return "\n".join(_context_text(item) for item in value)
+    return str(value) if value is not None else ""
+
+
+def _cached_source_questions(student_id: int, topic: str, db: Session) -> list[dict]:
+    cached = db.query(AICache).filter(
+        AICache.student_id == student_id,
+        AICache.topic == topic,
+        AICache.action_type == "master_question_bank",
+    ).order_by(AICache.created_at.desc()).first()
+    if not cached:
+        return []
+    try:
+        bank = json.loads(cached.content)
+        source = bank.get("easy", []) + bank.get("medium", []) + bank.get("hard", [])
+        return _parse_quiz_questions(json.dumps(source), topic, "mixed", None)
+    except (json.JSONDecodeError, AttributeError, TypeError):
+        return []
 
 def _parse_quiz_questions(response: str, topic: str, difficulty: str, subtopic: Optional[str]) -> list[dict]:
     """Parse and normalize a model response without doing another repair call."""
@@ -305,6 +376,7 @@ def _parse_quiz_questions(response: str, topic: str, difficulty: str, subtopic: 
         normalized.append({"topic": item.get("topic", topic), "subtopic": item.get("subtopic", subtopic or "General"), "difficulty": str(item.get("difficulty", difficulty)).lower(), "question": question, "options": clean_options, "correct_answer": correct, "explanation": str(item.get("explanation", "")).strip()})
     return normalized
 def _read_fast_cache(student_id: int, topic: str, difficulty: str, count: int, db: Session) -> list[dict]:
+    used = _used_question_keys(student_id, topic, db)
     cached = db.query(AICache).filter(
         AICache.student_id == student_id,
         AICache.topic == topic,
@@ -314,11 +386,26 @@ def _read_fast_cache(student_id: int, topic: str, difficulty: str, count: int, d
         return []
     try:
         questions = json.loads(cached.content)
-        if isinstance(questions, list) and len(questions) >= count:
-            return questions[:count]
+        if not isinstance(questions, list):
+            return []
+        usable = []
+        seen = set()
+        for question in questions:
+            if not isinstance(question, dict):
+                continue
+            text = str(question.get("question", ""))
+            key = _question_key(text)
+            if not key or key in used or key in seen or _is_generic_fallback(text):
+                continue
+            seen.add(key)
+            usable.append(question)
+        if len(usable) >= count:
+            return usable[:count]
     except (json.JSONDecodeError, TypeError):
         logger.warning(f"[PracticeEngine] Ignoring malformed fast quiz cache for topic='{topic}'")
     return []
+
+
 def _cache_fast_questions(student_id: int, topic: str, difficulty: str, questions: list[dict]) -> None:
     if not questions:
         return
@@ -343,19 +430,132 @@ def _cache_fast_questions(student_id: int, topic: str, difficulty: str, question
     finally:
         local_db.close()
 def _cached_learning_context(student_id: int, topic: str, db: Session) -> str:
-    """Use already-materialized learning notes; never cold-start Chroma on the request path."""
+    """Use materialized notes, cached source questions, and document text without Chroma."""
+    parts = []
     try:
-        cached = db.query(LearningContent).filter(
+        learning = db.query(LearningContent).filter(
             LearningContent.student_id == student_id,
             LearningContent.topic == topic,
         ).first()
-        if not cached:
-            cached = db.query(LearningContent).filter(LearningContent.topic == topic).first()
-        if cached and cached.content:
-            return json.dumps(cached.content, ensure_ascii=False)[:2500]
+        if not learning:
+            learning = db.query(LearningContent).filter(LearningContent.topic == topic).first()
+        if learning and learning.content:
+            parts.append(_context_text(learning.content))
+
+        caches = db.query(AICache).filter(
+            AICache.student_id == student_id,
+            AICache.topic == topic,
+            AICache.action_type.in_(("master_question_bank", "explain")),
+        ).order_by(AICache.created_at.desc()).limit(3).all()
+        parts.extend(_context_text(cache.content) for cache in caches if cache.content)
+
+        doc_ids = [row.id for row in db.query(Document.id).filter(Document.student_id == student_id).all()]
+        if doc_ids:
+            chunks = db.query(DocumentChunk.chunk_text).filter(
+                DocumentChunk.document_id.in_(doc_ids)
+            ).order_by(DocumentChunk.chunk_index).limit(8).all()
+            parts.extend(row.chunk_text for row in chunks if row.chunk_text)
     except Exception as exc:
         logger.debug(f"[PracticeEngine] Cached learning context unavailable: {exc}")
-    return "(No cached learning notes available — use accurate general knowledge.)"
+    context = "\n\n".join(part for part in parts if part)
+    return context[:6000] or "(No stored study content available — use accurate general knowledge.)"
+def _extract_content_facts(context: str, topic: str) -> list[tuple[str, str]]:
+    text = _context_text(context)
+    text = re.sub(r"```[\s\S]*?```", " ", text)
+    facts = []
+    heading = "Core concepts"
+    for block in re.split(r"(?<=[.!?])\s+|\n+", text):
+        block = re.sub(r"^[#>*\-\d.\s]+", "", block).strip(" |:")
+        if not block:
+            continue
+        if len(block) < 35 or len(block) > 260:
+            if len(block) < 80 and not re.search(r"[.!?]", block):
+                heading = block[:80]
+            continue
+        lower = block.lower()
+        if "options:" in lower or "correct explanation:" in lower or "generate exactly" in lower:
+            continue
+        key = _question_key(block)
+        if key and all(key != _question_key(existing[1]) for existing in facts):
+            facts.append((heading, block))
+    return facts[:24]
+
+
+def _rotated_options(correct: str, distractors: list[str], rotation: int) -> tuple[list[dict], str]:
+    values = [correct] + [value for value in distractors if value and value != correct][:3]
+    if len(values) < 4:
+        return [], ""
+    values = values[rotation % 4:] + values[:rotation % 4]
+    ids = ("A", "B", "C", "D")
+    return ([{"id": option_id, "text": value[:320]} for option_id, value in zip(ids, values)], ids[values.index(correct)])
+
+
+def generate_content_fallback_questions(
+    topic: str,
+    count: int,
+    difficulty: str,
+    context: str,
+    excluded_keys: Optional[set[str]] = None,
+    source_questions: Optional[list[dict]] = None,
+) -> list[dict]:
+    """Create deterministic MCQs from stored material when the model is unavailable."""
+    excluded = set(excluded_keys or set())
+    results = []
+    seen = set(excluded)
+    source_questions = source_questions or []
+    source_answers = []
+    for source in source_questions:
+        correct = str(source.get("correct_answer", "")).upper()
+        answer = next((o.get("text", "") for o in source.get("options", []) if o.get("id") == correct), "")
+        if answer:
+            source_answers.append(answer)
+    stems = (
+        "According to the study material, which statement correctly describes {label} in {topic}?",
+        "Which option matches the notes about {label} from {topic}?",
+        "What does the study content explain about {label} in {topic}?",
+    )
+    for index, source in enumerate(source_questions):
+        correct_id = str(source.get("correct_answer", "")).upper()
+        correct = next((o.get("text", "") for o in source.get("options", []) if o.get("id") == correct_id), "")
+        if not correct:
+            continue
+        label = str(source.get("subtopic") or "this concept")
+        distractors = [o.get("text", "") for o in source.get("options", []) if o.get("id") != correct_id]
+        distractors.extend(answer for answer in source_answers if answer not in distractors and answer != correct)
+        for variant, stem in enumerate(stems):
+            question = stem.format(label=label, topic=topic)
+            key = _question_key(question)
+            if key in seen:
+                continue
+            options, answer_id = _rotated_options(correct, distractors, index + variant)
+            if not options:
+                continue
+            seen.add(key)
+            results.append({"topic": topic, "subtopic": label, "difficulty": difficulty, "question": question, "options": options, "correct_answer": answer_id, "explanation": str(source.get("explanation", "The study material supports this answer.")).strip()})
+            if len(results) >= count:
+                return results
+    facts = _extract_content_facts(context, topic)
+    fact_values = [fact for _, fact in facts]
+    fact_stems = (
+        "Which statement is supported by the study material about {topic}?",
+        "According to the notes, which statement about {topic} is correct?",
+        "Which of the following matches the content for {topic}?",
+    )
+    for index, (label, fact) in enumerate(facts):
+        distractors = [other for other in fact_values if other != fact]
+        for variant, stem in enumerate(fact_stems):
+            question = stem.format(topic=topic) + (f" Focus: {label}." if label else "")
+            key = _question_key(question)
+            if key in seen:
+                continue
+            options, answer_id = _rotated_options(fact, distractors, index + variant)
+            if not options:
+                continue
+            seen.add(key)
+            results.append({"topic": topic, "subtopic": label or "Study content", "difficulty": difficulty, "question": question, "options": options, "correct_answer": answer_id, "explanation": f"The notes state: {fact}"})
+            if len(results) >= count:
+                return results
+    return results[:count]
 def _generate_fast_questions(
     student_id: int,
     topic: str,
@@ -364,9 +564,22 @@ def _generate_fast_questions(
     db: Session,
     subtopic: Optional[str] = None,
 ) -> list[dict]:
+    used = _used_question_keys(student_id, topic, db)
     cached = _read_fast_cache(student_id, topic, difficulty, count, db)
     if cached:
         return cached
+    source_questions = _cached_source_questions(student_id, topic, db)
+    source_available = [
+        question for question in source_questions
+        if _question_key(question["question"]) not in used
+        and not _is_generic_fallback(question["question"])
+    ]
+    questions = source_available[:count]
+    if len(questions) >= count:
+        _cache_fast_questions(student_id, topic, difficulty, questions)
+        return questions
+
+    remaining = count - len(questions)
     guidance = {
         "easy": "basic definitions and recall",
         "medium": "understanding and practical application",
@@ -374,30 +587,42 @@ def _generate_fast_questions(
         "mixed": "a balanced mix of easy, medium, and hard",
     }.get(difficulty.lower(), "a balanced mix of easy, medium, and hard")
     context = _cached_learning_context(student_id, topic, db)
+    avoid = list(used | {_question_key(q["question"]) for q in questions})[:20]
     system_prompt = (
-        f"Create exactly {count} valid multiple-choice quiz questions about '{topic}'. "
-        f"Use {guidance}. Existing learning notes: {context} "
-        "Return ONLY a JSON array. Each item needs question, exactly four options with ids A/B/C/D, "
-        "correct_answer as one id, difficulty, and a brief explanation. Do not use markdown."
+        f"Create exactly {remaining} valid MCQs about '{topic}' using only the study content below. "
+        f"Target {guidance}. Every question must test a specific fact, concept, relationship, or example "
+        "from the content; do not write questions about the topic heading itself. "
+        "Return ONLY a JSON array with question, four A/B/C/D options, correct_answer, difficulty, and explanation.\n\n"
+        f"STUDY CONTENT:\n{context}\n\nAVOID THESE USED QUESTION TEXTS:\n{avoid}"
     )
-    user_prompt = f"Create {count} concise MCQs for {topic}."
     response = _practice_llm_call(
         system_prompt,
-        user_prompt,
-        max_tokens=min(2200, max(1000, count * 240)),
+        f"Generate {remaining} new content-grounded questions for {topic}.",
+        max_tokens=min(2200, max(1000, remaining * 260)),
         timeout_seconds=6.5,
         allow_fallback_chain=False,
     )
-    questions = _parse_quiz_questions(response, topic, difficulty, subtopic)
+    generated = _parse_quiz_questions(response, topic, difficulty, subtopic)
+    seen = used | {_question_key(q["question"]) for q in questions}
+    for question in generated:
+        key = _question_key(question["question"])
+        if key and key not in seen and not _is_generic_fallback(question["question"]):
+            questions.append(question)
+            seen.add(key)
+        if len(questions) >= count:
+            break
     if len(questions) < count:
-        existing_keys = {_question_key(q["question"]) for q in questions}
-        for fallback in generate_local_fallback_questions(topic, count):
-            if _question_key(fallback["question"]) not in existing_keys:
-                questions.append(fallback)
-                existing_keys.add(_question_key(fallback["question"]))
-            if len(questions) >= count:
-                break
+        questions.extend(generate_content_fallback_questions(
+            topic,
+            count - len(questions),
+            difficulty,
+            context,
+            excluded_keys=seen,
+            source_questions=source_questions,
+        ))
     result = questions[:count]
+    if len(result) < count and not result:
+        result = generate_local_fallback_questions(topic, count)
     _cache_fast_questions(student_id, topic, difficulty, result)
     return result
 def _start_master_generation(student_id: int, topic: str) -> None:
@@ -473,14 +698,9 @@ def generate_questions(
             bank = json.loads(master_cached.content)
             diff_key = difficulty.lower()
             # Pool questions based on requested difficulty
-            is_initial = bank.get("is_initial", False)
-            if diff_key in ("easy", "medium", "hard") and not is_initial:
-                pool = bank.get(diff_key, [])
-                if not pool:
-                    pool = bank.get("easy", []) + bank.get("medium", []) + bank.get("hard", [])
-            else:
-                # "mixed" or "adaptive" or initial cache state: combine all pools
-                pool = bank.get("easy", []) + bank.get("medium", []) + bank.get("hard", [])
+            all_pool = bank.get("easy", []) + bank.get("medium", []) + bank.get("hard", [])
+            preferred_pool = bank.get(diff_key, []) if diff_key in ("easy", "medium", "hard") else all_pool
+            pool = preferred_pool if len(preferred_pool) >= count else all_pool
                 
             # Fetch previously answered questions in practice sessions to avoid repeating them
             recent_questions = (
@@ -507,7 +727,7 @@ def generate_questions(
                 
                 for q in shuffled_pool:
                     norm_q = re.sub(r'[^a-z0-9]', '', q["question"].strip().lower())
-                    if norm_q in seen_questions:
+                    if norm_q in seen_questions or _is_generic_fallback(q["question"]):
                         continue
                         
                     # Check if the normalized question matches any of the answered questions

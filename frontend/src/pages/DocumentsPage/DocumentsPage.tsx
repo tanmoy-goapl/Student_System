@@ -43,7 +43,7 @@ export default function DocumentsPage() {
         if (!data) return [];
         return data.documents.filter((doc: any) => {
             const matchesType =
-                activeFilter === 'All' || activeFilter === 'Date'
+                (activeFilter as string) === 'All' || (activeFilter as string) === 'Date'
                     ? true
                     : doc.type === activeFilter;
 

@@ -41,6 +41,7 @@ export default function TopicItem({
       <button
         onClick={handleClick}
         disabled={topic.locked}
+        title={topic.title?.replace(/\*\*/g, "")}
         className={`
           w-full flex items-center justify-between
           gap-2
@@ -96,6 +97,7 @@ export default function TopicItem({
                   e.stopPropagation();
                   onSelect(subtopic);
                 }}
+                title={subtopic?.replace(/\*\*/g, "")}
                 className={`flex w-full items-center gap-2 py-1.5 px-2 rounded-md transition-colors text-left ${
                   isSubSelected ? "bg-[#5b5fff] text-white" : "hover:bg-white/5"
                 }`}

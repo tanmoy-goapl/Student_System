@@ -36,6 +36,16 @@ export async function register(body: LoginRequest): Promise<AuthResponse> {
   });
 }
 
+export interface DepartmentOption {
+  id: number | string;
+  code: string;
+  name: string;
+  is_active?: boolean;
+  student_count?: number;
+  professor_count?: number;
+  course_count?: number;
+}
+
 // Admin: create user
 export async function createUser(
   adminId: number,
@@ -55,10 +65,48 @@ export async function createUser(
 // Admin: list all users (via Next.js proxy)
 export async function listUsers(
   adminId: number
-): Promise<{ id: number; name: string | null; department: string | null; email: string; role: string; is_active: boolean; created_at: string }[]> {
+): Promise<{ id: number; name: string | null; department: string | null; department_name?: string | null; email: string; role: string; is_active: boolean; created_at: string }[]> {
   return request("/api/admin/users?admin_id=" + encodeURIComponent(String(adminId)), {
     method: "GET",
   });
+}
+
+export async function listAdminDepartments(adminId: number): Promise<DepartmentOption[]> {
+  return request<DepartmentOption[]>("/api/admin/departments?admin_id=" + encodeURIComponent(String(adminId)), {
+    method: "GET",
+  });
+}
+
+export async function createDepartment(
+  adminId: number,
+  code: string,
+  name: string
+): Promise<DepartmentOption> {
+  return request<DepartmentOption>("/api/admin/departments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ admin_id: adminId, code, name }),
+  });
+}
+
+export async function updateUserDepartment(
+  adminId: number,
+  userId: number,
+  department: string | null
+): Promise<{ id: number; department: string | null; department_name?: string | null }> {
+  return request("/api/admin/users/" + userId + "/department", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ admin_id: adminId, department }),
+  });
+}
+
+export async function listClassroomDepartments(professorId?: number): Promise<DepartmentOption[]> {
+  const query = professorId ? "?professor_id=" + encodeURIComponent(String(professorId)) : "";
+  const data = await request<{ departments: DepartmentOption[] }>("/api/classroom/departments" + query, {
+    method: "GET",
+  });
+  return data.departments;
 }
 
 // Admin: delete user (via Next.js proxy)
@@ -416,12 +464,13 @@ export async function fetchDocumentAnalytics(
 // CLASSROOM
 // ------------------------------------------------------------------
 
-export async function createClass(data: { name: string; course_code: string; professor_id: number }) {
+export async function createClass(data: { name: string; course_code: string; department?: string; professor_id: number }) {
   return request<{
     success: boolean;
     class_id: number;
     code: string;
     course_code: string;
+    department?: string;
     name: string;
   }>("/api/classroom/create", {
     method: "POST",
@@ -477,6 +526,8 @@ export async function getClassDetails(classId: number, userId: number) {
     class_id: number;
     name: string;
     code: string;
+    course_code?: string;
+    department?: "CS" | "AI";
     professor_name: string;
     student_count: number;
     created_at: string;
@@ -777,6 +828,44 @@ export async function streamGiveExamples(
   if (q) url += `?${q}`;
   const response = await fetch(url, { method: "GET", signal });
   if (!response.body) throw new Error("ReadableStream not supported.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    fullText += chunk;
+    if (onChunk) onChunk(fullText);
+  }
+  return fullText;
+}
+
+export async function streamDocumentSummaryExample(
+  professorId: number,
+  documentId: string,
+  onChunk?: (text: string) => void,
+  signal?: AbortSignal
+): Promise<string> {
+  const cleanDocumentId = documentId.replace(/^db-/, "");
+  const params = new URLSearchParams({
+    professor_id: professorId.toString(),
+    document_id: cleanDocumentId,
+  });
+  const response = await fetch(
+    "/api/learning/summary-example/stream?" + params.toString(),
+    { method: "GET", signal }
+  );
+  if (!response.ok) {
+    let detail = "Failed to generate summary.";
+    try {
+      const error = await response.json();
+      detail = error.detail || detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  if (!response.body) throw new Error("ReadableStream not supported.");
+
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let fullText = "";

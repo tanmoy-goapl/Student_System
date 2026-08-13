@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from database import get_db
-from models import User
+from models import User, Department
+from services.departments import normalize_department_code, split_department_codes
 import bcrypt
 
 router = APIRouter()
@@ -39,6 +40,7 @@ class UserOut(BaseModel):
     id: int
     name: str | None = None
     department: str | None = None
+    department_name: str | None = None
     email: EmailStr
     role: str
     is_active: bool
@@ -98,10 +100,20 @@ def admin_create_user(payload: CreateUserRequest, db: Session = Depends(get_db))
             detail="Email already registered",
         )
 
+    department_code = normalize_department_code(payload.department)
+    department = None
+    if department_code:
+        department = db.query(Department).filter(
+            Department.code == department_code,
+            Department.is_active == True,
+        ).first()
+        if not department:
+            raise HTTPException(status_code=422, detail="Select an active department.")
+
     # 3) Create the new user
     user = User(
         name=payload.name,
-        department=payload.department,
+        department=department_code or None,
         email=payload.email,
         password_hash=hash_password(payload.password),
         role=payload.role,
@@ -131,11 +143,17 @@ def admin_list_users(admin_id: int, db: Session = Depends(get_db)):
         )
 
     users = db.query(User).order_by(User.created_at.asc()).all()
+    departments = {department.code: department.name for department in db.query(Department).all()}
     return [
         UserOut(
             id=u.id,
             name=u.name,
             department=u.department,
+            department_name=", ".join(
+                departments[code]
+                for code in sorted(split_department_codes(u.department))
+                if code in departments
+            ) or None,
             email=u.email,
             role=u.role,
             is_active=u.is_active,

@@ -33,6 +33,7 @@ export default function AppLayout({
  
   const { role, userId, userName, loading } = useAuth();
   const [rightOpen, setRightOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
  
   useEffect(() => {
     if (loading) return;
@@ -85,7 +86,7 @@ export default function AppLayout({
  
   return (
     <ChatSessionProvider userId={userId} role={role} userName={userName}>
-      <div className="h-screen bg-[#020617] flex overflow-hidden">
+      <div className="h-screen bg-[#090D1F] flex overflow-hidden">
       {/* Main sidebar (left) */}
       {!isLogin && !isStudioRoute && (
         <Suspense fallback={<div className="fixed left-0 top-0 h-screen w-64 z-50 bg-slate-950/70" />}>
@@ -94,13 +95,13 @@ export default function AppLayout({
           ) : role === "professor" ? (
             <ProfessorSidebar />
           ) : (
-            <Navbar />
+            <Navbar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
           )}
         </Suspense>
       )}
  
       {/* Everything right of the main sidebar */}
-      <div className={`flex flex-1 min-w-0 ${!isLogin && !isStudioRoute && role !== "admin" && role !== "professor" ? "pl-56" : ""}`}>
+      <div className={`flex flex-1 min-w-0 transition-all duration-300 ${!isLogin && !isStudioRoute && role !== "admin" && role !== "professor" ? (sidebarCollapsed ? "pl-16" : "pl-56") : ""}`}>
  
         {/* Secondary Sidebar (learning, practice, performance) */}
         {!isLogin && activeSidebar && (
@@ -114,7 +115,7 @@ export default function AppLayout({
  
           {/* TopBar — sticky, shrink-0 */}
           {!isLogin && !isStudioRoute && (
-            <header className="sticky top-0 z-[100] h-16 shrink-0 border-b border-white/5 bg-slate-950/70 backdrop-blur-md flex items-center">
+            <header className="sticky top-0 z-[100] h-16 shrink-0 border-b border-white/5 bg-[#090D1F]/70 backdrop-blur-md flex items-center">
               <Suspense fallback={<div className="h-full w-full bg-[#020617]" />}>
                 <TopBar rightOpen={rightOpen} onRightOpenChange={setRightOpen} />
               </Suspense>

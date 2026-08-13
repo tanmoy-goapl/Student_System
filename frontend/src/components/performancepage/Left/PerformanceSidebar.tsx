@@ -42,7 +42,7 @@ export default function PerformanceSidebar({
     };
 
     return (
-        <div className="bg-[#131826] w-[20vw] h-screen flex flex-col text-white">
+        <div className="bg-[#090D1F] w-[20vw] h-screen flex flex-col text-white">
             <div className="flex-1 overflow-y-auto purple-scrollbar">
                 <TimeRange selected={timeRange} onSelect={handleTimeRangeChange} />
 

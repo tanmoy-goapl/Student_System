@@ -10,6 +10,7 @@ class Classroom(Base):
     name = Column(String, nullable=False)
     code = Column(String, unique=True, index=True, nullable=False)
     course_code = Column(String, nullable=True)
+    department = Column(String, nullable=True)
     professor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

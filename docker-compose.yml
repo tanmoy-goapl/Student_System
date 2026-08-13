@@ -48,7 +48,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5451/student_rag
       - HF_HUB_OFFLINE=1
-      - CHAT_LLM_MAX_SECONDS=90
+      - CHAT_LLM_MAX_SECONDS=120
     volumes:
       - ./Backend:/app
       - ./mentorai-documents.zip:/app/mentorai-documents.zip

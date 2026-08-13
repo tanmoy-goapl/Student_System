@@ -274,6 +274,34 @@ export default function LearningPage() {
 
             const selectedTopic = response.selectedTopic || activeTopic || "General Topic";
 
+            if (response.notesResponse && typeof response.notesResponse.content === "string") {
+                const text = response.notesResponse.content;
+                const revisionSeparatorIndex = text.lastIndexOf("---REVISION---");
+                if (revisionSeparatorIndex >= 0) {
+                    response.notesResponse.content = text.slice(0, revisionSeparatorIndex).trim();
+                    let rawJson = text.slice(revisionSeparatorIndex + "---REVISION---".length).trim();
+                    if (rawJson.startsWith("```json")) {
+                        rawJson = rawJson.slice(7);
+                    } else if (rawJson.startsWith("```")) {
+                        rawJson = rawJson.slice(3);
+                    }
+                    if (rawJson.endsWith("```")) {
+                        rawJson = rawJson.slice(0, -3);
+                    }
+                    rawJson = rawJson.trim();
+                    try {
+                        const revisionData = JSON.parse(rawJson);
+                        if (!response.learningAssistantResponse) {
+                            response.learningAssistantResponse = { data: {} };
+                        }
+                        if (!response.learningAssistantResponse.data) {
+                            response.learningAssistantResponse.data = {};
+                        }
+                        response.learningAssistantResponse.data.revision = revisionData;
+                    } catch (e) {}
+                }
+            }
+
             const urlTopic = searchParams?.get("topic");
             if (!urlTopic && response.selectedTopic) {
                 const query = roadmapIdParam ? `&roadmap_id=${roadmapIdParam}` : "";
@@ -640,7 +668,7 @@ export default function LearningPage() {
                     <Header data={data.headerResponse?.data} />
                     
                     <div id="notes-section">
-                        <NotesCard notesResponse={data.notesResponse} onRegenerate={() => fetchData(true)} />
+                        <NotesCard notesResponse={data.notesResponse} onRegenerate={() => fetchData(true)} isGenerating={isTypewriting} />
                     </div>
 
                     {!isContentLoading && !isTypewriting && (
@@ -675,7 +703,7 @@ export default function LearningPage() {
                 </div>
             </div>
 
-            <div className="w-[20vw] shrink-0 h-full overflow-y-auto purple-scrollbar border-l border-white/10 bg-[#131826]">
+            <div className="w-[20vw] shrink-0 h-full overflow-y-auto purple-scrollbar border-l border-white/10 bg-[#090D1F]">
                 <Sidebar 
                     data={rightSidebarData}
                     quickActions={quickActions}

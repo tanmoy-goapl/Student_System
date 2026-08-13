@@ -268,14 +268,17 @@ def get_learning_data(
     import logging
     logger = logging.getLogger("chatbot")
     logger.info(f"[get_learning_data] Requested roadmap_id={roadmap_id}, student_id={student_id}")
+    roadmaps_list = []
+    roadmap = None
     if roadmap_id:
         roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.id == roadmap_id, LearningRoadmap.student_id == student_id).first()
+        if roadmap:
+            roadmaps_list.append(roadmap)
     else:
         if source == "personal":
-            roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == student_id).order_by(desc(LearningRoadmap.created_at)).first()
-        else:
-            roadmap = None
-    if roadmap:
+            roadmaps_list = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == student_id).order_by(desc(LearningRoadmap.created_at)).all()
+
+    for roadmap in roadmaps_list:
         logger.info(f"[get_learning_data] Retrieved roadmap id={roadmap.id}, title='{roadmap.title}'")
         all_tasks = db.query(DailyTask).filter(DailyTask.roadmap_id == roadmap.id).all()
         
@@ -315,14 +318,14 @@ def get_learning_data(
                 })
             
             subjects.append({
-                "id": f"week-{wn}",
+                "id": f"week-{wn}-{roadmap.id}",
                 "title": f"Week {wn}",
                 "color": "#f97316",
                 "topics": topics_list
             })
             
         sidebar_data.append({
-            "id": "roadmap",
+            "id": f"roadmap-{roadmap.id}",
             "title": roadmap.title,
             "remark": "Recommended",
             "subjects": subjects
@@ -584,6 +587,15 @@ def get_learning_data(
     status = metrics["status"]
     
     is_completed = False
+    if not roadmap and selected_topic:
+        from roadmap_models import DailyTask
+        t_task = db.query(DailyTask).join(LearningRoadmap).filter(
+            LearningRoadmap.student_id == student_id,
+            DailyTask.topic == selected_topic
+        ).first()
+        if t_task:
+            roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.id == t_task.roadmap_id).first()
+
     if roadmap:
         from roadmap_models import DailyTask
         task = None

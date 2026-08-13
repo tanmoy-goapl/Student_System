@@ -16,6 +16,7 @@ export type ChatMessage = {
   created_at?: string | null;
   session_id?: string | null;
   intent?: string;
+  sources?: string[];
   roadmap_metadata?: { title: string; duration: string; weeks: number; tasks: number };
   suggest_roadmap?: boolean;
   options?: string[];
@@ -26,6 +27,11 @@ export type ChatUser = {
   role: string;
   name: string;
 } | null;
+
+type DocumentChatContext = {
+  documentId: number;
+  documentName: string;
+};
 
 type ChatSessionContextValue = {
   user: ChatUser;
@@ -41,6 +47,8 @@ type ChatSessionContextValue = {
   handleAsk: () => Promise<void>;
   handleStop: () => void;
   handleNewChat: () => void;
+  startGeneralChat: () => void;
+  startDocumentChat: (document: DocumentChatContext) => void;
   handleSelectSession: (sessionId: string) => Promise<void>;
   handleSelectHistoryEntry: (item: { content: string; created_at?: string | null }) => Promise<void>;
   appendAssistantMessage: (content: string) => void;
@@ -54,6 +62,29 @@ type Props = {
   userName: string | null;
   children: React.ReactNode;
 };
+
+const CHAT_NEW_SESSION_AFTER_LOGOUT_KEY = "mentor_ai_new_session_after_logout";
+
+/**
+ * Keep the chat history on the server, but make the next authenticated
+ * session start blank after an explicit logout. sessionStorage survives the
+ * full-page navigation to login and is consumed once on the next login.
+ */
+export function prepareChatForLogout() {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.setItem(CHAT_NEW_SESSION_AFTER_LOGOUT_KEY, "1");
+  window.localStorage.removeItem("chat_input");
+}
+
+function consumeFreshSessionMarker() {
+  if (typeof window === "undefined") return false;
+  const shouldStartFresh =
+    window.sessionStorage.getItem(CHAT_NEW_SESSION_AFTER_LOGOUT_KEY) === "1";
+  if (shouldStartFresh) {
+    window.sessionStorage.removeItem(CHAT_NEW_SESSION_AFTER_LOGOUT_KEY);
+  }
+  return shouldStartFresh;
+}
 
 function getChatUser(userId: string | null, role: string | null, userName: string | null): ChatUser {
   const id = Number.parseInt(userId || "0", 10);
@@ -82,6 +113,7 @@ export default function ChatSessionProvider({ userId, role, userName, children }
   const [error, setError] = useState("");
   const [resetNext, setResetNext] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [documentChatContext, setDocumentChatContext] = useState<DocumentChatContext | null>(null);
 
   const identityRef = useRef<string | null | undefined>(undefined);
   const loadVersionRef = useRef(0);
@@ -120,13 +152,42 @@ export default function ChatSessionProvider({ userId, role, userName, children }
     setError("");
     setResetNext(false);
     setActiveSessionId(null);
+    setDocumentChatContext(null);
   }, [clearTypewriter, setQuestion]);
 
   const loadLatestSession = useCallback(async (studentId: number, expectedIdentity: string) => {
     const loadVersion = ++loadVersionRef.current;
     try {
       setLoading(true);
-      const res = await fetch(`/api/chat/history?student_id=${studentId}`, {
+
+      // Resolve the newest session explicitly. This keeps startup aligned with
+      // the history sidebar and avoids relying on an implicit database row
+      // when several messages were created close together.
+      let latestSessionId: string | null = null;
+      const sessionsRes = await fetch(
+        "/api/chat/sessions?student_id=" + studentId,
+        { cache: "no-store" },
+      );
+      if (sessionsRes.ok) {
+        const sessions = (await sessionsRes.json()) as Array<{
+          session_id?: string | null;
+          created_at?: string | null;
+        }>;
+        const orderedSessions = (Array.isArray(sessions) ? sessions : [])
+          .filter((session) => Boolean(session.session_id))
+          .sort((a, b) => {
+            const aTime = Date.parse(a.created_at || "");
+            const bTime = Date.parse(b.created_at || "");
+            return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+          });
+        latestSessionId = orderedSessions[0]?.session_id || null;
+      }
+
+      const historyUrl = latestSessionId
+        ? "/api/chat/history?student_id=" + studentId +
+          "&session_id=" + encodeURIComponent(latestSessionId)
+        : "/api/chat/history?student_id=" + studentId;
+      const res = await fetch(historyUrl, {
         cache: "no-store",
       });
       if (!res.ok) return;
@@ -140,7 +201,11 @@ export default function ChatSessionProvider({ userId, role, userName, children }
       }
 
       setHistory(Array.isArray(data) ? data : []);
-      setActiveSessionId(data?.find((message) => message.session_id)?.session_id || null);
+      setActiveSessionId(
+        latestSessionId ||
+        data?.find((message) => message.session_id)?.session_id ||
+        null,
+      );
       setResetNext(false);
     } catch (err) {
       console.error("Failed to restore latest chat session:", err);
@@ -153,13 +218,19 @@ export default function ChatSessionProvider({ userId, role, userName, children }
   // identity change (login, logout, or switching accounts) clears the chat.
   useEffect(() => {
     if (identityRef.current === identity) return;
+    const shouldStartFresh = Boolean(user && consumeFreshSessionMarker());
+    const savedInput =
+      user && !shouldStartFresh ? localStorage.getItem("chat_input") : null;
     identityRef.current = identity;
 
     resetLocalState();
     if (user) {
-      const savedInput = localStorage.getItem("chat_input");
       if (savedInput) setQuestionState(savedInput);
-      void loadLatestSession(user.id, identity as string);
+      if (shouldStartFresh) {
+        setResetNext(true);
+      } else {
+        void loadLatestSession(user.id, identity as string);
+      }
     }
   }, [identity, loadLatestSession, resetLocalState, user]);
 
@@ -214,6 +285,10 @@ export default function ChatSessionProvider({ userId, role, userName, children }
           role: user.role,
           reset: requestReset,
           session_id: activeSessionId || undefined,
+          session_title: documentChatContext
+            ? `Document: ${documentChatContext.documentName}`
+            : undefined,
+          document_id: documentChatContext?.documentId,
         }),
         signal: controller.signal,
       });
@@ -251,6 +326,7 @@ export default function ChatSessionProvider({ userId, role, userName, children }
       const decoder = new TextDecoder();
       let done = false;
       let finalIntent = "";
+      let finalSources: string[] = [];
       let finalMetadata: ChatMessage["roadmap_metadata"] = undefined;
       let finalSuggest = false;
       let finalSessionId = "";
@@ -278,6 +354,7 @@ export default function ChatSessionProvider({ userId, role, userName, children }
               targetChatTextRef.current += parsed.content;
             }
             if (parsed.intent) finalIntent = parsed.intent;
+            if (Array.isArray(parsed.sources)) finalSources = parsed.sources;
             if (parsed.roadmap_metadata) finalMetadata = parsed.roadmap_metadata;
             if (parsed.suggest_roadmap) finalSuggest = true;
             if (parsed.options) finalOptions = parsed.options;
@@ -297,6 +374,7 @@ export default function ChatSessionProvider({ userId, role, userName, children }
             ...copy[copy.length - 1],
             content: targetChatTextRef.current,
             intent: finalIntent,
+            sources: finalSources,
             roadmap_metadata: finalMetadata,
             suggest_roadmap: finalSuggest,
             options: finalOptions,
@@ -314,10 +392,23 @@ export default function ChatSessionProvider({ userId, role, userName, children }
       if (requestVersion !== requestVersionRef.current) return;
       if (err instanceof Error && err.name === "AbortError") {
         setStreamStatus("");
-        if (streamTimedOut) setError("Mentor AI took too long to respond. Please try again.");
         // The user message is committed before streaming starts. Reloading
         // after a stop/disconnect recovers its session_id and any saved reply.
         if (user) await loadLatestSession(user.id, identity as string);
+        if (streamTimedOut) {
+          // A slow model must not leave a red transport error over a usable
+          // partial answer. If nothing was generated, show a normal assistant
+          // message asking for a shorter request instead.
+          setError("");
+          setHistory((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.role === "assistant" && last.content.trim()) return prev;
+            return [
+              ...prev,
+              { role: "assistant", content: "I could not complete that explanation in time. Please ask for a shorter answer." },
+            ];
+          });
+        }
       } else {
         setError(err instanceof Error ? err.message : "Failed to get answer. Please try again.");
         setHistory((prev) => prev.slice(0, -1));
@@ -335,6 +426,7 @@ export default function ChatSessionProvider({ userId, role, userName, children }
   }, [
     activeSessionId,
     clearTypewriter,
+    documentChatContext,
     identity,
     isStreaming,
     loadLatestSession,
@@ -353,8 +445,23 @@ export default function ChatSessionProvider({ userId, role, userName, children }
     setResetNext(true);
   }, [resetLocalState]);
 
+  const startDocumentChat = useCallback((document: DocumentChatContext) => {
+    resetLocalState();
+    setDocumentChatContext(document);
+    setResetNext(true);
+    setQuestion(`Summarize this document: \"${document.documentName}\"`);
+  }, [resetLocalState, setQuestion]);
+
+  const startGeneralChat = useCallback(() => {
+    // Keep the restored conversation, but remove the document constraint.
+    // The next request will omit document_id and the backend will search all
+    // documents visible to this user.
+    setDocumentChatContext(null);
+  }, []);
+
   const handleSelectSession = useCallback(async (sessionId: string) => {
     if (!user?.id) return;
+    setDocumentChatContext(null);
     loadVersionRef.current += 1;
     try {
       setLoading(true);
@@ -377,6 +484,7 @@ export default function ChatSessionProvider({ userId, role, userName, children }
 
   const handleSelectHistoryEntry = useCallback(async (item: { content: string; created_at?: string | null }) => {
     if (!user?.id) return;
+    setDocumentChatContext(null);
     try {
       const res = await fetch(`/api/chat/history?student_id=${user.id}`, { cache: "no-store" });
       if (!res.ok) return;
@@ -432,6 +540,8 @@ export default function ChatSessionProvider({ userId, role, userName, children }
     handleAsk,
     handleStop,
     handleNewChat,
+    startGeneralChat,
+    startDocumentChat,
     handleSelectSession,
     handleSelectHistoryEntry,
     appendAssistantMessage,
@@ -450,6 +560,8 @@ export default function ChatSessionProvider({ userId, role, userName, children }
     question,
     setQuestion,
     streamStatus,
+    startGeneralChat,
+    startDocumentChat,
     user,
   ]);
 

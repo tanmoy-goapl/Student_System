@@ -4,6 +4,16 @@ from datetime import datetime
 from database import Base
 
 
+class Department(Base):
+    __tablename__ = "departments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 # ─────────────────────────────────────────────
 # User Model
 # ─────────────────────────────────────────────
@@ -91,6 +101,9 @@ class ChatMessage(Base):
 
     session_id    = Column(String, nullable=True, index=True)
     session_title = Column(String, nullable=True)
+    # JSON array of document filenames used to ground an assistant response.
+    # Nullable so existing chat rows remain compatible.
+    source_documents = Column(Text, nullable=True)
 
     # Relationships
     student = relationship("User", backref="messages")

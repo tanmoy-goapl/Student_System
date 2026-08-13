@@ -2,33 +2,54 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { 
-  BookOpen, Users, TrendingUp, AlertTriangle, Search, 
-  ChevronDown, UserPlus, PlusCircle, Sparkles, Clock, FileText, X, Trash2
+  BookOpen, Users, TrendingUp, BarChart3, AlertTriangle, Search,
+  UserPlus, PlusCircle, Sparkles, Target, Activity, ArrowUpRight,
+  ArrowDownRight, Minus, X, Trash2
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
 import Loader from "@/components/Loader";
-import { createClass, deleteClass } from "@/lib/api";
+import { createClass, DepartmentOption, deleteClass, listClassroomDepartments } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
+interface WeakTopicData {
+  name: string;
+  score: number;
+}
+
 interface ClassCardData {
+  department: string;
   id: string;
   name: string;
   grade: string;
   studentCount: number;
   avgScore: number;
   engagement: number;
+  analyticsAvailable: boolean;
+  studentIds: string[];
   badge: "ACTIVE" | "AT RISK" | "ARCHIVED";
   badgeColor: string;
   badgeBg: string;
   weakTopics: string[];
+  weakTopicDetails: WeakTopicData[];
+  activeStudents: number;
+  inactiveStudents: number;
+  scoreDelta: number | null;
+  recentQuizCount: number;
   insight: string;
   insightColor: string;
   insightBg: string;
   actionRequired?: string;
   isRedButton?: boolean;
-  button1: string;
-  button2: string;
-  button3: string;
+ }
+
+function resolveDepartment(classroom: any): string {
+  const saved = String(classroom.department || "").trim().toUpperCase();
+  if (saved) return saved;
+
+  const identity = String(classroom.name || "") + " " + String(classroom.course_code || classroom.code || "");
+  return /(^|\s)(AI|ML)(\d*)\b|MACHINE\s+LEARNING|ARTIFICIAL\s+INTELLIGENCE/i.test(identity)
+    ? "AI"
+    : "CS";
 }
 
 export default function ClassroomsPage() {
@@ -42,6 +63,8 @@ export default function ClassroomsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [className, setClassName] = useState("");
   const [courseCode, setCourseCode] = useState("");
+  const [department, setDepartment] = useState("CS");
+  const [departments, setDepartments] = useState<DepartmentOption[]>([]);
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -56,38 +79,53 @@ export default function ClassroomsPage() {
       const myClasses = data.classes || [];
       
       const mappedPromises = myClasses.map(async (c: any) => {
-        let avgScore = 75;
-        let engagement = 80;
+        let avgScore = 0;
+        let engagement = 0;
+        let analyticsAvailable = false;
+        let studentIds: string[] = [];
         let badge: "ACTIVE" | "AT RISK" | "ARCHIVED" = "ACTIVE";
-        let weakTopics = ["None"];
-        let insight = "Class showing stable engagement and performance.";
+        let weakTopics: string[] = [];
+        let weakTopicDetails: WeakTopicData[] = [];
+        let activeStudents = 0;
+        let inactiveStudents = 0;
+        let scoreDelta: number | null = null;
+        let recentQuizCount = 0;
+        let insight = "";
         let insightColor = "text-emerald-300";
         let insightBg = "bg-emerald-500/5 border border-emerald-500/10";
         let actionRequired: string | undefined = undefined;
         let isRedButton = false;
-        let button2 = "Generate Quiz";
-        let button3 = "Insights";
 
         try {
           const analyticsRes = await fetch(`/api/professor/class/${c.id}`);
           if (analyticsRes.ok) {
             const aData = await analyticsRes.json();
             if (aData && aData.metrics) {
+              analyticsAvailable = true;
               avgScore = Math.round(aData.metrics.averageAccuracy || 0);
-              engagement = Math.round(aData.metrics.completionRate || 0);
+              engagement = Math.round(aData.metrics.engagementRate || 0);
+              studentIds = (aData.students || []).map((student: any) => String(student.id));
+              activeStudents = Number(aData.metrics.activeStudents || 0);
+              inactiveStudents = Number(aData.metrics.inactiveStudents || 0);
+              scoreDelta = typeof aData.metrics.scoreDelta === "number" ? aData.metrics.scoreDelta : null;
+              recentQuizCount = Number(aData.metrics.recentQuizCount || 0);
+
+              weakTopicDetails = (aData.metrics.weakTopics || [])
+                .filter((topic: any) => topic && typeof topic.name === "string" && typeof topic.score === "number")
+                .slice(0, 5)
+                .map((topic: any) => ({ name: topic.name, score: Number(topic.score) }));
+              weakTopics = weakTopicDetails.length > 0
+                ? weakTopicDetails.slice(0, 3).map(topic => topic.name)
+                : ["No weak topics recorded"];
               
-              if (aData.metrics.weakTopics && aData.metrics.weakTopics.length > 0) {
-                weakTopics = aData.metrics.weakTopics.slice(0, 3).map((w: any) => w.name);
-              }
-              
-              if (avgScore < 50) {
+              // Keep the risk signal meaningful: 25% is the low-performance cutoff.
+              // A score of zero means no measured performance yet, not a risk diagnosis.
+              if (analyticsAvailable && avgScore > 0 && avgScore < 25) {
                 badge = "AT RISK";
 
                 actionRequired = `ACTION REQUIRED - ${aData.metrics.inactiveStudents || 0} STUDENTS INACTIVE`;
                 isRedButton = true;
-                button2 = "Create Revision";
-                button3 = "View At-Risk";
-              }
+               }
               
               if (aData.metrics.alerts && aData.metrics.alerts.length > 0) {
                 insight = aData.metrics.alerts[0];
@@ -111,24 +149,29 @@ export default function ClassroomsPage() {
         const badgeBg = badge === "AT RISK" ? "bg-rose-500" : "bg-emerald-500";
 
         return {
+          department: resolveDepartment(c),
           id: String(c.id),
           name: c.name,
           grade: c.course_code || "Grade 12",
           studentCount: c.student_count || 0,
           avgScore,
           engagement,
+          analyticsAvailable,
+          studentIds,
           badge,
           badgeColor,
           badgeBg,
           weakTopics,
+          weakTopicDetails,
+          activeStudents,
+          inactiveStudents,
+          scoreDelta,
+          recentQuizCount,
           insight,
           insightColor,
           insightBg,
           actionRequired,
           isRedButton,
-          button1: "Open Class",
-          button2,
-          button3
         };
       });
 
@@ -141,8 +184,29 @@ export default function ClassroomsPage() {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const userId = localStorage.getItem("user_id");
+      const professorId = userId ? parseInt(userId, 10) : undefined;
+      const rows = await listClassroomDepartments(professorId);
+      setDepartments(rows);
+      if (rows.length > 0 && !rows.some((row) => row.code === department)) {
+        setDepartment(rows[0].code);
+      }
+    } catch (err) {
+      console.error("Failed to load departments:", err);
+      setDepartments([
+        { id: "cs", code: "CS", name: "CS Department" },
+        { id: "ai", code: "AI", name: "AI Department" },
+      ]);
+    }
+  };
+
   useEffect(() => {
     fetchClasses();
+    fetchDepartments();
+    const refreshTimer = window.setInterval(fetchClasses, 30000);
+    return () => window.clearInterval(refreshTimer);
   }, []);
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -162,6 +226,7 @@ export default function ClassroomsPage() {
       const res = await createClass({
         name: className.trim(),
         course_code: courseCode.trim(),
+        department,
         professor_id: professorId
       });
 
@@ -171,6 +236,7 @@ export default function ClassroomsPage() {
 
       setClassName("");
       setCourseCode("");
+      setDepartment(departments[0]?.code || "CS");
       setIsCreateOpen(false);
       setLoading(true);
       await fetchClasses();
@@ -203,7 +269,7 @@ export default function ClassroomsPage() {
   };
 
   const totalStudents = useMemo(() => {
-    return classes.reduce((acc, c) => acc + c.studentCount, 0);
+    return classes.reduce((total, cls) => total + cls.studentCount, 0);
   }, [classes]);
 
   const atRiskClassesCount = useMemo(() => {
@@ -214,6 +280,36 @@ export default function ClassroomsPage() {
     if (classes.length === 0) return 0;
     const sum = classes.reduce((acc, c) => acc + c.engagement, 0);
     return Math.round(sum / classes.length);
+  }, [classes]);
+
+  const teachingPriorities = useMemo(() => {
+    return classes
+      .flatMap(cls => cls.weakTopicDetails.map(topic => ({
+        ...topic,
+        classId: cls.id,
+        className: cls.name,
+      })))
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3);
+  }, [classes]);
+
+  const engagementWatchlist = useMemo(() => {
+    return classes
+      .filter(cls => cls.analyticsAvailable)
+      .slice()
+      .sort((a, b) => (
+        a.engagement - b.engagement ||
+        b.inactiveStudents - a.inactiveStudents
+      ))
+      .slice(0, 3);
+  }, [classes]);
+
+  const performanceMomentum = useMemo(() => {
+    return classes
+      .filter(cls => cls.analyticsAvailable && cls.scoreDelta !== null)
+      .slice()
+      .sort((a, b) => Math.abs(b.scoreDelta ?? 0) - Math.abs(a.scoreDelta ?? 0))
+      .slice(0, 3);
   }, [classes]);
 
   const overviewCards = [
@@ -227,14 +323,14 @@ export default function ClassroomsPage() {
     {
       label: "Total Students",
       value: String(totalStudents),
-      subtitle: "Enrolled in classes",
+      subtitle: "Enrolled across classes",
       icon: Users,
       gradient: "from-emerald-500 to-teal-500",
     },
     {
-      label: "Avg Engagement",
+      label: "Avg Active Rate",
       value: `${averageEngagement}%`,
-      subtitle: "Classroom analytics",
+      subtitle: "Active in the last 30 days",
       icon: TrendingUp,
       gradient: "from-indigo-600 to-purple-600",
     },
@@ -248,40 +344,7 @@ export default function ClassroomsPage() {
     },
   ];
 
-  const recommendations = [
-    {
-      type: "RECOMMENDED ACTION",
-      title: "Conduct Revision Session — Wave Optics",
-      desc: "Physics Grade 12 • 14 students below 60% • Topic avg 52%",
-      btn: "Schedule Session",
-      icon: BookOpen,
-      iconColor: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-    },
-    {
-      type: "RECOMMENDED ACTION",
-      title: "Create Practice Quiz — Calculus Basics",
-      desc: "Mathematics Grade 12 • Reinforce integration fundamentals",
-      btn: "Generate Quiz",
-      icon: FileText,
-      iconColor: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-    },
-    {
-      type: "ENGAGEMENT ALERT",
-      title: "Engagement Dropping in Mathematics",
-      desc: "Down from 78% to 61% over the past 2 weeks • 12 inactive students",
-      btn: "View Students",
-      icon: TrendingUp,
-      iconColor: "text-rose-400 bg-rose-500/10 border-rose-500/20",
-    },
-    {
-      type: "ASSIGNMENT",
-      title: "Send Assignment Reminders — Chemistry",
-      desc: "11 students haven't submitted Lab Report 3 • Due 2 days ago",
-      btn: "Notify Students",
-      icon: Clock,
-      iconColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-    },
-  ];
+  // Insight panels below are derived from the live class analytics payload.
 
   const filteredClasses = classes.filter(cls => {
     const matchesSearch = cls.name.toLowerCase().includes(searchQuery.toLowerCase()) || cls.grade.toLowerCase().includes(searchQuery.toLowerCase());
@@ -323,11 +386,12 @@ export default function ClassroomsPage() {
               />
             </div>
 
-            {/* Import Students */}
+            {/* Import Students
             <button className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/5 transition">
               <UserPlus className="w-3.5 h-3.5 text-slate-300" />
               <span>Import Students</span>
             </button>
+            */}
 
             {/* Create Class */}
             <button 
@@ -370,6 +434,132 @@ export default function ClassroomsPage() {
               })}
             </div>
           </div>
+
+          {/* Live Class Insights */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Class Insights</h2>
+              <span className="px-2 py-0.5 text-[8px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-full">
+                Live from class analytics
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+              {/* Teaching Priorities */}
+              <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="h-9 w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                    <Target className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-white">Teaching Priorities</h3>
+                    <p className="text-[9px] text-slate-500 mt-1">Lowest measured topic accuracy</p>
+                  </div>
+                </div>
+
+                {teachingPriorities.length === 0 ? (
+                  <p className="text-[10px] text-slate-500 py-3">Topic data will appear after students practice.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {teachingPriorities.map(topic => (
+                      <button
+                        key={topic.classId + "-" + topic.name}
+                        onClick={() => router.push("/professor/insights?class_id=" + topic.classId)}
+                        className="w-full flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left hover:border-amber-400/30 hover:bg-amber-500/5 transition"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-semibold text-slate-200 truncate">{topic.name}</p>
+                          <p className="text-[9px] text-slate-500 truncate mt-0.5">{topic.className}</p>
+                        </div>
+                        <span className={"shrink-0 text-[10px] font-bold " + (topic.score < 50 ? "text-rose-400" : "text-amber-400")}>
+                          {topic.score}%
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Engagement Watchlist */}
+              <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                    <Activity className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-white">Engagement Watchlist</h3>
+                    <p className="text-[9px] text-slate-500 mt-1">Lowest active rates in 30 days</p>
+                  </div>
+                </div>
+
+                {engagementWatchlist.length === 0 ? (
+                  <p className="text-[10px] text-slate-500 py-3">Engagement data is not available yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {engagementWatchlist.map(cls => (
+                      <button
+                        key={cls.id}
+                        onClick={() => router.push("/professor/insights?class_id=" + cls.id)}
+                        className="w-full flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left hover:border-blue-400/30 hover:bg-blue-500/5 transition"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-semibold text-slate-200 truncate">{cls.name}</p>
+                          <p className="text-[9px] text-slate-500 mt-0.5">
+                            {cls.activeStudents}/{cls.studentCount} active
+                            {cls.inactiveStudents > 0 ? " - " + cls.inactiveStudents + " inactive" : " - no inactive students"}
+                          </p>
+                        </div>
+                        <span className={"shrink-0 text-[10px] font-bold " + (cls.engagement < 60 ? "text-rose-400" : cls.engagement < 80 ? "text-amber-400" : "text-emerald-400")}>
+                          {cls.engagement}%
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Performance Momentum */}
+              <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-white">Performance Momentum</h3>
+                    <p className="text-[9px] text-slate-500 mt-1">Last 7 days vs previous period</p>
+                  </div>
+                </div>
+
+                {performanceMomentum.length === 0 ? (
+                  <p className="text-[10px] text-slate-500 py-3">Trend baseline is forming as more quizzes are completed.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {performanceMomentum.map(cls => {
+                      const delta = cls.scoreDelta ?? 0;
+                      const MomentumIcon = delta > 0 ? ArrowUpRight : delta < 0 ? ArrowDownRight : Minus;
+                      const tone = delta > 0 ? "text-emerald-400" : delta < 0 ? "text-rose-400" : "text-slate-400";
+                      return (
+                        <button
+                          key={cls.id}
+                          onClick={() => router.push("/professor/insights?class_id=" + cls.id)}
+                          className="w-full flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-left hover:border-emerald-400/30 hover:bg-emerald-500/5 transition"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-semibold text-slate-200 truncate">{cls.name}</p>
+                            <p className="text-[9px] text-slate-500 mt-0.5">{cls.recentQuizCount} quiz{cls.recentQuizCount === 1 ? "" : "zes"} in the last 7 days</p>
+                          </div>
+                          <span className={"shrink-0 flex items-center gap-0.5 text-[10px] font-bold " + tone}>
+                            <MomentumIcon className="w-3 h-3" />
+                            {delta === 0 ? "Stable" : (delta > 0 ? "+" : "") + delta + " pts"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
 
           {/* Your Classes Grid Section */}
           <div className="space-y-4">
@@ -417,7 +607,10 @@ export default function ClassroomsPage() {
                       <div className="flex justify-between items-start">
                         <div>
                           <h4 className="text-sm font-bold text-white group-hover:text-blue-400 transition">{cls.name}</h4>
-                          <p className="text-[10px] text-slate-400 font-medium">{cls.grade}</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <p className="text-[10px] text-slate-400 font-medium">{cls.grade}</p>
+                            <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-1.5 py-0.5 text-[8px] font-bold text-cyan-300">{cls.department}</span>
+                          </div>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span className={`px-2 py-0.5 text-[8px] font-extrabold tracking-wider rounded border ${cls.badgeColor}`}>
@@ -443,12 +636,12 @@ export default function ClassroomsPage() {
                           <p className="text-[7px] uppercase tracking-widest text-slate-500">Students</p>
                         </div>
                         <div className="bg-black/20 rounded py-1 border border-white/5">
-                          <p className="text-xs font-bold text-blue-400">{cls.avgScore}%</p>
+                          <p className="text-xs font-bold text-blue-400">{cls.analyticsAvailable ? cls.avgScore + "%" : "N/A"}</p>
                           <p className="text-[7px] uppercase tracking-widest text-slate-500">Avg Score</p>
                         </div>
                         <div className="bg-black/20 rounded py-1 border border-white/5">
-                          <p className="text-xs font-bold text-teal-400">{cls.engagement}%</p>
-                          <p className="text-[7px] uppercase tracking-widest text-slate-500">Engagement</p>
+                          <p className="text-xs font-bold text-teal-400">{cls.analyticsAvailable ? cls.engagement + "%" : "N/A"}</p>
+                          <p className="text-[7px] uppercase tracking-widest text-slate-500">Active Rate</p>
                         </div>
                       </div>
 
@@ -464,11 +657,12 @@ export default function ClassroomsPage() {
                         </div>
                       </div>
 
-                      {/* Insight Box */}
-                      <div className={`p-2.5 rounded-lg text-[9px] flex items-center gap-2 ${cls.insightBg}`}>
-                        <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 animate-pulse" />
-                        <p className={`font-semibold ${cls.insightColor}`}>{cls.insight}</p>
-                      </div>
+                      {cls.insight && (
+                        <div className={`p-2.5 rounded-lg text-[9px] flex items-center gap-2 ${cls.insightBg}`}>
+                          <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 animate-pulse" />
+                          <p className={`font-semibold ${cls.insightColor}`}>{cls.insight}</p>
+                        </div>
+                      )}
 
                       {/* Action Required Banner */}
                       {cls.actionRequired && (
@@ -481,17 +675,16 @@ export default function ClassroomsPage() {
                     <div className="flex gap-2 pt-4 border-t border-white/5 mt-4">
                       <button 
                         onClick={() => router.push(`/classes/${cls.id}`)}
-                        className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider text-white transition ${
-                          cls.isRedButton ? "bg-rose-600 hover:bg-rose-700 shadow shadow-rose-600/10" : "bg-blue-500 hover:bg-blue-600 shadow shadow-blue-500/10"
-                        }`}
+                        className="flex-1 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 shadow shadow-blue-500/10 text-[9px] font-bold uppercase tracking-wider text-white transition"
                       >
-                        {cls.button1}
+                        Open Class
                       </button>
-                      <button className="flex-1 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-[9px] font-bold uppercase tracking-wider transition">
-                        {cls.button2}
-                      </button>
-                      <button className="flex-1 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-[9px] font-bold uppercase tracking-wider transition">
-                        {cls.button3}
+                      <button
+                        onClick={() => router.push(`/professor/insights?class_id=${cls.id}`)}
+                        className="flex-1 py-1.5 rounded-lg border border-indigo-400/30 text-indigo-300 hover:bg-indigo-500/10 text-[9px] font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5"
+                      >
+                        <BarChart3 className="w-3 h-3" />
+                        Analytics
                       </button>
                     </div>
                   </div>
@@ -500,7 +693,7 @@ export default function ClassroomsPage() {
             )}
           </div>
 
-          {/* AI Recommendations */}
+          {/* AI Recommendations
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">AI Recommendations</h2>
@@ -532,8 +725,9 @@ export default function ClassroomsPage() {
               })}
             </div>
           </div>
+          */}
 
-          {/* Quick Actions Footer */}
+          {/* Quick Actions Footer
           <div className="space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Quick Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -558,6 +752,7 @@ export default function ClassroomsPage() {
               })}
             </div>
           </div>
+          */}
         </main>
       </div>
 
@@ -608,6 +803,21 @@ export default function ClassroomsPage() {
                   placeholder="e.g. PHY-201 or Grade 12"
                   className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2 text-xs placeholder:text-white/25 focus:outline-none focus:border-blue-500/55 transition"
                 />
+              </div>
+
+              {/* Department */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold uppercase text-slate-400">Department</label>
+                <select
+                  value={department}
+                  onChange={e => setDepartment(e.target.value)}
+                  className="w-full bg-[#0d1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500/55 transition"
+                >
+                  {departments.length === 0 && <option value="CS">CS Department</option>}
+                  {departments.map((row) => (
+                    <option key={row.code} value={row.code}>{row.name}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Form Buttons */}

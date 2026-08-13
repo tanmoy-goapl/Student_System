@@ -76,26 +76,51 @@ def calculate_topic_metrics(perf) -> dict:
         "last_practiced_at": last_practiced_at
     }
 
-def get_predefined_topics(student_id: int, subject_name: str, db: Session) -> list:
-    # Normalize subject name
-    subject_lower = subject_name.lower().strip()
-    if "dsa" in subject_lower or "structure" in subject_lower:
-        subject_name = "Data Structures"
-    elif "operating" in subject_lower or "os" in subject_lower:
-        subject_name = "Operating Systems"
-    elif "network" in subject_lower or "cn" in subject_lower:
-        subject_name = "Computer Networks"
+def _normalize_subject_name(subject_name: str) -> str:
+    """Return a stable alias for matching class and fallback curriculum names."""
+    compact = re.sub(r"[^a-z0-9]+", " ", (subject_name or "").lower()).strip()
+    if "operating" in compact or "os" in compact.split():
+        return "Operating Systems"
+    if "data structure" in compact or "dsa" in compact:
+        return "Data Structures"
+    if "database" in compact or "dbms" in compact:
+        return "Database Management Systems"
+    if "network" in compact or "cn" in compact.split():
+        return "Computer Networks"
+    return (subject_name or "").strip()
 
-    # 1. Try to find dynamic classroom curriculum first (highest priority)
+
+def get_predefined_topics(student_id: int, subject_name: str, db: Session) -> list:
+    requested_subject = (subject_name or "").strip()
+    subject_name = _normalize_subject_name(requested_subject)
+
+    # 1. Try the enrolled class curriculum first. Match the stored subject
+    # exactly before applying aliases so custom course names keep their topics.
     try:
         from classroom_models import ClassCurriculum, StudentClass
         enrolled_classes = db.query(StudentClass).filter(StudentClass.student_id == student_id).all()
         class_ids = [c.class_id for c in enrolled_classes]
         if class_ids:
-            curr = db.query(ClassCurriculum).filter(
-                ClassCurriculum.subject_name == subject_name,
+            curriculums = db.query(ClassCurriculum).filter(
                 ClassCurriculum.class_id.in_(class_ids)
-            ).first()
+            ).all()
+            requested_key = requested_subject.casefold()
+            curr = next(
+                (
+                    item for item in curriculums
+                    if item.subject_name and item.subject_name.strip().casefold() == requested_key
+                ),
+                None,
+            )
+            if curr is None:
+                curr = next(
+                    (
+                        item for item in curriculums
+                        if item.subject_name
+                        and _normalize_subject_name(item.subject_name) == subject_name
+                    ),
+                    None,
+                )
             if curr and curr.curriculum_json:
                 topics = []
                 if "units" in curr.curriculum_json:

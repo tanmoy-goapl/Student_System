@@ -12,10 +12,10 @@ import {
   getMyClasses,
   getDocumentsData,
   deleteDocument,
-  streamExplainSimpler,
-  streamGiveExamples,
+  streamDocumentSummaryExample,
   streamGenerateMaterial
 } from "@/lib/api";
+import { normalizeReadableMath } from "@/lib/readableMath";
 
 interface MaterialItem {
   id: string;
@@ -54,6 +54,7 @@ const markdownComponents = {
 
 const parseAndRenderMarkdown = (text: string) => {
   if (!text) return null;
+  text = normalizeReadableMath(text);
   
   // Parse text into custom styled sections if it contains the [TAG] pattern
   const hasCustomTags = text.includes("[CONCEPT]") || text.includes("[ANALOGY]") || text.includes("[ANALYZE]") || text.includes("[TAKEAWAY]") || text.includes("[QUESTION]") || text.includes("[ANSWER]") || text.includes("[TITLE]") || text.includes("[CONTENT]");
@@ -295,7 +296,7 @@ const parseAndRenderMarkdown = (text: string) => {
   let elementKey = 0;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    if (line.startsWith("|") && line.endsWith("|")) {
+    if (line.startsWith("|")) {
       flushText(elementKey++);
       
       const cells = line.split("|").map(c => c.trim());
@@ -547,7 +548,7 @@ export default function ContentPage() {
       }
       formData.append("file", uploadFile);
 
-      const res = await fetch("/api/upload/upload", {
+      const res = await fetch("/api/upload", {
         method: "POST",
         body: formData
       });
@@ -569,7 +570,7 @@ export default function ContentPage() {
   };
 
   // Trigger streaming AI actions
-  const triggerAIAction = async (actionType: "simplify" | "summarize", docName: string) => {
+  const triggerAIAction = async (doc: MaterialItem) => {
     // Abort previous stream if active
     if (abortController) {
       abortController.abort();
@@ -578,23 +579,15 @@ export default function ContentPage() {
     const controller = new AbortController();
     setAbortController(controller);
 
-    setAiModalTitle(actionType === "simplify" ? `Simplifying Topic: ${docName}` : `Summarizing Chapter: ${docName}`);
+    setAiModalTitle("Summary + Example: " + doc.name);
     setAiStreamText("");
     setShowAIModal(true);
     setIsStreaming(true);
 
     try {
-      const topicClean = docName.replace(/\.[^/.]+$/, ""); // Strip file extension
-      
-      if (actionType === "simplify") {
-        await streamExplainSimpler(userId, topicClean, (text) => {
-          setAiStreamText(text);
-        }, controller.signal);
-      } else {
-        await streamGiveExamples(userId, topicClean, (text) => {
-          setAiStreamText(text);
-        }, controller.signal);
-      }
+      await streamDocumentSummaryExample(userId, doc.id, (text) => {
+        setAiStreamText(text);
+      }, controller.signal);
     } catch (err: any) {
       if (err.name !== "AbortError") {
         console.error("AI Action stream error:", err);
@@ -631,6 +624,7 @@ export default function ContentPage() {
     setShowGenMaterialModal(false);
     setShowAIModal(true);
     setIsStreaming(true);
+    setIsGeneratingMaterial(true);
 
     try {
       await streamGenerateMaterial(
@@ -653,6 +647,7 @@ export default function ContentPage() {
       }
     } finally {
       setIsStreaming(false);
+      setIsGeneratingMaterial(false);
     }
   };
 
@@ -911,22 +906,16 @@ export default function ContentPage() {
                             {/* Insight note */}
                             <div className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-[9px] flex items-center gap-2 text-slate-350 leading-snug">
                               <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                              <p>Ready for AI synthesis. Tap buttons below to run explanations.</p>
+                              <p>Generate a short summary and practical example from this document.</p>
                             </div>
                           </div>
 
-                          <div className="flex gap-2 pt-4 border-t border-white/5 mt-4">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); triggerAIAction("simplify", mat.name); }}
-                              className="flex-1 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-[9px] font-bold uppercase tracking-wider text-white transition shadow shadow-blue-500/10 cursor-pointer"
+                          <div className="pt-4 border-t border-white/5 mt-4">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); triggerAIAction(mat); }}
+                              className="w-full py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-[9px] font-bold uppercase tracking-wider text-white transition shadow shadow-blue-500/10 cursor-pointer"
                             >
-                              Simplify
-                            </button>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); triggerAIAction("summarize", mat.name); }}
-                              className="flex-1 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-[9px] font-bold uppercase tracking-wider transition cursor-pointer"
-                            >
-                              Summarize
+                              Summary + Example
                             </button>
                           </div>
                         </div>

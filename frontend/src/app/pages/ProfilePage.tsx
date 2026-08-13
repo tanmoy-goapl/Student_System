@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Loader";
+import { prepareChatForLogout } from "@/components/ChatSessionProvider";
 
 const roleBadge: Record<string, string> = {
   admin:     "bg-violet-500/15 text-violet-300 border-violet-500/30",
@@ -104,10 +105,12 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => {
+              prepareChatForLogout();
               localStorage.removeItem("user_id");
               localStorage.removeItem("role");
               localStorage.removeItem("user_name");
               localStorage.removeItem("user_email");
+              window.dispatchEvent(new Event("storage"));
               setIsAuthenticated(false);
               setUserInfo({ userId: "", role: "", name: "", email: "" });
               router.replace("/login?next=/profile");

@@ -63,7 +63,8 @@ def to_ui_doc(doc: Document) -> dict:
         "status": "ready",
         "category": doc.category or "Personal Learning",
         "documentType": doc.document_type or "general",
-        "visibility": doc.visibility or "private"
+        "visibility": doc.visibility or "private",
+        "classroom_id": doc.classroom_id
     }
 
 @router.get("/data")

@@ -307,7 +307,7 @@ export default function PracticePage({
     const renderMainContent = () => {
         if (hasError) {
             return (
-                <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto p-8 justify-center animate-fade-in">
+                <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto p-8 justify-center animate-fade-in">
                     <ErrorState 
                         message="Failed to build practice quiz. Make sure documents are uploaded and backend is online." 
                         onRetry={() => handleStartSession(sessionMode, sessionTopic, sessionDifficulty)} 
@@ -318,7 +318,7 @@ export default function PracticePage({
 
         if (isLoading) {
             return (
-                <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto p-8 justify-center animate-fade-in">
+                <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto p-8 justify-center animate-fade-in">
                     <ProcessingState 
                         title="Generating Practice Quiz"
                         steps={[
@@ -335,7 +335,7 @@ export default function PracticePage({
 
         if (!sessionStarted) {
             return (
-                <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto">
+                <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto">
                     <div className="flex-1 flex items-center justify-center px-6 py-4">
                         <div className="text-center space-y-6 max-w-lg">
                             <div className="w-20 h-20 mx-auto bg-gradient-to-br from-violet-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center border border-white/10 shadow-xl shadow-indigo-500/10">
@@ -355,7 +355,7 @@ export default function PracticePage({
 
         if (sessionComplete) {
             return (
-                <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto">
+                <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto">
                     <div className="flex-1 flex items-center justify-center px-6 py-4">
                         <div className="bg-slate-800/40 backdrop-blur-xl border border-white/10 rounded-2xl p-8 max-w-md text-center space-y-6 w-full shadow-2xl">
                             <div className="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 rounded-full flex items-center justify-center">
@@ -425,7 +425,7 @@ export default function PracticePage({
 
         if (isGenerating && questions.length === 0) {
             return (
-                <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto">
+                <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto">
                     <div className="flex-1 flex items-center justify-center px-6 py-4">
                         <div className="text-center space-y-4">
                             <div className="w-12 h-12 mx-auto border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
@@ -439,7 +439,7 @@ export default function PracticePage({
 
         if (questions.length === 0) {
             return (
-                <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto">
+                <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto">
                     <div className="flex-1 flex items-center justify-center px-6 py-4">
                         <div className="text-center space-y-4 max-w-md">
                             <div className="text-4xl">📄</div>
@@ -477,7 +477,7 @@ export default function PracticePage({
         };
 
         return (
-            <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-y-auto">
+            <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto">
                 <div className="flex-1 space-y-4 px-6 py-4 max-w-3xl mx-auto w-full">
                     <button 
                         onClick={() => {
@@ -560,7 +560,7 @@ export default function PracticePage({
                 </div>
             )}
 
-            <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden">
+            <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-hidden">
                 {renderMainContent()}
             </div>
 

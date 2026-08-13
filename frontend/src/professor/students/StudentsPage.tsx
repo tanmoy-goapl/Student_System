@@ -1,20 +1,21 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { 
   Users, AlertTriangle, TrendingUp, CheckCircle, Search, 
-  ChevronDown, UserPlus, FileText, Bell, Send, Compass
+  FileText, Compass, RefreshCw
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
 
 interface StudentCardData {
   id: string;
   name: string;
-  rollNumber: string;
-  cgpa: string;
+  studentId: string;
   performance: number;
-  engagement: number;
-  attendance: number;
+  progress: number;
+  exposure: number;
+  isActive: boolean;
   badge: "TOP PERFORMER" | "NEEDS ATTENTION" | "AT RISK" | "INACTIVE";
   badgeColor: string;
   badgeBg: string;
@@ -24,12 +25,43 @@ interface StudentCardData {
   className: string;
 }
 
+interface Recommendation {
+  title: string;
+  text: string;
+  action: string;
+  border: string;
+  icon: React.ElementType;
+  onClick: () => void;
+}
+
+interface ProfessorClass {
+  id: number;
+  name: string;
+}
+
+interface AnalyticsStudent {
+  id: string | number;
+  name: string;
+  accuracy?: number;
+  progress?: number;
+  exposure?: number;
+  is_active?: boolean;
+  is_at_risk?: boolean;
+}
+
+interface ClassAnalyticsResponse {
+  students?: AnalyticsStudent[];
+}
+
 export default function StudentsPage() {
+  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"all" | "at-risk" | "inactive" | "top">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [reportStatus, setReportStatus] = useState<string | null>(null);
   
-  const [classes, setClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<ProfessorClass[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>("all");
   const [allStudents, setAllStudents] = useState<StudentCardData[]>([]);
 
@@ -42,9 +74,16 @@ export default function StudentsPage() {
   };
 
   useEffect(() => {
+    let disposed = false;
+    let initialLoad = true;
+    let inFlight = false;
+
     const loadData = async () => {
+      if (inFlight) return;
+      inFlight = true;
       try {
-        setLoading(true);
+        if (initialLoad) setLoading(true);
+        else setRefreshing(true);
         const userId = localStorage.getItem("user_id");
         const professorId = userId ? parseInt(userId, 10) : 1;
         
@@ -52,7 +91,8 @@ export default function StudentsPage() {
         const classesRes = await fetch(`/api/classroom/my_classes/${professorId}`);
         if (!classesRes.ok) throw new Error("Failed to load classes");
         const classesData = await classesRes.json();
-        const myClasses = classesData.classes || [];
+        const myClasses: ProfessorClass[] = classesData.classes || [];
+        if (disposed) return;
         setClasses(myClasses);
 
         // 2. Fetch student analytics for each class
@@ -68,24 +108,20 @@ export default function StudentsPage() {
         for (const cls of myClasses) {
           const analyticsRes = await fetch(`/api/professor/class/${cls.id}`);
           if (!analyticsRes.ok) continue;
-          const analyticsData = await analyticsRes.json();
+          const analyticsData: ClassAnalyticsResponse = await analyticsRes.json();
           const classStudents = analyticsData.students || [];
 
-          classStudents.forEach((st: any, idx: number) => {
-            const accuracy = st.accuracy || 0;
-            const progress = st.progress || 0;
-            const exposure = st.exposure || 0;
+          classStudents.forEach((st, idx: number) => {
+            const accuracy = st.accuracy ?? 0;
+            const progress = st.progress ?? 0;
+            const exposure = st.exposure ?? 0;
 
             let badge: StudentCardData["badge"] = "NEEDS ATTENTION";
             let badgeColor = "text-amber-400 border-amber-500/20 bg-amber-500/10";
             let badgeBg = "bg-amber-400";
-            let note = "Needs assistance with calculus. Suggest remedial material.";
+            let note = "Continue practicing the assigned topics.";
 
-            const lastPracticed = st.last_practiced_at ? new Date(st.last_practiced_at) : null;
-            const daysSinceActive = lastPracticed 
-              ? (new Date().getTime() - lastPracticed.getTime()) / (1000 * 3600 * 24) 
-              : 999;
-            const isInactive = daysSinceActive > 7;
+            const isInactive = st.is_active === false;
 
             if (st.is_at_risk) {
               badge = "AT RISK";
@@ -107,13 +143,13 @@ export default function StudentsPage() {
             }
 
             studentsAccumulator.push({
-              id: st.id,
+              id: String(st.id),
               name: st.name,
-              rollNumber: st.id.replace("S", "22CSE100"),
-              cgpa: ((accuracy / 10) * 0.8 + 2.0).toFixed(1),
+              studentId: String(st.id),
               performance: Math.round(accuracy),
-              engagement: Math.round(progress),
-              attendance: Math.round(exposure || 85),
+              progress: Math.round(progress),
+              exposure: Math.round(exposure),
+              isActive: st.is_active !== false,
               badge,
               badgeColor,
               badgeBg,
@@ -125,34 +161,92 @@ export default function StudentsPage() {
           });
         }
 
+        if (disposed) return;
         setAllStudents(studentsAccumulator);
 
       } catch (err) {
         console.error("Error fetching students page data:", err);
       } finally {
-        setLoading(false);
+        inFlight = false;
+        if (!disposed) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+        initialLoad = false;
       }
     };
 
     loadData();
+    const refreshTimer = window.setInterval(loadData, 30000);
+    return () => {
+      disposed = true;
+      window.clearInterval(refreshTimer);
+    };
   }, []);
 
-  // Filter students based on classroom selection, then DEDUPLICATE if looking at "All Classes"
+  // Keep class-specific rows exact; aggregate live metrics for the unique-student view.
   const currentClassStudents = useMemo(() => {
-    let list = selectedClassId === "all" 
-      ? allStudents 
+    const list = selectedClassId === "all"
+      ? allStudents
       : allStudents.filter(s => s.classId === selectedClassId);
-      
-    if (selectedClassId === "all") {
-      // Deduplicate by student id globally
-      const seen = new Set();
-      list = list.filter(st => {
-        if (seen.has(st.id)) return false;
-        seen.add(st.id);
-        return true;
-      });
-    }
-    return list;
+
+    if (selectedClassId !== "all") return list;
+
+    const grouped = new Map<string, StudentCardData[]>();
+    list.forEach(student => {
+      const rows = grouped.get(student.id) || [];
+      rows.push(student);
+      grouped.set(student.id, rows);
+    });
+
+    return Array.from(grouped.values()).map(rows => {
+      const first = rows[0];
+      const average = (values: number[]) => Math.round(
+        values.reduce((sum, value) => sum + value, 0) / values.length
+      );
+      const performance = average(rows.map(row => row.performance));
+      const progress = average(rows.map(row => row.progress));
+      const exposure = average(rows.map(row => row.exposure));
+      const isActive = rows.some(row => row.isActive);
+
+      let badge: StudentCardData["badge"] = "NEEDS ATTENTION";
+      let badgeColor = "text-amber-400 border-amber-500/20 bg-amber-500/10";
+      let badgeBg = "bg-amber-400";
+      let note = "Continue practicing the assigned topics.";
+
+      if (performance < 50 && progress > 0) {
+        badge = "AT RISK";
+        badgeColor = "text-rose-400 border-rose-500/20 bg-rose-500/10";
+        badgeBg = "bg-rose-400";
+        note = "Critical drop in overall scores. Immediate intervention required.";
+      } else if (performance >= 75) {
+        badge = "TOP PERFORMER";
+        badgeColor = "text-emerald-400 border-emerald-500/20 bg-emerald-500/10";
+        badgeBg = "bg-emerald-400";
+        note = "Ready for advanced problem sets. Keep up the good work!";
+      } else if (!isActive) {
+        badge = "INACTIVE";
+        badgeColor = "text-slate-400 border-slate-500/20 bg-slate-500/10";
+        badgeBg = "bg-slate-400";
+        note = "Inactive for several days. Send reminder nudge.";
+      } else {
+        note = "Consistent overall performer. Maintain current pace.";
+      }
+
+      return {
+        ...first,
+        performance,
+        progress,
+        exposure,
+        isActive,
+        badge,
+        badgeColor,
+        badgeBg,
+        note,
+        classId: "all",
+        className: rows.length > 1 ? `${rows.length} classes` : first.className,
+      };
+    });
   }, [allStudents, selectedClassId]);
 
   // Compute metrics and KPIs reactively based on the filtered list of students
@@ -165,8 +259,11 @@ export default function StudentsPage() {
     
     const sumAccuracy = currentClassStudents.reduce((acc, s) => acc + s.performance, 0);
     const avgScore = total > 0 ? Math.round(sumAccuracy / total) : 0;
+    const avgProgress = total > 0
+      ? Math.round(currentClassStudents.reduce((sum, s) => sum + s.progress, 0) / total)
+      : 0;
     
-    const highEngagementCount = currentClassStudents.filter(s => s.engagement >= 70).length;
+    const highProgressCount = currentClassStudents.filter(s => s.progress >= 70).length;
     
     return {
       total,
@@ -175,7 +272,8 @@ export default function StudentsPage() {
       inactive,
       needsAttention,
       avgScore,
-      highEngagementCount
+      highProgressCount,
+      avgProgress
     };
   }, [currentClassStudents]);
 
@@ -202,43 +300,86 @@ export default function StudentsPage() {
       gradient: "from-amber-500 to-orange-500",
     },
     {
-      label: "High Engagement",
-      value: `${activeClassStats.total > 0 ? Math.round((activeClassStats.highEngagementCount / activeClassStats.total) * 100) : 0}%`,
-      subtitle: `${activeClassStats.highEngagementCount} of ${activeClassStats.total} students`,
+      label: "High Progress",
+      value: `${activeClassStats.total > 0 ? Math.round((activeClassStats.highProgressCount / activeClassStats.total) * 100) : 0}%`,
+      subtitle: `${activeClassStats.highProgressCount} of ${activeClassStats.total} students`,
       icon: CheckCircle,
       gradient: "from-emerald-500 to-teal-500",
     },
   ];
 
-  // Dynamic alerts
-  const alerts = [
-    {
-      type: "Topic Alert",
-      text: activeClassStats.atRisk > 0 ? `${activeClassStats.atRisk} Students Struggling in Core Curriculum Topics` : "All students currently performing above critical threshold.",
-      btn1: "Review Students",
-      btn2: "Generate Practice Set",
-      border: "border-amber-500/20 bg-amber-500/[0.02] text-amber-300",
-    },
-    {
-      type: "Inactivity Alert",
-      text: activeClassStats.inactive > 0 ? `${activeClassStats.inactive} Students Inactive for 7+ Days` : "No student inactivity flags this week.",
-      btn1: "Send Reminder",
-      btn2: "View Profiles",
-      border: "border-rose-500/20 bg-rose-500/[0.02] text-rose-300",
-    },
-    {
-      type: "Completion Alert",
-      text: `Average Engagement stands at ${activeClassStats.total > 0 ? Math.round((activeClassStats.highEngagementCount / activeClassStats.total) * 100) : 0}%`,
-      btn1: "Notify Students",
-      btn2: "View Assignments",
-      border: "border-blue-500/20 bg-blue-500/[0.02] text-blue-300",
-    },
-  ];
+  const recommendations = useMemo<Recommendation[]>(() => {
+    const lowestProgress = [...currentClassStudents].sort((a, b) => a.progress - b.progress)[0];
+
+    const openProfile = (student?: StudentCardData) => {
+      if (!student) {
+        setActiveTab("all");
+        return;
+      }
+      router.push(`/professor/students/${student.id.replace(/^S/, "")}`);
+    };
+
+    return [
+      activeClassStats.atRisk > 0
+        ? {
+            title: "Review at-risk students",
+            text: `${activeClassStats.atRisk} student${activeClassStats.atRisk === 1 ? " is" : "s are"} below the current performance threshold.`,
+            action: "View at-risk",
+            border: "border-rose-500/20 bg-rose-500/[0.03] text-rose-300",
+            icon: AlertTriangle,
+            onClick: () => setActiveTab("at-risk"),
+          }
+        : {
+            title: "Keep the class on track",
+            text: "No students currently meet the at-risk threshold.",
+            action: "View all students",
+            border: "border-emerald-500/20 bg-emerald-500/[0.03] text-emerald-300",
+            icon: CheckCircle,
+            onClick: () => setActiveTab("all"),
+          },
+      activeClassStats.inactive > 0
+        ? {
+            title: "Check inactive students",
+            text: `${activeClassStats.inactive} student${activeClassStats.inactive === 1 ? " has" : "s have"} no recent activity.`,
+            action: "View inactive",
+            border: "border-amber-500/20 bg-amber-500/[0.03] text-amber-300",
+            icon: Users,
+            onClick: () => setActiveTab("inactive"),
+          }
+        : {
+            title: "Support the next learner",
+            text: lowestProgress
+              ? `${lowestProgress.name} is currently at ${lowestProgress.progress}% progress.`
+              : "Open a student profile to review individual progress.",
+            action: "Open profile",
+            border: "border-blue-500/20 bg-blue-500/[0.03] text-blue-300",
+            icon: Compass,
+            onClick: () => openProfile(lowestProgress),
+          },
+      activeClassStats.avgProgress < 70
+        ? {
+            title: "Build completion momentum",
+            text: `Average class progress is ${activeClassStats.avgProgress}%. Start with the least-complete profile.`,
+            action: "Open profile",
+            border: "border-indigo-500/20 bg-indigo-500/[0.03] text-indigo-300",
+            icon: TrendingUp,
+            onClick: () => openProfile(lowestProgress),
+          }
+        : {
+            title: "Stretch strong performers",
+            text: `${activeClassStats.topPerformer} student${activeClassStats.topPerformer === 1 ? " is" : "s are"} ready for more challenging work.`,
+            action: "View top performers",
+            border: "border-violet-500/20 bg-violet-500/[0.03] text-violet-300",
+            icon: TrendingUp,
+            onClick: () => setActiveTab("top"),
+          },
+    ];
+  }, [activeClassStats, currentClassStudents, router]);
 
   // Filter students based on active tabs & search query
   const filteredStudents = useMemo(() => {
     return currentClassStudents.filter(st => {
-      const matchesSearch = st.name.toLowerCase().includes(searchQuery.toLowerCase()) || st.rollNumber.includes(searchQuery);
+      const matchesSearch = st.name.toLowerCase().includes(searchQuery.toLowerCase()) || st.studentId.toLowerCase().includes(searchQuery.toLowerCase());
       if (!matchesSearch) return false;
       if (activeTab === "all") return true;
       if (activeTab === "at-risk") return st.badge === "AT RISK";
@@ -247,6 +388,59 @@ export default function StudentsPage() {
       return true;
     });
   }, [currentClassStudents, searchQuery, activeTab]);
+
+  const generateReport = () => {
+    if (filteredStudents.length === 0) {
+      setReportStatus("No students match the current view.");
+      return;
+    }
+
+    const selectedClass = classes.find(cls => String(cls.id) === selectedClassId);
+    const reportScope = selectedClassId === "all"
+      ? "All classes"
+      : selectedClass?.name || `Class ${selectedClassId}`;
+    const headers = [
+      "Student ID",
+      "Student Name",
+      "Class",
+      "Performance (%)",
+      "Progress (%)",
+      "Exposure (%)",
+      "Status",
+      "Activity",
+    ];
+    const rows: Array<Array<string | number>> = [
+      ["Report scope", reportScope],
+      ["Generated at", new Date().toISOString()],
+      ["Students included", filteredStudents.length],
+      [],
+      headers,
+      ...filteredStudents.map(student => [
+        student.studentId,
+        student.name,
+        student.className,
+        student.performance,
+        student.progress,
+        student.exposure,
+        student.badge,
+        student.isActive ? "Active" : "Inactive",
+      ]),
+    ];
+    const escapeCsv = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+    const csv = rows.map(row => row.map(escapeCsv).join(",")).join("\n");
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const scopeSlug = reportScope.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "students";
+    link.href = url;
+    link.download = `student-report-${scopeSlug}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setReportStatus(`Downloaded ${filteredStudents.length} student${filteredStudents.length === 1 ? "" : "s"}.`);
+    window.setTimeout(() => setReportStatus(null), 4000);
+  };
 
   return (
     <div className="h-screen bg-[#020617] flex overflow-hidden text-white font-sans">
@@ -293,14 +487,22 @@ export default function StudentsPage() {
               </select>
             </div>
 
-            {/* Import Students */}
+            {/* Import Students
             <button className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/5 transition">
               <UserPlus className="w-3.5 h-3.5 text-slate-300" />
               <span>Import Students</span>
             </button>
+            */}
 
             {/* Generate Report */}
-            <button className="flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition">
+            {reportStatus && (
+              <span className="text-[10px] font-semibold text-emerald-400" role="status">{reportStatus}</span>
+            )}
+            <button
+              onClick={generateReport}
+              disabled={loading}
+              className="flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-blue-500 hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition"
+            >
               <FileText className="w-3.5 h-3.5 text-white" />
               <span>Generate Report</span>
             </button>
@@ -339,32 +541,42 @@ export default function StudentsPage() {
                 })}
               </div>
 
-              {/* AI Alerts Column Grid */}
+              {/* Live recommendations */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">AI Alerts</h2>
-                  <span className="px-2 py-0.5 text-[8px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full">
-                    {activeClassStats.atRisk > 0 ? "Active" : "Stable"}
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Recommendations</h2>
+                    <span className="px-2 py-0.5 text-[8px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
+                      Based on live metrics
+                    </span>
+                  </div>
+                  {refreshing && (
+                    <span className="flex items-center gap-1.5 text-[9px] font-semibold text-slate-500">
+                      <RefreshCw className="h-3 w-3 animate-spin" /> Syncing metrics
+                    </span>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {alerts.map((al, idx) => (
-                    <div key={idx} className={`rounded-xl border p-4 flex flex-col justify-between min-h-[110px] ${al.border}`}>
-                      <div>
-                        <span className="text-[8px] font-extrabold uppercase tracking-widest opacity-60">{al.type}</span>
-                        <p className="text-[11px] font-bold text-white mt-1 leading-snug">{al.text}</p>
+                  {recommendations.map((recommendation) => {
+                    const Icon = recommendation.icon;
+                    return (
+                    <div key={recommendation.title} className={`rounded-xl border p-4 flex flex-col justify-between min-h-[145px] ${recommendation.border}`}>
+                      <div className="flex items-start gap-3">
+                        <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+                        <div>
+                          <span className="text-[8px] font-extrabold uppercase tracking-widest opacity-60">Suggested next step</span>
+                          <p className="text-[11px] font-bold text-white mt-1 leading-snug">{recommendation.title}</p>
+                          <p className="text-[10px] text-slate-300 mt-1 leading-relaxed">{recommendation.text}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 mt-3 pt-2 border-t border-white/5">
-                        <button className="text-[9px] font-bold tracking-wider uppercase text-white/50 hover:text-white transition">
-                          {al.btn1}
-                        </button>
-                        <span className="text-white/10">|</span>
-                        <button className="text-[9px] font-bold tracking-wider uppercase text-blue-400 hover:text-blue-300 transition">
-                          {al.btn2}
+                      <div className="mt-3 pt-2 border-t border-white/5">
+                        <button onClick={recommendation.onClick} className="text-[9px] font-bold tracking-wider uppercase text-white/70 hover:text-white transition">
+                          {recommendation.action}
                         </button>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -374,7 +586,7 @@ export default function StudentsPage() {
                   <div className="flex items-center gap-2">
                     <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Students</h2>
                     <span className="px-2 py-0.5 text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
-                      AI Monitored
+                      Live Metrics
                     </span>
                   </div>
 
@@ -388,7 +600,7 @@ export default function StudentsPage() {
                     ].map(tb => (
                       <button
                         key={tb.id}
-                        onClick={() => setActiveTab(tb.id as any)}
+                        onClick={() => setActiveTab(tb.id as "all" | "at-risk" | "inactive" | "top")}
                         className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${
                           activeTab === tb.id ? "bg-blue-500 text-white shadow" : "text-slate-400 hover:text-white"
                         }`}
@@ -416,7 +628,7 @@ export default function StudentsPage() {
                               </div>
                               <div>
                                 <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition">{st.name}</h4>
-                                <p className="text-[9px] text-slate-400 font-medium">Roll: {st.rollNumber} • CGPA: {st.cgpa} ({st.className})</p>
+                                <p className="text-[9px] text-slate-400 font-medium">ID: {st.studentId} ({st.className})</p>
                               </div>
                             </div>
                             <span className={`px-2 py-0.5 text-[8px] font-extrabold tracking-wider rounded border ${st.badgeColor}`}>
@@ -431,12 +643,12 @@ export default function StudentsPage() {
                               <p className="text-[7px] uppercase tracking-widest text-slate-500">Perf</p>
                             </div>
                             <div className="bg-black/20 rounded py-1 border border-white/5">
-                              <p className="text-xs font-bold text-blue-400">{st.engagement}%</p>
-                              <p className="text-[7px] uppercase tracking-widest text-slate-500">Eng</p>
+                              <p className="text-xs font-bold text-blue-400">{st.progress}%</p>
+                              <p className="text-[7px] uppercase tracking-widest text-slate-500">Progress</p>
                             </div>
                             <div className="bg-black/20 rounded py-1 border border-white/5">
-                              <p className="text-xs font-bold text-teal-400">{st.attendance}%</p>
-                              <p className="text-[7px] uppercase tracking-widest text-slate-500">Attd</p>
+                              <p className="text-xs font-bold text-teal-400">{st.exposure}%</p>
+                              <p className="text-[7px] uppercase tracking-widest text-slate-500">Exposure</p>
                             </div>
                           </div>
 
@@ -445,12 +657,12 @@ export default function StudentsPage() {
                           </p>
                         </div>
 
-                        <div className="flex justify-end gap-2 pt-2">
-                          <button className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-[9px] font-bold uppercase tracking-wider transition">
+                        <div className="flex justify-end pt-2">
+                          <button
+                            onClick={() => router.push(`/professor/students/${st.id.replace(/^S/, "")}`)}
+                            className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-[9px] font-bold uppercase tracking-wider transition"
+                          >
                             View Profile
-                          </button>
-                          <button className="px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-[9px] font-bold uppercase tracking-wider text-white transition shadow shadow-blue-500/10">
-                            Assign Practice
                           </button>
                         </div>
                       </div>
@@ -549,7 +761,7 @@ export default function StudentsPage() {
                 </div>
               </div> */}
 
-              {/* Quick Actions Footer */}
+              {/* Quick Actions Footer
               <div className="space-y-4">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Quick Actions</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -574,6 +786,7 @@ export default function StudentsPage() {
                   })}
                 </div>
               </div>
+              */}
             </>
           )}
         </main>

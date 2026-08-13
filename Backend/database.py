@@ -23,7 +23,7 @@ Base = declarative_base()
 
 
 def init_db():
-    from models import User, Document  # removed DocumentChunk
+    from models import User, Document, Department  # removed DocumentChunk
     from practice_models import (      # Adaptive Learning Engine tables
         PracticeSession, PracticeQuestion,
         TopicPerformance, BehavioralInsight, CustomTopic, LearningContent, UserNote
@@ -57,6 +57,7 @@ def init_db():
             # ChatMessage additions
             conn.execute(text("ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_id VARCHAR;"))
             conn.execute(text("ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_title VARCHAR;"))
+            conn.execute(text("ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS source_documents TEXT;"))
     except Exception as e:
         print("Database schema migration notice/error:", e)
 
@@ -80,10 +81,14 @@ def init_db():
             # Get curriculum topics
             curriculum = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == classroom.id).first()
             topics = []
-            if curriculum and curriculum.curriculum_json and "semesters" in curriculum.curriculum_json:
-                for sem in curriculum.curriculum_json["semesters"]:
+            curriculum_data = (curriculum.curriculum_json or {}) if curriculum else {}
+            if "semesters" in curriculum_data:
+                for sem in curriculum_data["semesters"]:
                     for course in sem.get("courses", []):
                         topics.extend(course.get("topics", []))
+            elif "units" in curriculum_data:
+                for unit in curriculum_data["units"]:
+                    topics.extend(unit.get("topics", []))
             if not topics:
                 topics = ["Introduction", "Core Concepts", "Advanced Application", "Final Review"]
                 
@@ -157,14 +162,15 @@ def init_db():
                         tp.last_practiced_at = datetime.utcnow() - timedelta(hours=random.randint(1, 100))
                         
                         # 3. Practice Session & Quiz History
+                        quiz_correct = min(5, max(0, tp.correct_answers % 6))
                         session = PracticeSession(
                             student_id=student.id,
                             mode="topic",
                             topic=topic,
                             difficulty=tp.current_difficulty,
                             question_count=5,
-                            correct_answers=tp.correct_answers % 6,
-                            accuracy=round(((tp.correct_answers % 6) / 5) * 100, 1),
+                            correct_answers=quiz_correct,
+                            accuracy=round((quiz_correct / 5) * 100, 1),
                             created_at=datetime.utcnow() - timedelta(days=random.randint(1, 5)),
                             ended_at=datetime.utcnow(),
                             is_active=False
@@ -176,7 +182,11 @@ def init_db():
                             student_id=student.id,
                             session_id=session.id,
                             topic=topic,
+                            questions_attempted=5,
+                            correct_answers=quiz_correct,
                             score_percentage=session.accuracy,
+                            points_earned=quiz_correct * 10,
+                            time_spent=random.randint(90, 300),
                             created_at=session.created_at
                         )
                         db.add(quiz)

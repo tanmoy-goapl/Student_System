@@ -301,7 +301,7 @@ export function ChatThinking() {
   ];
 
   return (
-    <div className="flex flex-col gap-2.5 py-3.5 pl-4 pr-10 bg-slate-900/50 border border-white/5 rounded-2xl max-w-[85%] self-start transition-all">
+    <div className="flex flex-col gap-2.5 py-3.5 pl-4 pr-10 bg-slate-900/50 border border-white/5 rounded-2xl max-w-[85%] min-w-[280px] shrink-0 self-start transition-all">
       <div className="flex items-center gap-2 text-xs text-blue-400 font-semibold tracking-wide">
         <Loader2 size={13} className="animate-spin" />
         <span>MentorAI is thinking</span>

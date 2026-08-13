@@ -102,7 +102,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
 
   if (isLoading) {
     return (
-      <div className="bg-[#131826] w-[20vw] h-screen flex flex-col text-white p-4 space-y-4 animate-pulse">
+      <div className="bg-[#090D1F] w-[20vw] h-screen flex flex-col text-white p-4 space-y-4 animate-pulse">
         <div className="h-24 bg-slate-800 rounded-xl"></div>
         <div className="h-64 bg-slate-800 rounded-xl"></div>
       </div>
@@ -118,7 +118,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
   const hasSubjects = filteredSubjects.length > 0;
 
   return (
-    <div className="bg-[#131826] w-[20vw] h-screen flex flex-col text-white">
+    <div className="bg-[#090D1F] w-[20vw] h-screen flex flex-col text-white">
       <div className="flex-1 overflow-y-auto purple-scrollbar">
         {/* Topic Selector Section */}
         {hasSubjects ? (

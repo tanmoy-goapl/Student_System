@@ -2,7 +2,7 @@ from services.chatbot.chat_intent import RetrievalMode
 from llm_state import get_user_preferences
 from services.chatbot.student_scope_router import is_student_question_in_scope as semantic_scope_check
 
-MAX_CONTEXT_LEN = 12000
+MAX_CONTEXT_LEN = 6000
 
 
 # Student Chat is an academic mentor, not an unrestricted general-purpose
@@ -77,7 +77,7 @@ def _build_system_prompt(
     elif pref_style == "Step-by-Step":
         style_guide = "• RESPONSE STYLE: Break down your answer into a clear, numbered step-by-step walkthrough."
     else:
-        style_guide = "• RESPONSE STYLE: Provide a detailed, deep, and thoroughly structured response."
+        style_guide = "• RESPONSE STYLE: Be clear and concise. Focus only on the question and use short sections."
 
     tone_guide = ""
     if pref_tone == "Friendly":
@@ -134,13 +134,12 @@ CRITICAL RULES:
         rules = f"""
 MODE: LEARNING MODE
 CRITICAL RULES:
-• Use educational documents from CONTEXT if they are relevant.
-• If educational documents are unavailable or irrelevant, answer only with educational background relevant to the student's question.
+• The REFERENCE CONTEXT has been relevance-filtered, but it may contain related passages that do not fully answer the question.
+• First decide whether the context directly supports the requested answer.
+• If it directly supports the answer, use ONLY the document passages and do not supplement them with general knowledge.
+• If it is empty or does not directly answer the question, say that the exact answer was not found in the available documents, then provide a clearly labelled general academic explanation when the question is in scope. Never present that explanation as document content.
 • Do not answer unrelated trivia, entertainment, sports, animal, recipe, travel, or lifestyle questions.
 • If a question is outside the academic/student-support scope, politely refuse and redirect the student to coursework, coding, study help, documents, career preparation, or learning plans.
-• CLEARLY SEPARATE your answer into two distinct sections:
-    1. 'Information from documents' (attribute chunks to source documents, e.g. 'Source: notes.pdf')
-    2. 'Information from general knowledge'
 • Never hallucinate facts.
 
 ===== REFERENCE CONTEXT =====
@@ -171,10 +170,7 @@ CRITICAL RULES:
 GENERAL GROUNDING RULES:
 1. Every factual statement about the user's project, resume, research, or documents must come directly from retrieved documents.
 2. If a detail is not present in the retrieved documents, explicitly state that it is not mentioned.
-3. General knowledge may only be used to:
-   - explain concepts,
-   - define terminology,
-   - provide educational background.
+3. General knowledge may only be used when the active mode explicitly permits a fallback and the current retrieved context is empty or does not directly answer the question. Never use it to supplement a directly supported document answer.
 4. Never use general knowledge to invent implementation details about the user's work.
 5. Prefer saying: "The document does not mention..." instead of making assumptions.
 """
@@ -199,7 +195,9 @@ GENERAL FORMATTING RULES:
 {style_guide}
 {tone_guide}
 {prof_instruction}
-• Maximum 300–400 words.
+• HARD LENGTH LIMIT: Keep the answer under 220 words unless the user explicitly asks for a detailed explanation.
+• For a simple definition or "what is" question, answer in 80–150 words.
+• Do not repeat the question, add a long introduction, or include unrelated examples.
 """
 
     return base + rules + grounding + formatting

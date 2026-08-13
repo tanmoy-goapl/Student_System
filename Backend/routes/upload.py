@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, Document
@@ -10,6 +10,7 @@ import json
 from pydantic import BaseModel
 from datetime import datetime
 from chroma_store import upsert_chunks, delete_document_chunks
+from services.practice.base import normalize_generated_text
 
 router = APIRouter()
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -123,6 +124,24 @@ def view_document(document_id: int, db: Session = Depends(get_db)):
 
     if not os.path.exists(doc.file_path):
         raise HTTPException(status_code=404, detail="File not found on disk")
+
+    ext = os.path.splitext(doc.filename)[1].lower()
+    generated_titles = (
+        "AI Study Material - ", "AI Lesson Plan - ", "AI Quiz - ",
+        "AI Revision Notes - ", "AI Explained Simpler - ", "AI Practice Set - "
+    )
+    is_generated_material = doc.owner_role == "professor" and (
+        (doc.title or "").startswith(generated_titles)
+        or any(f"_{title}" in doc.filename for title in generated_titles)
+    )
+    if ext in {".txt", ".md"} and is_generated_material:
+        with open(doc.file_path, "r", encoding="utf-8", errors="replace") as generated_file:
+            readable_text = normalize_generated_text(generated_file.read())
+        return Response(
+            content=readable_text,
+            media_type="text/plain",
+            headers={"Content-Disposition": f'inline; filename="{doc.filename}"'}
+        )
     
     # Determine media type
     media_type_map = {

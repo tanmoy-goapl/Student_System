@@ -32,6 +32,7 @@ export default function SubjectSection({
           subject.topics?.length &&
           onToggle(subject.id)
         }
+        title={subject.title?.replace(/\*\*/g, "")}
         className={`
           w-full flex items-center justify-between
           px-2.5 py-2 rounded-lg

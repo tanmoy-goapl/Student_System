@@ -22,6 +22,7 @@ export default function ClassDetailsPage() {
     useEffect(() => {
         if (!authLoading && userId && params?.classId) {
             loadClassDetails();
+            localStorage.setItem("last_visited_class_path", `/classes/${params.classId}`);
         }
     }, [authLoading, userId, params?.classId]);
 
@@ -33,10 +34,12 @@ export default function ClassDetailsPage() {
             if (res.success) {
                 setClassDetails(res);
             } else {
+                localStorage.removeItem("last_visited_class_path");
                 router.push("/classes");
             }
         } catch (error) {
             console.error("Failed to load class details:", error);
+            localStorage.removeItem("last_visited_class_path");
             router.push("/classes");
         } finally {
             setLoading(false);
@@ -65,7 +68,7 @@ export default function ClassDetailsPage() {
 
     if (role === "student") {
         return (
-            <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-slate-900 to-slate-950 text-white w-full purple-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 bg-[#090D1F] text-white w-full purple-scrollbar">
                 <SubjectDashboard 
                     subjectName={classDetails.name} 
                     classId={Number(params!.classId)}
@@ -79,9 +82,9 @@ export default function ClassDetailsPage() {
     }
 
     return (
-        <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden text-white w-full">
+        <div className="flex flex-col h-full bg-[#090D1F] overflow-hidden text-white w-full">
             {/* Header */}
-            <div className="shrink-0 border-b border-white/10 p-6 bg-slate-900/50">
+            <div className="shrink-0 border-b border-white/10 p-6 bg-[#090D1F]/50">
                 <button 
                     onClick={() => {
                         if (role === "professor") {

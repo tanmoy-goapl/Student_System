@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { 
   BarChart3, Users, TrendingUp, Sparkles, Clock, Calendar, 
   ChevronDown, Download, AlertTriangle, CheckCircle, FileText, Loader2
@@ -24,7 +25,7 @@ interface AiInsight {
   badgeType: "critical" | "warning" | "success" | "info";
 }
 
-interface TopicItem { name: string; score: number; status: "WEAK" | "AVERAGE" | "GOOD" }
+interface TopicItem { name: string; score: number; status: "NOT_STARTED" | "WEAK" | "AVERAGE" | "GOOD" }
 interface ClassTopics { className: string; avgScore: number; topics: TopicItem[] }
 
 interface StudentRisk { name: string; score: number }
@@ -56,35 +57,63 @@ const BADGE_STYLES: Record<string, string> = {
 
 // ── Component ───────────────────────────────────────────────
 export default function InsightsPage() {
+  const searchParams = useSearchParams();
+  const parsedClassId = Number(searchParams?.get("class_id") || 0);
+  const requestedClassId = Number.isInteger(parsedClassId) && parsedClassId > 0
+    ? parsedClassId : 0;
   const [data, setData] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedClassId, setSelectedClassId] = useState(0);
+  const [selectedClassId, setSelectedClassId] = useState(requestedClassId);
   const [classDropdownOpen, setClassDropdownOpen] = useState(false);
+  const refreshController = useRef<AbortController | null>(null);
 
-  const fetchInsights = async (classId: number) => {
-    setLoading(true);
-    setError(null);
+  const fetchInsights = async (classId: number, showLoading = true) => {
+    refreshController.current?.abort();
+    const controller = new AbortController();
+    refreshController.current = controller;
+    if (showLoading) setLoading(true);
+    if (showLoading) setError(null);
     try {
       const userId = localStorage.getItem("user_id") || "2";
       const url = `/api/professor/insights?professor_id=${userId}&class_id=${classId}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: "no-store", signal: controller.signal });
       if (!res.ok) throw new Error("Failed to load insights");
       const json: InsightsData = await res.json();
       setData(json);
     } catch (err: any) {
-      setError(err.message || "Something went wrong");
+      if (err?.name === "AbortError") return;
+      if (showLoading) {
+        setError(err.message || "Something went wrong");
+      } else {
+        console.error("Silent Insights refresh failed:", err);
+      }
     } finally {
-      setLoading(false);
+      if (showLoading && refreshController.current === controller) {
+        setLoading(false);
+      }
     }
   };
 
-  useEffect(() => { fetchInsights(selectedClassId); }, [selectedClassId]);
+  useEffect(() => {
+    setSelectedClassId(requestedClassId);
+  }, [requestedClassId]);
+
+  useEffect(() => {
+    fetchInsights(selectedClassId, true);
+    const refreshTimer = window.setInterval(() => {
+      fetchInsights(selectedClassId, false);
+    }, 30000);
+    return () => {
+      window.clearInterval(refreshTimer);
+      refreshController.current?.abort();
+    };
+  }, [selectedClassId]);
 
   // ── Derived overview cards ────────────────────────────────
   const overviewCards = data ? [
     { label: "Avg Class Score", value: `${data.overview.avgScore}%`, subtitle: `Across ${data.classes.length} class${data.classes.length !== 1 ? "es" : ""}`, icon: TrendingUp, gradient: "from-blue-600 to-indigo-500" },
-    { label: "Engagement Rate", value: `${data.overview.engagementRate}%`, subtitle: "Curriculum completion", icon: CheckCircle, gradient: "from-emerald-500 to-teal-500" },
+    { label: "Engagement Rate", value: `${data.overview.engagementRate}%`, subtitle: "Active + completed quiz participation", icon: CheckCircle, gradient: "from-emerald-500 to-teal-500" },
     { label: "At-Risk Students", value: `${data.overview.atRiskStudents}`, subtitle: "Accuracy below 50%", icon: AlertTriangle, gradient: "from-rose-500 to-red-500" },
     { label: "Topic Mastery", value: `${data.overview.topicMastery}%`, subtitle: "Active topics average", icon: BookOpenIcon, gradient: "from-indigo-600 to-purple-600" },
   ] : [];
@@ -94,7 +123,7 @@ export default function InsightsPage() {
     { label: "Active Students", value: `${data.engagement.attendance}%`, color: "text-blue-400", bg: "bg-blue-500" },
     { label: "Quiz Participation", value: `${data.engagement.quizParticipation}%`, color: "text-purple-400", bg: "bg-purple-500" },
     { label: "Curriculum Progress", value: `${data.engagement.revisionConsistency}%`, color: "text-amber-400", bg: "bg-amber-500" },
-    { label: "Content Interaction", value: `${data.engagement.contentInteraction}%`, color: "text-emerald-400", bg: "bg-emerald-500" },
+    { label: "Topic Activity", value: `${data.engagement.contentInteraction}%`, color: "text-emerald-400", bg: "bg-emerald-500" },
   ] : [];
 
   // ── Risk columns ──────────────────────────────────────────
@@ -177,7 +206,7 @@ export default function InsightsPage() {
 
             {/* Refresh */}
             <button
-              onClick={() => fetchInsights(selectedClassId)}
+              onClick={() => fetchInsights(selectedClassId, false)}
               className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/5 transition"
             >
               <Download className="w-3.5 h-3.5 text-slate-300" />
@@ -235,9 +264,9 @@ export default function InsightsPage() {
               {data.aiInsights.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">AI Insights</h2>
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Data-Driven Insights</h2>
                     <span className="flex items-center gap-1 px-2 py-0.5 text-[8px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-full">
-                      <Sparkles className="w-2.5 h-2.5" /> Data-Driven Analysis
+                      <Sparkles className="w-2.5 h-2.5" /> Live Database Metrics
                     </span>
                   </div>
 
@@ -269,7 +298,7 @@ export default function InsightsPage() {
                         <div>
                           <div className="flex justify-between items-center border-b border-white/5 pb-2 mb-3">
                             <h3 className="text-xs font-bold text-slate-300">{cls.className}</h3>
-                            <span className={`text-[10px] font-semibold ${cls.avgScore >= 75 ? "text-emerald-400" : cls.avgScore >= 55 ? "text-amber-400" : "text-rose-400"}`}>
+                            <span className={`text-[10px] font-semibold ${cls.avgScore === 0 ? "text-slate-500" : cls.avgScore >= 75 ? "text-emerald-400" : cls.avgScore >= 55 ? "text-amber-400" : "text-rose-400"}`}>
                               {cls.avgScore}% Avg
                             </span>
                           </div>
@@ -278,14 +307,14 @@ export default function InsightsPage() {
                               <div key={i} className="space-y-1">
                                 <div className="flex justify-between text-[10px] font-semibold text-slate-300">
                                   <span>{top.name}</span>
-                                  <span className={top.status === "WEAK" ? "text-rose-400" : top.status === "GOOD" ? "text-emerald-400" : "text-slate-400"}>
+                                  <span className={top.status === "NOT_STARTED" ? "text-slate-600" : top.status === "WEAK" ? "text-rose-400" : top.status === "GOOD" ? "text-emerald-400" : "text-slate-400"}>
                                     {top.score}% {top.status}
                                   </span>
                                 </div>
                                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                   <div 
                                     className={`h-full rounded-full ${
-                                      top.status === "WEAK" ? "bg-gradient-to-r from-red-500 to-rose-500" : 
+                                      top.status === "NOT_STARTED" ? "bg-white/10" :
                                       top.status === "GOOD" ? "bg-gradient-to-r from-emerald-400 to-emerald-500" : 
                                       "bg-gradient-to-r from-blue-500 to-indigo-500"
                                     }`} 
@@ -307,7 +336,7 @@ export default function InsightsPage() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Student Risk Analysis</h2>
                   <span className="px-2 py-0.5 text-[8px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
-                    AI Categorized
+                    Rule-Based Categories
                   </span>
                 </div>
 
