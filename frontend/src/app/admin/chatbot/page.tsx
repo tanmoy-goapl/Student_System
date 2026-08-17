@@ -2,11 +2,11 @@
 
 import React, { Suspense } from "react";
 import AdminChatPage from "@/admin/chatbot/AdminChatPage";
-import Loader from "@/components/Loader";
+import { DashboardLoadingShell } from "@/components/DashboardLoading";
 
 export default function AdminChatbotRoute() {
   return (
-    <Suspense fallback={<Loader fullScreen text="Loading Chatbot..." />}>
+    <Suspense fallback={<DashboardLoadingShell role="admin" text="Loading Chatbot..." />}>
       <AdminChatPage />
     </Suspense>
   );

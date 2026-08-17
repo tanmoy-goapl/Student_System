@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { CheckCircle, Circle, ArrowRight, Calendar, BookOpen, Pen, Loader2 } from "lucide-react";
+import { CheckCircle, Circle, ArrowRight, Calendar, BookOpen, Pen } from "lucide-react";
+import { PageLoadingState } from "@/components/DashboardLoading";
 
 interface Task {
   id: number;
@@ -64,11 +65,7 @@ export default function RoadmapPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-      </div>
-    );
+    return <PageLoadingState text="Loading roadmap..." />;
   }
 
   if (!roadmap) {

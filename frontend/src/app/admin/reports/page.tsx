@@ -2,11 +2,11 @@
 
 import React, { Suspense } from "react";
 import ReportsPage from "@/admin/reports/ReportsPage";
-import Loader from "@/components/Loader";
+import { DashboardLoadingShell } from "@/components/DashboardLoading";
 
 export default function AdminReportsRoute() {
   return (
-    <Suspense fallback={<Loader fullScreen text="Loading Reports..." />}>
+    <Suspense fallback={<DashboardLoadingShell role="admin" text="Loading Reports..." />}>
       <ReportsPage />
     </Suspense>
   );

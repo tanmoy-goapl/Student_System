@@ -5,6 +5,7 @@ import { DepartmentOption, getMyClasses, createClass, joinClass, deleteClassroom
 import { PlusCircle, LogIn, Users, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
+import { PageLoadingState } from "@/components/DashboardLoading";
 
 export default function ClassesPage() {
     const { role, userId, loading: authLoading } = useAuth();
@@ -110,7 +111,7 @@ export default function ClassesPage() {
     };
 
     if (authLoading || loading) {
-        return <div className="p-8 text-slate-400">Loading classes...</div>;
+        return <PageLoadingState text="Loading classes..." />;
     }
 
     return (

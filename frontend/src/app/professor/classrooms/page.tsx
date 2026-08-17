@@ -2,11 +2,11 @@
 
 import React, { Suspense } from "react";
 import ClassroomsPage from "@/professor/classrooms/ClassroomsPage";
-import Loader from "@/components/Loader";
+import { DashboardLoadingShell } from "@/components/DashboardLoading";
 
 export default function ProfessorClassroomsRoute() {
   return (
-    <Suspense fallback={<Loader fullScreen text="Loading Classes..." />}>
+    <Suspense fallback={<DashboardLoadingShell role="professor" text="Loading Classes..." />}>
       <ClassroomsPage />
     </Suspense>
   );

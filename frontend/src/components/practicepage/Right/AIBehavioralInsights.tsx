@@ -9,6 +9,9 @@ interface APIInsight {
 
 interface AIBehavioralInsightsProps {
   insights?: APIInsight[];
+  loading?: boolean;
+  answeredQuestions?: number;
+  overallAccuracy?: number;
 }
 
 const typeToIcon: Record<string, any> = {
@@ -25,15 +28,48 @@ const typeToColor: Record<string, { bg: string; border: string; icon: string }> 
   repeated_error: { bg: "bg-red-500/5", border: "border-red-500/20", icon: "text-red-400" },
   conceptual_gap: { bg: "bg-red-500/5", border: "border-red-500/20", icon: "text-red-400" },
   formula_misuse: { bg: "bg-amber-500/5", border: "border-amber-500/20", icon: "text-amber-400" },
+  steady_progress: { bg: "bg-emerald-500/5", border: "border-emerald-500/20", icon: "text-emerald-400" },
 };
 
 const defaultColors = { bg: "bg-violet-500/5", border: "border-violet-500/20", icon: "text-violet-400" };
 
 export default function AIBehavioralInsights({
   insights = [],
+  loading = false,
+  answeredQuestions = 0,
+  overallAccuracy = 0,
 }: AIBehavioralInsightsProps) {
+  if (loading) {
+    return (
+      <div className="px-4 py-4 border-b border-white/10">
+        <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest mb-3">
+          🧠 AI Behavioral Insights
+        </h3>
+        <div className="flex items-center gap-2 text-[11px] text-white/50">
+          <div className="w-3 h-3 border border-violet-400 border-t-transparent rounded-full animate-spin" />
+          Analyzing recent practice...
+        </div>
+      </div>
+    );
+  }
+
   if (insights.length === 0) {
-    return null;
+    const remaining = Math.max(0, 3 - answeredQuestions);
+    const message = answeredQuestions === 0
+      ? "Complete a few practice questions to unlock behavior-based feedback."
+      : remaining > 0
+        ? "Answer " + remaining + " more question" + (remaining === 1 ? "" : "s") + " to detect a reliable pattern."
+        : "No recurring pattern is dominant right now. Current accuracy: " + overallAccuracy.toFixed(0) + "%.";
+    return (
+      <div className="px-4 py-4 border-b border-white/10">
+        <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest mb-3">
+          🧠 AI Behavioral Insights
+        </h3>
+        <div className="p-3 rounded-lg border border-violet-500/20 bg-violet-500/5 text-[11px] text-white/55 leading-snug">
+          {message}
+        </div>
+      </div>
+    );
   }
 
   return (

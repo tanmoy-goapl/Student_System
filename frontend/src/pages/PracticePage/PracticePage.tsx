@@ -12,11 +12,13 @@ import {
     startPracticeSession,
     submitPracticeAnswer,
     getNextBatch,
+    getSessionStatus,
     getStudentPerformance,
     type StartSessionResponse,
     type PracticeQuestion as APIPracticeQuestion,
     type SubmitAnswerResponse,
     type PracticePerformanceResponse,
+    type PracticeSessionStatus,
 } from "@/lib/api";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
@@ -58,6 +60,7 @@ export default function PracticePage({
 
     // Performance data for right sidebar
     const [performance, setPerformance] = useState<PracticePerformanceResponse | null>(null);
+    const [performanceLoading, setPerformanceLoading] = useState(true);
 
     // Live Stats for end-of-session screen
     const [liveStats, setLiveStats] = useState({
@@ -95,6 +98,8 @@ export default function PracticePage({
     // Timer
     const timerRef = useRef<number>(0);
     const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const generationPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const mountedRef = useRef(true);
     const [elapsedTime, setElapsedTime] = useState(0);
 
     // Get student ID from localStorage
@@ -106,18 +111,21 @@ export default function PracticePage({
         return 1;
     };
 
-    // Fetch performance data on mount
-    useEffect(() => {
-        async function fetchPerformance() {
-            try {
-                const data = await getStudentPerformance(getStudentId());
-                setPerformance(data);
-            } catch (error) {
-                // Supplementary data
-            }
+    const refreshPerformance = useCallback(async (showLoading = false) => {
+        if (showLoading) setPerformanceLoading(true);
+        try {
+            const data = await getStudentPerformance(getStudentId());
+            if (mountedRef.current) setPerformance(data);
+        } catch (error) {
+            // Sidebar analytics are supplementary to the quiz itself.
+        } finally {
+            if (showLoading && mountedRef.current) setPerformanceLoading(false);
         }
-        fetchPerformance();
     }, []);
+
+    useEffect(() => {
+        void refreshPerformance(true);
+    }, [refreshPerformance]);
 
     // Timer management
     const startTimer = useCallback(() => {
@@ -140,17 +148,85 @@ export default function PracticePage({
 
     // Clean up timer on unmount
     useEffect(() => {
+        mountedRef.current = true;
         return () => {
+            mountedRef.current = false;
             if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+            if (generationPollRef.current) clearInterval(generationPollRef.current);
         };
     }, []);
 
+    const stopGenerationPolling = useCallback(() => {
+        if (generationPollRef.current) {
+            clearInterval(generationPollRef.current);
+            generationPollRef.current = null;
+        }
+    }, []);
+
+    const applySessionQuestions = useCallback((
+        response: StartSessionResponse | PracticeSessionStatus
+    ) => {
+        const nextQuestions = response.questions || [];
+        setSessionId(response.session_id);
+        setSessionMode(response.mode);
+        setSessionTopic(response.topic);
+        setSessionDifficulty(response.difficulty);
+        setQuestions(nextQuestions);
+        setTotalQuestions(response.total_questions || nextQuestions.length || 5);
+        setCurrentQuestionIndex(0);
+        setSelectedAnswer(null);
+        setAnswered(false);
+        setAnswerResult(null);
+        setSessionStarted(true);
+        if (nextQuestions.length > 0) {
+            startTimer();
+        }
+    }, [startTimer]);
+
+    const beginGenerationPolling = useCallback((id: number) => {
+        stopGenerationPolling();
+        let requestInFlight = false;
+
+        const poll = async () => {
+            if (requestInFlight || !mountedRef.current) return;
+            requestInFlight = true;
+            try {
+                const status = await getSessionStatus(id);
+                if (!mountedRef.current) return;
+
+                if (status.generation_status === "ready" && status.questions?.length) {
+                    applySessionQuestions(status);
+                    setIsLoading(false);
+                    setIsGenerating(false);
+                    stopGenerationPolling();
+                } else if (status.generation_status === "failed") {
+                    setIsLoading(false);
+                    setIsGenerating(false);
+                    setHasError(true);
+                    stopGenerationPolling();
+                }
+            } catch (error) {
+                // Keep polling through transient network errors. The job lives on
+                // the backend and can be recovered when the user returns.
+            } finally {
+                requestInFlight = false;
+            }
+        };
+
+        void poll();
+        generationPollRef.current = setInterval(() => {
+            void poll();
+        }, 1000);
+    }, [applySessionQuestions, stopGenerationPolling]);
+
     // Start a new practice session
     const handleStartSession = async (mode: string, topic?: string, difficulty?: string, questionCount?: number) => {
+        stopGenerationPolling();
         setIsLoading(true);
         setIsGenerating(true);
         setSessionComplete(false);
         setAnswerResult(null);
+        let waitingForGeneration = false;
 
         try {
             setHasError(false);
@@ -163,26 +239,24 @@ export default function PracticePage({
                 count
             );
 
-            setSessionId(response.session_id);
-            setSessionMode(response.mode);
-            setSessionTopic(response.topic);
-            setSessionDifficulty(response.difficulty);
-            setQuestions(response.questions);
-            setTotalQuestions(response.total_questions || (response.questions ? response.questions.length : 5));
-            setCurrentQuestionIndex(0);
-            setSelectedAnswer(null);
-            setAnswered(false);
-            setSessionStarted(true);
+            if (!mountedRef.current) return;
+            applySessionQuestions(response);
             setLiveStats({ accuracy: 0, streak: 0, points: 0, avgSpeed: "0s", answered: 0, correct: 0 });
 
-            // Start timer for first question
-            startTimer();
+            waitingForGeneration = !response.questions?.length
+                || response.generation_status === "generating"
+                || response.status === "generating";
+            if (waitingForGeneration) {
+                beginGenerationPolling(response.session_id);
+            }
         } catch (error) {
             console.error("Failed to start session:", error);
-            setHasError(true);
+            if (mountedRef.current) setHasError(true);
         } finally {
-            setIsLoading(false);
-            setIsGenerating(false);
+            if (!waitingForGeneration && mountedRef.current) {
+                setIsLoading(false);
+                setIsGenerating(false);
+            }
         }
     };
     
@@ -226,6 +300,8 @@ export default function PracticePage({
                 answered: result.stats.answered,
                 correct: result.stats.correct,
             });
+
+            void refreshPerformance();
 
             onAnswerSubmit?.(
                 questions[currentQuestionIndex].id,
@@ -571,6 +647,9 @@ export default function PracticePage({
                     insights={performance?.insights}
                     adaptiveEngine={performance?.adaptive_engine}
                     suggestedNext={performance?.suggested_next}
+                    performanceLoading={performanceLoading}
+                    answeredQuestions={performance?.questions_attempted ?? performance?.total_attempts ?? 0}
+                    overallAccuracy={performance?.overall_accuracy ?? 0}
                 />
             </div>
         </div>

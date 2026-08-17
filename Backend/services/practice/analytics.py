@@ -51,6 +51,10 @@ def detect_behavioral_patterns(student_id: int, db: Session) -> list[dict]:
     )
 
     if len(recent) < 3:
+        db.query(BehavioralInsight).filter(
+            BehavioralInsight.student_id == student_id
+        ).delete(synchronize_session=False)
+        db.commit()
         return []
 
     insights = []
@@ -98,6 +102,25 @@ def detect_behavioral_patterns(student_id: int, db: Session) -> list[dict]:
             "description": f"Your recent accuracy is {accuracy:.0f}%. Focus on understanding core concepts before attempting harder questions.",
             "frequency": total - correct,
         })
+
+    if not insights:
+        insights.append({
+            "type": "steady_progress",
+            "title": "Recent practice looks steady",
+            "description": (
+                f"You answered {total} recent questions with {accuracy:.0f}% accuracy. "
+                "No repeated timing or topic-error pattern is currently dominant."
+            ),
+            "frequency": total,
+        })
+
+    current_types = {insight["type"] for insight in insights}
+    stored = db.query(BehavioralInsight).filter(
+        BehavioralInsight.student_id == student_id
+    ).all()
+    for existing in stored:
+        if existing.insight_type not in current_types:
+            db.delete(existing)
 
     for insight in insights:
         existing = (

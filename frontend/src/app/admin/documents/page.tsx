@@ -2,13 +2,14 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import AdminSidebar from "@/admin/components/AdminSidebar";
-import Loader from "@/components/Loader";
+import { DashboardLoadingShell } from "@/components/DashboardLoading";
 import { 
   FileText, Plus, Trash2, Shield, Eye, Tags, Calendar, 
   Search, Upload, X, CheckCircle2, AlertCircle, Info, FolderOpen,
   Download, Sparkles, Loader2, FileCode
 } from "lucide-react";
 import { getDocumentsData, deleteDocument } from "@/lib/api";
+import { getDocumentPreviewKind, getDocumentTextPreviewUrl, getDocumentViewUrl } from "@/lib/documentPreview";
 
 type DocumentItem = {
   id: string;
@@ -23,6 +24,7 @@ type DocumentItem = {
   category: string;
   documentType: string;
   visibility: string;
+  filename?: string;
 };
 
 export default function AdminDocumentsPage() {
@@ -150,13 +152,12 @@ export default function AdminDocumentsPage() {
     setPreviewDoc(doc);
     setTextContent(null);
     setTextError(null);
+    setTextLoading(false);
 
-    const ext = doc.name.substring(doc.name.lastIndexOf('.')).toLowerCase();
-    const isText = [".txt", ".csv", ".md", ".json"].includes(ext) || doc.type === "TXT";
+    if (getDocumentPreviewKind(doc) !== "text") return;
 
-    if (isText) {
-        setTextLoading(true);
-        fetch(`/api/documents/view?document_id=${cleanId(doc.id)}`)
+    setTextLoading(true);
+    fetch(getDocumentTextPreviewUrl(doc.id))
             .then(res => {
                 if (!res.ok) throw new Error("Failed to load text contents");
                 return res.text();
@@ -170,11 +171,10 @@ export default function AdminDocumentsPage() {
             .finally(() => {
                 setTextLoading(false);
             });
-    }
   };
 
   const handleDownload = (doc: DocumentItem) => {
-    const url = `/api/documents/view?document_id=${cleanId(doc.id)}`;
+    const url = getDocumentViewUrl(doc.id);
     const a = document.createElement('a');
     a.href = url;
     a.download = doc.name;
@@ -201,7 +201,7 @@ export default function AdminDocumentsPage() {
   }, [documents, activeTab, searchQuery]);
 
   if (loading) {
-    return <Loader fullScreen text="Loading document manager..." />;
+    return <DashboardLoadingShell role="admin" text="Loading document manager..." />;
   }
 
   return (
@@ -227,16 +227,7 @@ export default function AdminDocumentsPage() {
             </button>
           </div>
 
-          {/* Alert Note */}
-          <div className="flex gap-3 bg-violet-950/20 border border-violet-500/20 rounded-2xl p-4 text-sm text-violet-300">
-            <Info className="w-5 h-5 shrink-0 text-violet-400" />
-            <div>
-              <p className="font-semibold text-white">Access Control Policies</p>
-              <p className="mt-0.5 text-xs text-violet-300/80">
-                Documents stored as <strong>Universal</strong> are globally indexed and accessible to all student chatbots. <strong>Admin Shared</strong> documents are visible only to admins, and <strong>Private</strong> documents are restricted strictly to your account.
-              </p>
-            </div>
-          </div>
+
 
           {/* Filter Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
@@ -563,25 +554,25 @@ export default function AdminDocumentsPage() {
                   {/* Content Container */}
                   <div className="flex-1 overflow-auto bg-slate-950/20 p-6 flex items-center justify-center">
                       {(() => {
-                          const ext = previewDoc.name.substring(previewDoc.name.lastIndexOf('.')).toLowerCase();
+                          const previewKind = getDocumentPreviewKind(previewDoc);
                           
                           // 1. PDF Preview
-                          if (ext === '.pdf') {
+                          if (previewKind === "pdf") {
                               return (
                                   <iframe
-                                      src={`/api/documents/view?document_id=${cleanId(previewDoc.id)}#toolbar=0`}
+                                      src={getDocumentViewUrl(previewDoc.id) + "#toolbar=0"}
                                       className="w-full h-full rounded-lg border border-white/5 bg-slate-900"
                                   />
                               );
                           }
                           
                           // 2. Image Preview
-                          if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'].includes(ext)) {
+                          if (previewKind === "image") {
                               return (
                                   <div className="relative max-w-full max-h-full flex items-center justify-center">
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
                                       <img
-                                          src={`/api/documents/view?document_id=${cleanId(previewDoc.id)}`}
+                                          src={getDocumentViewUrl(previewDoc.id)}
                                           alt={previewDoc.name}
                                           className="max-w-full max-h-[70vh] rounded-lg object-contain shadow-lg border border-white/5"
                                       />
@@ -590,7 +581,7 @@ export default function AdminDocumentsPage() {
                           }
 
                           // 3. Text/CSV/MD Preview
-                          if (['.txt', '.csv', '.md', '.json'].includes(ext) || previewDoc.type === 'TXT') {
+                          if (previewKind === "text") {
                               if (textLoading) {
                                   return (
                                       <div className="flex flex-col items-center justify-center gap-3">

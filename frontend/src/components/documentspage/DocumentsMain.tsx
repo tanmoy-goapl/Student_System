@@ -8,6 +8,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import { useRouter } from 'next/navigation';
 import { useChatSession } from '@/components/ChatSessionProvider';
+import { getDocumentPreviewKind, getDocumentTextPreviewUrl, getDocumentViewUrl } from '@/lib/documentPreview';
 
 export type DocumentStatus = 'ready' | 'processing';
 
@@ -349,7 +350,6 @@ export default function DocumentsMain({ documents, totalCount, kpis, onDelete }:
     const [textContent, setTextContent] = useState<string | null>(null);
     const [textLoading, setTextLoading] = useState(false);
     const [textError, setTextError] = useState<string | null>(null);
-    const [isPreviewPdf, setIsPreviewPdf] = useState<boolean>(false);
     const [activeTab, setActiveTab] = useState<'universal' | 'private'>('universal');
     const router = useRouter();
     const { startDocumentChat } = useChatSession();
@@ -360,34 +360,23 @@ export default function DocumentsMain({ documents, totalCount, kpis, onDelete }:
         setPreviewDoc(doc);
         setTextContent(null);
         setTextError(null);
-        setIsPreviewPdf(false);
-        setTextLoading(true);
+        setTextLoading(false);
 
-        const cleanIdVal = cleanId(doc.id);
-        fetch(`/api/documents/view?document_id=${cleanIdVal}`)
+        if (getDocumentPreviewKind(doc) !== "text") return;
+
+        setTextLoading(true);
+        fetch(getDocumentTextPreviewUrl(doc.id))
             .then(res => {
-                if (!res.ok) throw new Error("Failed to load document");
+                if (!res.ok) throw new Error("Failed to load document contents");
                 return res.text();
             })
-            .then(text => {
-                const isRealPdf = text.startsWith("%PDF-");
-                if (isRealPdf) {
-                    setIsPreviewPdf(true);
-                } else {
-                    setIsPreviewPdf(false);
-                    setTextContent(text);
-                }
-            })
-            .catch(err => {
-                setTextError(err.message || "Could not read document contents.");
-            })
-            .finally(() => {
-                setTextLoading(false);
-            });
+            .then(text => setTextContent(text))
+            .catch(err => setTextError(err.message || "Could not read document contents."))
+            .finally(() => setTextLoading(false));
     };
 
     const handleDownload = (doc: DocumentItem) => {
-        const url = `/api/documents/view?document_id=${cleanId(doc.id)}`;
+        const url = getDocumentViewUrl(doc.id);
         const a = document.createElement('a');
         a.href = url;
         a.download = doc.name;
@@ -548,16 +537,31 @@ export default function DocumentsMain({ documents, totalCount, kpis, onDelete }:
                                      );
                                  }
 
-                                 if (isPreviewPdf) {
+                                 const previewKind = getDocumentPreviewKind(previewDoc);
+
+                                 if (previewKind === "pdf") {
                                      return (
                                          <iframe
-                                             src={`/api/documents/view?document_id=${cleanId(previewDoc.id)}#toolbar=0`}
+                                             src={getDocumentViewUrl(previewDoc.id) + "#toolbar=0"}
                                              className="w-full h-full rounded-lg border border-white/5 bg-slate-900"
                                          />
                                      );
                                  }
 
-                                 if (textContent !== null) {
+                                 if (previewKind === "image") {
+                                     return (
+                                         <div className="relative max-w-full max-h-full flex items-center justify-center">
+                                             {/* eslint-disable-next-line @next/next/no-img-element */}
+                                             <img
+                                                 src={getDocumentViewUrl(previewDoc.id)}
+                                                 alt={previewDoc.name}
+                                                 className="max-w-full max-h-[70vh] rounded-lg object-contain shadow-lg border border-white/5"
+                                             />
+                                         </div>
+                                     );
+                                 }
+
+                                 if (previewKind === "text" && textContent !== null) {
                                      return (
                                          <div className="w-full h-full text-xs leading-relaxed text-slate-200 bg-slate-950 p-6 rounded-xl border border-white/5 overflow-auto select-text purple-scrollbar text-left max-w-none space-y-5">
                                              {parseAndRenderMarkdown(textContent)}

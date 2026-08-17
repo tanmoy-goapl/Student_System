@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Briefcase, Loader2, Search } from 'lucide-react';
+import { Briefcase, Search } from 'lucide-react';
+import { DashboardContentLoader } from '@/components/DashboardLoading';
 
 interface ProfessorData {
   id: number;
@@ -70,9 +71,7 @@ export default function ProfessorsPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center p-12">
-            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-          </div>
+          <DashboardContentLoader text="Loading professors..." />
         ) : (
           <div className="bg-slate-900/40 border border-white/5 rounded-2xl backdrop-blur-xl overflow-hidden shadow-2xl animate-in fade-in duration-500">
             <div className="overflow-x-auto">

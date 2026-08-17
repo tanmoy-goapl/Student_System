@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ChatPage from "@/app/pages/ChatPage";
-import Loader from "@/components/Loader";
+import { PageLoadingState } from "@/components/DashboardLoading";
 
 export default function Chat() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,9 +25,7 @@ export default function Chat() {
   }, [loading, isAuthenticated, router]);
 
   if (loading) {
-    return (
-      <Loader fullScreen text="Loading..." />
-    );
+    return <PageLoadingState text="Loading..." />;
   }
 
   if (!isAuthenticated) {

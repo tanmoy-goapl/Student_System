@@ -4,9 +4,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { 
   BarChart3, Users, TrendingUp, Sparkles, Clock, Calendar, 
-  ChevronDown, Download, AlertTriangle, CheckCircle, FileText, Loader2
+  ChevronDown, Download, AlertTriangle, CheckCircle, FileText
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
+import { DashboardContentLoader } from "@/components/DashboardLoading";
 
 // ── Types ───────────────────────────────────────────────────
 interface ClassOption { id: number; name: string }
@@ -114,7 +115,7 @@ export default function InsightsPage() {
   const overviewCards = data ? [
     { label: "Avg Class Score", value: `${data.overview.avgScore}%`, subtitle: `Across ${data.classes.length} class${data.classes.length !== 1 ? "es" : ""}`, icon: TrendingUp, gradient: "from-blue-600 to-indigo-500" },
     { label: "Engagement Rate", value: `${data.overview.engagementRate}%`, subtitle: "Active + completed quiz participation", icon: CheckCircle, gradient: "from-emerald-500 to-teal-500" },
-    { label: "At-Risk Students", value: `${data.overview.atRiskStudents}`, subtitle: "Accuracy below 50%", icon: AlertTriangle, gradient: "from-rose-500 to-red-500" },
+    { label: "At-Risk Students", value: `${data.overview.atRiskStudents}`, subtitle: "Unique students below 50% in any class", icon: AlertTriangle, gradient: "from-rose-500 to-red-500" },
     { label: "Topic Mastery", value: `${data.overview.topicMastery}%`, subtitle: "Active topics average", icon: BookOpenIcon, gradient: "from-indigo-600 to-purple-600" },
   ] : [];
 
@@ -219,10 +220,7 @@ export default function InsightsPage() {
         <main className="flex-1 overflow-y-auto purple-scrollbar p-6 space-y-8 bg-gradient-to-b from-[#040815] to-[#020617]">
           {/* ── Loading State ─────────────────────────── */}
           {loading && (
-            <div className="flex flex-col items-center justify-center h-[60vh] gap-3">
-              <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-              <span className="text-xs text-slate-400 font-semibold">Loading insights…</span>
-            </div>
+            <DashboardContentLoader text="Loading insights..." />
           )}
 
           {/* ── Error State ──────────────────────────── */}

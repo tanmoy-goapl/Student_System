@@ -1,21 +1,15 @@
 "use client";
 
-import { User, PanelRightOpen, PanelRightClose, BarChart3, Bell, Search } from "lucide-react";
+import { User, BarChart3, Bell, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
-interface TopBarProps {
-  rightOpen?: boolean;
-  onRightOpenChange?: (open: boolean) => void;
-}
-
-export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarProps) {
+export default function TopBar() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isHomePage = pathname === "/" || pathname === "/courses" || pathname === "/personal";
-  const isChatPage = pathname?.startsWith("/chat");
 
   const sourceParam = searchParams?.get("source");
 
@@ -153,20 +147,6 @@ export default function TopBar({ rightOpen = false, onRightOpenChange }: TopBarP
           </span>
         </Link>
 
-        {/* Insights button — only on chat page */}
-        {isChatPage && (
-          <button
-            onClick={() => onRightOpenChange?.(!rightOpen)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95
-              ${rightOpen
-                ? "bg-blue-600/20 border-blue-500/40 text-blue-200 shadow-[0_0_12px_rgba(59,130,246,0.15)]"
-                : "bg-slate-900/60 border-white/5 text-white/50 hover:text-white hover:bg-white/5 hover:border-white/10"
-              }`}
-          >
-            {rightOpen ? <PanelRightClose size={13} /> : <PanelRightOpen size={13} />}
-            <span className="hidden sm:inline">{rightOpen ? "Close" : "Insights"}</span>
-          </button>
-        )}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, Document
-from services.extract import extract_text, chunk_text, IMAGE_EXTENSIONS
+from services.extract import extract_text, chunk_text, IMAGE_EXTENSIONS, get_pdf_page_count
 from config import UPLOAD_DIR
 import os
 import json
@@ -14,6 +14,15 @@ from services.practice.base import normalize_generated_text
 
 router = APIRouter()
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+def _listed_page_count(doc: Document) -> int | None:
+    """Use the actual PDF page count when returning older document records."""
+    if os.path.splitext(doc.filename)[1].lower() == ".pdf" and os.path.exists(doc.file_path):
+        actual_pages = get_pdf_page_count(doc.file_path)
+        if actual_pages is not None:
+            return actual_pages
+    return doc.pages
 
 class UpdateDocumentTypeRequest(BaseModel):
     document_type: str
@@ -104,7 +113,7 @@ def get_documents(student_id: int, db: Session = Depends(get_db)):
             "filename": d.filename,
             "category": d.category,
             "subject": d.subject,
-            "pages": d.pages,
+            "pages": _listed_page_count(d),
             "file_size": d.file_size,
             "uploaded_at": d.uploaded_at.isoformat(),
             "document_format": d.document_format,
@@ -127,7 +136,7 @@ def view_document(document_id: int, db: Session = Depends(get_db)):
 
     ext = os.path.splitext(doc.filename)[1].lower()
     generated_titles = (
-        "AI Study Material - ", "AI Lesson Plan - ", "AI Quiz - ",
+        "AI Study Material - ", "AI Lesson - ", "AI Lesson Plan - ", "AI Quiz - ",
         "AI Revision Notes - ", "AI Explained Simpler - ", "AI Practice Set - "
     )
     is_generated_material = doc.owner_role == "professor" and (
@@ -158,6 +167,47 @@ def view_document(document_id: int, db: Session = Depends(get_db)):
         media_type=media_type,
         filename=doc.filename,
         headers={"Content-Disposition": f'inline; filename="{doc.filename}"'}
+    )
+
+
+@router.get("/documents/preview/{document_id}")
+def preview_document(document_id: int, db: Session = Depends(get_db)):
+    """Return readable text for formats that browsers cannot render inline."""
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    if not os.path.exists(doc.file_path):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+
+    ext = os.path.splitext(doc.filename)[1].lower()
+    generated_titles = (
+        "AI Study Material - ", "AI Lesson - ", "AI Lesson Plan - ", "AI Quiz - ",
+        "AI Revision Notes - ", "AI Explained Simpler - ", "AI Practice Set - "
+    )
+    is_generated_material = doc.owner_role == "professor" and (
+        (doc.title or "").startswith(generated_titles)
+        or any(f"_{title}" in doc.filename for title in generated_titles)
+    )
+
+    try:
+        if ext in {".txt", ".md", ".csv", ".json"}:
+            with open(doc.file_path, "r", encoding="utf-8", errors="replace") as document_file:
+                text = document_file.read()
+            if is_generated_material:
+                text = normalize_generated_text(text)
+        else:
+            text = extract_text(doc.file_path)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=f"Preview unavailable: {exc}")
+
+    if not text.strip():
+        text = "No readable text was found in this document. You can still download the original file."
+
+    return Response(
+        content=text,
+        media_type="text/plain",
+        headers={"Content-Disposition": f'inline; filename="{doc.filename}.txt"'}
     )
 
 
@@ -203,6 +253,13 @@ async def upload_file(
     if not uploader:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # A professor course-shared upload must belong to one of their classrooms.
+    if classroom_id is not None and uploader.role == "professor":
+        from classroom_models import Classroom
+        target_classroom = db.query(Classroom).filter(Classroom.id == classroom_id).first()
+        if not target_classroom or target_classroom.professor_id != actual_student_id:
+            raise HTTPException(status_code=403, detail="You can only publish to your own classroom.")
+
     content = await file.read()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -227,14 +284,11 @@ async def upload_file(
         }
         doc_format = format_map.get(ext, ext.lstrip(".").upper() or "UNKNOWN")
 
-        # Estimate page count
+        # Read PDF page count from the document structure, never from file size.
         page_count = None
         if ext == ".pdf":
-            try:
-                from PyPDF2 import PdfReader
-                reader = PdfReader(file_path)
-                page_count = len(reader.pages)
-            except Exception:
+            page_count = get_pdf_page_count(file_path)
+            if page_count is None:
                 page_count = max(1, len(content) // 50000)
         elif ext == ".txt":
             # Estimate: ~3000 chars per page
@@ -299,6 +353,30 @@ async def upload_file(
         db.add(doc)
         db.commit()
         db.refresh(doc)
+
+        # Keep the class Resources tab in sync with the professor document list.
+        # The same physical file is referenced; no duplicate upload is needed.
+        if uploader.role == "professor" and final_visibility == "course_shared" and classroom_id is not None:
+            from classroom_models import ClassResource
+            resource_type = {
+                "syllabus": "syllabus",
+                "curriculum": "syllabus",
+                "assignment": "assignment",
+                "pyq": "pyq",
+            }.get(final_doc_type, "notes")
+            existing_resource = db.query(ClassResource).filter(
+                ClassResource.class_id == classroom_id,
+                ClassResource.file_path == file_path,
+            ).first()
+            if not existing_resource:
+                db.add(ClassResource(
+                    class_id=classroom_id,
+                    title=doc.title or doc.filename,
+                    type=resource_type,
+                    file_path=file_path,
+                    uploaded_by=actual_student_id,
+                ))
+                db.commit()
 
         # ── Extract text ─────────────────────────
         is_image = ext in IMAGE_EXTENSIONS

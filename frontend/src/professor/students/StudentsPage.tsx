@@ -7,6 +7,7 @@ import {
   FileText, Compass, RefreshCw
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
+import { DashboardContentLoader } from "@/components/DashboardLoading";
 
 interface StudentCardData {
   id: string;
@@ -214,7 +215,8 @@ export default function StudentsPage() {
       let badgeBg = "bg-amber-400";
       let note = "Continue practicing the assigned topics.";
 
-      if (performance < 50 && progress > 0) {
+      const hasAtRiskClass = rows.some(row => row.badge === "AT RISK");
+      if (hasAtRiskClass) {
         badge = "AT RISK";
         badgeColor = "text-rose-400 border-rose-500/20 bg-rose-500/10";
         badgeBg = "bg-rose-400";
@@ -512,12 +514,7 @@ export default function StudentsPage() {
         {/* Scrollable Body */}
         <main className="flex-1 overflow-y-auto purple-scrollbar p-6 space-y-8 bg-gradient-to-b from-[#040815] to-[#020617]">
           {loading ? (
-            <div className="flex h-full w-full items-center justify-center">
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-                <p className="text-xs text-slate-400 font-medium">Loading student list and analytics...</p>
-              </div>
-            </div>
+            <DashboardContentLoader text="Loading student list and analytics..." />
           ) : (
             <>
               {/* KPI Summary Row */}

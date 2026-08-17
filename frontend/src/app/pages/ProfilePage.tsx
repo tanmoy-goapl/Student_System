@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Loader from "@/components/Loader";
+import { PageLoadingState } from "@/components/DashboardLoading";
 import { prepareChatForLogout } from "@/components/ChatSessionProvider";
 
 const roleBadge: Record<string, string> = {
@@ -48,7 +48,7 @@ export default function ProfilePage() {
     router.replace("/login?next=/profile");
   }, [ready, isAuthenticated, router]);
 
-  if (!ready) return <Loader fullScreen text="Loading..." />;
+  if (!ready) return <PageLoadingState text="Loading..." />;
 
   if (!isAuthenticated) {
     return (

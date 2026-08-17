@@ -2,11 +2,11 @@
 
 import React, { Suspense } from "react";
 import UsersPage from "@/admin/users/UsersPage";
-import Loader from "@/components/Loader";
+import { DashboardLoadingShell } from "@/components/DashboardLoading";
 
 export default function AdminUsersRoute() {
   return (
-    <Suspense fallback={<Loader fullScreen text="Loading Users..." />}>
+    <Suspense fallback={<DashboardLoadingShell role="admin" text="Loading Users..." />}>
       <UsersPage />
     </Suspense>
   );

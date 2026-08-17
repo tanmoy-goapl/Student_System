@@ -20,7 +20,7 @@ import {
   UserRound,
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
-import Loader from "@/components/Loader";
+import { DashboardContentLoader } from "@/components/DashboardLoading";
 
 interface ProfileData {
   student: { id: number; name: string; email: string; role: string };
@@ -166,7 +166,7 @@ export default function StudentProfilePage() {
 
         <main className="flex-1 overflow-y-auto purple-scrollbar bg-gradient-to-b from-[#040815] to-[#020617] p-6">
           {loading ? (
-            <div className="flex min-h-[70vh] items-center justify-center"><Loader text="Loading student profile..." /></div>
+            <DashboardContentLoader text="Loading student profile..." />
           ) : error ? (
             <div className="flex min-h-[70vh] items-center justify-center">
               <div className="max-w-md rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 text-center">

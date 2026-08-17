@@ -1,0 +1,161 @@
+# Lesson Plan – React JS  
+**Subject:** Front‑End Development  
+**Topic:** React JS (Fundamentals & Core Practices)  
+**Class Length:** 60 minutes  
+**Audience:** Upper‑level undergraduate students (third‑year) who have basic HTML, CSS, and JavaScript knowledge.  
+
+---  
+
+## 1. Learning Objectives  
+
+By the end of the session, students will be able to:  
+
+1. **Explain** the motivation behind React and the problems it solves in modern UI development.  
+2. **Identify** and **describe** the core concepts of React: components, JSX, props, state, lifecycle, hooks, and the virtual DOM.  
+3. **Create** a simple functional component using JSX, pass data via props, and manage local state with the `useState` hook.  
+4. **Demonstrate** how to fetch data from an API inside a component using the `useEffect` hook.  
+5. **Critically discuss** the trade‑offs of using React versus alternative frameworks (Vue, Angular, Svelte).  
+
+---  
+
+## 2. Lecture Timeline (60 min)  
+
+| Time | Activity | Details |
+|------|----------|---------|
+| **0‑5 min** | **Opening & Context** | Quick poll: “Who has built a UI with a library before?” – set the stage, show a slide with the evolution of front‑end (jQuery → SPA frameworks). |
+| **5‑12 min** | **Why React? – The Problem Space** | Explain UI complexity, state synchronization, and performance bottlenecks. Show a simple “shopping cart” UI before/after React. |
+| **12‑22 min** | **Core Concepts Overview** | Slides covering: <br>• Components (functional vs class) <br>• JSX syntax <br>• Props & state <br>• Virtual DOM & reconciliation <br>• Hooks (focus on `useState`, `useEffect`). |
+| **22‑30 min** | **Live Coding – Building a Counter** | Step‑by‑step creation of a functional component `Counter`. Demonstrate JSX, `useState`, event handling, and re‑rendering. |
+| **30‑38 min** | **In‑Class Activity – Props & Composition** | Students work in pairs (2‑3 per pair) to extend the Counter into a `Dashboard` component that receives the count as a prop and displays additional static info. Instructor circulates, offers hints. |
+| **38‑45 min** | **Fetching Data with `useEffect`** | Show a small example that pulls a list of users from `https://jsonplaceholder.typicode.com/users`. Discuss dependency array, cleanup, and async handling. |
+| **45‑52 min** | **Group Discussion – Hooks vs Class Lifecycle** | Prompt: “If you were maintaining a legacy codebase that uses class components, how would you migrate to hooks? What pitfalls might you encounter?” Students share ideas; instructor synthesises key points. |
+| **52‑58 min** | **Comparative Reflection** | Quick table on board comparing React, Vue, Angular, Svelte (learning curve, bundle size, ecosystem). Students vote on which they would choose for a given project scenario. |
+| **58‑60 min** | **Wrap‑Up & Homework** | Recap objectives, announce next class (state management with Redux/Context). Assign homework (build a small “Todo” app using only functional components and hooks). |
+
+---  
+
+## 3. Core Concepts Explanation  
+
+### 3.1 Components  
+- **Definition:** Reusable, self‑contained pieces of UI that return a description of what should appear on the screen.  
+- **Types:**  
+  - *Functional components* – plain JavaScript functions that return JSX. Preferred for new code.  
+  - *Class components* – ES6 classes extending `React.Component`. Still valid but largely superseded by hooks.  
+
+### 3.2 JSX (JavaScript XML)  
+- **What it is:** A syntax extension that looks like HTML but is compiled to `React.createElement` calls.  
+- **Key rules:**  
+  - Must have a single root element.  
+  - Use `className` instead of `class`.  
+  - JavaScript expressions are embedded with curly braces `{}`.  
+
+### 3.3 Props (Properties)  
+- **Read‑only** values passed from a parent component to a child.  
+- Enable component composition and data flow “top‑down”.  
+
+### 3.4 State  
+- **Mutable** data that lives inside a component and triggers a re‑render when changed.  
+- In functional components, state is created with the `useState` hook:  
+
+```js
+const [count, setCount] = useState(0);
+```
+
+- Updating state is asynchronous; React batches multiple updates for performance.  
+
+### 3.5 Virtual DOM & Reconciliation  
+- React keeps an in‑memory representation of the UI (the virtual DOM).  
+- When state or props change, React creates a new virtual tree, diffs it against the previous tree, and applies only the minimal set of real DOM changes.  
+- This approach yields fast UI updates and abstracts away manual DOM manipulation.  
+
+### 3.6 Hooks (Functional‑Component Lifecycle)  
+| Hook | Purpose | Typical Use |
+|------|---------|-------------|
+| `useState` | Declare local state | Counter, form fields |
+| `useEffect` | Run side effects (data fetch, subscriptions) | API calls, timers |
+| `useContext` | Consume a React context | Theme, auth |
+| `useReducer` | Complex state logic similar to Redux | Form wizard, game state |
+| `useMemo` / `useCallback` | Memoize expensive calculations or functions | Performance tuning |
+
+**`useEffect` pattern:**  
+
+```js
+useEffect(() => {
+  // side effect code
+  return () => {
+    // optional cleanup
+  };
+}, [dependency1, dependency2]); // runs when dependencies change
+```
+
+---  
+
+## 4. Discussion Questions  
+
+1. **Conceptual:** *Why does React need a virtual DOM? Could we achieve the same performance by directly manipulating the real DOM?*  
+2. **Practical:** *When would you prefer a class component over a functional component today?*  
+3. **Design:** *How does the “single source of truth” principle manifest in React’s state management?*  
+4. **Ecosystem:** *What are the advantages and disadvantages of using a large library like React compared to a lightweight alternative such as Svelte?*  
+5. **Future‑Oriented:** *React is moving toward server‑side rendering (Next.js) and concurrent features. How might these impact the way we structure components today?*  
+
+---  
+
+## 5. In‑Class Activities  
+
+### Activity 1 – **Props & Composition (8 min)**  
+- **Goal:** Reinforce data flow from parent to child.  
+- **Instructions:**  
+  1. In the provided starter file, locate the `Counter` component created earlier.  
+  2. Create a new component `Dashboard` that receives `count` as a prop and displays it inside a styled card.  
+  3. Render `<Dashboard count={count} />` from the main `App` component.  
+- **Assessment:** Walk around; verify that each pair correctly passes the prop and that the UI updates when the button is clicked.  
+
+### Activity 2 – **Fetching Data with `useEffect` (7 min)**  
+- **Goal:** Practice side‑effects and async handling.  
+- **Instructions:**  
+  1. Add a new component `UserList`.  
+  2. Inside `UserList`, use `useEffect` to fetch the user array from the JSONPlaceholder endpoint.  
+  3. Store the result in state (`users`) and render a simple unordered list of usernames.  
+- **Tip for Students:** Remember to include an empty dependency array (`[]`) to run the fetch only once on mount.  
+
+### Activity 3 – **Mini Debate (5 min)**  
+- **Goal:** Develop critical thinking about framework choice.  
+- **Setup:** Split the class into two groups. One argues that React is the best choice for a large‑scale enterprise app; the other argues for an alternative (Vue, Angular, or Svelte).  
+- **Outcome:** Each group presents two supporting points; the instructor highlights trade‑offs (learning curve, community, tooling, performance).  
+
+---  
+
+## 6. Homework Assignment  
+
+**Task:** Build a **Todo List** application using only functional components and React hooks.  
+
+**Requirements:**  
+
+1. **Add Todo:** Input field + button; new items appear in a list.  
+2. **Toggle Completion:** Clicking a todo toggles a `completed` flag; completed items render with a line‑through style.  
+3. **Persist Data:** Use `localStorage` to save the list; load it on component mount with `useEffect`.  
+4. **Optional Bonus:** Implement a filter (All / Active / Completed) using a derived state or `useMemo`.  
+
+**Submission:** Push the code to a public GitHub repository and share the link on the course LMS by next week.  
+
+---  
+
+## 7. Resources & Further Reading  
+
+| Type | Link | Description |
+|------|------|-------------|
+| Official Docs | https://reactjs.org/docs/getting-started.html | Comprehensive guide, API reference, and tutorials. |
+| Interactive Tutorial | https://reactjs.org/tutorial/tutorial.html | “Intro to React” tutorial that walks through a tic‑tac‑toe game. |
+| Video Lecture | https://www.youtube.com/watch?v=Ke90Tje7VS0 | 1‑hour overview of React fundamentals (free on YouTube). |
+| Community | https://stackoverflow.com/questions/tagged/reactjs | Stack Overflow tag for quick Q&A. |
+| Tooling | https://create-react-app.dev/ | Boilerplate generator for quick project setup. |
+
+---  
+
+### Closing Note  
+
+React remains a cornerstone of modern front‑end engineering. Mastering its core ideas—components, JSX, state, and hooks—gives students a solid foundation not only for building interactive UIs but also for understanding the design patterns that underpin many other libraries. The blend of live coding, hands‑on pair work, and critical discussion in this lesson aims to cement both practical skills and conceptual depth.  
+
+*Prepared by:* **Prof. [Your Name]**, Department of Computer Science, [University]  
+
+---  

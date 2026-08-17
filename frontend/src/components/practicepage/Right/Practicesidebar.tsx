@@ -18,6 +18,9 @@ interface PracticeSidebarProps {
   }[];
   adaptiveEngine?: any;
   suggestedNext?: any[];
+  performanceLoading?: boolean;
+  answeredQuestions?: number;
+  overallAccuracy?: number;
 
   // Callbacks
   onContinuePractice?: () => void;
@@ -30,6 +33,9 @@ export default function PracticeSidebar({
   insights,
   adaptiveEngine,
   suggestedNext = [],
+  performanceLoading = false,
+  answeredQuestions = 0,
+  overallAccuracy = 0,
   onContinuePractice,
   onReviewMistakes,
   onGoToLearning,
@@ -38,7 +44,12 @@ export default function PracticeSidebar({
     <div className="w-full h-full bg-[#090D1F] flex flex-col border-l border-white/10 overflow-hidden">
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
-        <AIBehavioralInsights insights={insights} />
+        <AIBehavioralInsights
+          insights={insights}
+          loading={performanceLoading}
+          answeredQuestions={answeredQuestions}
+          overallAccuracy={overallAccuracy}
+        />
 
         <WeakTopics topics={weakTopics} />
 

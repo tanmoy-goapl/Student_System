@@ -101,6 +101,8 @@ def admin_create_user(payload: CreateUserRequest, db: Session = Depends(get_db))
         )
 
     department_code = normalize_department_code(payload.department)
+    if payload.role == "admin" and department_code:
+        raise HTTPException(status_code=422, detail="Admin accounts do not use academic departments.")
     department = None
     if department_code:
         department = db.query(Department).filter(

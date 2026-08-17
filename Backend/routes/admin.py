@@ -3,8 +3,8 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User, Department
-from classroom_models import Classroom, StudentClass
+from models import User, Department, Document
+from classroom_models import Classroom, StudentClass, ClassResource, ClassCurriculum
 from practice_models import PracticeSession, QuizHistory
 from datetime import datetime, timedelta
 from typing import Optional
@@ -42,6 +42,96 @@ def relative_time(dt):
     if minutes > 0:
         return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
     return "Just now"
+
+
+def _build_faculty_activity(db: Session) -> dict:
+    """Build a live teaching-activity snapshot from existing faculty records."""
+    now = datetime.utcnow()
+    week_start = now - timedelta(days=7)
+    month_start = now - timedelta(days=30)
+    professors = db.query(User).filter(User.role == "professor").all()
+    professor_ids = {professor.id for professor in professors}
+    professor_names = {
+        professor.id: professor.name or professor.email or f"Professor {professor.id}"
+        for professor in professors
+    }
+    active_professor_ids = set()
+    events = []
+
+    def add_event(professor_id, timestamp, message):
+        if professor_id not in professor_ids or not timestamp:
+            return
+        if timestamp >= week_start:
+            active_professor_ids.add(professor_id)
+        if timestamp >= month_start:
+            events.append((timestamp, message))
+
+    recent_classes = db.query(Classroom).filter(
+        Classroom.created_at >= month_start,
+        Classroom.professor_id.in_(professor_ids),
+    ).all() if professor_ids else []
+    for classroom in recent_classes:
+        professor_name = professor_names.get(classroom.professor_id, "A professor")
+        add_event(classroom.professor_id, classroom.created_at, f"{professor_name} created {classroom.name}")
+
+    recent_resources = db.query(ClassResource).filter(
+        ClassResource.uploaded_at >= month_start,
+        ClassResource.uploaded_by.in_(professor_ids),
+    ).all() if professor_ids else []
+    for resource in recent_resources:
+        professor_name = professor_names.get(resource.uploaded_by, "A professor")
+        add_event(resource.uploaded_by, resource.uploaded_at, f"{professor_name} uploaded {resource.title}")
+
+    recent_curriculums = db.query(ClassCurriculum, Classroom).join(
+        Classroom, ClassCurriculum.class_id == Classroom.id
+    ).filter(
+        ClassCurriculum.generated_at >= month_start,
+        Classroom.professor_id.in_(professor_ids),
+    ).all() if professor_ids else []
+    for curriculum, classroom in recent_curriculums:
+        professor_name = professor_names.get(classroom.professor_id, "A professor")
+        add_event(
+            classroom.professor_id,
+            curriculum.generated_at,
+            f"{professor_name} updated curriculum for {classroom.name}",
+        )
+
+    generated_prefixes = (
+        "AI Study Material - ", "AI Lesson - ", "AI Lesson Plan - ",
+        "AI Quiz - ", "AI Revision Notes - ", "AI Explained Simpler - ",
+        "AI Practice Set - ",
+    )
+    recent_documents = db.query(Document).filter(
+        Document.owner_role == "professor",
+        Document.owner_id.in_(professor_ids),
+        Document.uploaded_at >= month_start,
+    ).all() if professor_ids else []
+    generated_documents = [
+        document for document in recent_documents
+        if (document.title or "").startswith(generated_prefixes)
+        or any(f"_{prefix}" in (document.filename or "") for prefix in generated_prefixes)
+    ]
+    for document in generated_documents:
+        professor_name = professor_names.get(document.owner_id, "A professor")
+        material_name = (document.title or document.filename or "AI material").replace(".txt", "")
+        add_event(document.owner_id, document.uploaded_at, f"{professor_name} generated {material_name}")
+
+    events.sort(key=lambda item: item[0], reverse=True)
+    last_action = None
+    if events:
+        timestamp, message = events[0]
+        last_action = {"message": message, "time": relative_time(timestamp)}
+
+    return {
+        "total_professors": len(professors),
+        "active_professors_7d": len(active_professor_ids),
+        "classes_managed": db.query(Classroom).filter(Classroom.professor_id.in_(professor_ids)).count() if professor_ids else 0,
+        "classes_created_30d": len(recent_classes),
+        "resources_uploaded_30d": len(recent_resources),
+        "curriculums_updated_30d": len(recent_curriculums),
+        "ai_materials_generated_30d": len(generated_documents),
+        "last_action": last_action,
+    }
 
 
 def _build_admin_alerts(
@@ -247,7 +337,7 @@ def _build_department_summaries(
         student_ids = department_students[department_id]
         metrics = [metrics_by_student[student_id] for student_id in student_ids if student_id in metrics_by_student]
         confidences = [metric.get("overall_confidence", 0.0) for metric in metrics]
-        readinesses = [metric.get("overall_progress", 0.0) for metric in metrics]
+        readinesses = [metric.get("overall_readiness", metric.get("overall_progress", 0.0)) for metric in metrics]
         summaries.append({
             **department_meta[department_id],
             "student_count": len(student_ids),
@@ -292,7 +382,7 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
         metrics = calculate_student_metrics(student.id, db)
         metrics_by_student[student.id] = metrics
         conf = metrics.get("overall_confidence", 0.0)
-        readiness = metrics.get("overall_progress", 0.0)
+        readiness = metrics.get("overall_readiness", metrics.get("overall_progress", 0.0))
         confidences.append(conf)
         readinesses.append(readiness)
 
@@ -343,6 +433,7 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
         "inactive_students": inactive_students,
         "departments": departments,
         "alerts": alerts,
+        "faculty_activity": _build_faculty_activity(db),
         "last_updated": datetime.utcnow().isoformat(),
     }
 
@@ -405,8 +496,14 @@ def update_user_department(
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
+    if user.role == "admin":
+        raise HTTPException(status_code=422, detail="Admin accounts do not use academic departments.")
+    if user.department:
+        raise HTTPException(status_code=409, detail="A department is already assigned to this user.")
 
     code = normalize_department_code(req.department)
+    if not code:
+        raise HTTPException(status_code=422, detail="Select a department to assign.")
     department = None
     if code:
         department = db.query(Department).filter(
@@ -447,7 +544,7 @@ def get_admin_students(db: Session = Depends(get_db)):
             "id": s.id,
             "name": s.name or s.email,
             "confidence": round(metrics.get("overall_confidence", 0.0)),
-            "readiness": round(metrics.get("overall_progress", 0.0)),
+            "readiness": round(metrics.get("overall_readiness", metrics.get("overall_progress", 0.0))),
             "last_active": relative_time(latest_time) if latest_time else "Never active"
         })
     return results
@@ -573,7 +670,7 @@ def get_classrooms_analytics(db: Session = Depends(get_db)):
         for sid in student_ids:
             metrics = calculate_student_metrics(sid, db)
             conf = metrics.get("overall_confidence", 0.0)
-            readiness = metrics.get("overall_progress", 0.0)
+            readiness = metrics.get("overall_readiness", metrics.get("overall_progress", 0.0))
             confidences.append(conf)
             readinesses.append(readiness)
 

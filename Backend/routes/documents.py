@@ -2,11 +2,24 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Document
+from services.extract import get_pdf_page_count
 import os
 import json
 from datetime import datetime
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
+
+def _page_count_for_document(doc: Document) -> int | None:
+    """Prefer the real PDF page count so older size-based values are corrected."""
+    if os.path.splitext(doc.filename)[1].lower() == ".pdf" and os.path.exists(doc.file_path):
+        actual_pages = get_pdf_page_count(doc.file_path)
+        if actual_pages is not None:
+            return actual_pages
+
+    if doc.pages is not None:
+        return doc.pages
+    return max(1, doc.file_size // 50000) if doc.file_size else None
 
 def to_ui_doc(doc: Document) -> dict:
     # Use stored document_format, fallback to extension-based detection
@@ -43,8 +56,8 @@ def to_ui_doc(doc: Document) -> dict:
     else:
         time_str = f"{delta.days} days ago"
 
-    # Use stored pages, fallback to estimate
-    pages = doc.pages if doc.pages else max(1, doc.file_size // 50000)
+    # Recalculate PDFs so old size-based values do not remain visible.
+    pages = _page_count_for_document(doc)
     size_mb = round(doc.file_size / (1024 * 1024), 2)
     
     # Use stored title, fallback to filename

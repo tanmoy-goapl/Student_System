@@ -170,6 +170,7 @@ class CompleteTopicRequest(BaseModel):
 @router.post("/complete_topic")
 def complete_topic(req: CompleteTopicRequest, db: Session = Depends(get_db)):
     from sqlalchemy import desc
+    activity_at = datetime.utcnow()
     
     # 1. Always create or update TopicPerformance so the frontend knows the topic is read/started
     from practice_models import TopicPerformance
@@ -182,7 +183,8 @@ def complete_topic(req: CompleteTopicRequest, db: Session = Depends(get_db)):
             questions_attempted=0,
             accuracy=0.0,
             current_difficulty="Beginner",
-            status="LEARNING"
+            status="LEARNING",
+            last_practiced_at=activity_at,
         )
         db.add(perf)
     else:
@@ -190,6 +192,7 @@ def complete_topic(req: CompleteTopicRequest, db: Session = Depends(get_db)):
             perf.sessions = 1
         if perf.status == "NOT_STARTED":
             perf.status = "LEARNING"
+        perf.last_practiced_at = activity_at
     db.commit()
 
     roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == req.student_id).order_by(desc(LearningRoadmap.created_at)).first()

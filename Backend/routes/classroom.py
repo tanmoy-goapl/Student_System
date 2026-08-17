@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database import get_db
-from models import User
+from models import User, Document
 from models import Department
 from classroom_models import Classroom, StudentClass, ClassResource, ClassCurriculum
 from services.extract import extract_text_from_pdf
@@ -308,7 +308,41 @@ def get_class_resources(class_id: int, user_id: int, db: Session = Depends(get_d
     _ensure_class_access(classroom, user, db)
             
     resources = db.query(ClassResource).filter(ClassResource.class_id == class_id).order_by(ClassResource.uploaded_at.desc()).all()
-    
+
+    # Backfill documents published before the upload route started creating
+    # ClassResource rows. The document and resource continue to share one file.
+    published_documents = db.query(Document).filter(
+        Document.classroom_id == class_id,
+        Document.visibility == "course_shared",
+    ).all()
+    resource_paths = {resource.file_path for resource in resources}
+    created_legacy_resource = False
+    for doc in published_documents:
+        if doc.file_path in resource_paths or not os.path.exists(doc.file_path):
+            continue
+
+        resource_type = {
+            "syllabus": "syllabus",
+            "curriculum": "syllabus",
+            "assignment": "assignment",
+            "pyq": "pyq",
+        }.get((doc.document_type or "").lower(), "notes")
+        db.add(ClassResource(
+            class_id=class_id,
+            title=doc.title or doc.filename,
+            type=resource_type,
+            file_path=doc.file_path,
+            uploaded_by=doc.owner_id or doc.student_id,
+        ))
+        resource_paths.add(doc.file_path)
+        created_legacy_resource = True
+
+    if created_legacy_resource:
+        db.commit()
+        resources = db.query(ClassResource).filter(
+            ClassResource.class_id == class_id
+        ).order_by(ClassResource.uploaded_at.desc()).all()
+
     return {
         "success": True,
         "resources": [

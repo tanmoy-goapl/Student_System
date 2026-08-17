@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Users, AlertTriangle, ChevronDown, Loader2, Search } from 'lucide-react';
+import { Users, AlertTriangle, ChevronDown, Search } from 'lucide-react';
+import { DashboardContentLoader } from '@/components/DashboardLoading';
 
 export default function StudentsPage() {
   const { role } = useAuth();
@@ -132,9 +133,7 @@ export default function StudentsPage() {
         </div>
 
         {loadingStudents ? (
-          <div className="flex justify-center p-12">
-            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-          </div>
+          <DashboardContentLoader text="Loading student list..." />
         ) : (
           <div className="space-y-6 animate-in fade-in duration-500">
             {/* At-Risk Banner for Professors */}

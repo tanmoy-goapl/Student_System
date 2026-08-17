@@ -5,8 +5,8 @@ import ChatHistorySidebar from "@/components/ChatHistorySidebar";
 import { useChatSession, type ChatMessage } from "@/components/ChatSessionProvider";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
-import { Paperclip, Send, Square, CheckCircle2, ChevronRight, Activity, CalendarDays, Sparkles, History, Plus } from "lucide-react";
-import { getChatSidebarData, uploadDocument } from "@/lib/api";
+import { AlertTriangle, Paperclip, Send, Square, CheckCircle2, ChevronRight, Activity, CalendarDays, Sparkles, History, Plus, Sidebar, TrendingUp } from "lucide-react";
+import { getChatSidebarData, getHomepageData, uploadDocument, type HomepageDataResponse } from "@/lib/api";
 import Link from "next/link";
 import { OfflineState, ChatThinking } from "@/components/UIStateSystem";
 
@@ -18,6 +18,9 @@ export default function ChatPage() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [roleSuggestions, setRoleSuggestions] = useState<Record<string, RoleSuggestion[]> | null>(null);
   const [fileUploading, setFileUploading] = useState(false);
+  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+  const [studentInsights, setStudentInsights] = useState<HomepageDataResponse | null>(null);
+  const [studentInsightsLoading, setStudentInsightsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const {
@@ -48,8 +51,30 @@ export default function ChatPage() {
     }).catch(err => console.error("Failed to fetch suggestions", err));
   }, []);
 
+  useEffect(() => {
+    if (!isInsightsOpen || user?.role !== "student" || !user.id) return;
+
+    let cancelled = false;
+    setStudentInsightsLoading(true);
+    getHomepageData(user.id)
+      .then((data) => {
+        if (!cancelled) setStudentInsights(data);
+      })
+      .catch(() => {
+        if (!cancelled) setStudentInsights(null);
+      })
+      .finally(() => {
+        if (!cancelled) setStudentInsightsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isInsightsOpen, user?.id, user?.role]);
+
 
   const initialScrollPendingRef = useRef(true);
+  const autoScrolledSessionRef = useRef<string | null | undefined>(undefined);
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -68,6 +93,23 @@ export default function ChatPage() {
     }
     if (isInitialRestore) initialScrollPendingRef.current = false;
   }, [history, loading]);
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !activeSessionId || !history.length) return;
+    if (autoScrolledSessionRef.current === activeSessionId) return;
+
+    autoScrolledSessionRef.current = activeSessionId;
+    requestAnimationFrame(() => {
+      if (scrollRef.current !== el) return;
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    });
+  }, [activeSessionId, history.length]);
+  useLayoutEffect(() => {
+    if (!history.length) {
+      initialScrollPendingRef.current = true;
+      autoScrolledSessionRef.current = undefined;
+    }
+  }, [history.length]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -116,9 +158,23 @@ export default function ChatPage() {
 
           <div className="flex items-center gap-2">
 
+            {user?.role === "student" && (
+              <button
+                onClick={() => setIsInsightsOpen((open) => !open)}
+                className={`order-2 h-8 w-8 rounded-xl border flex items-center justify-center transition ${
+                  isInsightsOpen
+                    ? "bg-blue-600/10 border-blue-500/20 text-blue-400"
+                    : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
+                }`}
+                title="Open live learning insights"
+                aria-label="Open live learning insights"
+              >
+                <Sidebar size={16} />
+              </button>
+            )}
             <button
               onClick={handleNewChat}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/10 transition cursor-pointer text-white"
+              className="order-1 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/10 transition cursor-pointer text-white"
               title="Start New Conversation"
             >
               <Plus size={14} className="text-slate-300" />
@@ -242,6 +298,99 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+
+      {isInsightsOpen && user?.role === "student" && (
+        <aside className="w-80 h-full border-l border-white/5 bg-[#090D1F] shrink-0 overflow-y-auto purple-scrollbar p-5 space-y-6 text-white">
+          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+              <TrendingUp className="w-4 h-4 text-blue-400" /> Live insights
+            </h3>
+            <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-400">
+              {studentInsightsLoading ? "Updating..." : studentInsights ? "Current" : "Unavailable"}
+            </span>
+          </div>
+
+          {studentInsightsLoading ? (
+            <div className="space-y-3">
+              <div className="h-28 rounded-xl bg-white/5 animate-pulse" />
+              <div className="h-24 rounded-xl bg-white/5 animate-pulse" />
+              <div className="h-40 rounded-xl bg-white/5 animate-pulse" />
+            </div>
+          ) : studentInsights ? (
+            <>
+              <section className="space-y-3.5">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Learning snapshot</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-black/25 p-3 rounded-xl border border-white/5">
+                    <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Readiness</span>
+                    <span className="text-lg font-extrabold mt-1 block">{studentInsights.examOverview?.find((item) => item.id === "readiness")?.value ?? "—"}</span>
+                    <span className="text-[8px] text-slate-500 mt-0.5 block font-bold">{studentInsights.dashboard_health || "Current signal"}</span>
+                  </div>
+                  <div className="bg-black/25 p-3 rounded-xl border border-white/5">
+                    <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Accuracy</span>
+                    <span className="text-lg font-extrabold mt-1 block">{studentInsights.performanceSnapshots?.find((item) => item.id === "overall-accuracy")?.value ?? "—"}</span>
+                    <span className="text-[8px] text-slate-500 mt-0.5 block font-bold">lifetime performance</span>
+                  </div>
+                  <div className="bg-black/25 p-3 rounded-xl border border-white/5">
+                    <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Study streak</span>
+                    <span className="text-lg font-extrabold mt-1 block">{studentInsights.performanceSnapshots?.find((item) => item.id === "study-streak")?.value ?? "—"}</span>
+                    <span className="text-[8px] text-slate-500 mt-0.5 block font-bold">current streak</span>
+                  </div>
+                  <div className="bg-black/25 p-3 rounded-xl border border-white/5">
+                    <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Focus score</span>
+                    <span className="text-lg font-extrabold mt-1 block">{studentInsights.performanceSnapshots?.find((item) => item.id === "focus-score")?.value ?? "—"}</span>
+                    <span className="text-[8px] text-slate-500 mt-0.5 block font-bold">recent activity</span>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-xl border border-blue-500/15 bg-blue-500/5 p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-blue-300">Today&apos;s focus</span>
+                  <span className="text-[9px] font-bold text-blue-200">{studentInsights.todays_focus?.estimated_time ?? "—"} min</span>
+                </div>
+                <p className="mt-2 text-sm font-bold text-white">{studentInsights.todays_focus?.topic || "No focus selected"}</p>
+                <p className="mt-1 text-[10px] leading-relaxed text-slate-400">{studentInsights.todays_focus?.reason || "Your live learning signals will appear here."}</p>
+              </section>
+
+              <section className="space-y-3.5">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Recommendations</span>
+                {studentInsights.aiAlerts?.length ? (
+                  <div className="space-y-2">
+                    {studentInsights.aiAlerts.slice(0, 4).map((alert) => (
+                      <div key={alert.id || alert.title} className="rounded-xl border border-white/5 bg-black/20 p-3">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-bold leading-snug text-slate-200">{alert.title}</p>
+                            <p className="mt-1 text-[9px] leading-relaxed text-slate-500">{alert.subtitle}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-xl border border-white/5 bg-black/20 p-4 text-[10px] text-slate-500">No active recommendations.</p>
+                )}
+              </section>
+
+              <section className="space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500">Pending work</span>
+                  <span className="text-[10px] font-extrabold text-blue-300">{studentInsights.pending_dues?.total ?? 0}</span>
+                </div>
+                <p className="rounded-xl border border-white/5 bg-black/20 p-3 text-[10px] leading-relaxed text-slate-500">
+                  {studentInsights.pending_dues?.revision_due ?? 0} revisions and {studentInsights.pending_dues?.quiz_due ?? 0} quizzes currently need attention.
+                </p>
+              </section>
+            </>
+          ) : (
+            <p className="rounded-xl border border-white/5 bg-black/20 p-4 text-[10px] leading-relaxed text-slate-500">
+              Live learning insights are unavailable right now.
+            </p>
+          )}
+        </aside>
+      )}
     </div>
   );
 }

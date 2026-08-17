@@ -306,6 +306,7 @@ export async function getHomepageData(studentId?: string | number): Promise<Home
   const url = studentId ? `/api/homepage/data?student_id=${studentId}` : "/api/homepage/data";
   return request<HomepageDataResponse>(url, {
     method: "GET",
+    cache: "no-store",
   });
 }
 
@@ -370,6 +371,9 @@ export interface StartSessionResponse {
   mode: string;
   topic: string;
   difficulty: string;
+  status?: "generating" | "ready" | "failed" | "complete" | string;
+  generation_status?: "generating" | "ready" | "failed" | "complete" | string;
+  question_count?: number;
   total_questions: number;
   questions: PracticeQuestion[];
 }
@@ -434,6 +438,18 @@ export interface NextBatchResponse {
   stats?: any;
 }
 
+export interface PracticeSessionStatus {
+  session_id: number;
+  mode: string;
+  topic: string;
+  difficulty: string;
+  is_active: boolean;
+  generation_status?: "generating" | "ready" | "failed" | "complete" | string;
+  total_questions: number;
+  questions: PracticeQuestion[];
+  stats: any;
+}
+
 export async function getNextBatch(sessionId: number): Promise<NextBatchResponse> {
   return request<NextBatchResponse>(`/api/practice/session/${sessionId}/next-batch`, {
     method: "POST",
@@ -441,9 +457,10 @@ export async function getNextBatch(sessionId: number): Promise<NextBatchResponse
   });
 }
 
-export async function getSessionStatus(sessionId: number): Promise<any> {
-  return request<any>(`/api/practice/session/${sessionId}/status`, {
+export async function getSessionStatus(sessionId: number): Promise<PracticeSessionStatus> {
+  return request<PracticeSessionStatus>(`/api/practice/session/${sessionId}/status`, {
     method: "GET",
+    cache: "no-store",
   });
 }
 
@@ -583,8 +600,10 @@ export async function getStudentTopics(studentId: number): Promise<any> {
 
 export interface PracticePerformanceResponse {
   overall_accuracy: number;
-  total_attempts: number;
-  total_correct: number;
+  questions_attempted: number;
+  correct_answers: number;
+  total_attempts?: number;
+  total_correct?: number;
   weak_topics: {
     topic: string;
     subject: string;
@@ -615,6 +634,7 @@ export interface PracticePerformanceResponse {
 export async function getStudentPerformance(studentId: number): Promise<PracticePerformanceResponse> {
   return request<PracticePerformanceResponse>(`/api/practice/performance/${studentId}`, {
     method: "GET",
+    cache: "no-store",
   });
 }
 
@@ -961,6 +981,7 @@ export async function getDocumentsData(studentId?: number): Promise<DocumentsDat
   const url = studentId ? `/api/documents/data?student_id=${studentId}` : "/api/documents/data";
   return request<DocumentsDataResponse>(url, {
     method: "GET",
+    cache: "no-store",
   });
 }
 

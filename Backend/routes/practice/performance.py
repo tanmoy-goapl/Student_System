@@ -14,8 +14,7 @@ from practice_models import (
 )
 from services.practice.topic_extractor import extract_topics_from_documents
 from services.practice.analytics import (
-    detect_behavioral_patterns,
-    get_stored_insights
+    detect_behavioral_patterns
 )
 
 logger = logging.getLogger("chatbot")
@@ -239,14 +238,13 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
     })
 
     insights = detect_behavioral_patterns(student_id, db)
-    stored_insights = get_stored_insights(student_id, db)
 
     return {
         "overall_accuracy": round(overall_accuracy, 1),
         "questions_attempted": questions_attempted,
         "correct_answers": correct_answers,
         "weak_topics": weak_topics_list,
-        "insights": stored_insights if stored_insights else insights,
+        "insights": insights,
         "topic_performances": [
             {
                 "topic": p.topic,

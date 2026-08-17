@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createDepartment, createUser, DepartmentOption, listAdminDepartments, listUsers, updateUserDepartment, deleteUser } from "@/lib/api";
-import Loader from "@/components/Loader";
+import { InlineLoadingState } from "@/components/DashboardLoading";
 import AdminSidebar from "../components/AdminSidebar";
 
 export type UserRow = {
@@ -21,6 +21,15 @@ const roleBadge: Record<string, string> = {
   professor: "bg-blue-500/15 text-blue-300 border-blue-500/30",
   student: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
 };
+type UserFilter = "student" | "professor" | "admin";
+
+function userHasDepartment(user: UserRow, departmentCode: string): boolean {
+  return (user.department || "")
+    .split(/[,;/|]+/)
+    .map((code) => code.trim().toUpperCase())
+    .filter(Boolean)
+    .includes(departmentCode.toUpperCase());
+}
 
 function UserTable({
   users, loading, departments, onDelete, onDepartmentChange,
@@ -51,9 +60,7 @@ function UserTable({
             {loading ? (
               <tr>
                 <td colSpan={5} className="py-8 text-center text-sm text-slate-500">
-                  <div className="flex justify-center py-4">
-                    <div className="w-5 h-5 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
-                  </div>
+                  <InlineLoadingState text="Loading users..." />
                 </td>
               </tr>
             ) : users.length === 0 ? (
@@ -70,22 +77,25 @@ function UserTable({
                   <tr key={u.id} className="border-b border-white/5 transition hover:bg-slate-800/40">
                     <td className="px-5 py-3.5 text-sm font-medium text-slate-200">{displayName}</td>
                     <td className="px-5 py-3.5">
-                      <select
-                        value={u.department || ""}
-                        onChange={(e) => onDepartmentChange(u, e.target.value || null)}
-                        className="rounded-lg border border-white/10 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 focus:border-cyan-500/50 focus:outline-none"
-                        aria-label={"Department for " + displayName}
-                      >
-                        <option value="">Unassigned</option>
-                        {u.department && !departments.some((department) => department.code === u.department) && (
-                          <option value={u.department}>{u.department_name || u.department}</option>
-                        )}
-                        {departments.map((department) => (
-                          <option key={department.code} value={department.code}>
-                            {department.name}
-                          </option>
-                        ))}
-                      </select>
+                      {u.role === "admin" ? (
+                        <span className="text-xs font-semibold text-violet-300">Admin</span>
+                      ) : u.department ? (
+                        <span className="text-xs font-medium text-slate-300">{u.department_name || u.department}</span>
+                      ) : (
+                        <select
+                          value=""
+                          onChange={(e) => onDepartmentChange(u, e.target.value || null)}
+                          className="rounded-lg border border-cyan-500/30 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 focus:border-cyan-500/50 focus:outline-none"
+                          aria-label={"Assign department to " + displayName}
+                        >
+                          <option value="" disabled>Assign department</option>
+                          {departments.map((department) => (
+                            <option key={department.code} value={department.code}>
+                              {department.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td className="px-5 py-3.5 text-sm text-slate-400">{u.email}</td>
                     <td className="px-5 py-3.5">
@@ -121,7 +131,10 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [usersLoading, setUsersLoading] = useState(false);
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
+  const [roleFilter, setRoleFilter] = useState<UserFilter>("student");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showDepartmentForm, setShowDepartmentForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDepartment, setNewDepartment] = useState("");
   const [departmentCode, setDepartmentCode] = useState("");
@@ -148,15 +161,26 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    if (!searchQuery.trim()) { setFilteredUsers(users); return; }
     const q = searchQuery.toLowerCase();
-    setFilteredUsers(users.filter((u) =>
-      (u.name?.toLowerCase().includes(q) || false) ||
-      (u.department_name?.toLowerCase().includes(q) || false) ||
-      (u.department?.toLowerCase().includes(q) || false) ||
-      u.email.toLowerCase().includes(q)
-    ));
-  }, [searchQuery, users]);
+    const visible = users
+      .filter((u) => u.role === roleFilter)
+      .filter((u) => (
+        departmentFilter === "all" ||
+        (departmentFilter === "unassigned" ? u.role !== "admin" && !u.department : userHasDepartment(u, departmentFilter))
+      ))
+      .filter((u) => (
+        !q ||
+        u.name?.toLowerCase().includes(q) ||
+        u.department_name?.toLowerCase().includes(q) ||
+        u.department?.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q)
+      ))
+      .sort((a, b) => (
+        (a.department || "ZZZ").localeCompare(b.department || "ZZZ") ||
+        (a.name || a.email).localeCompare(b.name || b.email)
+      ));
+    setFilteredUsers(visible);
+  }, [departmentFilter, roleFilter, searchQuery, users]);
 
   const handleDepartmentChange = async (user: UserRow, department: string | null) => {
     const adminId = Number(localStorage.getItem("user_id") || 0);
@@ -222,7 +246,30 @@ export default function UsersPage() {
     } catch (err: any) { setUserError(err.message || "Failed to delete user"); }
   };
 
+  const closeCreateForm = () => {
+    setShowCreateForm(false);
+    setUserError("");
+    setUserMsg("");
+    setNewName("");
+    setNewDepartment("");
+    setNewEmail("");
+    setNewPassword("");
+  };
+
+  const closeDepartmentForm = () => {
+    setShowDepartmentForm(false);
+    setDepartmentCode("");
+    setDepartmentName("");
+    setUserError("");
+    setUserMsg("");
+  };
+
   const inputCls = "w-full rounded-xl border border-white/10 bg-slate-800/80 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30";
+  const roleTabs: Array<{ key: UserFilter; label: string }> = [
+    { key: "student", label: "Students" },
+    { key: "professor", label: "Faculty" },
+    { key: "admin", label: "Administrators" },
+  ];
 
   return (
     <div className="h-screen bg-[#020617] flex overflow-hidden text-white font-sans">
@@ -240,7 +287,11 @@ export default function UsersPage() {
               <p className="mt-1 text-sm text-slate-400">Manage platform users and their roles</p>
             </div>
             <button
-              onClick={() => setShowCreateForm(true)}
+              onClick={() => {
+                setUserError("");
+                setUserMsg("");
+                setShowCreateForm(true);
+              }}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:from-blue-500 hover:to-violet-500"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -250,62 +301,116 @@ export default function UsersPage() {
             </button>
           </div>
 
-          {/* Search */}
-          <div className="relative">
+          {/* Search and department filter */}
+          <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
+            <div className="relative flex-1">
             <svg className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
             </svg>
             <input
-              type="text"
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 backdrop-blur-sm"
-              placeholder="Search users by name, email or department…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+                type="text"
+                className="w-full rounded-xl border border-white/10 bg-slate-900/60 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 backdrop-blur-sm"
+                placeholder="Search users by name, email or department…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-
-          {/* Department management */}
-          <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div>
-                <h3 className="text-base font-semibold text-white">Departments</h3>
-                <p className="mt-1 text-xs text-slate-400">Create departments and assign them to existing students or faculty below.</p>
-              </div>
-              <div className="grid w-full gap-2 sm:grid-cols-[120px_minmax(180px,1fr)_auto] lg:max-w-xl">
-                <input
-                  value={departmentCode}
-                  onChange={(e) => setDepartmentCode(e.target.value.toUpperCase())}
-                  placeholder="Code"
-                  className={inputCls}
-                  maxLength={24}
-                />
-                <input
-                  value={departmentName}
-                  onChange={(e) => setDepartmentName(e.target.value)}
-                  placeholder="Department name"
-                  className={inputCls}
-                />
-                <button
-                  type="button"
-                  onClick={handleCreateDepartment}
-                  disabled={userLoading}
-                  className="rounded-xl bg-cyan-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-40"
-                >
-                  Add Department
-                </button>
-              </div>
-            </div>
-            {userMsg && <p className="mt-3 text-xs text-cyan-300">{userMsg}</p>}
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <select
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2.5 text-xs text-slate-200 focus:border-cyan-500/50 focus:outline-none lg:w-56"
+              aria-label="Filter users by department"
+            >
+              <option value="all">All departments</option>
               {departments.map((department) => (
-                <div key={department.code} className="rounded-xl border border-white/5 bg-slate-950/40 p-3">
-                  <p className="text-sm font-semibold text-white">{department.name}</p>
-                  <p className="mt-1 text-[11px] text-slate-500">{department.code}</p>
-                  <p className="mt-3 text-[11px] text-slate-400">
-                    {department.student_count ?? 0} students · {department.professor_count ?? 0} faculty · {department.course_count ?? 0} classes
-                  </p>
-                </div>
+                <option key={department.code} value={department.code}>{department.name}</option>
               ))}
+              <option value="unassigned">Unassigned</option>
+            </select>
+          </div>
+
+          <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-1.5 backdrop-blur-xl">
+            <div className="flex flex-wrap gap-1">
+              {roleTabs.map((tab) => {
+                const count = users.filter((user) => user.role === tab.key).length;
+                const active = roleFilter === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setRoleFilter(tab.key)}
+                    className={"rounded-xl px-4 py-2.5 text-xs font-semibold transition " + (
+                      active
+                        ? "bg-blue-600/20 text-white shadow-sm"
+                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                    )}
+                  >
+                    {tab.label}
+                    <span className={"ml-2 rounded-full px-1.5 py-0.5 text-[10px] " + (
+                      active ? "bg-blue-500/20 text-blue-200" : "bg-white/5 text-slate-500"
+                    )}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Compact department summary */}
+          <section className="rounded-2xl border border-white/10 bg-slate-900/40 px-4 py-3 backdrop-blur-xl">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-white">Departments</h3>
+                <p className="mt-0.5 text-[11px] text-slate-500">
+                  {departments.length} configured · Select a department to filter the list
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setUserError("");
+                  setUserMsg("");
+                  setShowDepartmentForm(true);
+                }}
+                className="self-start rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-500/20 sm:self-auto"
+              >
+                Manage departments
+              </button>
+            </div>
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-0.5">
+              {departments.map((department) => {
+                const active = departmentFilter === department.code;
+                return (
+                  <button
+                    key={department.code}
+                    type="button"
+                    onClick={() => setDepartmentFilter(active ? "all" : department.code)}
+                    className={"shrink-0 rounded-xl border px-3 py-2 text-left transition " + (
+                      active
+                        ? "border-cyan-400/40 bg-cyan-500/10"
+                        : "border-white/10 bg-slate-950/30 hover:border-white/20 hover:bg-white/5"
+                    )}
+                  >
+                    <span className="block text-xs font-semibold text-white">{department.name}</span>
+                    <span className="mt-0.5 block text-[10px] text-slate-500">
+                      {department.student_count ?? 0} students · {department.professor_count ?? 0} faculty · {department.course_count ?? 0} classes
+                    </span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setDepartmentFilter(departmentFilter === "unassigned" ? "all" : "unassigned")}
+                className={"shrink-0 rounded-xl border px-3 py-2 text-left transition " + (
+                  departmentFilter === "unassigned"
+                    ? "border-amber-400/40 bg-amber-500/10"
+                    : "border-white/10 bg-slate-950/30 hover:border-white/20 hover:bg-white/5"
+                )}
+              >
+                <span className="block text-xs font-semibold text-white">Unassigned</span>
+                <span className="mt-0.5 block text-[10px] text-slate-500">Students and faculty</span>
+              </button>
             </div>
           </section>
 
@@ -323,8 +428,24 @@ export default function UsersPage() {
 
           {/* Create form */}
           {showCreateForm && (
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 backdrop-blur-sm">
-              <h3 className="mb-4 text-base font-semibold text-white">Create New User</h3>
+            <div
+              className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-slate-950/80 p-4 pt-8 backdrop-blur-sm"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="create-user-title"
+            >
+              <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0b1227] p-6 shadow-2xl">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <h3 id="create-user-title" className="text-base font-semibold text-white">Create New User</h3>
+                  <button
+                    type="button"
+                    aria-label="Close create user modal"
+                    onClick={closeCreateForm}
+                    className="rounded-lg px-2.5 py-1 text-xl leading-none text-slate-400 transition hover:bg-white/5 hover:text-white"
+                  >
+                    ×
+                  </button>
+                </div>
 
               {userError && (
                 <div className="mb-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">{userError}</div>
@@ -340,12 +461,16 @@ export default function UsersPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-slate-400">Department (Optional)</label>
-                  <select className={inputCls} value={newDepartment} onChange={(e) => setNewDepartment(e.target.value)}>
-                    <option value="">Unassigned</option>
-                    {departments.map((department) => (
-                      <option key={department.code} value={department.code}>{department.name}</option>
-                    ))}
-                  </select>
+                  {newRole === "admin" ? (
+                    <div className={inputCls + " text-violet-300"}>Admin (no department)</div>
+                  ) : (
+                    <select className={inputCls} value={newDepartment} onChange={(e) => setNewDepartment(e.target.value)}>
+                      <option value="">Unassigned</option>
+                      {departments.map((department) => (
+                        <option key={department.code} value={department.code}>{department.name}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-slate-400">Email</label>
@@ -353,7 +478,11 @@ export default function UsersPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-slate-400">Role</label>
-                  <select className={inputCls} value={newRole} onChange={(e) => setNewRole(e.target.value as UserRole)}>
+                  <select className={inputCls} value={newRole} onChange={(e) => {
+                    const role = e.target.value as UserRole;
+                    setNewRole(role);
+                    if (role === "admin") setNewDepartment("");
+                  }}>
                     <option value="student">Student</option>
                     <option value="professor">Professor</option>
                     <option value="admin">Admin</option>
@@ -375,11 +504,103 @@ export default function UsersPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setShowCreateForm(false); setUserError(""); setUserMsg(""); setNewName(""); setNewDepartment(""); setNewEmail(""); setNewPassword(""); }}
+                  onClick={closeCreateForm}
                   className="rounded-xl border border-white/10 bg-slate-800/60 px-5 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-slate-800"
                 >
                   Cancel
                 </button>
+              </div>
+              </div>
+            </div>
+          )}
+
+          {/* Department management modal */}
+          {showDepartmentForm && (
+            <div
+              className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-slate-950/80 p-4 pt-8 backdrop-blur-sm"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="department-management-title"
+            >
+              <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0b1227] p-5 shadow-2xl">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <div>
+                    <h3 id="department-management-title" className="text-base font-semibold text-white">Manage Departments</h3>
+                    <p className="mt-1 text-xs text-slate-400">Create departments for users and classes.</p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Close department management modal"
+                    onClick={closeDepartmentForm}
+                    className="rounded-lg px-2.5 py-1 text-xl leading-none text-slate-400 transition hover:bg-white/5 hover:text-white"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {userError && (
+                  <div className="mb-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">{userError}</div>
+                )}
+                {userMsg && (
+                  <div className="mb-3 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-2.5 text-sm text-cyan-300">{userMsg}</div>
+                )}
+
+                <div className="grid gap-2 sm:grid-cols-[120px_minmax(0,1fr)_auto]">
+                  <input
+                    value={departmentCode}
+                    onChange={(e) => setDepartmentCode(e.target.value.toUpperCase())}
+                    placeholder="Code"
+                    className={inputCls}
+                    maxLength={24}
+                    aria-label="Department code"
+                  />
+                  <input
+                    value={departmentName}
+                    onChange={(e) => setDepartmentName(e.target.value)}
+                    placeholder="Department name"
+                    className={inputCls}
+                    aria-label="Department name"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateDepartment}
+                    disabled={userLoading}
+                    className="rounded-xl bg-cyan-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-40"
+                  >
+                    {userLoading ? "Adding…" : "Add"}
+                  </button>
+                </div>
+
+                <div className="mt-5 rounded-xl border border-white/5 bg-slate-950/30 p-3">
+                  <p className="text-xs font-semibold text-slate-300">Current departments</p>
+                  <div className="mt-2 space-y-2">
+                    {departments.length === 0 ? (
+                      <p className="text-xs text-slate-500">No departments created yet.</p>
+                    ) : (
+                      departments.map((department) => (
+                        <div key={department.code} className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-white">{department.name}</p>
+                            <p className="text-[10px] text-slate-500">{department.code}</p>
+                          </div>
+                          <p className="shrink-0 text-[10px] text-slate-500">
+                            {department.student_count ?? 0} students · {department.professor_count ?? 0} faculty
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-5 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={closeDepartmentForm}
+                    className="rounded-xl border border-white/10 bg-slate-800/60 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-slate-800"
+                  >
+                    Done
+                  </button>
+                </div>
               </div>
             </div>
           )}

@@ -136,18 +136,6 @@ export default function CurriculumTab({ classId, role, userId }: { classId: numb
                     <h2 className="text-2xl font-bold text-white mb-1">{curriculum.subject_name || "Class Curriculum"}</h2>
                     <p className="text-slate-400 text-sm">AI extracted topics and learning paths</p>
                 </div>
-                {role === "professor" && (
-                    <div className="flex gap-3">
-                        <button
-                            onClick={handleRegenerate}
-                            disabled={regenerating}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 rounded-xl transition-colors font-medium text-sm border border-slate-700"
-                        >
-                            <RefreshCw size={16} className={regenerating ? "animate-spin" : ""} />
-                            Regenerate
-                        </button>
-                    </div>
-                )}
             </div>
 
             <div className="space-y-6">

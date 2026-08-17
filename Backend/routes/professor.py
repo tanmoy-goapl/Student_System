@@ -11,6 +11,14 @@ from classroom_models import Classroom, StudentClass, ClassCurriculum
 
 router = APIRouter(prefix="/professor", tags=["professor"])
 
+AT_RISK_ACCURACY_THRESHOLD = 50.0
+
+
+def _is_at_risk_metric(metrics: Dict[str, Any]) -> bool:
+    """Use one accuracy rule for every professor-facing risk surface."""
+    return float(metrics.get("average_accuracy", 0.0) or 0.0) < AT_RISK_ACCURACY_THRESHOLD
+
+
 @router.get("/classes/{professor_id}")
 def get_professor_classes(professor_id: int, db: Session = Depends(get_db)):
     classes = db.query(Classroom).filter(Classroom.professor_id == professor_id).all()
@@ -115,7 +123,7 @@ def get_class_analytics(class_id: int, db: Session = Depends(get_db)):
             inactive_students_count += 1
 
         is_active = bool(last_active and last_active > thirty_days_ago)
-        is_at_risk = student_accuracy < 50 and progress_pct > 0
+        is_at_risk = _is_at_risk_metric(metrics)
         
         recent_quiz = db.query(QuizHistory).filter(QuizHistory.student_id == student.id).order_by(QuizHistory.created_at.desc()).first()
             
@@ -319,6 +327,7 @@ def get_student_profile(student_id: int, professor_id: int, db: Session = Depend
 
     class_breakdown = []
     allowed_topics = set()
+    has_at_risk_class = False
     total_topics = 0
     attempted_topics = 0
     mastered_topics = 0
@@ -330,6 +339,7 @@ def get_student_profile(student_id: int, professor_id: int, db: Session = Depend
         subject_name = curriculum.subject_name if curriculum and curriculum.subject_name else classroom.name
         metrics = calculate_subject_metrics(student_id, subject_name, db)
         class_topics = get_predefined_topics(student_id, subject_name, db)
+        has_at_risk_class = has_at_risk_class or _is_at_risk_metric(metrics)
         allowed_topics.update(class_topics)
 
         class_attempted = metrics.get("attempted_topics", 0)
@@ -417,7 +427,7 @@ def get_student_profile(student_id: int, professor_id: int, db: Session = Depend
             "attemptedTopics": attempted_topics,
             "masteredTopics": mastered_topics,
             "totalTopics": total_topics,
-            "isAtRisk": overall_accuracy < 50 and attempted_topics > 0,
+            "isAtRisk": has_at_risk_class,
             "isActive": bool(last_practiced and last_practiced > now - timedelta(days=30)),
         },
         "stats": {
@@ -1007,18 +1017,21 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
             mastered_topics / total_topics * 100 if total_topics else 0.0
         )
 
-        if attempted_topics == 0:
+        class_accuracies = [
+            float(metric.get("average_accuracy", 0.0) or 0.0)
+            for metric in metric_values
+        ]
+        risk_accuracy = min(class_accuracies) if class_accuracies else student_accuracy
+        is_at_risk = any(
+            _is_at_risk_metric(metric) for metric in metric_values
+        )
+
+        if is_at_risk:
             status = "Red"
-            is_at_risk = True
-        elif student_accuracy < 50:
-            status = "Red"
-            is_at_risk = True
         elif student_accuracy <= 70:
             status = "Yellow"
-            is_at_risk = False
         else:
             status = "Green"
-            is_at_risk = False
 
         if is_at_risk:
             at_risk_count += 1
@@ -1038,6 +1051,7 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
             "progress": round(student_progress, 1),
             "status": status,
             "is_at_risk": is_at_risk,
+            "risk_accuracy": round(risk_accuracy, 1),
             "class_name": class_name,
             "active": student_id in recent_quiz_participants,
         })
@@ -1267,7 +1281,7 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
         "topicMastery": topic_mastery_out,
         "riskAnalysis": {
             "high": [
-                {"name": student["name"], "score": student["accuracy"]}
+                {"name": student["name"], "score": student["risk_accuracy"]}
                 for student in high_risk
             ],
             "medium": [
@@ -1328,6 +1342,17 @@ def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
 
+    class_subjects = {}
+    for classroom in classrooms:
+        curriculum = db.query(ClassCurriculum).filter(
+            ClassCurriculum.class_id == classroom.id
+        ).first()
+        class_subjects[classroom.id] = (
+            curriculum.subject_name
+            if curriculum and curriculum.subject_name
+            else classroom.name
+        )
+
     # 3. Compute per-student metrics
     total_accuracy = 0.0
     total_progress = 0.0
@@ -1345,6 +1370,15 @@ def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
         metrics = calculate_subject_metrics(student.id, subject_name, db)
         student_accuracy = metrics["average_accuracy"]
         student_progress = metrics["progress"]
+        enrolled_class_metrics = [
+            calculate_subject_metrics(
+                student.id,
+                class_subjects[class_id],
+                db,
+            )
+            for class_id in student_id_to_class[student.id]
+            if class_id in class_subjects
+        ]
 
         total_accuracy += student_accuracy
         total_progress += student_progress
@@ -1358,7 +1392,7 @@ def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
             active_count += 1
 
         # At-risk check
-        if student_accuracy < 50 and student_progress > 0:
+        if any(_is_at_risk_metric(metric) for metric in enrolled_class_metrics):
             at_risk_students.append({
                 "name": student.name or f"Student {student.id}",
                 "accuracy": round(student_accuracy, 1),

@@ -8,7 +8,7 @@ import { ArrowLeft, Users, FileText, BarChart, BookOpen, CheckSquare, TrendingUp
 import ResourcesTab from "@/components/classroom/ResourcesTab";
 import CurriculumTab from "@/components/classroom/CurriculumTab";
 import SubjectDashboard from "@/pages/SubjectDashboard/SubjectDashboard";
-import Loader from "@/components/Loader";
+import { PageLoadingState } from "@/components/DashboardLoading";
 
 export default function ClassDetailsPage() {
     const params = useParams<{ classId: string }>();
@@ -22,7 +22,6 @@ export default function ClassDetailsPage() {
     useEffect(() => {
         if (!authLoading && userId && params?.classId) {
             loadClassDetails();
-            localStorage.setItem("last_visited_class_path", `/classes/${params.classId}`);
         }
     }, [authLoading, userId, params?.classId]);
 
@@ -34,12 +33,10 @@ export default function ClassDetailsPage() {
             if (res.success) {
                 setClassDetails(res);
             } else {
-                localStorage.removeItem("last_visited_class_path");
                 router.push("/classes");
             }
         } catch (error) {
             console.error("Failed to load class details:", error);
-            localStorage.removeItem("last_visited_class_path");
             router.push("/classes");
         } finally {
             setLoading(false);
@@ -47,7 +44,7 @@ export default function ClassDetailsPage() {
     };
 
     if (authLoading || loading) {
-        return <Loader fullScreen text="Loading class..." />;
+        return <PageLoadingState text="Loading class..." />;
     }
 
     if (!classDetails) {

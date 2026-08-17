@@ -5,10 +5,12 @@ import ReactMarkdown from "react-markdown";
 import { 
   Bell, ChevronDown, TrendingUp, Users, AlertTriangle, BookOpen, 
   Lightbulb, Sparkles, ClipboardCheck, CheckCircle2, FileText,
-  GraduationCap, TrendingDown, Loader2
+  GraduationCap, TrendingDown, Loader2, LucideIcon, X
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
+import { useProfessorGeneration } from "../components/ProfessorGenerationProvider";
 import { useRouter } from "next/navigation";
+import { DashboardContentLoader } from "@/components/DashboardLoading";
 
 // ── Types ───────────────────────────────────────────────────
 interface ClassInfo { id: number; name: string; code: string; course_code: string }
@@ -16,15 +18,6 @@ interface KPI { avgScore: number; engagement: number; atRiskCount: number; weakT
 interface WeekDay { day: string; score: number | null }
 interface WeakTopic { name: string; score: number }
 interface AlertItem { type: "critical" | "warning" | "info" | "success"; title: string; desc: string; students?: string[]; score?: number }
-type GenerationJobStatus = "generating" | "complete" | "error";
-interface GenerationJob {
-  id: string;
-  title: string;
-  topic: string;
-  status: GenerationJobStatus;
-  result: string;
-  error?: string;
-}
 
 interface DashboardData {
   classes: ClassInfo[];
@@ -36,6 +29,23 @@ interface DashboardData {
   alerts: AlertItem[];
 }
 
+type GenerationActionType = "lesson" | "quiz" | "revision" | "simplify" | "practice";
+
+interface SelectedGenerationAction {
+  title: string;
+  placeholder: string;
+  actionType: GenerationActionType;
+}
+
+interface AIActionDefinition extends SelectedGenerationAction {
+  description: string;
+  icon: LucideIcon;
+  badge: string;
+  badgeColor: string;
+  badgeBg: string;
+  badgeBorder: string;
+}
+
 // ── Alert styling ───────────────────────────────────────────
 const ALERT_STYLES: Record<string, { border: string; bg: string; iconColor: string; icon: any; btnClass: string }> = {
   critical: { border: "border-rose-500/10", bg: "bg-rose-500/[0.02]", iconColor: "text-rose-400", icon: AlertTriangle, btnClass: "bg-blue-500 hover:bg-blue-600 text-white" },
@@ -45,13 +55,134 @@ const ALERT_STYLES: Record<string, { border: string; bg: string; iconColor: stri
 };
 
 // ── AI Actions (static — these are tool shortcuts, not data) ─
-const AI_ACTIONS = [
-  { title: "Generate Lesson", description: "Create AI-powered lesson plans from your curriculum", icon: BookOpen, badge: "LESSON PLAN", badgeColor: "text-blue-400", badgeBg: "bg-blue-500/10", badgeBorder: "border-blue-500/20" },
-  { title: "Create Quiz", description: "Auto-generate questions from topic or documents", icon: ClipboardCheck, badge: "ASSESSMENT", badgeColor: "text-purple-400", badgeBg: "bg-purple-500/10", badgeBorder: "border-purple-500/20" },
-  { title: "Generate Revision Notes", description: "Concise topic summaries for student revision", icon: FileText, badge: "CONTENT", badgeColor: "text-amber-400", badgeBg: "bg-amber-500/10", badgeBorder: "border-amber-500/20" },
-  { title: "Simplify Topic", description: "Break down complex concepts into easy explanations", icon: Lightbulb, badge: "EXPLAIN", badgeColor: "text-cyan-400", badgeBg: "bg-cyan-500/10", badgeBorder: "border-cyan-500/20" },
-  { title: "Create Practice Set", description: "Structured problem sets matched to learning gaps", icon: GraduationCap, badge: "PRACTICE", badgeColor: "text-indigo-400", badgeBg: "bg-indigo-500/10", badgeBorder: "border-indigo-500/20" },
+const AI_ACTIONS: AIActionDefinition[] = [
+  { title: "Generate Lesson", actionType: "lesson", description: "Create a student-ready lesson with explanations, examples, and quick checks", placeholder: "e.g. process scheduling, database normalization...", icon: BookOpen, badge: "STUDENT LESSON", badgeColor: "text-blue-400", badgeBg: "bg-blue-500/10", badgeBorder: "border-blue-500/20" },
+  { title: "Create Quiz", actionType: "quiz", description: "Create focused multiple-choice questions with options for student practice", placeholder: "e.g. memory management, Big-O notation...", icon: ClipboardCheck, badge: "QUIZ", badgeColor: "text-purple-400", badgeBg: "bg-purple-500/10", badgeBorder: "border-purple-500/20" },
+  { title: "Generate Revision Notes", actionType: "revision", description: "Create a compact revision sheet for quick student review", placeholder: "e.g. paging and segmentation, red-black trees...", icon: FileText, badge: "REVISION", badgeColor: "text-amber-400", badgeBg: "bg-amber-500/10", badgeBorder: "border-amber-500/20" },
+  { title: "Simplify Topic", actionType: "simplify", description: "Explain a difficult topic in beginner-friendly language with an analogy", placeholder: "e.g. banker's algorithm, bubble sort...", icon: Lightbulb, badge: "EXPLANATION", badgeColor: "text-cyan-400", badgeBg: "bg-cyan-500/10", badgeBorder: "border-cyan-500/20" },
+  { title: "Create Practice Set", actionType: "practice", description: "Create open-ended exercises and worked examples for student practice", placeholder: "e.g. CPU scheduling math, binary search tree insertion...", icon: GraduationCap, badge: "PRACTICE SET", badgeColor: "text-indigo-400", badgeBg: "bg-indigo-500/10", badgeBorder: "border-indigo-500/20" },
 ];
+interface TeachingInsight {
+  label: string;
+  title: string;
+  value: string;
+  description: string;
+  icon: LucideIcon;
+  iconClass: string;
+  iconBackground: string;
+  valueClass: string;
+}
+
+interface HomeRecommendation {
+  label: string;
+  title: string;
+  description: string;
+  buttonLabel: string;
+  actionType?: GenerationActionType;
+  topic?: string;
+}
+
+const buildTeachingInsights = (dashboard: DashboardData): TeachingInsight[] => {
+  const scoreDelta = Number(dashboard.kpi.scoreDelta || 0);
+  const totalStudents = Math.max(0, dashboard.totalStudents || 0);
+  const activeStudents = Math.min(
+    totalStudents,
+    Math.max(0, Math.round(totalStudents * (Number(dashboard.kpi.engagement || 0) / 100)))
+  );
+  const focusTopic = dashboard.weakTopics[0];
+
+  return [
+    {
+      label: "Priority topic",
+      title: focusTopic?.name || "No weak topic detected",
+      value: focusTopic ? `${focusTopic.score}%` : "On track",
+      description: focusTopic
+        ? "Lowest tracked topic average. A focused resource can target this gap."
+        : "No tracked topic is currently below the weak-topic threshold.",
+      icon: BookOpen,
+      iconClass: focusTopic ? "text-amber-300" : "text-emerald-300",
+      iconBackground: focusTopic ? "bg-amber-500/10 border-amber-500/20" : "bg-emerald-500/10 border-emerald-500/20",
+      valueClass: focusTopic ? "text-amber-300" : "text-emerald-300",
+    },
+    {
+      label: "Performance momentum",
+      title: scoreDelta > 0 ? "Improving" : scoreDelta < 0 ? "Needs attention" : "Stable",
+      value: scoreDelta > 0 ? `+${scoreDelta}%` : scoreDelta < 0 ? `${scoreDelta}%` : "0%",
+      description: scoreDelta > 0
+        ? "Recent quiz performance is ahead of the previous comparison window."
+        : scoreDelta < 0
+          ? "Recent quiz performance is below the previous comparison window."
+          : "Recent quiz performance has not materially changed.",
+      icon: scoreDelta < 0 ? TrendingDown : TrendingUp,
+      iconClass: scoreDelta < 0 ? "text-rose-300" : scoreDelta > 0 ? "text-emerald-300" : "text-blue-300",
+      iconBackground: scoreDelta < 0 ? "bg-rose-500/10 border-rose-500/20" : scoreDelta > 0 ? "bg-emerald-500/10 border-emerald-500/20" : "bg-blue-500/10 border-blue-500/20",
+      valueClass: scoreDelta < 0 ? "text-rose-300" : scoreDelta > 0 ? "text-emerald-300" : "text-blue-300",
+    },
+    {
+      label: "Engagement coverage",
+      title: totalStudents > 0 ? `${activeStudents} active students` : "No enrolled students",
+      value: `${Number(dashboard.kpi.engagement || 0)}%`,
+      description: totalStudents > 0
+        ? `${activeStudents} of ${totalStudents} students are active in the current analytics window.`
+        : "Enroll students to start receiving activity signals.",
+      icon: Users,
+      iconClass: dashboard.kpi.engagement < 50 ? "text-cyan-300" : "text-emerald-300",
+      iconBackground: dashboard.kpi.engagement < 50 ? "bg-cyan-500/10 border-cyan-500/20" : "bg-emerald-500/10 border-emerald-500/20",
+      valueClass: dashboard.kpi.engagement < 50 ? "text-cyan-300" : "text-emerald-300",
+    },
+  ];
+};
+
+const buildHomeRecommendation = (dashboard: DashboardData): HomeRecommendation => {
+  const focusTopic = dashboard.weakTopics[0];
+  const scoreDelta = Number(dashboard.kpi.scoreDelta || 0);
+
+  if (focusTopic) {
+    return {
+      label: "RECOMMENDED NEXT STEP",
+      title: `Reinforce ${focusTopic.name}`,
+      description: `${focusTopic.name} is the lowest tracked topic at ${focusTopic.score}%. Generate a focused revision sheet and publish it to the relevant class after review.`,
+      buttonLabel: "Generate revision",
+      actionType: "revision",
+      topic: focusTopic.name,
+    };
+  }
+
+  if (dashboard.kpi.atRiskCount > 0) {
+    return {
+      label: "RECOMMENDED NEXT STEP",
+      title: "Review students needing support",
+      description: `${dashboard.kpi.atRiskCount} unique student${dashboard.kpi.atRiskCount === 1 ? " is" : "s are"} below the current risk threshold. Review the student-level analytics before assigning targeted practice.`,
+      buttonLabel: "Review analytics",
+    };
+  }
+
+  if (dashboard.kpi.engagement < 50) {
+    return {
+      label: "RECOMMENDED NEXT STEP",
+      title: "Bring more students back into practice",
+      description: `Current engagement is ${dashboard.kpi.engagement}%. Use a short, student-facing lesson or practice set to create a clear next activity.`,
+      buttonLabel: "View insights",
+    };
+  }
+
+  if (scoreDelta < 0) {
+    return {
+      label: "RECOMMENDED NEXT STEP",
+      title: "Investigate the recent score dip",
+      description: `Performance is down ${Math.abs(scoreDelta)}% in the recent comparison window. Review the class trend and recent quiz activity for context.`,
+      buttonLabel: "View insights",
+    };
+  }
+
+  return {
+    label: "RECOMMENDED NEXT STEP",
+    title: "Keep the current momentum",
+    description: "Classroom signals are stable or improving. Continue with regular quizzes and short revision resources to maintain progress.",
+    buttonLabel: "View insights",
+  };
+};
+
 const renderLessonContent = (text: string) => {
   const lines = text.split("\n");
   const elements: React.ReactNode[] = [];
@@ -161,10 +292,10 @@ export default function HomeView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [classDropdownOpen, setClassDropdownOpen] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<{ title: string; placeholder: string; template: string } | null>(null);
+  const [selectedAction, setSelectedAction] = useState<SelectedGenerationAction | null>(null);
   const [topicInput, setTopicInput] = useState("");
-  const [generationJobs, setGenerationJobs] = useState<GenerationJob[]>([]);
-  const [viewingJobId, setViewingJobId] = useState<string | null>(null);
+  const [descriptionInput, setDescriptionInput] = useState("");
+  const { generationJobs, startGeneration, dismissGenerationJob, viewingJobId, setViewingJobId } = useProfessorGeneration();
   const [selectedClassId, setSelectedClassId] = useState<string>("");
 
   const [katexLoaded, setKatexLoaded] = useState(false);
@@ -223,90 +354,29 @@ export default function HomeView() {
     }
   }, [data]);
 
-  const updateGenerationJob = (id: string, updates: Partial<GenerationJob>) => {
-    setGenerationJobs((jobs) =>
-      jobs.map((job) => (job.id === id ? { ...job, ...updates } : job))
-    );
-  };
-
-  const runGenerationJob = async (
-    jobId: string,
-    topic: string,
-    subjectName: string,
-    professorId: number,
-    actionType: string
-  ) => {
-    try {
-      // We DO NOT pass classroom_id to keep the document privately saved in Content Studio.
-      const url = `/api/learning/generate_material/stream?topic=${encodeURIComponent(topic)}&subject=${encodeURIComponent(subjectName)}&user_id=${professorId}&action_type=${actionType}`;
-      const res = await fetch(url, { method: "GET", cache: "no-store" });
-
-      if (!res.ok) {
-        throw new Error(`Server returned status ${res.status}`);
-      }
-
-      const reader = res.body?.getReader();
-      if (!reader) {
-        throw new Error("No response stream available");
-      }
-
-      const decoder = new TextDecoder();
-      let fullText = "";
-      try {
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          if (value) {
-            fullText += decoder.decode(value, { stream: true });
-            updateGenerationJob(jobId, { result: fullText });
-          }
-        }
-        const finalChunk = decoder.decode();
-        if (finalChunk) {
-          fullText += finalChunk;
-          updateGenerationJob(jobId, { result: fullText });
-        }
-      } finally {
-        reader.releaseLock();
-      }
-
-      updateGenerationJob(jobId, { status: "complete" });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to generate content";
-      updateGenerationJob(jobId, { status: "error", error: message });
-    }
-  };
-
   const handleGenerateAction = () => {
     const action = selectedAction;
     const topic = topicInput.trim();
+    const description = descriptionInput.trim();
     if (!topic || !action) return;
-
-    let actionType = "notes";
-    if (action.title === "Generate Lesson") {
-      actionType = "lesson_plan";
-    } else if (action.title === "Create Quiz") {
-      actionType = "quiz";
-    } else if (action.title === "Generate Revision Notes") {
-      actionType = "revision";
-    } else if (action.title === "Simplify Topic") {
-      actionType = "simplify";
-    } else if (action.title === "Create Practice Set" || action.title === "Review Submissions") {
-      actionType = "practice";
-    }
 
     const professorId = Number(localStorage.getItem("user_id") || 2);
     const targetClass = data?.classes?.find(c => c.id.toString() === selectedClassId) || (data?.classes && data.classes[0]);
     const subjectName = targetClass ? targetClass.name : "Computer Science";
-    const jobId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const classroomId = targetClass?.id != null ? String(targetClass.id) : undefined;
 
-    setGenerationJobs((jobs) => [
-      ...jobs,
-      { id: jobId, title: action.title, topic, status: "generating" as const, result: "" },
-    ].slice(-8));
+    startGeneration({
+      title: action.title,
+      topic,
+      subjectName,
+      actionType: action.actionType,
+      classroomId,
+      description,
+      professorId,
+    });
     setSelectedAction(null);
     setTopicInput("");
-    void runGenerationJob(jobId, topic, subjectName, professorId, actionType);
+    setDescriptionInput("");
   };
 
   // Greeting based on time
@@ -342,6 +412,27 @@ export default function HomeView() {
 
   const getAvatarInitials = (name: string) =>
     name.split(" ").map(n => n[0]).join("").toUpperCase();
+
+  const teachingInsights = data ? buildTeachingInsights(data) : [];
+  const homeRecommendation = data ? buildHomeRecommendation(data) : null;
+
+  const openRecommendation = () => {
+    if (!homeRecommendation) return;
+    if (homeRecommendation.actionType && homeRecommendation.topic) {
+      const action = AI_ACTIONS.find((item) => item.actionType === homeRecommendation.actionType);
+      if (action) {
+        setSelectedAction({
+          title: action.title,
+          placeholder: action.placeholder,
+          actionType: action.actionType,
+        });
+        setTopicInput(homeRecommendation.topic);
+        setDescriptionInput("Use the class performance gap as the main focus and keep the content student-facing.");
+        return;
+      }
+    }
+    router.push("/professor/insights");
+  };
 
   // Active class subtitle
   const classSubtitle = data && data.classes.length > 0
@@ -411,10 +502,7 @@ export default function HomeView() {
         <main className="flex-1 overflow-y-auto purple-scrollbar p-6 space-y-8 bg-gradient-to-b from-[#040815] to-[#020617]">
           {/* Loading */}
           {loading && (
-            <div className="flex flex-col items-center justify-center h-[60vh] gap-3">
-              <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-              <span className="text-xs text-slate-400 font-semibold">Loading dashboard…</span>
-            </div>
+            <DashboardContentLoader text="Loading dashboard..." />
           )}
 
           {/* Error */}
@@ -522,7 +610,7 @@ export default function HomeView() {
                       <div className="space-y-1">
                         <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">At-Risk Students</span>
                         <span className="text-3xl font-extrabold text-white tracking-tight">{data.kpi.atRiskCount}</span>
-                        <p className="text-[10px] text-slate-400 font-medium">Need immediate attention</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Below 50% in any class</p>
                       </div>
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-500 shadow-lg shadow-rose-500/10 shrink-0">
                         <AlertTriangle className="h-5 w-5 text-white" />
@@ -607,29 +695,9 @@ export default function HomeView() {
                       <div
                         key={i}
                         onClick={() => {
-                          let template = "";
-                          let placeholder = "";
-                          if (act.title === "Generate Lesson") {
-                            template = "Create a detailed lesson plan on {topic}, outlining objectives, core concepts, and interactive activities.";
-                            placeholder = "e.g. process scheduling, database normalization...";
-                          } else if (act.title === "Create Quiz") {
-                            template = "Generate a multiple-choice practice quiz with 5 questions, options, and explanations on {topic}.";
-                            placeholder = "e.g. memory management, Big-O notation...";
-                          } else if (act.title === "Review Submissions") {
-                            template = "Analyze my students' latest submissions for {topic} and give a summary of common conceptual errors and weak areas.";
-                            placeholder = "e.g. CSE-5A assignment 2, SQL project...";
-                          } else if (act.title === "Generate Revision Notes") {
-                            template = "Produce concise, bulleted revision notes on the core concepts of {topic}.";
-                            placeholder = "e.g. paging and segmentation, red-black trees...";
-                          } else if (act.title === "Simplify Topic") {
-                            template = "Explain the core concepts of {topic} using a simple, relatable real-world analogy.";
-                            placeholder = "e.g. banker's algorithm, bubble sort...";
-                          } else if (act.title === "Create Practice Set") {
-                            template = "Prepare a structured problem set focusing on {topic} calculations and exercises.";
-                            placeholder = "e.g. CPU scheduling math, binary search tree insertion...";
-                          }
-                          setSelectedAction({ title: act.title, placeholder, template });
+                          setSelectedAction({ title: act.title, placeholder: act.placeholder, actionType: act.actionType });
                           setTopicInput("");
+                          setDescriptionInput("");
                         }}
                         className="relative overflow-hidden rounded-2xl border border-white/5 bg-slate-900/20 p-5 backdrop-blur-xl group transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/30 hover:bg-slate-900/40 cursor-pointer flex flex-col justify-between min-h-[145px]"
                       >
@@ -651,6 +719,68 @@ export default function HomeView() {
                     );
                   })}
                 </div>
+              </section>
+
+              {/* ─── Teaching Insights ───────────────────────── */}
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-200">Teaching Insights</h2>
+                    <span className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-violet-500/10 text-violet-300 border border-violet-500/20 rounded-full">
+                      Live signals
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => router.push("/professor/insights")}
+                    className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition"
+                  >
+                    Open analytics &rarr;
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {teachingInsights.map((insight) => {
+                    const Icon = insight.icon;
+                    return (
+                      <div key={insight.label} className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-xl min-h-[170px] flex flex-col justify-between hover:border-white/10 transition">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">{insight.label}</span>
+                            <h3 className="mt-1 text-sm font-bold text-white leading-snug">{insight.title}</h3>
+                          </div>
+                          <div className={`flex h-9 w-9 items-center justify-center rounded-xl border shrink-0 ${insight.iconBackground}`}>
+                            <Icon className={`h-4 w-4 ${insight.iconClass}`} />
+                          </div>
+                        </div>
+                        <div>
+                          <p className={`text-2xl font-extrabold tracking-tight ${insight.valueClass}`}>{insight.value}</p>
+                          <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">{insight.description}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {homeRecommendation && (
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-2xl border border-violet-500/15 bg-gradient-to-r from-violet-500/[0.08] to-blue-500/[0.04] p-5">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10 border border-violet-500/20 shrink-0">
+                        <Lightbulb className="h-4 w-4 text-violet-300" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-violet-300">{homeRecommendation.label}</span>
+                        <h3 className="mt-1 text-xs font-bold text-white">{homeRecommendation.title}</h3>
+                        <p className="mt-1 text-[10px] leading-relaxed text-slate-300">{homeRecommendation.description}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={openRecommendation}
+                      className="shrink-0 self-start md:self-center rounded-xl border border-violet-400/25 bg-violet-500/10 px-3.5 py-2 text-[10px] font-bold text-violet-200 hover:bg-violet-500/20 transition"
+                    >
+                      {homeRecommendation.buttonLabel} &rarr;
+                    </button>
+                  </div>
+                )}
               </section>
 
               {/* ─── Student Alerts ─────────────────────────── */}
@@ -755,11 +885,9 @@ export default function HomeView() {
             const isGenerating = job.status === "generating";
             const isComplete = job.status === "complete";
             return (
-              <button
+              <div
                 key={job.id}
-                onClick={() => setViewingJobId(job.id)}
-                aria-label={`View ${label} generation for ${job.topic}`}
-                className={`w-full flex items-start gap-3 rounded-2xl border p-3.5 text-left shadow-2xl backdrop-blur-md transition hover:-translate-y-0.5 ${
+                className={`relative rounded-2xl border p-3.5 text-left shadow-2xl backdrop-blur-md transition hover:-translate-y-0.5 ${
                   isGenerating
                     ? "border-violet-400/35 bg-[#11132a]/95 hover:border-violet-300/60"
                     : isComplete
@@ -767,32 +895,50 @@ export default function HomeView() {
                       : "border-rose-400/25 bg-[#1d1018]/95 hover:border-rose-300/50"
                 }`}
               >
-                <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
-                  isGenerating ? "bg-violet-500/15" : isComplete ? "bg-emerald-500/15" : "bg-rose-500/15"
-                }`}>
-                  {isGenerating ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-violet-300" />
-                  ) : isComplete ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-300" />
-                  ) : (
-                    <AlertTriangle className="h-4 w-4 text-rose-300" />
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="truncate text-[11px] font-bold text-white">
-                      {isGenerating ? `${label} generation started` : isComplete ? `${label} ready` : `${label} failed`}
+                <button
+                  type="button"
+                  onClick={() => setViewingJobId(job.id)}
+                  aria-label={`View ${label} generation for ${job.topic}`}
+                  className="flex w-full items-start gap-3 pr-7 text-left"
+                >
+                  <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
+                    isGenerating ? "bg-violet-500/15" : isComplete ? "bg-emerald-500/15" : "bg-rose-500/15"
+                  }`}>
+                    {isGenerating ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-violet-300" />
+                    ) : isComplete ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-rose-300" />
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="truncate text-[11px] font-bold text-white">
+                        {isGenerating ? `${label} generation started` : isComplete ? `${label} ready` : `${label} failed`}
+                      </span>
+                      <Bell className={`h-3.5 w-3.5 shrink-0 ${isGenerating ? "text-violet-300" : isComplete ? "text-emerald-300" : "text-rose-300"}`} />
                     </span>
-                    <Bell className={`h-3.5 w-3.5 shrink-0 ${isGenerating ? "text-violet-300" : isComplete ? "text-emerald-300" : "text-rose-300"}`} />
+                    <span className="mt-1 block truncate text-[10px] text-slate-300">
+                      {isGenerating ? `Generating ${label.toLowerCase()} for “${job.topic}”` : job.topic}
+                    </span>
+                    <span className={`mt-2 block text-[9px] font-semibold uppercase tracking-wider ${isGenerating ? "text-violet-300" : isComplete ? "text-emerald-300" : "text-rose-300"}`}>
+                      Click to view {isGenerating ? "live progress" : "result"}
+                    </span>
                   </span>
-                  <span className="mt-1 block truncate text-[10px] text-slate-300">
-                    {isGenerating ? `Generating ${label.toLowerCase()} for “${job.topic}”` : job.topic}
-                  </span>
-                  <span className={`mt-2 block text-[9px] font-semibold uppercase tracking-wider ${isGenerating ? "text-violet-300" : isComplete ? "text-emerald-300" : "text-rose-300"}`}>
-                    Click to view {isGenerating ? "live progress" : "result"}
-                  </span>
-                </span>
-              </button>
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    dismissGenerationJob(job.id);
+                  }}
+                  aria-label={`Dismiss ${label} generation notification`}
+                  className="absolute right-2 top-2 rounded-lg p-1 text-slate-500 transition hover:bg-white/10 hover:text-white"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
             );
           })}
         </div>
@@ -813,7 +959,7 @@ export default function HomeView() {
                 Close
               </button>
             </div>
-            <p className="text-[10px] text-slate-400">Choose a topic and start this generation. You can start another lesson, quiz, or content action while it runs.</p>
+            <p className="text-[10px] text-slate-400">This creates student-facing content, not instructor notes. Review it in Content Studio and publish it to a class when ready. You can run another action while this one is generating.</p>
 
             {data && data.classes && data.classes.length > 0 && (
               <div className="space-y-2">
@@ -849,6 +995,22 @@ export default function HomeView() {
               />
             </div>
 
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="generation-description" className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Optional description or intent</label>
+                <span className="text-[9px] text-slate-600">{descriptionInput.length}/1000</span>
+              </div>
+              <textarea
+                id="generation-description"
+                value={descriptionInput}
+                onChange={(e) => setDescriptionInput(e.target.value.slice(0, 1000))}
+                placeholder="Add the student level, focus areas, examples, or constraints you want AI to follow..."
+                rows={3}
+                className="w-full resize-none bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 transition-colors"
+              />
+              <p className="text-[9px] leading-relaxed text-slate-500">Example: “Second-year students; focus on page replacement with one worked example and a short real-world analogy.”</p>
+            </div>
+
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setSelectedAction(null)}
@@ -861,7 +1023,7 @@ export default function HomeView() {
                 disabled={!topicInput.trim()}
                 className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-500/10 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
               >
-                Generate
+                Generate for Students
               </button>
             </div>
           </div>

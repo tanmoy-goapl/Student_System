@@ -2,10 +2,10 @@
  
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
+import { DashboardLoadingShell } from "@/components/DashboardLoading";
 import TopBar from "./navbar/TopBar";
 import { Suspense } from "react";
 import PerformanceSidebar from "./performancepage/Left/PerformanceSidebar";
-import RightSidebar from "@/components/RightSidebar";
  
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -19,6 +19,7 @@ interface SidebarRoute {
 import ProfessorSidebar from "@/professor/components/ProfessorSidebar";
 import AdminSidebar from "@/admin/components/AdminSidebar";
 import ChatSessionProvider from "@/components/ChatSessionProvider";
+import ProfessorGenerationProvider from "@/professor/components/ProfessorGenerationProvider";
 
 export default function AppLayout({
   children,
@@ -27,12 +28,10 @@ export default function AppLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isChatPage = pathname?.startsWith("/chat");
  
   const isLogin = pathname === "/login";
  
   const { role, userId, userName, loading } = useAuth();
-  const [rightOpen, setRightOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
  
   useEffect(() => {
@@ -78,6 +77,14 @@ export default function AppLayout({
   const isAdminRoute = pathname?.startsWith("/admin");
   const isStudioRoute = isProfessorRoute || isAdminRoute;
 
+  if (loading && isAdminRoute) {
+    return <DashboardLoadingShell role="admin" text="Loading..." />;
+  }
+
+  if (loading && isProfessorRoute) {
+    return <DashboardLoadingShell role="professor" text="Loading..." />;
+  }
+
   if (loading || (!role && !isLogin)) {
     return (
       <Loader fullScreen text="Loading..." />
@@ -86,6 +93,7 @@ export default function AppLayout({
  
   return (
     <ChatSessionProvider userId={userId} role={role} userName={userName}>
+      <ProfessorGenerationProvider enabled={role === "professor"}>
       <div className="h-screen bg-[#090D1F] flex overflow-hidden">
       {/* Main sidebar (left) */}
       {!isLogin && !isStudioRoute && (
@@ -117,7 +125,7 @@ export default function AppLayout({
           {!isLogin && !isStudioRoute && (
             <header className="sticky top-0 z-[100] h-16 shrink-0 border-b border-white/5 bg-[#090D1F]/70 backdrop-blur-md flex items-center">
               <Suspense fallback={<div className="h-full w-full bg-[#020617]" />}>
-                <TopBar rightOpen={rightOpen} onRightOpenChange={setRightOpen} />
+                <TopBar />
               </Suspense>
             </header>
           )}
@@ -129,18 +137,11 @@ export default function AppLayout({
               {children}
             </main>
  
-            {/* Right insights panel — only on chat page */}
-            {isChatPage && (
-              <div className={`shrink-0 h-full min-h-0 border-l border-white/8 bg-[#080d19]/80 backdrop-blur-xl overflow-hidden transition-all duration-300 ease-in-out ${rightOpen ? "w-64" : "w-0"}`}>
-                <div className="w-64 h-full overflow-y-auto purple-scrollbar">
-                  <RightSidebar />
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
       </div>
+      </ProfessorGenerationProvider>
     </ChatSessionProvider>
   );
 }

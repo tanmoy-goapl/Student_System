@@ -2,11 +2,11 @@
 
 import React, { Suspense } from "react";
 import PlacementsPage from "@/admin/placements/PlacementsPage";
-import Loader from "@/components/Loader";
+import { DashboardLoadingShell } from "@/components/DashboardLoading";
 
 export default function AdminPlacementsRoute() {
   return (
-    <Suspense fallback={<Loader fullScreen text="Loading Placements..." />}>
+    <Suspense fallback={<DashboardLoadingShell role="admin" text="Loading Placements..." />}>
       <PlacementsPage />
     </Suspense>
   );

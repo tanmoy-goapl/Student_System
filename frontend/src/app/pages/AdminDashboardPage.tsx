@@ -202,7 +202,7 @@ export default function AdminDashboardPage() {
               label="Active Today"
               gradient="from-cyan-500 to-blue-500"
               icon={Activity}
-              subtitle={`${dashboardData?.inactive_students ?? 0} inactive (no activity in 7 days)`}
+              subtitle={`${dashboardData?.inactive_students ?? 0} students had no activity in the last 7 days`}
             />
             <StatCard
               value={`${dashboardData?.average_confidence ?? 0}%`}

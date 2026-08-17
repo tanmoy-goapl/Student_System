@@ -23,16 +23,6 @@ export default function Navbar({ collapsed = false, onToggle }: NavbarProps) {
   const [userEmail, setUserEmail] = useState("student@university.edu");
   const searchParams = useSearchParams();
   const sourceParam = searchParams?.get("source");
-  const [classesPath, setClassesPath] = useState("/classes");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedPath = localStorage.getItem("last_visited_class_path");
-      if (savedPath) {
-        setClassesPath(savedPath);
-      }
-    }
-  }, [pathname]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -62,7 +52,7 @@ export default function Navbar({ collapsed = false, onToggle }: NavbarProps) {
   const navItems = [
     { id: "home", label: "Home", path: selectedMode === "personal" ? "/personal" : "/courses", icon: Home },
     { id: "chat", label: "AI Chatbot", path: "/chat", icon: MessageSquare },
-    { id: "classes", label: "My Classes", path: classesPath, icon: BookOpen },
+    { id: "classes", label: "My Classes", path: "/classes", icon: BookOpen },
     { id: "learning", label: "Learning Path", path: `/learning?source=${selectedMode}`, icon: Compass },
     { id: "practice", label: "Practice Arena", path: `/practice?source=${selectedMode}`, icon: ClipboardCheck },
     { id: "documents", label: "My Documents", path: "/documents", icon: FileText },

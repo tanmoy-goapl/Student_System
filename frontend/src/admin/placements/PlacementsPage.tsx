@@ -1,66 +1,128 @@
 "use client";
 
-import React, { useState } from "react";
-import { 
-  Briefcase, Calendar, Download, Sparkles, TrendingUp, 
-  Users, BookOpen, AlertTriangle, Play, HelpCircle, FileText, CheckCircle
+import { useCallback, useEffect, useState } from "react";
+import {
+  Activity, AlertTriangle, BookOpen, Calendar, FileText, RefreshCw,
+  Sparkles,
+  Target, TrendingUp, UserX, Users,
 } from "lucide-react";
 import AdminSidebar from "../components/AdminSidebar";
 
+interface ClassroomStat {
+  id: number;
+  name: string;
+  code: string;
+  professor: string;
+  student_count: number;
+  avg_confidence: number;
+  avg_readiness: number;
+  active_students: number;
+  inactive_students: number;
+  status: "STRONG" | "STABLE" | "NEEDS ATTENTION" | "EMPTY";
+}
+
+interface DepartmentStat {
+  id: string;
+  code: string;
+  name: string;
+  student_count: number;
+  course_count: number;
+  active_students: number;
+  active_students_today: number;
+  inactive_students: number;
+  average_confidence: number;
+  average_readiness: number;
+}
+
+interface StudentStat {
+  id: number;
+  name: string;
+  confidence: number;
+  readiness: number;
+  last_active: string;
+}
+
+interface DashboardData {
+  total_students: number;
+  enrolled_students: number;
+  total_professors: number;
+  total_classes: number;
+  active_students_today: number;
+  average_confidence: number;
+  average_readiness: number;
+  weak_students: number;
+  inactive_students: number;
+  departments: DepartmentStat[];
+}
+
+interface PlacementInsight {
+  title: string;
+  desc: string;
+  badge: string;
+  badgeColor: string;
+}
+
+async function fetchAdminJson<T>(endpoint: string): Promise<T> {
+  const response = await fetch(endpoint, { cache: "no-store" });
+  if (!response.ok) throw new Error(`Unable to load ${endpoint} (${response.status})`);
+  return response.json() as Promise<T>;
+}
+
 export default function PlacementsPage() {
-  const [timeRange, setTimeRange] = useState("Last 30 Days");
-  const [simulatorValue, setSimulatorValue] = useState(25);
-  const [selectedScenario, setSelectedScenario] = useState("interviews");
+  const timeRange = "Live snapshot";
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [classrooms, setClassrooms] = useState<ClassroomStat[]>([]);
+  const [students, setStudents] = useState<StudentStat[]>([]);
+  const [error, setError] = useState("");
+
+  const loadPlacements = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [dashboard, classroomRows, studentRows] = await Promise.all([
+        fetchAdminJson<DashboardData>("/api/admin/dashboard"),
+        fetchAdminJson<ClassroomStat[]>("/api/admin/classrooms-analytics"),
+        fetchAdminJson<StudentStat[]>("/api/admin/students"),
+      ]);
+      setDashboardData(dashboard);
+      setClassrooms(classroomRows);
+      setStudents(studentRows);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to load placement analytics.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPlacements();
+  }, [loadPlacements]);
+
+  const totalStudents = dashboardData?.total_students ?? students.length;
+  const enrolledStudents = dashboardData?.enrolled_students ?? 0;
+  const activeToday = dashboardData?.active_students_today ?? 0;
+  const activeRate = totalStudents ? Math.round((activeToday / totalStudents) * 100) : 0;
+  const enrollmentRate = totalStudents ? Math.round((enrolledStudents / totalStudents) * 100) : 0;
+  const highRiskStudents = students.filter((student) => student.readiness < 40 || student.confidence < 40);
+  const readyStudents = students.filter((student) => student.readiness >= 70 && student.confidence >= 60);
+  const prepStudents = students.filter((student) => !highRiskStudents.some((risk) => risk.id === student.id) && !readyStudents.some((ready) => ready.id === student.id));
+  const departmentRows = dashboardData?.departments ?? [];
+  const priorityClasses = [...classrooms].filter((classroom) => classroom.student_count > 0).sort((a, b) => a.avg_readiness - b.avg_readiness);
+  const actionQueue = [...students].sort((a, b) => a.readiness - b.readiness || a.confidence - b.confidence).slice(0, 6);
 
   const overviewCards = [
-    { label: "Placement Readiness", value: "68%", subtitle: "Across final-year students", icon: BookOpen, gradient: "from-blue-600 to-indigo-500", progress: "+4%" },
-    { label: "Resume Quality", value: "61%", subtitle: "Average score vs benchmark", icon: FileText, gradient: "from-amber-500 to-orange-500", progress: "-2%" },
-    { label: "Interview Readiness", value: "54%", subtitle: "Based on mock performance", icon: Users, gradient: "from-purple-600 to-violet-650", progress: "-3%" },
-    { label: "Active Recruiters", value: "24", subtitle: "Actively hiring this month", icon: Briefcase, gradient: "from-emerald-500 to-teal-500", progress: "+1" },
+    { label: "Placement Readiness", value: dashboardData ? `${Math.round(dashboardData.average_readiness)}%` : "…", subtitle: `${readyStudents.length} students meet the current on-track threshold`, icon: BookOpen, gradient: "from-blue-600 to-indigo-500", progress: "Live academic signal" },
+    { label: "Academic Confidence", value: dashboardData ? `${Math.round(dashboardData.average_confidence)}%` : "…", subtitle: "Confidence is used with readiness for triage", icon: TrendingUp, gradient: "from-purple-600 to-violet-650", progress: "Live academic signal" },
+    { label: "Ready for Placement Prep", value: `${readyStudents.length}`, subtitle: `of ${totalStudents} students currently on track`, icon: Target, gradient: "from-emerald-500 to-teal-500", progress: `${totalStudents ? Math.round((readyStudents.length / totalStudents) * 100) : 0}% of roster` },
+    { label: "Preparation Queue", value: `${highRiskStudents.length + prepStudents.length}`, subtitle: `${highRiskStudents.length} high-risk · ${prepStudents.length} need preparation`, icon: AlertTriangle, gradient: "from-amber-500 to-orange-500", progress: `${activeRate}% active today` },
   ];
 
-  const placementInsights = [
-    {
-      title: "Resume Quality Below Benchmark",
-      desc: "Average ATS score: 58/100. Need revision across CS & Math majors.",
-      badge: "ATS CONCERN",
-      badgeColor: "text-rose-400 bg-rose-500/10 border-rose-500/20",
-      btn1: "Review Students",
-      btn2: "Generate Plan",
-    },
-    {
-      title: "Mock Interview Performance Dropped",
-      desc: "Communication scores dropped 11% this cycle. Action required.",
-      badge: "INTERVIEW TREND",
-      badgeColor: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-      btn1: "View Patterns",
-      btn2: "Notify Faculty",
-    },
-    {
-      title: "AI Practice Improved Readiness",
-      desc: "Students practicing 5+ times showed 18% improvement.",
-      badge: "AI OUTCOME",
-      badgeColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-      btn1: "Assign Practice",
-      btn2: "View Dashboard",
-    },
-    {
-      title: "High-Demand Skills Missing",
-      desc: "SQL, System Design, and Communication absent in 40% of profiles.",
-      badge: "SKILL GAP",
-      badgeColor: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-      btn1: "View Curriculum",
-      btn2: "Add Workshops",
-    },
-  ];
-
-  const skillGaps = [
-    { name: "System Design", score: 68 },
-    { name: "SQL & Databases", score: 79 },
-    { name: "Communication", score: 62 },
-    { name: "DSA Advanced", score: 84 },
-    { name: "Cloud Basics", score: 56 },
-  ];
+  const placementInsights: PlacementInsight[] = [];
+  if (highRiskStudents.length > 0) placementInsights.push({ title: "Readiness intervention queue is open", desc: `${highRiskStudents.length} students are below the high-risk threshold on readiness or confidence. This is a planning signal for future targeted practice.`, badge: "HIGH PRIORITY", badgeColor: "text-rose-400 bg-rose-500/10 border-rose-500/20" });
+  if ((dashboardData?.inactive_students ?? 0) > 0) placementInsights.push({ title: "Inactive student signal detected", desc: `${dashboardData?.inactive_students ?? 0} students have no recorded activity in the last seven days. This is an engagement alert for future faculty follow-up.`, badge: "ENGAGEMENT", badgeColor: "text-amber-400 bg-amber-500/10 border-amber-500/20" });
+  if (priorityClasses[0]) placementInsights.push({ title: `${priorityClasses[0].name} has the largest classroom gap`, desc: `This class has the lowest live readiness average among enrolled classrooms at ${priorityClasses[0].avg_readiness}%. This is a classroom-level planning alert.`, badge: "CLASSROOM GAP", badgeColor: "text-blue-400 bg-blue-500/10 border-blue-500/20" });
+  if (placementInsights.length < 3) placementInsights.push({ title: "Department readiness signal available", desc: `${departmentRows.length} department-level summaries are available from current enrollments and student metrics. This is an informational planning alert.`, badge: "PLANNING", badgeColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" });
 
   return (
     <div className="h-screen bg-[#020617] flex overflow-hidden text-white font-sans">
@@ -83,22 +145,17 @@ export default function PlacementsPage() {
               <Calendar className="w-3.5 h-3.5 opacity-60" />
             </button>
 
-            {/* Export */}
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 transition">
-              <Download className="w-3.5 h-3.5 text-slate-350" />
-              <span>Export Analytics</span>
-            </button>
-
-            {/* Generate Report */}
-            <button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition">
-              <Briefcase className="w-3.5 h-3.5 text-white" />
-              <span>Generate Report</span>
+            <button onClick={() => void loadPlacements()} className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:border-white/20 hover:text-white" aria-label="Refresh placement analytics">
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             </button>
           </div>
         </header>
 
         {/* Scrollable Body */}
         <main className="flex-1 overflow-y-auto purple-scrollbar p-6 space-y-8 bg-gradient-to-b from-[#040815] to-[#020617]">
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-300"><AlertTriangle className="h-4 w-4 shrink-0" /><span>{error}</span></div>
+          )}
           {/* Overview Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {overviewCards.map((card, idx) => {
@@ -115,7 +172,7 @@ export default function PlacementsPage() {
                       <div className={`h-9 w-9 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center`}>
                         <Icon className="w-4.5 h-4.5 text-white" />
                       </div>
-                      <span className={`text-[10px] font-bold ${card.progress.startsWith("+") ? "text-emerald-400" : "text-rose-400"}`}>
+                      <span className="text-[10px] font-bold text-slate-400">
                         {card.progress}
                       </span>
                     </div>
@@ -128,15 +185,15 @@ export default function PlacementsPage() {
           {/* AI Placement Insights */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">AI Placement Insights</h2>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Live placement recommendations</h2>
               <span className="flex items-center gap-1 px-2 py-0.5 text-[8px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-full">
-                <Sparkles className="w-2.5 h-2.5" /> Powered by GPT-4
+                <Sparkles className="w-2.5 h-2.5" /> Based on current academic signals
               </span>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {placementInsights.map((insight, idx) => (
-                <div key={idx} className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 flex flex-col justify-between min-h-[160px] backdrop-blur-sm hover:border-white/10 transition">
+              {placementInsights.map((insight) => (
+                <div key={insight.title} className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 flex flex-col justify-between min-h-[160px] backdrop-blur-sm hover:border-white/10 transition">
                   <div className="space-y-2">
                     <div className="flex justify-between items-start">
                       <span className={`px-2 py-0.5 text-[7px] font-extrabold tracking-wider rounded border ${insight.badgeColor}`}>
@@ -147,14 +204,6 @@ export default function PlacementsPage() {
                     <p className="text-[10px] text-slate-400 leading-relaxed">{insight.desc}</p>
                   </div>
 
-                  <div className="flex gap-2 pt-3 border-t border-white/5 mt-3">
-                    <button className="flex-1 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-[9px] font-bold uppercase tracking-wider transition">
-                      {insight.btn1}
-                    </button>
-                    <button className="flex-1 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-[9px] font-bold uppercase tracking-wider text-white transition">
-                      {insight.btn2}
-                    </button>
-                  </div>
                 </div>
               ))}
             </div>
@@ -164,130 +213,113 @@ export default function PlacementsPage() {
           <div className="space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">Department Placement Readiness</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { name: "Computer Science", enrolled: 120, ready: "78%", placement: "72%" },
-                { name: "Physics", enrolled: 80, ready: "66%", placement: "60%" },
-                { name: "Mathematics", enrolled: 100, ready: "61%", placement: "54%" },
-                { name: "Chemistry", enrolled: 90, ready: "70%", placement: "65%" },
-              ].map((dept, idx) => (
-                <div key={idx} className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 space-y-4 hover:border-white/10 transition">
+              {departmentRows.length === 0 ? <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 text-xs text-slate-500">Department readiness appears after departments or classes have live enrollment data.</div> : departmentRows.map((dept) => (
+                <div key={dept.id} className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 space-y-4 hover:border-white/10 transition">
                   <div>
                     <h3 className="text-xs font-bold text-slate-200">{dept.name}</h3>
-                    <span className="text-[8px] text-slate-500 font-bold block mt-0.5">Enrolled: {dept.enrolled} final-years</span>
+                    <span className="text-[8px] text-slate-500 font-bold block mt-0.5">Enrolled: {dept.student_count} students · {dept.course_count} classes</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-center">
                     <div className="bg-black/25 p-2 rounded-xl border border-white/5">
                       <span className="text-[7px] uppercase tracking-wider text-slate-550 block font-bold">Ready</span>
-                      <span className="text-sm font-extrabold text-emerald-400 mt-1 block">{dept.ready}</span>
+                      <span className="text-sm font-extrabold text-emerald-400 mt-1 block">{Math.round(dept.average_readiness)}%</span>
                     </div>
                     <div className="bg-black/25 p-2 rounded-xl border border-white/5">
-                      <span className="text-[7px] uppercase tracking-wider text-slate-550 block font-bold">Placed</span>
-                      <span className="text-sm font-extrabold text-white mt-1 block">{dept.placement}</span>
+                      <span className="text-[7px] uppercase tracking-wider text-slate-550 block font-bold">Confidence</span>
+                      <span className="text-sm font-extrabold text-white mt-1 block">{Math.round(dept.average_confidence)}%</span>
                     </div>
                   </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500" style={{ width: `${Math.max(0, Math.min(100, dept.average_readiness))}%` }} /></div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Student Risk & Skill Gap Split */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* Student Risk Analysis */}
-            <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-xl space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-350 border-b border-white/5 pb-2">Student Risk Analysis</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl border border-rose-500/10 bg-rose-500/5 text-center space-y-2">
-                  <span className="text-xl font-extrabold text-rose-400">42</span>
-                  <span className="text-[9px] font-bold text-slate-400 block uppercase">High Risk</span>
-                  <button className="w-full py-1 rounded bg-rose-600 hover:bg-rose-700 text-[8px] font-bold uppercase text-white transition">Intervene</button>
-                </div>
-                <div className="p-4 rounded-xl border border-amber-500/10 bg-amber-500/5 text-center space-y-2">
-                  <span className="text-xl font-extrabold text-amber-400">118</span>
-                  <span className="text-[9px] font-bold text-slate-400 block uppercase">Needs Prep</span>
-                  <button className="w-full py-1 rounded bg-amber-600/30 border border-amber-500/20 text-amber-300 hover:bg-amber-550/30 text-[8px] font-bold uppercase transition">Assign Training</button>
-                </div>
-                <div className="p-4 rounded-xl border border-emerald-500/10 bg-emerald-500/5 text-center space-y-2">
-                  <span className="text-xl font-extrabold text-emerald-400">318</span>
-                  <span className="text-[9px] font-bold text-slate-400 block uppercase">Ready</span>
-                  <button className="w-full py-1 rounded bg-emerald-600/30 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-550/30 text-[8px] font-bold uppercase transition">Export List</button>
+          {/* Readiness mix and classroom gaps */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-xl">
+              <div className="mb-4 flex items-center gap-2"><Activity className="h-4 w-4 text-cyan-400" /><h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">Readiness mix</h3></div>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "High risk", value: highRiskStudents.length, color: "text-rose-400", bg: "bg-rose-500/10" },
+                  { label: "Needs prep", value: prepStudents.length, color: "text-amber-400", bg: "bg-amber-500/10" },
+                  { label: "On track", value: readyStudents.length, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+                ].map((item) => <div key={item.label} className={`rounded-xl border border-white/5 p-3 text-center ${item.bg}`}><span className={`text-xl font-extrabold ${item.color}`}>{item.value}</span><span className="mt-1 block text-[9px] font-bold uppercase tracking-wider text-slate-500">{item.label}</span></div>)}
+              </div>
+              <div className="mt-5 space-y-2">
+                <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500"><span>Placement preparation coverage</span><span>{totalStudents} students</span></div>
+                <div className="flex h-3 overflow-hidden rounded-full bg-white/5"><div className="bg-rose-500" style={{ width: `${totalStudents ? (highRiskStudents.length / totalStudents) * 100 : 0}%` }} /><div className="bg-amber-500" style={{ width: `${totalStudents ? (prepStudents.length / totalStudents) * 100 : 0}%` }} /><div className="bg-emerald-500" style={{ width: `${totalStudents ? (readyStudents.length / totalStudents) * 100 : 0}%` }} /></div>
+                <div className="flex items-center justify-between text-[10px] text-slate-500"><span><UserX className="mr-1 inline h-3 w-3" />{dashboardData?.inactive_students ?? 0} inactive in the last 7 days</span></div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-[10px]" aria-label="Readiness mix legend">
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-rose-500" /><span className="text-slate-400">High risk</span><span className="font-bold text-rose-400">{highRiskStudents.length}</span></span>
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" /><span className="text-slate-400">Needs prep</span><span className="font-bold text-amber-400">{prepStudents.length}</span></span>
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /><span className="text-slate-400">On track</span><span className="font-bold text-emerald-400">{readyStudents.length}</span></span>
                 </div>
               </div>
             </div>
 
-            {/* Skill Gap Analysis */}
-            <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-xl space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-350 border-b border-white/5 pb-2">Skill Gap Analysis</h3>
-              <div className="space-y-3">
-                {skillGaps.map((skill, i) => (
-                  <div key={i} className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold text-slate-300">
-                      <span>{skill.name}</span>
-                      <span>{skill.score}% Coverage</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" style={{ width: `${skill.score}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-
-          {/* AI What-If Simulator */}
-          <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-xl space-y-6">
-            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-              <Sparkles className="w-4.5 h-4.5 text-violet-400" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-200">AI What-If Simulator (Recruitment)</h3>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Controls */}
-              <div className="space-y-5">
-                <div className="space-y-3">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Select placement scenarios</span>
-                  <div className="space-y-2">
-                    {[
-                      { id: "interviews", label: "If mock placement interviews are increased to 3 rounds/month" },
-                      { id: "resume", label: "If resume builder AI validation is made mandatory for final-years" },
-                    ].map(sc => (
-                      <label key={sc.id} className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-black/25 cursor-pointer hover:border-white/10 transition">
-                        <input
-                          type="radio"
-                          name="placement_scenario"
-                          checked={selectedScenario === sc.id}
-                          onChange={() => setSelectedScenario(sc.id)}
-                          className="accent-violet-500 h-3.5 w-3.5"
-                        />
-                        <span className="text-xs font-semibold text-slate-200">{sc.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <button className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-xs font-bold transition shadow-lg shadow-violet-500/20 flex items-center justify-center gap-2">
-                  <Play className="w-4 h-4 text-white" />
-                  <span>Run Placements Projection</span>
-                </button>
-              </div>
-
-              {/* Outcomes */}
-              <div className="rounded-xl border border-white/5 bg-black/25 p-5 space-y-4">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">AI Predicted Outcomes</span>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
-                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Placement Rate</span>
-                    <span className="text-2xl font-extrabold text-emerald-400 mt-2 block">+12%</span>
-                  </div>
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
-                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Interview Success</span>
-                    <span className="text-2xl font-extrabold text-emerald-400 mt-2 block">+11%</span>
-                  </div>
-                </div>
-              </div>
+            <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-xl">
+              <div className="mb-4 flex items-center justify-between"><div className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-400" /><h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">Priority classroom gaps</h3></div></div>
+              {priorityClasses.length === 0 ? <p className="rounded-xl border border-white/5 bg-black/20 p-6 text-center text-xs text-slate-500">No enrolled classrooms are available for comparison.</p> : <div className="space-y-3">{priorityClasses.slice(0, 4).map((classroom) => <div key={classroom.id} className="rounded-xl border border-white/5 bg-black/20 p-3"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate text-xs font-bold text-white">{classroom.name}</p><p className="mt-0.5 text-[10px] text-slate-500">{classroom.student_count} students · {classroom.inactive_students} inactive · {classroom.professor}</p></div><div className="text-right"><p className="text-sm font-extrabold text-amber-400">{classroom.avg_readiness}%</p><p className="text-[9px] uppercase tracking-wider text-slate-600">readiness</p></div></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-amber-500" style={{ width: `${Math.max(0, Math.min(100, classroom.avg_readiness))}%` }} /></div></div>)}</div>}
             </div>
           </div>
+
+          {/* Student action queue and data coverage */}
+          <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-xl">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2"><Users className="h-4 w-4 text-cyan-400" /><h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">Student support signals</h3></div>
+              </div>
+              {loading ? (
+                <div className="space-y-2">{[1, 2, 3].map((item) => <div key={item} className="h-12 animate-pulse rounded-xl bg-white/5" />)}</div>
+              ) : actionQueue.length === 0 ? (
+                <p className="rounded-xl border border-white/5 bg-black/20 p-6 text-center text-xs text-slate-500">Student signals will appear when the roster has live metrics.</p>
+              ) : (
+                <div className="space-y-2">
+                  {actionQueue.map((student) => (
+                    <div key={student.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/20 p-3">
+                      <div className="min-w-0"><p className="truncate text-xs font-bold text-white">{student.name}</p><p className="mt-0.5 truncate text-[10px] text-slate-500">Last active: {student.last_active || "Not recorded"}</p></div>
+                      <div className="shrink-0 text-right"><p className="text-sm font-extrabold text-amber-400">{Math.round(student.readiness)}%</p><p className="text-[9px] uppercase tracking-wider text-slate-600">readiness · {Math.round(student.confidence)}% conf.</p></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-xl">
+              <div className="mb-4 flex items-center gap-2"><FileText className="h-4 w-4 text-violet-400" /><h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">Data coverage</h3></div>
+              <div className="space-y-3 text-[10px]">
+                <div className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 p-3"><span className="text-slate-500">Enrollment coverage</span><span className="font-bold text-white">{enrolledStudents} / {totalStudents} ({enrollmentRate}%)</span></div>
+                <div className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 p-3"><span className="text-slate-500">Active today</span><span className="font-bold text-emerald-400">{activeToday} ({activeRate}%)</span></div>
+                <div className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 p-3"><span className="text-slate-500">Classroom coverage</span><span className="font-bold text-white">{classrooms.filter((classroom) => classroom.student_count > 0).length} / {dashboardData?.total_classes ?? classrooms.length}</span></div>
+              </div>
+              <p className="mt-4 text-[10px] leading-relaxed text-slate-500">Recommendations use live readiness, confidence, activity, enrollment, and classroom metrics. Resume, recruiter, and interview records are not connected to the current admin data sources yet.</p>
+            </div>
+          </section>
+
+          {/* Placement readiness guide */}
+          <section className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Placement readiness guide</h2>
+                <p className="mt-1 text-[10px] text-slate-500">A simple explanation of the thresholds already used in this dashboard.</p>
+              </div>
+              <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-slate-600">Current metrics</span>
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              {[
+                { title: "High risk", rule: "Readiness below 40% or confidence below 40%", note: "Needs foundational academic support before placement preparation.", tone: "border-rose-500/20 bg-rose-500/5" },
+                { title: "Needs preparation", rule: "Between the high-risk and on-track thresholds", note: "Continue practice, activity, and confidence building.", tone: "border-amber-500/20 bg-amber-500/5" },
+                { title: "On track", rule: "Readiness at least 70% and confidence at least 60%", note: "Suitable for placement-preparation planning based on academic signals.", tone: "border-emerald-500/20 bg-emerald-500/5" },
+              ].map((guide) => (
+                <div key={guide.title} className={"rounded-xl border p-4 " + guide.tone}>
+                  <p className="text-xs font-bold text-white">{guide.title}</p>
+                  <p className="mt-2 text-[10px] font-semibold leading-relaxed text-slate-300">{guide.rule}</p>
+                  <p className="mt-2 text-[10px] leading-relaxed text-slate-500">{guide.note}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         </main>
       </div>
     </div>

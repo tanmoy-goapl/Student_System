@@ -9,7 +9,7 @@ import {
   TrendingUp, Clock, Target, BookOpen, Compass, 
   CheckCircle2, AlertTriangle, XCircle, Brain, LayoutDashboard
 } from 'lucide-react';
-import Loader from '@/components/Loader';
+import { DashboardContentLoader } from '@/components/DashboardLoading';
 
 interface OverallStats {
   studyStreak: number;
@@ -106,7 +106,7 @@ export default function AnalyticsPage() {
     fetchAnalytics();
   }, []);
 
-  if (loading) return <Loader fullScreen text="Loading Analytics..." />;
+  if (loading) return <DashboardContentLoader text="Loading Analytics..." />;
   if (errorMsg) return <div className="text-red-400 text-center mt-20">Error: {errorMsg}</div>;
   if (!data) return <div className="text-white text-center mt-20">Failed to load data</div>;
 

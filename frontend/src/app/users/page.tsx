@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Loader from "@/components/Loader";
+import { PageLoadingState } from "@/components/DashboardLoading";
 
 export default function UsersRedirect() {
   const router = useRouter();
@@ -11,5 +11,5 @@ export default function UsersRedirect() {
     router.replace("/admin/users");
   }, [router]);
 
-  return <Loader fullScreen text="Redirecting..." />;
+  return <PageLoadingState text="Redirecting..." />;
 }

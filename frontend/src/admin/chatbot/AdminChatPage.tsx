@@ -1,20 +1,42 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { 
-  Sparkles, Paperclip, Send, Bell, Sidebar, PlusCircle, 
-  TrendingUp, FileText, CheckCircle, AlertTriangle, Users, Play, Clock
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import {
+  AlertTriangle, BookOpen, History, Paperclip, Plus, Send, Sidebar,
+  Sparkles, Square, Target, TrendingUp, Users,
 } from "lucide-react";
 import AdminSidebar from "../components/AdminSidebar";
-import { ChatThinking } from "@/components/UIStateSystem";
 import ReactMarkdown from "react-markdown";
 import { uploadDocument } from "@/lib/api";
+import ChatHistorySidebar from "@/components/ChatHistorySidebar";
 import { useChatSession } from "@/components/ChatSessionProvider";
 
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-};
+interface AdminAlert {
+  id: string;
+  severity: "critical" | "warning" | "info" | "success";
+  title: string;
+  message: string;
+  metric: string;
+}
+
+interface AdminDashboardSnapshot {
+  total_students: number;
+  total_professors: number;
+  total_classes: number;
+  active_students_today: number;
+  average_confidence: number;
+  average_readiness: number;
+  weak_students: number;
+  inactive_students: number;
+  alerts: AdminAlert[];
+  departments: Array<{
+    id: string;
+    name: string;
+    student_count: number;
+    course_count: number;
+    average_readiness: number;
+  }>;
+}
 
 interface TableBlock {
   type: "markdown" | "table";
@@ -79,6 +101,7 @@ function parseMarkdownAndTables(text: string): TableBlock[] {
 
 export default function AdminChatPage() {
   const {
+    user,
     question,
     setQuestion,
     history,
@@ -87,65 +110,120 @@ export default function AdminChatPage() {
     isStreaming,
     error,
     setError,
+    activeSessionId,
     handleAsk,
+    handleStop,
+    handleSelectSession,
     handleNewChat,
     appendAssistantMessage,
   } = useChatSession();
 
-  const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
+  const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [fileUploading, setFileUploading] = useState(false);
+  const [dashboard, setDashboard] = useState<AdminDashboardSnapshot | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const scrollThrottleRef = useRef<number>(0);
+  const initialScrollPendingRef = useRef(true);
+  const autoScrolledSessionRef = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    setDashboardLoading(true);
+    fetch("/api/admin/dashboard", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Dashboard request failed (${response.status})`);
+        return (await response.json()) as AdminDashboardSnapshot;
+      })
+      .then((data) => {
+        if (!cancelled) setDashboard(data);
+      })
+      .catch(() => {
+        if (!cancelled) setDashboard(null);
+      })
+      .finally(() => {
+        if (!cancelled) setDashboardLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    const userId = Number(localStorage.getItem("user_id") || 0);
-    if (!file || !userId) return;
+    if (!file || !user?.id) return;
     setError("");
     setFileUploading(true);
     try {
-      const res = await uploadDocument(userId, file, "owner");
+      const res = await uploadDocument(user.id, file, "owner");
       appendAssistantMessage(`📁 **Uploaded "${res.filename}"** (${res.chunks_created} chunks processed). I have parsed it and added it to my knowledge. You can now ask questions about it!`);
-    } catch (err: any) {
-      setError(err.message || "Failed to upload document");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to upload document");
     } finally {
       setFileUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  const suggestions = [
-    { text: "Which classes are underperforming?", desc: "See ranked class list by score" },
-    { text: "Compare teacher performance", desc: "Side-by-side teacher metrics" },
-    { text: "Identify low engagement students", desc: "At-risk learners by activity" },
-    { text: "Generate performance report", desc: "Structured institutional report" },
-    { text: "Suggest improvements", desc: "AI-recommended action plan" },
-    { text: "Usage analytics overview", desc: "Platform activity breakdown" }
+  const liveMetrics = [
+    { label: "Students", value: dashboard?.total_students ?? "—", note: dashboard ? dashboard.active_students_today + " active today" : "Loading...", icon: Users },
+    { label: "Faculty", value: dashboard?.total_professors ?? "—", note: dashboard ? dashboard.total_classes + " classes covered" : "Loading...", icon: Users },
+    { label: "Classes", value: dashboard?.total_classes ?? "—", note: "Current class roster", icon: BookOpen },
+    { label: "Readiness", value: dashboard ? Math.round(dashboard.average_readiness) + "%" : "—", note: dashboard ? Math.round(dashboard.average_confidence) + "% confidence" : "Loading...", icon: Target },
   ];
 
-  useEffect(() => {
+
+  useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const now = Date.now();
-    if (now - scrollThrottleRef.current > 120) {
-      scrollThrottleRef.current = now;
-      const lastMsg = history[history.length - 1];
-      const isUserMsg = lastMsg && lastMsg.role === "user";
-      const threshold = 150;
-      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    const lastMsg = history[history.length - 1];
+    const isUserMsg = lastMsg?.role === "user";
+    const threshold = 150;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    const isInitialRestore = initialScrollPendingRef.current && history.length > 0;
 
-      if (isUserMsg || nearBottom || loading) {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      }
+    if (isInitialRestore || isUserMsg || nearBottom || loading) {
+      const behavior = isInitialRestore ? "auto" : "smooth";
+      requestAnimationFrame(() => {
+        if (scrollRef.current !== el) return;
+        el.scrollTo({ top: el.scrollHeight, behavior });
+      });
     }
+    if (isInitialRestore) initialScrollPendingRef.current = false;
   }, [history, loading]);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !activeSessionId || !history.length) return;
+    if (autoScrolledSessionRef.current === activeSessionId) return;
+
+    autoScrolledSessionRef.current = activeSessionId;
+    requestAnimationFrame(() => {
+      if (scrollRef.current !== el) return;
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    });
+  }, [activeSessionId, history.length]);
+
+  useLayoutEffect(() => {
+    if (!history.length) {
+      initialScrollPendingRef.current = true;
+      autoScrolledSessionRef.current = undefined;
+    }
+  }, [history.length]);
 
   return (
     <div className="h-screen bg-[#020617] flex overflow-hidden text-white font-sans">
       {/* Left Sidebar */}
       <AdminSidebar />
+      <ChatHistorySidebar
+        studentId={user?.id ?? null}
+        open={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onSelectSession={handleSelectSession}
+        activeSessionId={activeSessionId}
+      />
 
       {/* Main Conversation Canvas */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#040815]">
@@ -153,6 +231,13 @@ export default function AdminChatPage() {
         {/* Chat Header Bar */}
         <header className="h-16 shrink-0 border-b border-white/5 bg-[#050a14]/40 backdrop-blur-md flex items-center justify-between px-6 select-none relative z-40">
           <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition"
+              title="Open chat history"
+            >
+              <History size={16} />
+            </button>
             <div className="h-7 w-7 rounded-full bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
               <Sparkles className="w-3.5 h-3.5" />
             </div>
@@ -186,6 +271,14 @@ export default function AdminChatPage() {
           </div> */}
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleNewChat}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-xs font-semibold hover:border-white/20 hover:bg-white/10 transition"
+              title="Start new conversation"
+            >
+              <Plus size={14} className="text-slate-300" />
+              <span>New Chat</span>
+            </button>
             {/* <button className="h-8 w-8 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-slate-350 hover:bg-white/10 transition relative">
               <Bell className="w-4 h-4" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500" />
@@ -207,7 +300,7 @@ export default function AdminChatPage() {
         <div ref={scrollRef} className="flex-1 overflow-y-auto purple-scrollbar p-6 space-y-6">
           {history.length === 0 ? (
             /* Welcome screen */
-            <div className="h-full flex flex-col justify-center items-center max-w-2xl mx-auto space-y-8 select-none py-12">
+            <div className="h-full flex flex-col justify-center items-center max-w-5xl mx-auto space-y-8 select-none py-12">
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-500/25">
                   <Sparkles className="w-8 h-8 text-white" />
@@ -217,17 +310,16 @@ export default function AdminChatPage() {
                   I can help you analyze student & teacher performance, manage users, and optimize learning outcomes.
                 </p>
                 <div className="flex gap-4 pt-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  <span>👥 120 Students</span>
-                  <span>📁 45 Documents</span>
-                  <span>⚡ 1,240 Questions Analyzed</span>
+                  <span>👥 {dashboard?.total_students ?? "—"} Students</span>
+                  <span>🏫 {dashboard?.total_classes ?? "—"} Classes</span>
+                  <span>⚡ {dashboard?.active_students_today ?? "—"} Active Today</span>
                 </div>
               </div>
 
-""
             </div>
           ) : (
             /* Active message history */
-            <div className="max-w-3xl mx-auto space-y-6">
+            <div className="max-w-5xl mx-auto space-y-6">
               {history.map((msg, idx) => {
                 if (msg.role === "assistant" && !msg.content) {
                   return null;
@@ -299,6 +391,7 @@ export default function AdminChatPage() {
                     <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-bounce shadow-[0_0_8px_rgba(96,165,250,0.6)]" style={{ animationDelay: "0ms", animationDuration: "1s" }} />
                     <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-bounce shadow-[0_0_8px_rgba(129,140,248,0.6)]" style={{ animationDelay: "150ms", animationDuration: "1s" }} />
                     <span className="w-2.5 h-2.5 rounded-full bg-pink-400 animate-bounce shadow-[0_0_8px_rgba(244,114,182,0.6)]" style={{ animationDelay: "300ms", animationDuration: "1s" }} />
+                    <span className="ml-2 text-[10px] text-slate-400">{streamStatus || "Mentor AI is thinking..."}</span>
                   </div>
                 </div>
               )}
@@ -310,17 +403,17 @@ export default function AdminChatPage() {
         {/* Input Bar */}
         <footer className="p-4 shrink-0 border-t border-white/5 bg-[#050a14]/20">
           {error && (
-            <div className="max-w-3xl mx-auto mb-2 text-rose-400 text-[10px] font-semibold bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-lg">
+            <div className="max-w-5xl mx-auto mb-2 text-rose-400 text-[10px] font-semibold bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-lg">
               {error}
             </div>
           )}
           {fileUploading && (
-            <div className="max-w-3xl mx-auto mb-2 text-violet-400 text-[10px] font-semibold bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
+            <div className="max-w-5xl mx-auto mb-2 text-violet-400 text-[10px] font-semibold bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-violet-400 animate-ping" />
               Uploading and analyzing document...
             </div>
           )}
-          <div className="max-w-3xl mx-auto relative flex items-center bg-slate-950/60 rounded-2xl border border-white/10 px-4 py-2">
+          <div className="max-w-5xl mx-auto relative flex items-center bg-slate-950/60 rounded-2xl border border-white/10 px-4 py-2">
             <input
               type="file"
               ref={fileInputRef}
@@ -330,7 +423,8 @@ export default function AdminChatPage() {
             />
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="h-8 w-8 rounded-xl hover:bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition"
+              disabled={fileUploading || !user?.id}
+              className="h-8 w-8 rounded-xl hover:bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition disabled:opacity-40"
             >
               <Paperclip className="w-4.5 h-4.5" />
             </button>
@@ -339,16 +433,27 @@ export default function AdminChatPage() {
               placeholder="Ask about students, performance, or system insights..."
               value={question}
               onChange={e => setQuestion(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleAsk()}
+              onKeyDown={e => e.key === "Enter" && !e.shiftKey && !isStreaming && handleAsk()}
+              disabled={isStreaming || !user?.id}
               className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-xs px-3 placeholder:text-white/20 text-white"
             />
-            <button
-              onClick={() => handleAsk()}
-              disabled={!question.trim()}
-              className="h-8 w-8 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-40 flex items-center justify-center text-white transition shadow shadow-violet-500/20"
-            >
-              <Send className="w-3.5 h-3.5 text-white" />
-            </button>
+            {isStreaming ? (
+              <button
+                onClick={handleStop}
+                className="h-8 w-8 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 hover:bg-rose-500 hover:text-white flex items-center justify-center transition"
+                title="Stop generation"
+              >
+                <Square className="w-3.5 h-3.5" fill="currentColor" />
+              </button>
+            ) : (
+              <button
+                onClick={handleAsk}
+                disabled={!question.trim() || !user?.id}
+                className="h-8 w-8 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-40 flex items-center justify-center text-white transition shadow shadow-violet-500/20"
+              >
+                <Send className="w-3.5 h-3.5 text-white" />
+              </button>
+            )}
           </div>
           <p className="text-[8px] text-slate-600 text-center mt-2 font-medium">
             Mentor AI may make mistakes. Verify all reports against official records.
@@ -365,83 +470,69 @@ export default function AdminChatPage() {
             </h3>
           </div>
 
-          {/* System Stats */}
+
+          {/* Live snapshot */}
           <div className="space-y-3.5">
-            <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">System Stats</span>
+            <div className="flex items-center justify-between"><span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500">Live snapshot</span><span className="text-[8px] font-bold uppercase tracking-wider text-emerald-400">{dashboardLoading ? "Updating..." : "Current"}</span></div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-black/25 p-3 rounded-xl border border-white/5">
-                <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Total Students</span>
-                <span className="text-lg font-extrabold mt-1 block">120</span>
-                <span className="text-[8px] text-emerald-400 mt-0.5 block font-bold">+8 this week</span>
-              </div>
-              <div className="bg-black/25 p-3 rounded-xl border border-white/5">
-                <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Documents</span>
-                <span className="text-lg font-extrabold mt-1 block">45</span>
-                <span className="text-[8px] text-emerald-400 mt-0.5 block font-bold">+3 today</span>
-              </div>
-              <div className="bg-black/25 p-3 rounded-xl border border-white/5">
-                <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Questions</span>
-                <span className="text-lg font-extrabold mt-1 block">1,240</span>
-                <span className="text-[8px] text-emerald-400 mt-0.5 block font-bold">+124 today</span>
-              </div>
-              <div className="bg-black/25 p-3 rounded-xl border border-white/5">
-                <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Engagement</span>
-                <span className="text-lg font-extrabold mt-1 block">68%</span>
-                <span className="text-[8px] text-rose-450 mt-0.5 block font-bold">-4% vs last wk</span>
-              </div>
+              {liveMetrics.map((metric) => {
+                const Icon = metric.icon;
+                return (
+                  <div key={metric.label} className="bg-black/25 p-3 rounded-xl border border-white/5">
+                    <div className="flex items-center justify-between gap-2"><span className="text-[8px] text-slate-500 font-extrabold uppercase">{metric.label}</span><Icon className="h-3.5 w-3.5 text-violet-400" /></div>
+                    <span className="text-lg font-extrabold mt-1 block">{metric.value}</span>
+                    <span className="text-[8px] text-slate-500 mt-0.5 block font-bold">{metric.note}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           {/* Active Alerts */}
           <div className="space-y-3.5">
             <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Active Alerts</span>
-            <div className="space-y-2 text-[10px] font-bold">
-              <div className="p-3 rounded-xl border border-rose-500/15 bg-rose-500/5 flex justify-between items-center text-rose-350">
-                <span>Students with zero activity (7 days)</span>
-                <span className="bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded text-[8px]">14</span>
+            {dashboardLoading ? (
+              <div className="space-y-2">{[1, 2, 3].map((item) => <div key={item} className="h-12 rounded-xl bg-white/5 animate-pulse" />)}</div>
+            ) : dashboard?.alerts?.length ? (
+              <div className="space-y-2">
+                {dashboard.alerts.slice(0, 4).map((alert) => (
+                  <div key={alert.id} className="rounded-xl border border-white/5 bg-black/20 p-3">
+                    <div className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2"><AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400" /><span className="truncate text-[10px] font-bold text-slate-200">{alert.title}</span></div><span className="shrink-0 rounded bg-violet-500/10 px-1.5 py-0.5 text-[8px] font-bold text-violet-300">{alert.metric || alert.severity}</span></div>
+                    <p className="mt-1 text-[9px] leading-relaxed text-slate-500">{alert.message}</p>
+                  </div>
+                ))}
               </div>
-              <div className="p-3 rounded-xl border border-amber-500/15 bg-amber-500/5 flex justify-between items-center text-amber-350">
-                <span>Low engagement in Math department</span>
-                <span className="bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded text-[8px]">32</span>
-              </div>
-              <div className="p-3 rounded-xl border border-blue-500/15 bg-blue-500/5 flex justify-between items-center text-blue-355">
-                <span>New documents pending indexing</span>
-                <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[8px]">5</span>
-              </div>
-            </div>
+            ) : (
+              <p className="rounded-xl border border-white/5 bg-black/20 p-4 text-[10px] text-slate-500">No active institutional alerts.</p>
+            )}
           </div>
 
-          {/* Quick Actions */}
-          <div className="space-y-3.5">
-            <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Quick Actions</span>
-            <div className="space-y-2">
-              {["Generate Report", "Add Users", "Upload Documents"].map((act, i) => (
-                <button key={i} className="w-full py-2 px-3 rounded-xl border border-white/5 bg-slate-900/40 text-left hover:bg-slate-900/70 hover:border-violet-500/20 text-[10px] font-bold transition flex justify-between items-center text-slate-300">
-                  <span>{act}</span>
-                  <PlusCircle className="w-3.5 h-3.5 text-slate-500" />
-                </button>
-              ))}
+          {dashboard?.departments?.length ? (
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500">Department signals</span>
+                <span className="text-[8px] font-bold uppercase tracking-wider text-slate-600">Readiness</span>
+              </div>
+              <div className="space-y-2">
+                {dashboard.departments.slice(0, 4).map((department) => {
+                  const readiness = Math.max(0, Math.min(100, Math.round(department.average_readiness)));
+                  return (
+                    <div key={department.id} className="rounded-xl border border-white/5 bg-black/20 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-[10px] font-bold text-slate-200">{department.name}</span>
+                        <span className="shrink-0 text-[10px] font-extrabold text-violet-300">{readiness}%</span>
+                      </div>
+                      <p className="mt-1 text-[9px] text-slate-500">{department.student_count} students · {department.course_count} classes</p>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
+                        <div className="h-full rounded-full bg-gradient-to-r from-violet-600 to-indigo-400" style={{ width: `${readiness}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ) : null}
 
-          {/* AI Configuration */}
-          <div className="space-y-3.5 pt-4 border-t border-white/5">
-            <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">AI Configuration</span>
-            <div className="space-y-2.5 text-[9px] font-bold uppercase tracking-wider text-slate-450">
-              <div className="flex justify-between items-center">
-                <span>Analysis Depth</span>
-                <span className="text-violet-400 font-extrabold bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded">Deep</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Data Scope</span>
-                <span className="text-slate-300 font-extrabold bg-white/5 border border-white/5 px-2 py-0.5 rounded">All Dept.</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Alert Sensitivity</span>
-                <span className="text-amber-400 font-extrabold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">High</span>
-              </div>
-            </div>
-          </div>
         </aside>
       )}
     </div>

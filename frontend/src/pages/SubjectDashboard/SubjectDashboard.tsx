@@ -6,7 +6,7 @@ import {
   BookOpen, CheckCircle2, Clock, PlayCircle, Trophy, Target, ArrowLeft, 
   FileText, ExternalLink, AlertTriangle, Award, Calendar, Percent, Download, Users
 } from 'lucide-react';
-import Loader from '@/components/Loader';
+import { PageLoadingState } from '@/components/DashboardLoading';
 
 interface TopicData {
   title: string;
@@ -113,7 +113,7 @@ export default function SubjectDashboard({ subjectName, classId, hideBackButton,
     window.open(`${backendUrl}/uploads/${file}?t=${cacheBuster}`, '_blank');
   };
 
-  if (loading) return <Loader fullScreen text="Loading Subject Data..." />;
+  if (loading) return <PageLoadingState text="Loading Subject Data..." />;
 
   const progressPercentage = progress ? progress.progress : 0;
 

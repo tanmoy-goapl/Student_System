@@ -1,15 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Loader from "@/components/Loader";
+import { DashboardLoadingShell } from "@/components/DashboardLoading";
 import { 
   Users, 
   BookOpen,
   GraduationCap, 
   Activity, 
   Search, 
-  Server, 
-  Database, 
+  FileText,
   TrendingUp, 
   CheckCircle,
   Clock,
@@ -52,6 +51,17 @@ interface DepartmentData {
   courses: DepartmentCourse[];
 }
 
+interface FacultyActivityData {
+  total_professors: number;
+  active_professors_7d: number;
+  classes_managed: number;
+  classes_created_30d: number;
+  resources_uploaded_30d: number;
+  curriculums_updated_30d: number;
+  ai_materials_generated_30d: number;
+  last_action?: { message: string; time: string } | null;
+}
+
 interface DashboardData {
   total_students: number;
   total_student_accounts?: number;
@@ -64,6 +74,7 @@ interface DashboardData {
   weak_students: number;
   inactive_students: number;
   departments?: DepartmentData[];
+  faculty_activity?: FacultyActivityData;
   alerts: AdminAlert[];
   last_updated?: string;
 }
@@ -88,13 +99,6 @@ interface ProfessorData {
 interface ActivityItem {
   message: string;
   time: string;
-}
-
-interface SystemStatus {
-  backend: string;
-  database: string;
-  analytics: string;
-  last_sync: string;
 }
 
 function StatCard({
@@ -149,16 +153,6 @@ const departmentStyles: Record<string, { iconBg: string; border: string; badge: 
   },
 };
 
-function statusClasses(value?: string) {
-  const normalized = (value || "").toLowerCase();
-  if (["online", "connected", "healthy"].includes(normalized)) {
-    return "text-emerald-400";
-  }
-  if (["degraded", "unavailable", "offline"].includes(normalized)) {
-    return "text-rose-400";
-  }
-  return "text-amber-400";
-}
 
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "students" | "professors">("overview");
@@ -169,7 +163,6 @@ export default function AdminDashboardPage() {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [professors, setProfessors] = useState<ProfessorData[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
-  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async (showLoader = false, signal?: AbortSignal) => {
@@ -183,19 +176,17 @@ export default function AdminDashboardPage() {
         return response.json() as Promise<T>;
       };
 
-      const [dashboard, studentRows, professorRows, activityRows, status] = await Promise.all([
+      const [dashboard, studentRows, professorRows, activityRows] = await Promise.all([
         fetchJson<DashboardData>("/api/admin/dashboard"),
         fetchJson<StudentData[]>("/api/admin/students"),
         fetchJson<ProfessorData[]>("/api/admin/professors"),
         fetchJson<ActivityItem[]>("/api/admin/recent-activity"),
-        fetchJson<SystemStatus>("/api/admin/system-status"),
       ]);
 
       setDashboardData(dashboard);
       setStudents(studentRows);
       setProfessors(professorRows);
       setActivities(activityRows);
-      setSystemStatus(status);
     } catch (err) {
       if (!(err instanceof DOMException && err.name === "AbortError")) {
         console.error("Failed to load admin dashboard data", err);
@@ -220,7 +211,7 @@ export default function AdminDashboardPage() {
   }, [loadData]);
 
   if (loading) {
-    return <Loader fullScreen text="Loading dashboard data..." />;
+    return <DashboardLoadingShell role="admin" text="Loading dashboard data..." />;
   }
 
   // Filter students based on search
@@ -299,7 +290,7 @@ export default function AdminDashboardPage() {
                   label="Active Today"
                   gradient="from-cyan-500 to-blue-500"
                   icon={Activity}
-                  subtitle={`${dashboardData?.inactive_students ?? 0} inactive (no activity in 7 days)`}
+                  subtitle={`All accounts · ${dashboardData?.inactive_students ?? 0} inactive in the last 7 days`}
                 />
                 <StatCard
                   value={`${dashboardData?.average_confidence ?? 0}%`}
@@ -312,6 +303,7 @@ export default function AdminDashboardPage() {
                   label="Average Readiness"
                   gradient="from-sky-500 to-cyan-500"
                   icon={CheckCircle}
+                  subtitle="Exposure, practice, recency"
                 />
               </div>
 
@@ -321,7 +313,7 @@ export default function AdminDashboardPage() {
                   <GraduationCap className="h-5 w-5 text-cyan-400" />
                   <div>
                     <h2 className="text-lg font-bold">Departments</h2>
-                    <p className="text-xs text-slate-500">Live student, course, and performance summaries by department</p>
+                    <p className="text-xs text-slate-500">Enrolled-student activity by department · last 7 days</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -388,8 +380,8 @@ export default function AdminDashboardPage() {
                         </div>
 
                         <div className="mt-5 flex items-center justify-between border-t border-white/5 pt-4 text-xs">
-                          <span className="text-emerald-300">{department.active_students} active in 7 days</span>
-                          <span className="text-slate-500">{department.inactive_students} inactive</span>
+                          <span className="text-emerald-300">{department.active_students} active in the last 7 days</span>
+                          <span className="text-slate-500">{department.inactive_students} inactive in the last 7 days</span>
                         </div>
                       </article>
                     );
@@ -397,7 +389,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <p className="text-xs text-slate-500">
                   {dashboardData?.enrolled_students ?? 0} unique students are enrolled across {dashboardData?.total_classes ?? 0} courses.
-                  Students enrolled in both departments are counted once within each relevant department.
+                  Department counts use each department roster, so a student in both departments can appear in both.
                 </p>
               </section>
 
@@ -446,7 +438,7 @@ export default function AdminDashboardPage() {
                 </div>
               </section>
 
-              {/* Activity and System Status Section */}
+              {/* Recent student activity and faculty activity */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Recent Activity */}
                 <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-xl">
@@ -468,39 +460,37 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                {/* System Status */}
+                {/* Faculty Activity */}
                 <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-xl flex flex-col justify-between">
                   <div>
                     <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
-                      <Server className="w-5 h-5 text-emerald-400" />
-                      System Status
+                      <Users className="w-5 h-5 text-violet-400" />
+                      Faculty Activity
                     </h2>
+                    <p className="text-xs text-slate-500 -mt-3 mb-4">Teaching and content activity from the last 30 days</p>
                     <div className="space-y-4">
                       {[
-                        { label: "Backend API", value: systemStatus?.backend || "unknown", StatusIcon: Server },
-                        { label: "Database Connection", value: systemStatus?.database || "unknown", StatusIcon: Database },
-                        { label: "Analytics Engine", value: systemStatus?.analytics || "unknown", StatusIcon: TrendingUp },
-                      ].map(({ label, value, StatusIcon }) => {
-                        const tone = statusClasses(value);
-                        const dot = tone === "text-emerald-400" ? "bg-emerald-400" : tone === "text-rose-400" ? "bg-rose-400" : "bg-amber-400";
+                        { label: "Active professors (7d)", value: `${dashboardData?.faculty_activity?.active_professors_7d ?? 0}/${dashboardData?.faculty_activity?.total_professors ?? dashboardData?.total_professors ?? 0}`, Icon: Activity, tone: "text-emerald-400" },
+                        { label: "Classes created (30d)", value: dashboardData?.faculty_activity?.classes_created_30d ?? 0, Icon: BookOpen, tone: "text-blue-400" },
+                        { label: "Resources uploaded (30d)", value: dashboardData?.faculty_activity?.resources_uploaded_30d ?? 0, Icon: FileText, tone: "text-cyan-400" },
+                        { label: "Curriculums updated (30d)", value: dashboardData?.faculty_activity?.curriculums_updated_30d ?? 0, Icon: BookOpen, tone: "text-amber-400" },
+                        { label: "AI materials generated (30d)", value: dashboardData?.faculty_activity?.ai_materials_generated_30d ?? 0, Icon: Sparkles, tone: "text-violet-400" },
+                      ].map(({ label, value, Icon, tone }) => {
                         return (
                           <div key={label} className="flex justify-between items-center py-3 border-b border-white/5">
                             <span className="flex items-center gap-2 text-sm font-semibold text-slate-400">
-                              <StatusIcon className={"h-4 w-4 " + tone} />
+                              <Icon className={"h-4 w-4 " + tone} />
                               {label}
                             </span>
-                            <span className={"flex items-center gap-2 text-sm font-bold " + tone}>
-                              <span className={"h-2 w-2 rounded-full " + dot} />
-                              {value}
-                            </span>
+                            <span className={"text-sm font-bold " + tone}>{value}</span>
                           </div>
                         );
                       })}
                     </div>
                   </div>
-                  <div className="text-xs text-slate-500 mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-                    <span>Database Sync status</span>
-                    <span>Last checked: {systemStatus?.last_sync || "Just now"}</span>
+                  <div className="text-xs text-slate-500 mt-6 pt-4 border-t border-white/5 flex items-center justify-between gap-4">
+                    <span className="truncate">{dashboardData?.faculty_activity?.last_action?.message || "No faculty activity recorded recently."}</span>
+                    <span className="shrink-0">{dashboardData?.faculty_activity?.last_action?.time || "—"}</span>
                   </div>
                 </div>
               </div>

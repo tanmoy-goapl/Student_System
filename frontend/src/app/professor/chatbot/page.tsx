@@ -2,11 +2,11 @@
 
 import React, { Suspense } from "react";
 import ProfessorChatPage from "@/professor/chatbot/ProfessorChatPage";
-import Loader from "@/components/Loader";
+import { DashboardLoadingShell } from "@/components/DashboardLoading";
 
 export default function ProfessorChatbotRoute() {
   return (
-    <Suspense fallback={<Loader fullScreen text="Loading Chatbot..." />}>
+    <Suspense fallback={<DashboardLoadingShell role="professor" text="Loading Chatbot..." />}>
       <ProfessorChatPage />
     </Suspense>
   );

@@ -1,11 +1,12 @@
 import logging
+import threading
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from database import get_db
+from database import SessionLocal, get_db
 from practice_models import PracticeSession, PracticeQuestion
 from services.practice.topic_extractor import extract_topics_from_documents
 from services.practice.question_generator import generate_questions
@@ -20,6 +21,113 @@ from services.practice.analytics import get_weakness_topics_for_quiz
 logger = logging.getLogger("chatbot")
 
 router = APIRouter()
+
+_session_generation_lock = threading.Lock()
+_session_generation_jobs: set[int] = set()
+
+
+def _public_question(question: PracticeQuestion) -> dict:
+    """Serialize a question without exposing the answer to the quiz client."""
+    return {
+        "id": question.id,
+        "topic": question.topic,
+        "subtopic": question.subtopic,
+        "difficulty": question.difficulty,
+        "question": question.question_text,
+        "options": question.options,
+    }
+
+
+def _generate_session_questions(
+    session_id: int,
+    student_id: int,
+    topic: str,
+    difficulty: str,
+    mode: str,
+    question_count: int,
+) -> None:
+    """Generate and persist a session's questions independently of the browser."""
+    worker_db = SessionLocal()
+    try:
+        session = worker_db.query(PracticeSession).filter(
+            PracticeSession.id == session_id
+        ).first()
+        if not session or not session.is_active:
+            return
+
+        raw_questions = generate_questions(
+            student_id=student_id,
+            topic=topic,
+            difficulty=difficulty,
+            count=question_count,
+            db=worker_db,
+            mode=mode,
+        )
+        if not raw_questions:
+            raise RuntimeError("No valid practice questions were generated")
+
+        existing_count = worker_db.query(PracticeQuestion).filter(
+            PracticeQuestion.session_id == session_id
+        ).count()
+        if existing_count:
+            return
+
+        for question in raw_questions[:question_count]:
+            worker_db.add(PracticeQuestion(
+                session_id=session_id,
+                topic=question["topic"],
+                subtopic=question.get("subtopic", "General"),
+                difficulty=question.get("difficulty", difficulty),
+                question_text=question["question"],
+                options=question["options"],
+                correct_answer=question["correct_answer"],
+                explanation=question.get("explanation", ""),
+            ))
+
+        # If the material cannot support the requested count, make the actual
+        # count authoritative so the session does not wait for an impossible batch.
+        session.question_count = min(question_count, len(raw_questions))
+        worker_db.commit()
+        logger.info(
+            "[Practice] Background generation completed for session %s (%s questions)",
+            session_id,
+            len(raw_questions[:question_count]),
+        )
+    except Exception as exc:
+        worker_db.rollback()
+        logger.error("[Practice] Background generation failed for session %s: %s", session_id, exc)
+        failed = worker_db.query(PracticeSession).filter(
+            PracticeSession.id == session_id
+        ).first()
+        if failed:
+            failed.is_active = False
+            failed.ended_at = datetime.utcnow()
+            worker_db.commit()
+    finally:
+        worker_db.close()
+        with _session_generation_lock:
+            _session_generation_jobs.discard(session_id)
+
+
+def _queue_session_generation(
+    session_id: int,
+    student_id: int,
+    topic: str,
+    difficulty: str,
+    mode: str,
+    question_count: int,
+) -> None:
+    with _session_generation_lock:
+        if session_id in _session_generation_jobs:
+            return
+        _session_generation_jobs.add(session_id)
+
+    threading.Thread(
+        target=_generate_session_questions,
+        args=(session_id, student_id, topic, difficulty, mode, question_count),
+        daemon=True,
+        name=f"practice-session-{session_id}",
+    ).start()
 
 class StartSessionRequest(BaseModel):
     student_id: int
@@ -39,6 +147,7 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
     """Start a new practice session, or resume the active one if it exists."""
     try:
         logger.info(f"[Practice] Starting/resuming session: mode={req.mode}, topic={req.topic}, difficulty={req.difficulty}")
+        requested_count = max(1, min(int(req.question_count or 5), 20))
 
         # Check for existing active session for this student and topic to support instant refresh recovery
         # Check for existing active session for this student and topic to support instant refresh recovery
@@ -49,11 +158,9 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
                 PracticeSession.is_active == True
             ).first()
             if existing_session:
-                existing_session.question_count = 5
-                db.commit()
                 existing_questions = db.query(PracticeQuestion).filter(
                     PracticeQuestion.session_id == existing_session.id
-                ).all()
+                ).order_by(PracticeQuestion.id.asc()).all()
                 if existing_questions:
                     logger.info(f"[Practice] Resuming existing active session {existing_session.id} for topic='{req.topic}'")
                     return {
@@ -61,20 +168,33 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
                         "mode": existing_session.mode,
                         "topic": existing_session.topic,
                         "difficulty": existing_session.difficulty,
-                        "total_questions": 5,
-                        "questions": [
-                            {
-                                "id": pq.id,
-                                "topic": pq.topic,
-                                "subtopic": pq.subtopic,
-                                "difficulty": pq.difficulty,
-                                "question": pq.question_text,
-                                "options": pq.options,
-                                "correct_answer": pq.correct_answer,
-                                "explanation": pq.explanation
-                            }
-                            for pq in existing_questions[:5]
-                        ]
+                        "status": "ready",
+                        "generation_status": "ready",
+                        "question_count": existing_session.question_count or len(existing_questions),
+                        "total_questions": existing_session.question_count or len(existing_questions),
+                        "questions": [_public_question(pq) for pq in existing_questions],
+                    }
+                if existing_session.is_active:
+                    existing_session.question_count = requested_count
+                    db.commit()
+                    _queue_session_generation(
+                        existing_session.id,
+                        existing_session.student_id,
+                        existing_session.topic or "General",
+                        existing_session.difficulty,
+                        existing_session.mode,
+                        requested_count,
+                    )
+                    return {
+                        "session_id": existing_session.id,
+                        "mode": existing_session.mode,
+                        "topic": existing_session.topic,
+                        "difficulty": existing_session.difficulty,
+                        "status": "generating",
+                        "generation_status": "generating",
+                        "question_count": requested_count,
+                        "total_questions": requested_count,
+                        "questions": [],
                     }
 
         # Determine which topics to use based on mode
@@ -112,66 +232,84 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
         if difficulty == "mixed" or difficulty == "adaptive":
             difficulty = get_adaptive_difficulty(req.student_id, topic_for_gen, db)
 
+        # Resume background work for weakness/exam/revision sessions as well.
+        if not (req.mode == "topic" and req.topic):
+            existing_session = db.query(PracticeSession).filter(
+                PracticeSession.student_id == req.student_id,
+                PracticeSession.mode == req.mode,
+                PracticeSession.topic == topic_for_gen,
+                PracticeSession.is_active == True,
+            ).order_by(PracticeSession.created_at.desc()).first()
+            if existing_session:
+                existing_questions = db.query(PracticeQuestion).filter(
+                    PracticeQuestion.session_id == existing_session.id
+                ).order_by(PracticeQuestion.id.asc()).all()
+                if existing_questions:
+                    return {
+                        "session_id": existing_session.id,
+                        "mode": existing_session.mode,
+                        "topic": existing_session.topic,
+                        "difficulty": existing_session.difficulty,
+                        "status": "ready",
+                        "generation_status": "ready",
+                        "question_count": existing_session.question_count or len(existing_questions),
+                        "total_questions": existing_session.question_count or len(existing_questions),
+                        "questions": [_public_question(question) for question in existing_questions],
+                    }
+                existing_session.question_count = requested_count
+                db.commit()
+                _queue_session_generation(
+                    existing_session.id,
+                    existing_session.student_id,
+                    existing_session.topic or "General",
+                    existing_session.difficulty,
+                    existing_session.mode,
+                    requested_count,
+                )
+                return {
+                    "session_id": existing_session.id,
+                    "mode": existing_session.mode,
+                    "topic": existing_session.topic,
+                    "difficulty": existing_session.difficulty,
+                    "status": "generating",
+                    "generation_status": "generating",
+                    "question_count": requested_count,
+                    "total_questions": requested_count,
+                    "questions": [],
+                }
+
         # Create session record
         session = PracticeSession(
             student_id=req.student_id,
             mode=req.mode,
             topic=topic_for_gen,
             difficulty=difficulty,
-            question_count=5,
+            question_count=requested_count,
             is_active=True,
         )
         db.add(session)
         db.commit()
         db.refresh(session)
 
-        # Generate first batch of questions
-        gen_count = 5
-        raw_questions = generate_questions(
-            student_id=req.student_id,
-            topic=topic_for_gen,
-            difficulty=difficulty,
-            count=gen_count,
-            db=db,
-            mode=req.mode,
+        _queue_session_generation(
+            session.id,
+            session.student_id,
+            session.topic or "General",
+            session.difficulty,
+            session.mode,
+            requested_count,
         )
-
-        # Save questions to DB
-        saved_questions = []
-        pending_questions = []
-        for q in raw_questions:
-            pq = PracticeQuestion(
-                session_id=session.id,
-                topic=q["topic"],
-                subtopic=q.get("subtopic", "General"),
-                difficulty=q.get("difficulty", difficulty),
-                question_text=q["question"],
-                options=q["options"],
-                correct_answer=q["correct_answer"],
-                explanation=q.get("explanation", ""),
-            )
-            db.add(pq)
-            pending_questions.append(pq)
-        db.flush()
-        for pq in pending_questions:
-            saved_questions.append({
-                "id": pq.id,
-                "topic": pq.topic,
-                "subtopic": pq.subtopic,
-                "difficulty": pq.difficulty,
-                "question": pq.question_text,
-                "options": pq.options,
-            })
-        db.commit()
 
         return {
             "session_id": session.id,
             "mode": session.mode,
             "topic": session.topic,
             "difficulty": difficulty,
-            "question_count": session.question_count,
+            "status": "generating",
+            "generation_status": "generating",
+            "question_count": requested_count,
             "total_questions": session.question_count,
-            "questions": saved_questions,
+            "questions": [],
         }
     except Exception as e:
         logger.error(f"[Practice] CRASH in start_session: {e}")
@@ -235,12 +373,24 @@ def session_status(session_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Session not found")
 
     stats = get_session_stats(session, db)
+    questions = db.query(PracticeQuestion).filter(
+        PracticeQuestion.session_id == session.id
+    ).order_by(PracticeQuestion.id.asc()).all()
+    if questions:
+        generation_status = "ready" if session.is_active else "complete"
+    else:
+        generation_status = "generating" if session.is_active else "failed"
+
     return {
         "session_id": session.id,
         "mode": session.mode,
         "topic": session.topic,
+        "difficulty": session.difficulty,
         "is_active": session.is_active,
         **stats,
+        "generation_status": generation_status,
+        "total_questions": session.question_count or len(questions),
+        "questions": [_public_question(question) for question in questions],
     }
 
 

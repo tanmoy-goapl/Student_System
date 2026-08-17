@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardPage from "@/app/pages/DashboardPage";
 import AdminDashboardPage from "@/app/pages/AdminDashboardPage";
-import Loader from "@/components/Loader";
+import { PageLoadingState } from "@/components/DashboardLoading";
 
 export default function Dashboard() {
   const [role, setRole] = useState<"admin" | "student" | null>(null);
@@ -28,9 +28,7 @@ export default function Dashboard() {
   }, [loading, isAuthenticated, router]);
 
   if (loading) {
-    return (
-      <Loader fullScreen text="Loading..." />
-    );
+    return <PageLoadingState text="Loading..." />;
   }
 
   if (!isAuthenticated) {

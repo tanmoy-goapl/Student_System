@@ -2,6 +2,7 @@ import json
 import os
 import re
 import logging
+from datetime import datetime
 from sqlalchemy.orm import Session
 from practice_models import TopicPerformance
 
@@ -261,6 +262,26 @@ def calculate_subject_metrics(student_id: int, subject: str, db: Session, topics
         "health": health
     }
 
+
+def _activity_recency_score(last_activity_at) -> float:
+    """Convert the latest learning activity into a bounded readiness signal."""
+    if not last_activity_at:
+        return 0.0
+    if getattr(last_activity_at, "tzinfo", None) is not None:
+        last_activity_at = last_activity_at.replace(tzinfo=None)
+    age_days = max(0.0, (datetime.utcnow() - last_activity_at).total_seconds() / 86400.0)
+    if age_days <= 1:
+        return 100.0
+    if age_days <= 3:
+        return 85.0
+    if age_days <= 7:
+        return 70.0
+    if age_days <= 14:
+        return 45.0
+    if age_days <= 30:
+        return 20.0
+    return 0.0
+
 def calculate_student_metrics(student_id: int, db: Session) -> dict:
     subjects = get_student_subjects(student_id, db)
     
@@ -290,12 +311,56 @@ def calculate_student_metrics(student_id: int, db: Session) -> dict:
     overall_exposure = (total_attempted_topics_all / total_topics_all * 100) if total_topics_all > 0 else 0.0
     overall_accuracy = (total_accuracy_sum / total_attempted_topics_all) if total_attempted_topics_all > 0 else 0.0
     overall_confidence = (total_confidence_sum / total_attempted_topics_all) if total_attempted_topics_all > 0 else 0.0
+
+    latest_topic_activity = db.query(TopicPerformance.last_practiced_at).filter(
+        TopicPerformance.student_id == student_id,
+        TopicPerformance.last_practiced_at.isnot(None),
+    ).order_by(TopicPerformance.last_practiced_at.desc()).first()
+    latest_activity_at = latest_topic_activity[0] if latest_topic_activity else None
+
+    roadmap_progress = 0.0
+    latest_roadmap_activity = None
+    try:
+        from roadmap_models import LearningRoadmap, DailyTask
+
+        latest_roadmap = db.query(LearningRoadmap).filter(
+            LearningRoadmap.student_id == student_id,
+        ).order_by(LearningRoadmap.updated_at.desc(), LearningRoadmap.created_at.desc()).first()
+        if latest_roadmap:
+            roadmap_progress = max(0.0, min(100.0, float(latest_roadmap.overall_progress or 0.0)))
+
+        completed_task = db.query(DailyTask.completed_at).join(LearningRoadmap).filter(
+            LearningRoadmap.student_id == student_id,
+            DailyTask.completed_at.isnot(None),
+        ).order_by(DailyTask.completed_at.desc()).first()
+        latest_roadmap_activity = completed_task[0] if completed_task else None
+    except Exception:
+        # Readiness should remain available even when a student has no roadmap data.
+        pass
+
+    if latest_roadmap_activity and (not latest_activity_at or latest_roadmap_activity > latest_activity_at):
+        latest_activity_at = latest_roadmap_activity
+
+    overall_recency = _activity_recency_score(latest_activity_at)
+    overall_readiness = (
+        (overall_exposure * 0.40)
+        + (overall_confidence * 0.35)
+        + (overall_recency * 0.15)
+        + (roadmap_progress * 0.10)
+    )
     
     return {
         "overall_progress": round(overall_progress),
         "overall_exposure": round(overall_exposure),
         "overall_accuracy": round(overall_accuracy, 1),
         "overall_confidence": round(overall_confidence, 1),
+        "overall_readiness": round(overall_readiness, 1),
+        "readiness_components": {
+            "exposure": round(overall_exposure, 1),
+            "confidence": round(overall_confidence, 1),
+            "recent_activity": round(overall_recency, 1),
+            "roadmap_progress": round(roadmap_progress, 1),
+        },
         "mastered_topics": mastered_topics_all,
         "weak_topics": weak_topics_all,
         "strong_topics": strong_topics_all,

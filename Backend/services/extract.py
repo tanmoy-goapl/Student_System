@@ -27,6 +27,30 @@ CHUNK_MAX_WORDS    = 100    # hard cap
 CHUNK_OVERLAP_WORDS = 16    # word overlap between consecutive chunks
 
 
+def get_pdf_page_count(file_path: str) -> int | None:
+    """Return the structural PDF page count without estimating from file size."""
+    readers = []
+    try:
+        from pypdf import PdfReader
+        readers.append(PdfReader)
+    except ImportError:
+        pass
+
+    try:
+        from PyPDF2 import PdfReader
+        readers.append(PdfReader)
+    except ImportError:
+        pass
+
+    for reader_type in readers:
+        try:
+            with open(file_path, "rb") as fh:
+                return len(reader_type(fh, strict=False).pages)
+        except Exception:
+            continue
+    return None
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 #  EXTRACTION
 # ═════════════════════════════════════════════════════════════════════════════

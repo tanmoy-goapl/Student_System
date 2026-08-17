@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   FileText, Search, Upload, Sparkles, BookOpen, Clock, 
-  TrendingUp, AlertTriangle, PlusCircle, CheckCircle, ChevronDown,
+  TrendingUp, PlusCircle, CheckCircle, ChevronDown,
   Trash2, X, Loader2, Download, Eye, AlertCircle, Lightbulb, GraduationCap
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
+import { DashboardContentLoader } from "@/components/DashboardLoading";
 import ReactMarkdown from "react-markdown";
 import {
   getMyClasses,
@@ -16,6 +17,7 @@ import {
   streamGenerateMaterial
 } from "@/lib/api";
 import { normalizeReadableMath } from "@/lib/readableMath";
+import { getDocumentPreviewKind, getDocumentTextPreviewUrl, getDocumentViewUrl } from "@/lib/documentPreview";
 
 interface MaterialItem {
   id: string;
@@ -28,6 +30,7 @@ interface MaterialItem {
   category: string;
   visibility: string;
   classroom_id?: number | string;
+  filename?: string;
 }
 
 const markdownComponents = {
@@ -358,7 +361,6 @@ export default function ContentPage() {
   const [textContent, setTextContent] = useState<string | null>(null);
   const [textLoading, setTextLoading] = useState<boolean>(false);
   const [textError, setTextError] = useState<string | null>(null);
-  const [isPreviewPdf, setIsPreviewPdf] = useState<boolean>(false);
 
   const [publishingDoc, setPublishingDoc] = useState<any | null>(null);
   const [publishClassId, setPublishClassId] = useState<string>("");
@@ -414,10 +416,22 @@ export default function ContentPage() {
   }, [textContent, textLoading, previewDoc, katexLoaded]);
 
   useEffect(() => {
-    if (classes && classes.length > 0) {
-      setPublishClassId(classes[0].id.toString());
+    if (!classes || classes.length === 0) {
+      setPublishClassId("");
+      return;
     }
+    setPublishClassId((current) => {
+      if (current && classes.some((cls) => String(cls.id) === current)) return current;
+      return String(classes[0].id);
+    });
   }, [classes]);
+
+  const openPublishModal = (doc: MaterialItem) => {
+    const intendedClassId = doc.classroom_id == null ? "" : String(doc.classroom_id);
+    const hasIntendedClass = intendedClassId && classes.some((cls) => String(cls.id) === intendedClassId);
+    setPublishClassId(hasIntendedClass ? intendedClassId : (classes[0]?.id != null ? String(classes[0].id) : ""));
+    setPublishingDoc(doc);
+  };
 
   const handlePublish = async () => {
     if (!publishingDoc || !publishClassId) return;
@@ -492,35 +506,23 @@ export default function ContentPage() {
     setPreviewDoc(doc);
     setTextContent(null);
     setTextError(null);
-    setIsPreviewPdf(false);
-    setTextLoading(true);
+    setTextLoading(false);
 
-    const cleanId = doc.id.replace("db-", "");
-    fetch(`/api/documents/view?document_id=${cleanId}`)
-        .then(res => {
-            if (!res.ok) throw new Error("Failed to load document");
-            return res.text();
-        })
-        .then(text => {
-            const isRealPdf = text.startsWith("%PDF-");
-            if (isRealPdf) {
-                setIsPreviewPdf(true);
-            } else {
-                setIsPreviewPdf(false);
-                setTextContent(text);
-            }
-        })
-        .catch(err => {
-            setTextError(err.message || "Could not read document contents.");
-        })
-        .finally(() => {
-            setTextLoading(false);
-        });
+    if (getDocumentPreviewKind(doc) !== "text") return;
+
+    setTextLoading(true);
+    fetch(getDocumentTextPreviewUrl(doc.id))
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load document contents");
+        return res.text();
+      })
+      .then(text => setTextContent(text))
+      .catch(err => setTextError(err.message || "Could not read document contents."))
+      .finally(() => setTextLoading(false));
   };
 
   const handleDownload = (doc: any) => {
-    const cleanId = doc.id.replace("db-", "");
-    const url = `/api/documents/view?document_id=${cleanId}`;
+    const url = getDocumentViewUrl(doc.id);
     const a = document.createElement('a');
     a.href = url;
     a.download = doc.name;
@@ -696,8 +698,10 @@ export default function ContentPage() {
 
   // Calculate dynamic KPIs
   const totalMaterials = materials.length;
-  const processedPercentage = totalMaterials > 0 
-    ? Math.round((materials.filter(m => m.category === "Studies" || m.pages > 0).length / totalMaterials) * 100)
+  const processedMaterials = materials.filter(m => m.category === "Studies" || m.pages > 0);
+  const referenceMaterials = materials.filter(m => m.category !== "Studies");
+  const processedPercentage = totalMaterials > 0
+    ? Math.round((processedMaterials.length / totalMaterials) * 100)
     : 100;
   const uniqueSubjects = Array.from(new Set(materials.map(m => m.subject.toLowerCase()))).length;
 
@@ -712,7 +716,7 @@ export default function ContentPage() {
     {
       label: "AI Processed",
       value: `${processedPercentage}%`,
-      subtitle: `${materials.filter(m => m.category === "Studies" || m.pages > 0).length} of ${totalMaterials} processed`,
+      subtitle: `${processedMaterials.length} of ${totalMaterials} processed`,
       icon: Sparkles,
       gradient: "from-emerald-500 to-teal-500",
     },
@@ -724,11 +728,11 @@ export default function ContentPage() {
       gradient: "from-indigo-600 to-purple-600",
     },
     {
-      label: "Pending Processing",
-      value: String(materials.filter(m => m.category !== "Studies").length),
-      subtitle: "Queued for smart extraction",
-      icon: AlertTriangle,
-      gradient: "from-rose-500 to-red-500",
+      label: "Reference Documents",
+      value: String(referenceMaterials.length),
+      subtitle: "Policies, placement & general materials",
+      icon: BookOpen,
+      gradient: "from-amber-500 to-orange-500",
     },
   ];
 
@@ -784,10 +788,7 @@ export default function ContentPage() {
         {/* Scrollable Body */}
         <main className="flex-1 overflow-y-auto purple-scrollbar p-6 space-y-8 bg-gradient-to-b from-[#040815] to-[#020617]">
           {isLoading ? (
-            <div className="h-full flex items-center justify-center flex-col gap-3 py-20">
-              <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-              <p className="text-xs text-slate-400 font-medium">Loading classroom materials...</p>
-            </div>
+            <DashboardContentLoader text="Loading classroom materials..." />
           ) : (
             <>
               {/* Overview Row */}
@@ -811,7 +812,41 @@ export default function ContentPage() {
                 })}
               </div>
 
+              {/* Filter & Organize Section */}
+              <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-sm space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Filter & Organize Library</h3>
+                <div className="space-y-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="w-16 block">Subject</span>
+                    {["All", ...Array.from(new Set(materials.map(m => m.subject)))].map(sub => (
+                      <button
+                        key={sub}
+                        onClick={() => setActiveSubject(sub)}
+                        className={`px-3.5 py-1.5 rounded-xl border transition cursor-pointer ${
+                          activeSubject === sub ? "bg-blue-500 border-blue-500 text-white" : "border-white/5 hover:border-white/10"
+                        }`}
+                      >
+                        {sub}
+                      </button>
+                    ))}
+                  </div>
 
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="w-16 block">Type</span>
+                    {["All", "PDF", "TXT", "DOC"].map(tp => (
+                      <button
+                        key={tp}
+                        onClick={() => setActiveType(tp)}
+                        className={`px-3.5 py-1.5 rounded-xl border transition cursor-pointer ${
+                          activeType === tp ? "bg-blue-500 border-blue-500 text-white" : "border-white/5 hover:border-white/10"
+                        }`}
+                      >
+                        {tp}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               {/* Materials Library */}
               <div className="space-y-4">
@@ -850,7 +885,7 @@ export default function ContentPage() {
                           <div className="absolute top-4 right-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition duration-200">
                             {mat.visibility === "private" && (
                               <button 
-                                onClick={(e) => { e.stopPropagation(); setPublishingDoc(mat); }}
+                                onClick={(e) => { e.stopPropagation(); openPublishModal(mat); }}
                                 className="p-1.5 rounded-lg bg-slate-900 border border-white/5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/20 transition cursor-pointer"
                                 title="Publish to Class"
                               >
@@ -875,12 +910,12 @@ export default function ContentPage() {
 
                           <div className="space-y-3">
                             <div className="flex justify-between items-start">
-                              <div className="flex items-center gap-2.5 max-w-[85%]">
+                              <div className="flex items-center gap-2.5 max-w-[calc(100%-76px)]">
                                 <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                                   <FileText className="w-4.5 h-4.5 text-blue-400" />
                                 </div>
                                 <div className="min-w-0">
-                                  <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition truncate">{mat.name}</h4>
+                                  <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition truncate" title={mat.name}>{mat.name}</h4>
                                   <p className="text-[9px] text-slate-400 font-medium mt-0.5">
                                     {mat.type} • {mat.pages} pages • {mat.sizeMB} MB
                                   </p>
@@ -925,66 +960,6 @@ export default function ContentPage() {
                 )}
               </div>
 
-
-
-              {/* Filter & Organize Section */}
-              <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 backdrop-blur-sm space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Filter & Organize Library</h3>
-                <div className="space-y-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="w-16 block">Subject</span>
-                    {["All", ...Array.from(new Set(materials.map(m => m.subject)))].map(sub => (
-                      <button
-                        key={sub}
-                        onClick={() => setActiveSubject(sub)}
-                        className={`px-3.5 py-1.5 rounded-xl border transition cursor-pointer ${
-                          activeSubject === sub ? "bg-blue-500 border-blue-500 text-white" : "border-white/5 hover:border-white/10"
-                        }`}
-                      >
-                        {sub}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="w-16 block">Class</span>
-                    <button
-                      onClick={() => setActiveClass("All")}
-                      className={`px-3.5 py-1.5 rounded-xl border transition cursor-pointer ${
-                        activeClass === "All" ? "bg-blue-500 border-blue-500 text-white" : "border-white/5 hover:border-white/10"
-                      }`}
-                    >
-                      All Classes
-                    </button>
-                    {classes.map(c => (
-                      <button
-                        key={c.id}
-                        onClick={() => setActiveClass(String(c.id))}
-                        className={`px-3.5 py-1.5 rounded-xl border transition cursor-pointer ${
-                          activeClass === String(c.id) ? "bg-blue-500 border-blue-500 text-white" : "border-white/5 hover:border-white/10"
-                        }`}
-                      >
-                        {c.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="w-16 block">Type</span>
-                    {["All", "PDF", "TXT", "DOC"].map(tp => (
-                      <button
-                        key={tp}
-                        onClick={() => setActiveType(tp)}
-                        className={`px-3.5 py-1.5 rounded-xl border transition cursor-pointer ${
-                          activeType === tp ? "bg-blue-500 border-blue-500 text-white" : "border-white/5 hover:border-white/10"
-                        }`}
-                      >
-                        {tp}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </>
           )}
         </main>
@@ -1262,17 +1237,31 @@ export default function ContentPage() {
                   );
                 }
 
-                if (isPreviewPdf) {
-                  const cleanIdVal = previewDoc.id.replace("db-", "");
+                const previewKind = getDocumentPreviewKind(previewDoc);
+
+                if (previewKind === "pdf") {
                   return (
                     <iframe
-                      src={`/api/documents/view?document_id=${cleanIdVal}#toolbar=0`}
+                      src={getDocumentViewUrl(previewDoc.id) + "#toolbar=0"}
                       className="w-full h-full rounded-lg border border-white/5 bg-slate-900"
                     />
                   );
                 }
 
-                if (textContent !== null) {
+                if (previewKind === "image") {
+                  return (
+                    <div className="relative max-w-full max-h-full flex items-center justify-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={getDocumentViewUrl(previewDoc.id)}
+                        alt={previewDoc.name}
+                        className="max-w-full max-h-[70vh] rounded-lg object-contain shadow-lg border border-white/5"
+                      />
+                    </div>
+                  );
+                }
+
+                if (previewKind === "text" && textContent !== null) {
                   return (
                     <div ref={previewRef} className="w-full h-full text-xs leading-relaxed text-slate-200 bg-slate-950 p-6 rounded-xl border border-white/5 overflow-auto select-text purple-scrollbar text-left max-w-none space-y-5">
                       {parseAndRenderMarkdown(textContent)}

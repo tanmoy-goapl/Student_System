@@ -18,15 +18,13 @@ def calculate_priority_score(confidence: float, accuracy: float, days_since_prac
 
 def calculate_exam_readiness(student_id: int, db: Session) -> dict:
     """
-    Computes exam readiness using:
-    readiness = confidence * 0.4 + exposure * 0.3 + mastery * 0.3
+    Computes preparation readiness from the shared live learning signal.
     """
     metrics = calculate_student_metrics(student_id, db)
-    confidence = metrics.get("overall_confidence", 0.0)
-    exposure = metrics.get("overall_exposure", 0.0)
-    mastery = metrics.get("overall_progress", 0.0)
-    
-    readiness = round(confidence * 0.4 + exposure * 0.3 + mastery * 0.3, 2)
+    readiness = round(
+        metrics.get("overall_readiness", metrics.get("overall_progress", 0.0)),
+        2,
+    )
     
     # Calculate weekly change based on sessions in last 7 days
     recent_sessions = db.query(PracticeSession).filter(

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createUser, listUsers, deleteUser } from "@/lib/api";
-import Loader from "@/components/Loader";
+import { InlineLoadingState } from "@/components/DashboardLoading";
 
 export type UserRow = {
   id: number;
@@ -45,7 +45,11 @@ function UserTable({
           </thead>
           <tbody>
             {loading ? (
-              <Loader fullScreen text="Loading..." />
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-sm text-slate-500">
+                  <InlineLoadingState text="Loading users..." />
+                </td>
+              </tr>
             ) : users.length === 0 ? (
               <tr>
                 <td colSpan={5} className="py-14 text-center text-sm text-slate-500">No users found.</td>

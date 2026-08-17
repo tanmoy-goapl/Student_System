@@ -67,7 +67,11 @@ export default function LoginScreen({ onLoginSuccess, redirectAfterLogin = "/pro
       // Force useAuth hooks to re-evaluate localStorage across the app
       window.dispatchEvent(new Event("storage"));
 
-      let nextPath = redirectAfterLogin;
+      // A class detail URL is not a stable post-login landing page. Start at
+      // the class list so the student can choose a class explicitly.
+      let nextPath = redirectAfterLogin.startsWith("/classes/")
+        ? "/classes"
+        : redirectAfterLogin;
       if (!nextPath || nextPath === "/" || nextPath === "/courses") {
         nextPath = res.role === "admin" ? "/admin" :
                    res.role === "professor" ? "/professor" :

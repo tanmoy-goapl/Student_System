@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { 
-  Sparkles, Paperclip, Send, Bell, Sidebar, PlusCircle, 
-  TrendingUp, FileText, CheckCircle, AlertTriangle, Users, Play, Clock, History, Plus
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import {
+  Sparkles, Paperclip, Send, Sidebar, TrendingUp, History, Plus,
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
 import { useRouter } from "next/navigation";
 import { ChatThinking } from "@/components/UIStateSystem";
 import ReactMarkdown from "react-markdown";
 import ChatHistorySidebar from "@/components/ChatHistorySidebar";
-import { uploadDocument } from "@/lib/api";
+import { getDocumentsData, uploadDocument } from "@/lib/api";
 import { useChatSession } from "@/components/ChatSessionProvider";
 
 type Message = {
@@ -27,6 +26,53 @@ interface TableBlock {
     headers: string[];
     rows: string[][];
   };
+}
+
+interface ProfessorDashboardSnapshot {
+  classes: Array<{ id: number; name: string }>;
+  totalStudents: number;
+  kpi: {
+    avgScore: number;
+    engagement: number;
+    atRiskCount: number;
+    weakTopicCount: number;
+    scoreDelta?: number;
+  };
+  alerts: Array<{
+    type: string;
+    title: string;
+    desc: string;
+    score?: number;
+  }>;
+}
+
+interface ProfessorInsightsSnapshot {
+  overview: {
+    avgScore: number;
+    engagementRate: number;
+    atRiskStudents: number;
+    topicMastery: number;
+  };
+  aiInsights: Array<{
+    title: string;
+    desc: string;
+    badge?: string;
+    badgeType?: string;
+  }>;
+  topicMastery: Array<{ className: string; avgScore: number }>;
+  engagement: {
+    attendance: number;
+    quizParticipation: number;
+    revisionConsistency: number;
+    contentInteraction: number;
+  };
+}
+
+interface ProfessorInsightState {
+  dashboard: ProfessorDashboardSnapshot;
+  insights: ProfessorInsightsSnapshot;
+  materialCount: number;
+  subjectCount: number;
 }
 
 function parseMarkdownAndTables(text: string): TableBlock[] {
@@ -83,6 +129,7 @@ function parseMarkdownAndTables(text: string): TableBlock[] {
 
 export default function ProfessorChatPage() {
   const {
+    user,
     question,
     setQuestion,
     history,
@@ -105,6 +152,93 @@ export default function ProfessorChatPage() {
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const scrollThrottleRef = useRef<number>(0);
+  const initialScrollPendingRef = useRef(true);
+  const autoScrolledSessionRef = useRef<string | null | undefined>(undefined);
+  const [insightData, setInsightData] = useState<ProfessorInsightState | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id || user.role !== "professor") {
+      setInsightData(null);
+      return;
+    }
+
+    let cancelled = false;
+    const loadInsights = async () => {
+      setInsightsLoading(true);
+      try {
+        const readJson = async <T,>(url: string): Promise<T> => {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) {
+            throw new Error("Insights request failed");
+          }
+          return (await response.json()) as T;
+        };
+
+        const [dashboard, insights, documents] = await Promise.all([
+          readJson<ProfessorDashboardSnapshot>(`/api/professor/dashboard?professor_id=${user.id}`),
+          readJson<ProfessorInsightsSnapshot>(`/api/professor/insights?professor_id=${user.id}`),
+          getDocumentsData(user.id).catch(() => null),
+        ]);
+
+        const documentItems = documents?.documents ?? [];
+        const subjects = documentItems
+          .map((document) => typeof document?.subject === "string" ? document.subject.trim().toLowerCase() : "")
+          .filter(Boolean);
+
+        if (!cancelled) {
+          setInsightData({
+            dashboard,
+            insights,
+            materialCount: documentItems.length,
+            subjectCount: new Set(subjects).size,
+          });
+        }
+      } catch {
+        if (!cancelled) setInsightData(null);
+      } finally {
+        if (!cancelled) setInsightsLoading(false);
+      }
+    };
+
+    void loadInsights();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, user?.role, rightDrawerOpen]);
+
+  const professorAlerts = insightData
+    ? [
+        ...insightData.dashboard.alerts.map((alert) => ({
+          title: alert.title,
+          desc: alert.desc,
+          type: alert.type,
+          badge: alert.type,
+        })),
+        ...insightData.insights.aiInsights.map((alert) => ({
+          title: alert.title,
+          desc: alert.desc,
+          type: alert.badgeType || "info",
+          badge: alert.badge || "AI INSIGHT",
+        })),
+      ].slice(0, 4)
+    : [];
+
+  const engagementSignals = insightData
+    ? [
+        { label: "Attendance", value: insightData.insights.engagement.attendance },
+        { label: "Quiz participation", value: insightData.insights.engagement.quizParticipation },
+        { label: "Revision consistency", value: insightData.insights.engagement.revisionConsistency },
+        { label: "Content interaction", value: insightData.insights.engagement.contentInteraction },
+      ]
+    : [];
+
+  const alertToneClasses: Record<string, { card: string; badge: string; icon: string }> = {
+    critical: { card: "border-rose-500/15 bg-rose-500/5", badge: "bg-rose-500/15 text-rose-300", icon: "text-rose-400" },
+    warning: { card: "border-amber-500/15 bg-amber-500/5", badge: "bg-amber-500/15 text-amber-300", icon: "text-amber-400" },
+    success: { card: "border-emerald-500/15 bg-emerald-500/5", badge: "bg-emerald-500/15 text-emerald-300", icon: "text-emerald-400" },
+    info: { card: "border-blue-500/15 bg-blue-500/5", badge: "bg-blue-500/15 text-blue-300", icon: "text-blue-400" },
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,8 +249,8 @@ export default function ProfessorChatPage() {
     try {
       const res = await uploadDocument(userId, file, "owner");
       appendAssistantMessage(`📁 **Uploaded "${res.filename}"** (${res.chunks_created} chunks processed). I have parsed it and added it to my knowledge. You can now ask questions about it!`);
-    } catch (err: any) {
-      setError(err.message || "Failed to upload document");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to upload document");
     } finally {
       setFileUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -131,6 +265,34 @@ export default function ProfessorChatPage() {
     { text: "Analyze assessment performance", desc: "Detailed question accuracy summaries" },
     { text: "Generate course completion report", desc: "Check syllabus completion progress %" }
   ];
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !history.length || !initialScrollPendingRef.current) return;
+
+    initialScrollPendingRef.current = false;
+    requestAnimationFrame(() => {
+      if (scrollRef.current !== el) return;
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    });
+  }, [history.length]);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !activeSessionId || !history.length) return;
+    if (autoScrolledSessionRef.current === activeSessionId) return;
+
+    autoScrolledSessionRef.current = activeSessionId;
+    requestAnimationFrame(() => {
+      if (scrollRef.current !== el) return;
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    });
+  }, [activeSessionId, history.length]);
+  useLayoutEffect(() => {
+    if (!history.length) {
+      initialScrollPendingRef.current = true;
+      autoScrolledSessionRef.current = undefined;
+    }
+  }, [history.length]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -254,6 +416,8 @@ export default function ProfessorChatPage() {
                   ? "bg-blue-600/10 border-blue-500/20 text-blue-400" 
                   : "bg-white/5 border-white/5 text-slate-350 hover:bg-white/10"
               }`}
+              title="Open live professor insights"
+              aria-label="Open live professor insights"
             >
               <Sidebar className="w-4 h-4" />
             </button>
@@ -274,13 +438,11 @@ export default function ProfessorChatPage() {
                   I can help you review class health, draft practice questions, outline study roadmaps, and assist struggling students.
                 </p>
                 <div className="flex gap-4 pt-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  <span>👥 136 Students</span>
-                  <span>📁 24 Materials</span>
-                  <span>⚡ 38 Quizzes Generated</span>
+                  <span>👥 {insightData?.dashboard.totalStudents ?? "—"} Students</span>
+                  <span>🏫 {insightData?.dashboard.classes.length ?? "—"} Classes</span>
+                  <span>📈 {insightData ? Math.round(insightData.insights.engagement.quizParticipation) + "%" : "—"} Quiz Participation</span>
                 </div>
               </div>
-
-""
             </div>
           ) : (
             /* Active message history */
@@ -415,90 +577,119 @@ export default function ProfessorChatPage() {
 
       {/* Right Drawer Insights */}
       {rightDrawerOpen && (
-        <aside className="w-80 h-screen border-l border-white/5 bg-[#090D1F] flex flex-col justify-between shrink-0 select-none text-white font-sans overflow-y-auto purple-scrollbar p-5 space-y-6">
-          <div className="flex justify-between items-center border-b border-white/5 pb-2 shrink-0">
+        <aside className="w-80 h-screen border-l border-white/5 bg-[#090D1F] shrink-0 select-none text-white font-sans overflow-y-auto purple-scrollbar p-5 space-y-6">
+          <div className="flex items-center justify-between border-b border-white/5 pb-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4 text-blue-400" /> Studio Stats
+              <TrendingUp className="w-4 h-4 text-blue-400" /> Live insights
             </h3>
+            <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-400">
+              {insightsLoading ? "Updating..." : insightData ? "Current" : "Unavailable"}
+            </span>
           </div>
 
-          {/* System Stats */}
-          <div className="space-y-3.5">
-            <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Class Stats</span>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-black/25 p-3 rounded-xl border border-white/5">
-                <span className="text-[8px] text-slate-500 font-extrabold uppercase block">My Students</span>
-                <span className="text-lg font-extrabold mt-1 block">136</span>
-                <span className="text-[8px] text-emerald-400 mt-0.5 block font-bold">+12 this month</span>
-              </div>
-              <div className="bg-black/25 p-3 rounded-xl border border-white/5">
-                <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Materials</span>
-                <span className="text-lg font-extrabold mt-1 block">24</span>
-                <span className="text-[8px] text-emerald-400 mt-0.5 block font-bold">3 subjects</span>
-              </div>
-              <div className="bg-black/25 p-3 rounded-xl border border-white/5">
-                <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Quizzes</span>
-                <span className="text-lg font-extrabold mt-1 block">38</span>
-                <span className="text-[8px] text-emerald-400 mt-0.5 block font-bold">+6 this week</span>
-              </div>
-              <div className="bg-black/25 p-3 rounded-xl border border-white/5">
-                <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Avg Score</span>
-                <span className="text-lg font-extrabold mt-1 block">68%</span>
-                <span className="text-[8px] text-rose-450 mt-0.5 block font-bold">-3% vs last wk</span>
-              </div>
+          {insightsLoading ? (
+            <div className="space-y-3">
+              <div className="h-28 rounded-xl bg-white/5 animate-pulse" />
+              <div className="h-32 rounded-xl bg-white/5 animate-pulse" />
+              <div className="h-40 rounded-xl bg-white/5 animate-pulse" />
             </div>
-          </div>
+          ) : insightData ? (
+            <>
+              <section className="space-y-3.5">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Class snapshot</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-black/25 p-3 rounded-xl border border-white/5">
+                    <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Students</span>
+                    <span className="text-lg font-extrabold mt-1 block">{insightData.dashboard.totalStudents}</span>
+                    <span className="text-[8px] text-slate-500 mt-0.5 block font-bold">{insightData.dashboard.classes.length} classes</span>
+                  </div>
+                  <div className="bg-black/25 p-3 rounded-xl border border-white/5">
+                    <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Avg score</span>
+                    <span className="text-lg font-extrabold mt-1 block">{Math.round(insightData.dashboard.kpi.avgScore)}%</span>
+                    <span className="text-[8px] text-slate-500 mt-0.5 block font-bold">{insightData.dashboard.kpi.atRiskCount} at risk</span>
+                  </div>
+                  <div className="bg-black/25 p-3 rounded-xl border border-white/5">
+                    <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Materials</span>
+                    <span className="text-lg font-extrabold mt-1 block">{insightData.materialCount}</span>
+                    <span className="text-[8px] text-slate-500 mt-0.5 block font-bold">{insightData.subjectCount} subjects</span>
+                  </div>
+                  <div className="bg-black/25 p-3 rounded-xl border border-white/5">
+                    <span className="text-[8px] text-slate-500 font-extrabold uppercase block">Quiz activity</span>
+                    <span className="text-lg font-extrabold mt-1 block">{Math.round(insightData.insights.engagement.quizParticipation)}%</span>
+                    <span className="text-[8px] text-slate-500 mt-0.5 block font-bold">recent participation</span>
+                  </div>
+                </div>
+              </section>
 
-          {/* Active Alerts */}
-          <div className="space-y-3.5">
-            <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Active Alerts</span>
-            <div className="space-y-2 text-[10px] font-bold">
-              <div className="p-3 rounded-xl border border-rose-500/15 bg-rose-500/5 flex justify-between items-center text-rose-350">
-                <span>Chemistry lab attendance drop</span>
-                <span className="bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded text-[8px]">11</span>
-              </div>
-              <div className="p-3 rounded-xl border border-amber-500/15 bg-amber-500/5 flex justify-between items-center text-amber-350">
-                <span>Wave Optics struggles detected</span>
-                <span className="bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded text-[8px]">14</span>
-              </div>
-              <div className="p-3 rounded-xl border border-blue-500/15 bg-blue-500/5 flex justify-between items-center text-blue-355">
-                <span>Calculus quiz pending review</span>
-                <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[8px]">1</span>
-              </div>
-            </div>
-          </div>
+              <section className="space-y-3.5">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Active signals</span>
+                {professorAlerts.length ? (
+                  <div className="space-y-2">
+                    {professorAlerts.map((alert) => {
+                      const tone = alertToneClasses[alert.type] || alertToneClasses.info;
+                      return (
+                        <div key={alert.title} className={"p-3 rounded-xl border " + tone.card}>
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-[10px] font-bold text-slate-200 leading-snug">{alert.title}</span>
+                            <span className={"shrink-0 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase " + tone.badge}>{alert.badge}</span>
+                          </div>
+                          <p className="mt-1 text-[9px] leading-relaxed text-slate-500">{alert.desc}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="rounded-xl border border-white/5 bg-black/20 p-4 text-[10px] text-slate-500">No active class signals.</p>
+                )}
+              </section>
 
-          {/* Quick Actions */}
-          <div className="space-y-3.5">
-            <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Quick Actions</span>
-            <div className="space-y-2">
-              {["Create Practice Quiz", "Upload Lesson Slide", "Email Weak Students"].map((act, i) => (
-                <button key={i} className="w-full py-2 px-3 rounded-xl border border-white/5 bg-slate-900/40 text-left hover:bg-slate-900/70 hover:border-blue-500/20 text-[10px] font-bold transition flex justify-between items-center text-slate-330">
-                  <span>{act}</span>
-                  <PlusCircle className="w-3.5 h-3.5 text-slate-500" />
-                </button>
-              ))}
-            </div>
-          </div>
+              <section className="space-y-3.5">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Engagement signals</span>
+                <div className="space-y-3">
+                  {engagementSignals.map((signal) => {
+                    const value = Math.max(0, Math.min(100, Math.round(signal.value)));
+                    return (
+                      <div key={signal.label}>
+                        <div className="flex items-center justify-between text-[9px] font-bold">
+                          <span className="text-slate-400">{signal.label}</span>
+                          <span className="text-blue-300">{value}%</span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/5">
+                          <div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-400" style={{ width: String(value) + "%" }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
 
-          {/* AI Configuration */}
-          <div className="space-y-3.5 pt-4 border-t border-white/5">
-            <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">AI Configuration</span>
-            <div className="space-y-2.5 text-[9px] font-bold uppercase tracking-wider text-slate-450">
-              <div className="flex justify-between items-center">
-                <span>Analysis Depth</span>
-                <span className="text-blue-400 font-extrabold bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded">Deep</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Data Scope</span>
-                <span className="text-slate-300 font-extrabold bg-white/5 border border-white/5 px-2 py-0.5 rounded">CS & Math</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Alert Sensitivity</span>
-                <span className="text-amber-400 font-extrabold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">High</span>
-              </div>
-            </div>
-          </div>
+              {insightData.insights.topicMastery.length ? (
+                <section className="space-y-3.5">
+                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 block">Class readiness</span>
+                  <div className="space-y-2">
+                    {insightData.insights.topicMastery.slice(0, 4).map((item) => {
+                      const value = Math.max(0, Math.min(100, Math.round(item.avgScore)));
+                      return (
+                        <div key={item.className} className="rounded-xl border border-white/5 bg-black/20 p-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate text-[10px] font-bold text-slate-200">{item.className}</span>
+                            <span className="text-[10px] font-extrabold text-blue-300">{value}%</span>
+                          </div>
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
+                            <div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-400" style={{ width: String(value) + "%" }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
+            </>
+          ) : (
+            <p className="rounded-xl border border-white/5 bg-black/20 p-4 text-[10px] leading-relaxed text-slate-500">
+              Live professor insights are unavailable right now.
+            </p>
+          )}
         </aside>
       )}
     </div>

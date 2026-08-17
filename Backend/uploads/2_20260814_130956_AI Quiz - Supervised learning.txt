@@ -1,0 +1,42 @@
+## Supervised Learning Quiz  
+*Select the best answer for each question (A‑D).*
+
+### Question 1  
+Which of the following statements best describes the main difference between **classification** and **regression** tasks?  
+
+A. Classification predicts a continuous numeric value, while regression predicts a discrete label.  
+B. Classification uses a loss function based on squared error, whereas regression uses cross‑entropy loss.  
+C. Classification outputs a categorical label, and regression outputs a real‑valued number.  
+D. Classification requires feature scaling, but regression does not.
+
+### Question 2  
+You are given a dataset of house prices with features *size*, *location score*, and *age*. After training a linear regression model, you notice a high training error but a very low test error. Which of the following is the most plausible explanation?  
+
+A. The model is underfitting the training data due to insufficient complexity.  
+B. The training set contains mislabeled target values.  
+C. The test set is too small to reflect true performance.  
+D. The model has memorized the test set during training.
+
+### Question 3  
+In a binary classification problem, the model outputs a probability *p* for the positive class. Which decision rule corresponds to the **maximum likelihood** principle when the class prior probabilities are equal?  
+
+A. Predict positive if *p* > 0.5, otherwise negative.  
+B. Predict positive if *p* > 0.7, otherwise negative.  
+C. Predict the class with the higher posterior probability after applying Bayes’ rule.  
+D. Predict the class that minimizes the squared error between *p* and the true label.
+
+### Question 4  
+A student claims that “k‑Nearest Neighbours (k‑NN) is a parametric model because it learns a set of weights during training.” Which response is most accurate?  
+
+A. Correct – the distances between points are stored as parameters.  
+B. Incorrect – k‑NN does not learn any parameters; it stores the training data and makes predictions at query time.  
+C. Partially correct – k‑NN learns a weight for each feature but not for each instance.  
+D. Incorrect – k‑NN is a parametric model only when k is fixed in advance.
+
+### Question 5  
+Consider a supervised learning pipeline that includes feature scaling, dimensionality reduction with PCA, and a support vector machine (SVM) classifier. Which step, if omitted, is most likely to cause the SVM’s margin to be suboptimal when using a radial basis function (RBF) kernel?  
+
+A. Feature scaling (standardising each feature to zero mean and unit variance).  
+B. Removing outliers from the training set.  
+C. Encoding categorical variables with one‑hot encoding.  
+D. Splitting the data into training and validation sets.

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getLlmConfig, updateLlmConfig, type LLMProvider, getSettingsData, SettingsDataResponse, getUserPreferences, updateUserPreferences, type UserPreferences } from "../../lib/api";
-import Loader from "@/components/Loader";
+import { InlineLoadingState } from "@/components/DashboardLoading";
 import MentorPreferences from "@/components/settingpage/MentorPreferences";
 import ResponseStyle from "@/components/settingpage/ResponseStyle";
 import ToneSelector from "@/components/settingpage/ToneSelector";
@@ -173,7 +173,7 @@ export default function SettingsPage() {
         </p>
 
         {loading && (
-          <Loader fullScreen text="Loading..." />
+          <InlineLoadingState text="Loading..." />
         )}
 
         {error && (

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { UploadCloud } from "lucide-react";
 import { uploadDocument } from "@/lib/api";
 import { OfflineState, ErrorState, EmptyState, TableSkeleton, LoadingButton } from "@/components/UIStateSystem";
+import { getDocumentViewUrl } from "@/lib/documentPreview";
 
 function formatDate(iso: string) {
   const date = new Date(iso);
@@ -82,8 +83,6 @@ export default function DocumentsPage() {
   const visibilityLabel: Record<string, string> = {
     owner: "Only Me", professor: "Professors", all: "Everyone",
   };
-
-  console.log(previewUrl)
 
   return (
     <div className="space-y-6 p-6 relative">
@@ -169,7 +168,7 @@ export default function DocumentsPage() {
                     <td className="px-5 py-3.5">
                       <button
                         className="text-sm font-medium text-cyan-400 transition hover:text-cyan-300 hover:underline text-left"
-                        onClick={() => setPreviewUrl(`http://localhost:8001/uploads/${encodeURIComponent(doc.file_path ?? "")}`)}
+                        onClick={() => setPreviewUrl(getDocumentViewUrl(doc.id))}
                         title="Click to view"
                       >
                         {doc.filename}

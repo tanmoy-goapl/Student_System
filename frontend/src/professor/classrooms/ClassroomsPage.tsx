@@ -7,7 +7,7 @@ import {
   ArrowDownRight, Minus, X, Trash2
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
-import Loader from "@/components/Loader";
+import { DashboardLoadingShell } from "@/components/DashboardLoading";
 import { createClass, DepartmentOption, deleteClass, listClassroomDepartments } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
@@ -356,7 +356,7 @@ export default function ClassroomsPage() {
   });
 
   if (loading) {
-    return <Loader fullScreen text="Loading Classes..." />;
+    return <DashboardLoadingShell role="professor" text="Loading Classes..." />;
   }
 
   return (

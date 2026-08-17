@@ -71,6 +71,10 @@ RULES:
 - Each question MUST have exactly 4 options (A, B, C, D)
 - Exactly ONE correct answer per question
 - Include a clear, educational explanation for the correct answer
+- Ground the questions in specific concepts, examples, mechanisms, or relationships from the context, not just the topic heading.
+- Use five different cognitive angles: recall/definition, mechanism or cause-and-effect, application/scenario, comparison/trade-off, and troubleshooting or prediction.
+- Use a different subtopic for each question where the context supports it. Do not repeat a generic stem with only the topic name changed.
+- Do not ask placeholder questions about the topic's "primary purpose", "standard best practice", or "production use" unless the context explicitly teaches that exact point.
 - Return ONLY valid JSON array containing objects with a "difficulty" field:
 [
   {{
@@ -101,6 +105,8 @@ RULES:
                     questions_5 = json.loads(json_match_5.group())
                     for q in questions_5:
                         if all(k in q for k in ("question", "options", "correct_answer", "difficulty")):
+                            if _is_generic_fallback(str(q.get("question", ""))):
+                                continue
                             norm_q = re.sub(r'[^a-z0-9]', '', q["question"].strip().lower())
                             if norm_q not in seen_questions:
                                 seen_questions.add(norm_q)
@@ -169,6 +175,9 @@ RULES:
 - Each question MUST have exactly 4 options (A, B, C, D)
 - Exactly ONE correct answer per question
 - Include a clear, educational explanation for the correct answer{avoid_text}
+- Every question must target a concrete concept, example, mechanism, relationship, or decision from the context, rather than restating the topic title.
+- Deliberately vary question forms across the bank: definition, why/how, scenario/application, compare/contrast, debugging, prediction, and (when the context supports it) a small calculation.
+- Do not repeat a stem pattern with only a different noun substituted. Avoid generic "primary purpose", "best practice", and "production system" placeholders.
 
 Return ONLY valid JSON array containing objects with a "difficulty" field:
 [
@@ -199,6 +208,8 @@ Return ONLY valid JSON array containing objects with a "difficulty" field:
                     questions_25 = json.loads(json_match_25.group())
                     for q in questions_25:
                         if all(k in q for k in ("question", "options", "correct_answer", "difficulty")):
+                            if _is_generic_fallback(str(q.get("question", ""))):
+                                continue
                             norm_q = re.sub(r'[^a-z0-9]', '', q["question"].strip().lower())
                             if norm_q not in seen_questions:
                                 seen_questions.add(norm_q)
@@ -259,7 +270,7 @@ def _question_key(question: str) -> str:
     return re.sub(r"[^a-z0-9]", "", question.strip().lower())
 _GENERIC_FALLBACK_MARKERS = (
     "best defines the primary purpose of",
-    "when implementing",
+    "major engineering trade-off or constraint",
     "standard best practice when analyzing",
     "in a production system, how is",
     "performance bottleneck points associated with",
@@ -325,7 +336,10 @@ def _cached_source_questions(student_id: int, topic: str, db: Session) -> list[d
     try:
         bank = json.loads(cached.content)
         source = bank.get("easy", []) + bank.get("medium", []) + bank.get("hard", [])
-        return _parse_quiz_questions(json.dumps(source), topic, "mixed", None)
+        return [
+            question for question in _parse_quiz_questions(json.dumps(source), topic, "mixed", None)
+            if not _is_generic_fallback(question["question"])
+        ]
     except (json.JSONDecodeError, AttributeError, TypeError):
         return []
 
@@ -370,7 +384,7 @@ def _parse_quiz_questions(response: str, topic: str, difficulty: str, subtopic: 
         if correct not in option_ids:
             continue
         key = _question_key(question)
-        if not key or key in seen:
+        if not key or key in seen or _is_generic_fallback(question):
             continue
         seen.add(key)
         normalized.append({"topic": item.get("topic", topic), "subtopic": item.get("subtopic", subtopic or "General"), "difficulty": str(item.get("difficulty", difficulty)).lower(), "question": question, "options": clean_options, "correct_answer": correct, "explanation": str(item.get("explanation", "")).strip()})
@@ -475,6 +489,8 @@ def _extract_content_facts(context: str, topic: str) -> list[tuple[str, str]]:
         lower = block.lower()
         if "options:" in lower or "correct explanation:" in lower or "generate exactly" in lower:
             continue
+        if _is_generic_fallback(block):
+            continue
         key = _question_key(block)
         if key and all(key != _question_key(existing[1]) for existing in facts):
             facts.append((heading, block))
@@ -509,12 +525,20 @@ def generate_content_fallback_questions(
         answer = next((o.get("text", "") for o in source.get("options", []) if o.get("id") == correct), "")
         if answer:
             source_answers.append(answer)
-    stems = (
-        "According to the study material, which statement correctly describes {label} in {topic}?",
-        "Which option matches the notes about {label} from {topic}?",
-        "What does the study content explain about {label} in {topic}?",
-    )
+    # A validated source question is already useful content-grounded practice.
+    # Reusing its complete wording is better than manufacturing a generic stem.
     for index, source in enumerate(source_questions):
+        source_question = str(source.get("question", "")).strip()
+        source_key = _question_key(source_question)
+        if source_question and source_key not in seen and not _is_generic_fallback(source_question):
+            copied = dict(source)
+            copied["topic"] = topic
+            copied["difficulty"] = difficulty
+            results.append(copied)
+            seen.add(source_key)
+            if len(results) >= count:
+                return results
+
         correct_id = str(source.get("correct_answer", "")).upper()
         correct = next((o.get("text", "") for o in source.get("options", []) if o.get("id") == correct_id), "")
         if not correct:
@@ -522,6 +546,11 @@ def generate_content_fallback_questions(
         label = str(source.get("subtopic") or "this concept")
         distractors = [o.get("text", "") for o in source.get("options", []) if o.get("id") != correct_id]
         distractors.extend(answer for answer in source_answers if answer not in distractors and answer != correct)
+        stems = (
+            "A learner is reviewing {label}. Which statement is directly supported by the study material?",
+            "When {label} is applied in a problem from {topic}, which outcome follows from the notes?",
+            "Which cause-and-effect explanation about {label} matches the material for {topic}?",
+        )
         for variant, stem in enumerate(stems):
             question = stem.format(label=label, topic=topic)
             key = _question_key(question)
@@ -537,24 +566,31 @@ def generate_content_fallback_questions(
     facts = _extract_content_facts(context, topic)
     fact_values = [fact for _, fact in facts]
     fact_stems = (
-        "Which statement is supported by the study material about {topic}?",
-        "According to the notes, which statement about {topic} is correct?",
-        "Which of the following matches the content for {topic}?",
+        'The notes discuss this detail: "{focus}". Which statement is supported by the same material?',
+        'Given the study detail "{focus}", which practical conclusion follows?',
+        'A learner is applying the detail "{focus}". Which claim should be relied on?',
+        'How should the detail "{focus}" be interpreted in relation to {topic}?',
+        'Which observation would be consistent with the detail "{focus}"?',
     )
     for index, (label, fact) in enumerate(facts):
         distractors = [other for other in fact_values if other != fact]
-        for variant, stem in enumerate(fact_stems):
-            question = stem.format(topic=topic) + (f" Focus: {label}." if label else "")
-            key = _question_key(question)
-            if key in seen:
-                continue
-            options, answer_id = _rotated_options(fact, distractors, index + variant)
-            if not options:
-                continue
-            seen.add(key)
-            results.append({"topic": topic, "subtopic": label or "Study content", "difficulty": difficulty, "question": question, "options": options, "correct_answer": answer_id, "explanation": f"The notes state: {fact}"})
-            if len(results) >= count:
-                return results
+        distractors.extend(answer for answer in source_answers if answer not in distractors and answer != fact)
+        variant = index % len(fact_stems)
+        stem = fact_stems[variant]
+        focus = re.sub(r"\s+", " ", fact).strip().rstrip(".")
+        question = stem.format(
+            topic=topic,
+            label=label or "this concept",
+            focus=focus[:140],
+        )
+        key = _question_key(question)
+        if key in seen:
+            continue
+        options, answer_id = _rotated_options(fact, distractors, index + variant)
+        if not options:
+            continue
+        seen.add(key)
+        results.append({"topic": topic, "subtopic": label or "Study content", "difficulty": difficulty, "question": question, "options": options, "correct_answer": answer_id, "explanation": f"The notes state: {fact}"})
     return results[:count]
 def _generate_fast_questions(
     student_id: int,
@@ -592,6 +628,8 @@ def _generate_fast_questions(
         f"Create exactly {remaining} valid MCQs about '{topic}' using only the study content below. "
         f"Target {guidance}. Every question must test a specific fact, concept, relationship, or example "
         "from the content; do not write questions about the topic heading itself. "
+        "Vary the question forms across definition, mechanism, application, comparison, debugging, and prediction. "
+        "Use different concrete concepts where possible and never repeat a stem with only the topic name changed. "
         "Return ONLY a JSON array with question, four A/B/C/D options, correct_answer, difficulty, and explanation.\n\n"
         f"STUDY CONTENT:\n{context}\n\nAVOID THESE USED QUESTION TEXTS:\n{avoid}"
     )
@@ -599,8 +637,10 @@ def _generate_fast_questions(
         system_prompt,
         f"Generate {remaining} new content-grounded questions for {topic}.",
         max_tokens=min(2200, max(1000, remaining * 260)),
-        timeout_seconds=6.5,
-        allow_fallback_chain=False,
+        # Session creation is a backend job, so quality gets priority over a
+        # short request timeout. The browser is not held open while this runs.
+        timeout_seconds=12.0,
+        allow_fallback_chain=True,
     )
     generated = _parse_quiz_questions(response, topic, difficulty, subtopic)
     seen = used | {_question_key(q["question"]) for q in questions}
@@ -621,8 +661,17 @@ def _generate_fast_questions(
             source_questions=source_questions,
         ))
     result = questions[:count]
-    if len(result) < count and not result:
-        result = generate_local_fallback_questions(topic, count)
+    if len(result) < count:
+        local_questions = generate_local_fallback_questions(
+            topic,
+            count - len(result),
+            difficulty=difficulty,
+            context=context,
+            excluded_keys=seen,
+            source_questions=source_questions,
+        )
+        result.extend(local_questions)
+    result = result[:count]
     _cache_fast_questions(student_id, topic, difficulty, result)
     return result
 def _start_master_generation(student_id: int, topic: str) -> None:
@@ -665,30 +714,8 @@ def generate_questions(
             AICache.student_id == student_id,
             AICache.topic == topic,
             AICache.action_type == "master_question_bank"
-        ).first()
+        ).order_by(AICache.created_at.desc()).first()
         
-        # 2. Try global/any-student cache for this topic to avoid duplicate LLM generation latency
-        if not master_cached:
-            any_cached = db.query(AICache).filter(
-                AICache.topic.ilike(topic),
-                AICache.action_type == "master_question_bank"
-            ).first()
-            if any_cached:
-                try:
-                    # Clone cache for this student to make future checks instant
-                    master_cached = AICache(
-                        student_id=student_id,
-                        topic=topic,
-                        action_type="master_question_bank",
-                        content=any_cached.content
-                    )
-                    db.add(master_cached)
-                    db.commit()
-                    logger.info(f"[PracticeEngine] Shared cache HIT: Cloned question bank for topic='{topic}' from another student profile.")
-                except Exception:
-                    db.rollback()
-                break
-                
         if master_cached:
             break
     
@@ -895,79 +922,102 @@ Return ONLY valid JSON array, no markdown fencing:
 
     return generate_local_fallback_questions(topic, count)
 
-def generate_local_fallback_questions(topic: str, count: int) -> list[dict]:
-    """Generate high-quality general questions about the topic as a fallback."""
-    logger.warning(f"[PracticeEngine] Generating local fallback questions for topic='{topic}'")
-    fallback_questions = [
-        {
-            "topic": topic,
-            "subtopic": "Core Principles",
-            "difficulty": "easy",
-            "question": f"Which of the following best defines the primary purpose of {topic}?",
-            "options": [
-                {"id": "A", "text": f"To optimize the runtime and memory footprint of {topic} operations."},
-                {"id": "B", "text": f"To serve as a foundational protocol or structure within the system."},
-                {"id": "C", "text": f"To decouple high-level interfaces from low-level implementations."},
-                {"id": "D", "text": "All of the above."}
+def generate_local_fallback_questions(
+    topic: str,
+    count: int,
+    difficulty: str = "mixed",
+    context: str = "",
+    excluded_keys: Optional[set[str]] = None,
+    source_questions: Optional[list[dict]] = None,
+) -> list[dict]:
+    """Build deterministic questions without the old title-only template.
+
+    Stored notes and validated source questions are preferred. If no material is
+    available, the final safety net tests transferable reasoning and never
+    invents a topic-specific fact.
+    """
+    logger.warning(f"[PracticeEngine] Generating grounded local fallback questions for topic='{topic}'")
+    grounded = generate_content_fallback_questions(
+        topic,
+        count,
+        difficulty,
+        context,
+        excluded_keys=excluded_keys,
+        source_questions=source_questions,
+    )
+    if len(grounded) >= count:
+        return grounded[:count]
+
+    seen = set(excluded_keys or set()) | {_question_key(q["question"]) for q in grounded}
+    blueprints = (
+        (
+            "Requirements and validation",
+            f"A learner is checking an implementation of {topic}. Which evidence is strongest that it satisfies the stated requirements?",
+            "Its observed inputs, outputs, and boundary behavior match the defined requirements.",
+            [
+                "It uses the most popular library regardless of the requirements.",
+                "It produces a result once on a small example, without checking constraints.",
+                "It has the longest source code among the available implementations.",
             ],
-            "correct_answer": "D",
-            "explanation": f"All options list core design goals and primary purposes of {topic} in standard implementations."
-        },
-        {
-            "topic": topic,
-            "subtopic": "Architecture",
-            "difficulty": "medium",
-            "question": f"When implementing {topic}, what is a major engineering trade-off or constraint?",
-            "options": [
-                {"id": "A", "text": "Increased design complexity in exchange for better scalability."},
-                {"id": "B", "text": "Reduced thread safety and lock contention issues."},
-                {"id": "C", "text": "Strict reliance on single-threaded execution models."},
-                {"id": "D", "text": "Higher initial execution latency with no long-term throughput benefits."}
+        ),
+        (
+            "Evaluation",
+            f"When comparing two approaches to {topic}, which evidence should guide the decision first?",
+            "Measurements from representative workloads together with the constraints that matter for the system.",
+            [
+                "The approach with the most configuration switches, without measurements.",
+                "A single best-case run that ignores memory, latency, and failure behavior.",
+                "The approach selected only because its name sounds more advanced.",
             ],
-            "correct_answer": "A",
-            "explanation": f"Implementing {topic} typically introduces higher design complexity to achieve scalability, reliability, and modularity."
-        },
-        {
-            "topic": topic,
-            "subtopic": "Best Practices",
-            "difficulty": "easy",
-            "question": f"What is a standard best practice when analyzing or working with {topic}?",
-            "options": [
-                {"id": "A", "text": "Ignoring performance profiling and edge cases."},
-                {"id": "B", "text": f"Ensuring modular division of responsibilities and checking boundary constraints."},
-                {"id": "C", "text": "Coupling database transactions directly with slow, external network API calls."},
-                {"id": "D", "text": "Using outdated legacy algorithms with known security vulnerabilities."}
+        ),
+        (
+            "Debugging",
+            f"A problem appears only when the workload grows in a system using {topic}. What is the most useful first step?",
+            "Reproduce the issue with representative inputs and measure the resource or algorithmic constraint that changes with scale.",
+            [
+                "Change several unrelated components at once so the cause cannot be isolated.",
+                "Assume the latest code change is responsible without collecting evidence.",
+                "Disable validation so the symptom is hidden from the user.",
             ],
-            "correct_answer": "B",
-            "explanation": f"Modular design and strict checking of boundary conditions are foundational best practices when implementing {topic}."
-        },
-        {
-            "topic": topic,
-            "subtopic": "Application",
-            "difficulty": "medium",
-            "question": f"In a production system, how is {topic} most commonly applied?",
-            "options": [
-                {"id": "A", "text": "To coordinate distributed workloads and maintain system state integrity."},
-                {"id": "B", "text": "As a simple print statement for debugging local environments."},
-                {"id": "C", "text": "To replace all core database index structures without testing performance."},
-                {"id": "D", "text": "To execute unverified, arbitrary scripts from untrusted remote domains."}
+        ),
+        (
+            "Edge cases",
+            f"Which practice gives the most reliable understanding of how {topic} behaves?",
+            "Trace a concrete example through normal and boundary cases, then compare the result with the expected behavior.",
+            [
+                "Study only the successful path and ignore empty or extreme inputs.",
+                "Replace the example with an unrelated feature before reasoning about it.",
+                "Judge correctness from the interface name alone.",
             ],
-            "correct_answer": "A",
-            "explanation": f"In production environments, {topic} is widely used to coordinate workloads, optimize data access, and ensure high availability."
-        },
-        {
-            "topic": topic,
-            "subtopic": "Troubleshooting",
-            "difficulty": "hard",
-            "question": f"What is the most effective way to optimize performance bottleneck points associated with {topic}?",
-            "options": [
-                {"id": "A", "text": "Adding arbitrary delay timers to simulate background work."},
-                {"id": "B", "text": "Profiling hot execution paths, using efficient caches, and removing redundant lock contentions."},
-                {"id": "C", "text": "Disabling database connection pooling entirely."},
-                {"id": "D", "text": "Increasing LLM completion timeouts to exceed 30 seconds."}
+        ),
+        (
+            "Trade-offs",
+            f"A design for {topic} meets its functional goal but violates a system constraint. What should the learner do next?",
+            "Identify the violated constraint, measure the trade-off, and choose the change that preserves correctness within the stated limits.",
+            [
+                "Remove the constraint from the requirements without discussing its impact.",
+                "Optimize an unrelated part of the system before measuring the violation.",
+                "Treat functional correctness as proof that every non-functional requirement is met.",
             ],
-            "correct_answer": "B",
-            "explanation": f"Identifying hot paths, utilizing local cache systems, and optimizing thread locks are standard methods to remediate performance bottlenecks in {topic}."
-        }
-    ]
-    return fallback_questions[:count]
+        ),
+    )
+    for index, (subtopic, question, correct, distractors) in enumerate(blueprints):
+        key = _question_key(question)
+        if key in seen:
+            continue
+        options, answer_id = _rotated_options(correct, distractors, index)
+        if not options:
+            continue
+        grounded.append({
+            "topic": topic,
+            "subtopic": subtopic,
+            "difficulty": difficulty,
+            "question": question,
+            "options": options,
+            "correct_answer": answer_id,
+            "explanation": "This answer uses evidence, constraints, and observable behavior instead of relying on the topic label alone.",
+        })
+        seen.add(key)
+        if len(grounded) >= count:
+            break
+    return grounded[:count]

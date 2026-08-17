@@ -671,19 +671,30 @@ def generate_material_stream(
     subject: str = "Computer Science",
     user_id: int = 1,
     classroom_id: Optional[int] = None,
-    action_type: Optional[str] = "notes", # "notes", "quiz", "lesson_plan", "revision", "simplify", "practice"
+    target_classroom_id: Optional[int] = None,
+    action_type: Optional[str] = "notes", # "notes", "quiz", "lesson", "revision", "simplify", "practice"
+    description: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
-    Professor-only: Generate comprehensive, in-depth study material from scratch.
-    Always generates fresh content via LLM and saves to Content Studio.
+    Professor-only: Generate one distinct, student-facing resource from scratch.
+    The generated file is kept private in Content Studio until the professor publishes it.
+    ``target_classroom_id`` records the professor's intended class without publishing
+    the document. ``classroom_id`` remains supported for the older direct-assignment
+    flow used by Content Studio.
     """
 
+    requested_action = (action_type or "notes").strip().lower()
+    action_type = "lesson" if requested_action == "lesson_plan" else requested_action
+    if action_type not in {"notes", "quiz", "lesson", "revision", "simplify", "practice"}:
+        action_type = "notes"
+    content_brief = (description or "").strip()[:1000]
     doc_name = f"AI Study Material - {topic}.txt"
-    if classroom_id is not None:
+    intended_classroom_id = target_classroom_id if target_classroom_id is not None else classroom_id
+    if intended_classroom_id is not None:
         from classroom_models import Classroom
         assigned_class = db.query(Classroom).filter(
-            Classroom.id == classroom_id,
+            Classroom.id == intended_classroom_id,
             Classroom.professor_id == user_id
         ).first()
         if not assigned_class:
@@ -744,45 +755,55 @@ RULES:
 - Every section must have real, detailed content — no placeholders or one-liners.
 """
 
-    if action_type == "lesson_plan":
-        doc_name = f"AI Lesson Plan - {topic}.txt"
-        system_prompt = f"""You are a senior university professor preparing a comprehensive, structured lesson plan for the topic: "{topic}" under the subject "{subject}".
-        Include learning objectives, lecture timeline (breakdown of a 60-minute class), core concepts explanation, discussion questions, and in-class activities.
-        Write in clear markdown. Aim for 800-1000 words."""
+    if action_type == "lesson":
+        doc_name = f"AI Lesson - {topic}.txt"
+        system_prompt = f"""You are an expert educational content writer.
+Create a student-ready lesson module about "{topic}" in "{subject}". Teach the learner directly with clear explanations, a logical progression, and concrete examples.
+Use this structure: # {topic}, ## Overview, ## Core ideas, ## How it works, ## Worked example, ## Quick self-check, ## Key takeaways.
+The quick self-check should contain three short questions for the student to think through, without turning the document into a multiple-choice quiz.
+Do not include learning objectives, class length, lecture timelines, instructor notes, teaching activities, discussion plans, grading criteria, or directions to a professor. Do not call this a lesson plan.
+Aim for 800-1000 words of useful student content."""
     elif action_type == "quiz":
         doc_name = f"AI Quiz - {topic}.txt"
-        system_prompt = f"""You are an expert examiner. Generate a comprehensive multiple-choice quiz on the topic: "{topic}" under the subject "{subject}".
-        Generate exactly 5 detailed multiple-choice questions with 4 options (A, B, C, D) each.
-        Specify the correct answer and a thorough, educational explanation for each question.
-        Write in clear markdown. Aim for 600-800 words."""
+        system_prompt = f"""You are an expert university examiner.
+Create a student-facing multiple-choice quiz only about "{topic}" in "{subject}".
+Generate exactly 5 questions, each with exactly 4 options labelled A, B, C, and D. Mix conceptual understanding, application, and scenario-based questions.
+Use a short title, one-line instructions, then Question 1 through Question 5 with their options.
+Do not include a lesson, learning objectives, revision notes, worked examples, explanations, or an answer key. The file may be shared directly with students.
+Aim for 350-500 words."""
     elif action_type == "revision":
         doc_name = f"AI Revision Notes - {topic}.txt"
-        system_prompt = f"""You are a senior tutor. Generate concise, fact-packed revision notes on the topic: "{topic}" under the subject "{subject}".
-        Focus on key definitions, core concepts, comparisons, and exam highlights. Use bullet points and bold formatting for rapid review.
-        Write in clear markdown. Aim for 600-800 words."""
+        system_prompt = f"""You are a senior tutor creating a compact student revision sheet for "{topic}" in "{subject}".
+Use this structure: # {topic} - Revision Sheet, ## Key definitions, ## Core facts, ## Comparisons or formulas, ## Common mistakes, ## Final takeaways.
+Use concise bullets and short paragraphs. Do not write a lesson, lecture sequence, quiz questions, or instructor guidance. Aim for 450-650 words."""
     elif action_type == "simplify":
         doc_name = f"AI Explained Simpler - {topic}.txt"
-        system_prompt = f"""You are a creative educator. Explain the complex topic: "{topic}" under the subject "{subject}" using simple, everyday language and relatable real-world analogies.
-        Break down the core principles without jargon so that a beginner can grasp it instantly.
-        Write in clear markdown. Aim for 600-800 words."""
+        system_prompt = f"""You are a patient tutor helping a beginner understand "{topic}" in "{subject}".
+Create a friendly explanation with this structure: # {topic} in Simple Terms, ## In one sentence, ## Everyday analogy, ## Step-by-step explanation, ## Concrete example, ## What learners commonly confuse, ## Takeaway.
+Use plain language and define unavoidable technical terms. Do not write learning objectives, a lesson plan, revision notes, or a quiz. Aim for 450-650 words."""
     elif action_type == "practice":
         doc_name = f"AI Practice Set - {topic}.txt"
-        system_prompt = f"""You are a university professor. Generate a structured practice problem set with calculations, exercises, or analysis tasks on the topic: "{topic}" under the subject "{subject}".
-        Include 3-4 problem scenarios, follow-up questions, and detailed step-by-step model solutions for each.
-        Write in clear markdown. Aim for 800-1000 words."""
+        system_prompt = f"""You are an assessment designer creating a student practice worksheet for "{topic}" in "{subject}".
+Create 5 open-ended problems. Mix conceptual, calculation, debugging, and real-world scenario tasks as appropriate. Do not use multiple-choice options and do not turn the worksheet into lecture notes.
+After all problems, add a clearly marked Answer Guide with concise step-by-step solutions so students can self-check. Aim for 700-900 words."""
 
-    system_prompt += """
+    system_prompt += f"""
 
 READABILITY REQUIREMENTS:
 - Never use LaTeX, TeX commands, backslash math delimiters, or math environments.
 - Write formulas in plain text or readable Unicode, such as y = Xβ + ε, beta_hat = (X^T X)^-1 X^T y, loss = (a / b), and sqrt(x).
 - Use words such as beta, sigma, and arg min when Unicode would be unclear.
 - Do not output formula commands or backslash-delimited expressions.
+- Use markdown headings, bullets, and numbered lists where they improve readability.
+- Treat the optional professor description below as a content brief only; keep the requested resource type and student-facing audience.
+
+OPTIONAL PROFESSOR DESCRIPTION:
+{content_brief or "No additional description provided."}
 """
 
-    user_prompt = f"Generate the complete document for the topic \"{topic}\" in the subject \"{subject}\". Be extremely thorough and detailed."
+    user_prompt = f"Generate only the requested {action_type} resource for the topic \"{topic}\" in the subject \"{subject}\". Follow the resource-specific structure exactly and use the optional professor description to make the content more precise."
 
-    logger.info(f"[ProfessorGen] Generating fresh material for topic='{topic}', subject='{subject}', user_id={user_id}, classroom_id={classroom_id}")
+    logger.info(f"[ProfessorGen] Generating fresh material for topic='{topic}', subject='{subject}', user_id={user_id}, classroom_id={intended_classroom_id}, private_target={target_classroom_id is not None}")
 
     # Generate a unique key for tracking this task
     import threading
@@ -799,7 +820,9 @@ READABILITY REQUIREMENTS:
     def key_part(value: str) -> str:
         return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")[:120]
 
-    task_key = f"{user_id}_{classroom_id or 0}_{key_part(subject)}_{key_part(action_type or 'notes')}_{key_part(topic)}"
+    brief_key = key_part(content_brief) or "default"
+    action_key = action_type or "notes"
+    task_key = f"{user_id}_{intended_classroom_id or 0}_{key_part(subject)}_{key_part(action_key)}_{key_part(topic)}_{brief_key}"
  
     def bg_worker():
         logger.info(f"[BgGen] Worker thread started for key: {task_key}")
@@ -840,10 +863,10 @@ READABILITY REQUIREMENTS:
                         Document.filename == doc_name,
                         Document.subject == subject,
                     )
-                    if classroom_id is None:
+                    if intended_classroom_id is None:
                         existing_query = existing_query.filter(Document.classroom_id.is_(None))
                     else:
-                        existing_query = existing_query.filter(Document.classroom_id == classroom_id)
+                        existing_query = existing_query.filter(Document.classroom_id == intended_classroom_id)
                     existing = existing_query.first()
                     if existing:
                         if existing.file_path and os.path.exists(existing.file_path):
@@ -866,7 +889,7 @@ READABILITY REQUIREMENTS:
                         uploaded_at=datetime.datetime.now(),
                         visibility="course_shared" if classroom_id else "private",
                         document_type="notes",
-                        classroom_id=classroom_id,
+                        classroom_id=intended_classroom_id,
                         document_format="TXT",
                         file_size=os.path.getsize(file_path),
                         pages=max(1, len(readable_text) // 3000),

@@ -16627,3 +16627,512 @@ UnboundLocalError: cannot access local variable 'threading' where it is not asso
 2026-08-13 12:10:20,227 - INFO -   [Timing] Total TTFT (user → first token loop): 4.087s
 2026-08-13 12:10:21,110 - INFO -   [Timing] LLM Streaming Duration: 2.526s
 2026-08-13 12:10:21,110 - INFO -   [Timing] Total Response Time: 4.970s
+2026-08-14 07:44:01,016 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 07:44:11,255 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 07:44:17,932 - INFO - [PracticeEngine] Synchronized document custom topics for student 5
+2026-08-14 10:18:08,344 - INFO - 
+================================================================================
+2026-08-14 10:18:08,344 - INFO - [2026-08-14T10:18:08.344929] CHAT REQUEST
+2026-08-14 10:18:08,345 - INFO -   Student ID : 2
+2026-08-14 10:18:08,345 - INFO -   Question   : what is statistics
+2026-08-14 10:18:08,345 - INFO -   Role       : professor
+2026-08-14 10:18:08,345 - INFO - ================================================================================
+2026-08-14 10:18:08,387 - INFO -   [Timing] FastAPI Request started processing at 152169.455
+2026-08-14 10:18:08,401 - INFO -   Detected Mode: LEARNING
+2026-08-14 10:18:08,401 - INFO -   [Timing] Docs + Mode Detection: 0.014s
+2026-08-14 10:18:15,217 - INFO -   Adaptive filter: top_score=0.3770
+2026-08-14 10:18:15,217 - INFO -   Adaptive filter: cutoff=0.2770, kept=15/41
+2026-08-14 10:18:15,217 - INFO -   [Timing] Retrieval & Context Building: 6.782s
+2026-08-14 10:18:15,222 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-14 10:18:16,927 - INFO -   [Timing] Backend First Token Loop hit: 1.705s since LLM call
+2026-08-14 10:18:16,927 - INFO -   [Timing] Total TTFT (user → first token loop): 8.540s
+2026-08-14 10:18:20,366 - INFO -   [Timing] LLM Streaming Duration: 5.144s
+2026-08-14 10:18:20,366 - INFO -   [Timing] Total Response Time: 11.980s
+2026-08-14 10:18:29,599 - INFO - [ProfessorGen] Generating fresh material for topic='Tokenisation', subject='AI', user_id=2, classroom_id=None
+2026-08-14 10:18:29,600 - INFO - [BgGen] Worker thread started for key: 2_0_ai_lesson_plan_tokenisation
+2026-08-14 10:19:41,298 - INFO - [BgGen] Indexed 25 chunks into Chroma for doc_id=102
+2026-08-14 10:19:41,301 - INFO - [BgGen] Saved generated material as document & file: 'AI Lesson Plan - Tokenisation.txt' privately in Content Studio
+2026-08-14 10:19:41,301 - INFO - [BgGen] Worker thread finished for key: 2_0_ai_lesson_plan_tokenisation
+2026-08-14 10:20:36,690 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:20:47,068 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 10:20:50,064 - INFO - [ProfessorGen] Generating fresh material for topic='Lemmatisation', subject='AI', user_id=2, classroom_id=None
+2026-08-14 10:20:50,065 - INFO - [BgGen] Worker thread started for key: 2_0_ai_quiz_lemmatisation
+2026-08-14 10:20:58,361 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-14 10:22:22,728 - INFO - [BgGen] Indexed 28 chunks into Chroma for doc_id=103
+2026-08-14 10:22:22,731 - INFO - [BgGen] Saved generated material as document & file: 'AI Quiz - Lemmatisation.txt' privately in Content Studio
+2026-08-14 10:22:22,732 - INFO - [BgGen] Worker thread finished for key: 2_0_ai_quiz_lemmatisation
+2026-08-14 10:23:14,749 - INFO - [ProfessorGen] Generating fresh material for topic='Token optimisation', subject='AI', user_id=2, classroom_id=None
+2026-08-14 10:23:14,749 - INFO - [BgGen] Worker thread started for key: 2_0_ai_revision_token_optimisation
+2026-08-14 10:23:19,064 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:23:29,509 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 10:23:37,114 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-14 10:23:59,590 - INFO - [ProfessorGen] Generating fresh material for topic='Prompt engineering', subject='AI', user_id=2, classroom_id=None
+2026-08-14 10:23:59,591 - INFO - [BgGen] Worker thread started for key: 2_0_ai_simplify_prompt_engineering
+2026-08-14 10:24:25,842 - INFO - [BgGen] Indexed 20 chunks into Chroma for doc_id=104
+2026-08-14 10:24:25,847 - INFO - [BgGen] Saved generated material as document & file: 'AI Revision Notes - Token optimisation.txt' privately in Content Studio
+2026-08-14 10:24:25,847 - INFO - [BgGen] Worker thread finished for key: 2_0_ai_revision_token_optimisation
+2026-08-14 10:25:18,995 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:25:29,338 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 10:25:39,830 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-14 10:25:40,235 - INFO - [BgGen] Indexed 26 chunks into Chroma for doc_id=105
+2026-08-14 10:25:40,239 - INFO - [BgGen] Saved generated material as document & file: 'AI Explained Simpler - Prompt engineering.txt' privately in Content Studio
+2026-08-14 10:25:40,239 - INFO - [BgGen] Worker thread finished for key: 2_0_ai_simplify_prompt_engineering
+2026-08-14 10:26:13,948 - INFO - [ProfessorGen] Generating fresh material for topic='Embeddings', subject='AI', user_id=2, classroom_id=None
+2026-08-14 10:26:13,948 - INFO - [BgGen] Worker thread started for key: 2_0_ai_practice_embeddings
+2026-08-14 10:26:27,572 - INFO - 
+================================================================================
+2026-08-14 10:26:27,573 - INFO - [2026-08-14T10:26:27.573078] CHAT REQUEST
+2026-08-14 10:26:27,573 - INFO -   Student ID : 2
+2026-08-14 10:26:27,573 - INFO -   Question   : what is police
+2026-08-14 10:26:27,573 - INFO -   Role       : professor
+2026-08-14 10:26:27,573 - INFO - ================================================================================
+2026-08-14 10:26:27,576 - INFO -   [Timing] FastAPI Request started processing at 152668.645
+2026-08-14 10:26:27,581 - INFO -   Detected Mode: LEARNING
+2026-08-14 10:26:27,582 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-14 10:26:31,671 - INFO -   Adaptive filter: top_score=0.2410
+2026-08-14 10:26:31,671 - INFO -   Adaptive filter: cutoff=0.1410, kept=45/45
+2026-08-14 10:26:31,672 - INFO -   [Timing] Retrieval & Context Building: 4.080s
+2026-08-14 10:26:31,676 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-14 10:26:34,393 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:26:39,294 - INFO -   [Timing] Backend First Token Loop hit: 7.618s since LLM call
+2026-08-14 10:26:39,294 - INFO -   [Timing] Total TTFT (user → first token loop): 11.718s
+2026-08-14 10:26:44,618 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 10:26:46,760 - INFO -   [Timing] LLM Streaming Duration: 15.084s
+2026-08-14 10:26:46,760 - INFO -   [Timing] Total Response Time: 19.184s
+2026-08-14 10:26:54,486 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-14 10:27:08,003 - INFO - 
+================================================================================
+2026-08-14 10:27:08,003 - INFO - [2026-08-14T10:27:08.003479] CHAT REQUEST
+2026-08-14 10:27:08,003 - INFO -   Student ID : 2
+2026-08-14 10:27:08,003 - INFO -   Question   : tell me a song
+2026-08-14 10:27:08,003 - INFO -   Role       : professor
+2026-08-14 10:27:08,003 - INFO - ================================================================================
+2026-08-14 10:27:08,006 - INFO -   [Timing] FastAPI Request started processing at 152709.075
+2026-08-14 10:27:08,010 - INFO -   Detected Mode: LEARNING
+2026-08-14 10:27:08,010 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-14 10:27:12,274 - INFO -   Adaptive filter: top_score=0.2570
+2026-08-14 10:27:12,274 - INFO -   Adaptive filter: cutoff=0.1570, kept=28/38
+2026-08-14 10:27:12,274 - INFO -   [Timing] Retrieval & Context Building: 4.251s
+2026-08-14 10:27:12,277 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-14 10:27:15,779 - INFO -   [Timing] Backend First Token Loop hit: 3.502s since LLM call
+2026-08-14 10:27:15,779 - INFO -   [Timing] Total TTFT (user → first token loop): 7.773s
+2026-08-14 10:27:17,385 - INFO -   [Timing] LLM Streaming Duration: 5.108s
+2026-08-14 10:27:17,385 - INFO -   [Timing] Total Response Time: 9.379s
+2026-08-14 10:27:35,407 - INFO - 
+================================================================================
+2026-08-14 10:27:35,407 - INFO - [2026-08-14T10:27:35.407594] CHAT REQUEST
+2026-08-14 10:27:35,407 - INFO -   Student ID : 2
+2026-08-14 10:27:35,407 - INFO -   Question   : who is rahul
+2026-08-14 10:27:35,407 - INFO -   Role       : professor
+2026-08-14 10:27:35,407 - INFO - ================================================================================
+2026-08-14 10:27:35,410 - INFO -   [Timing] FastAPI Request started processing at 152736.478
+2026-08-14 10:27:35,414 - INFO -   Detected Mode: LEARNING
+2026-08-14 10:27:35,414 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-14 10:27:35,758 - INFO -   Adaptive filter: top_score=0.2480
+2026-08-14 10:27:35,758 - INFO -   Adaptive filter: cutoff=0.1480, kept=40/40
+2026-08-14 10:27:35,758 - INFO -   [Timing] Retrieval & Context Building: 0.337s
+2026-08-14 10:27:35,761 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-14 10:27:38,068 - INFO -   [Timing] Backend First Token Loop hit: 2.307s since LLM call
+2026-08-14 10:27:38,068 - INFO -   [Timing] Total TTFT (user → first token loop): 2.658s
+2026-08-14 10:27:39,242 - INFO -   [Timing] LLM Streaming Duration: 3.480s
+2026-08-14 10:27:39,242 - INFO -   [Timing] Total Response Time: 3.832s
+2026-08-14 10:28:44,536 - INFO - [BgGen] Indexed 27 chunks into Chroma for doc_id=106
+2026-08-14 10:28:44,539 - INFO - [BgGen] Saved generated material as document & file: 'AI Practice Set - Embeddings.txt' privately in Content Studio
+2026-08-14 10:28:44,540 - INFO - [BgGen] Worker thread finished for key: 2_0_ai_practice_embeddings
+2026-08-14 10:29:37,673 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:29:47,929 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 10:29:56,770 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-14 10:37:20,689 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:37:30,882 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 10:37:40,858 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-14 10:38:18,481 - INFO - [PracticeEngine] LLM stream 'GPT-4o-mini' cancelled by client disconnect.
+2026-08-14 10:45:35,192 - INFO - DEBUG2 predefined_topics: ['Introduction to Data Structures', 'Arrays and Strings', 'Linked Lists', 'Stacks', 'Queues', 'Trees', 'Binary Search Trees', 'Heaps', 'Graphs', 'Hashing', 'Sorting Algorithms', 'Searching Algorithms']
+2026-08-14 10:45:35,192 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:45:35,192 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:45:35,242 - INFO - DEBUG2 predefined_topics: ['Introduction to Data Structures', 'Arrays and Strings', 'Linked Lists', 'Stacks', 'Queues', 'Trees', 'Binary Search Trees', 'Heaps', 'Graphs', 'Hashing', 'Sorting Algorithms', 'Searching Algorithms']
+2026-08-14 10:45:35,243 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:45:35,243 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:45:46,129 - INFO - DEBUG2 predefined_topics: ['Introduction to Data Structures', 'Arrays and Strings', 'Linked Lists', 'Stacks', 'Queues', 'Trees', 'Binary Search Trees', 'Heaps', 'Graphs', 'Hashing', 'Sorting Algorithms', 'Searching Algorithms']
+2026-08-14 10:45:46,129 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:45:46,129 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:45:46,173 - INFO - DEBUG2 predefined_topics: ['Introduction to Data Structures', 'Arrays and Strings', 'Linked Lists', 'Stacks', 'Queues', 'Trees', 'Binary Search Trees', 'Heaps', 'Graphs', 'Hashing', 'Sorting Algorithms', 'Searching Algorithms']
+2026-08-14 10:45:46,173 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:45:46,173 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:45:58,395 - INFO - DEBUG2 predefined_topics: ['Introduction to Data Structures', 'Arrays and Strings', 'Linked Lists', 'Stacks', 'Queues', 'Trees', 'Binary Search Trees', 'Heaps', 'Graphs', 'Hashing', 'Sorting Algorithms', 'Searching Algorithms']
+2026-08-14 10:45:58,395 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:45:58,396 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:45:58,449 - INFO - DEBUG2 predefined_topics: ['Introduction to Data Structures', 'Arrays and Strings', 'Linked Lists', 'Stacks', 'Queues', 'Trees', 'Binary Search Trees', 'Heaps', 'Graphs', 'Hashing', 'Sorting Algorithms', 'Searching Algorithms']
+2026-08-14 10:45:58,449 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:45:58,449 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:48:08,522 - INFO - [ProfessorGen] Generating fresh material for topic='React js', subject='Frontend', user_id=2, classroom_id=None
+2026-08-14 10:48:08,523 - INFO - [BgGen] Worker thread started for key: 2_0_frontend_lesson_plan_react_js
+2026-08-14 10:49:13,405 - INFO - [BgGen] Indexed 24 chunks into Chroma for doc_id=108
+2026-08-14 10:49:13,409 - INFO - [BgGen] Saved generated material as document & file: 'AI Lesson Plan - React js.txt' privately in Content Studio
+2026-08-14 10:49:13,409 - INFO - [BgGen] Worker thread finished for key: 2_0_frontend_lesson_plan_react_js
+2026-08-14 10:50:00,603 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:50:10,936 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 10:50:19,570 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-14 10:50:59,905 - INFO - DEBUG2 predefined_topics: []
+2026-08-14 10:50:59,905 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:50:59,905 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:50:59,961 - INFO - DEBUG2 predefined_topics: []
+2026-08-14 10:50:59,961 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:50:59,961 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:53:38,158 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:53:38,159 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:53:38,159 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:53:38,227 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:53:38,227 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:53:38,227 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:53:41,841 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:53:41,841 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:53:41,841 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:53:41,893 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:53:41,893 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:53:41,893 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:53:43,905 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-14 10:53:43,923 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Artificial Intelligence'
+2026-08-14 10:53:43,971 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:53:45,143 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:53:45,187 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:53:49,371 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-14 10:53:49,388 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Artificial Intelligence'
+2026-08-14 10:53:49,436 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:53:50,968 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:53:50,968 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:53:50,968 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:53:51,026 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:53:51,026 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:53:51,026 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:53:56,462 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-14 10:53:56,474 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Artificial Intelligence'
+2026-08-14 10:53:56,523 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:53:59,630 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:53:59,630 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:53:59,630 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:53:59,677 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:53:59,678 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:53:59,678 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:54:09,382 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:54:09,383 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:54:09,383 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:54:09,430 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:54:09,430 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:54:09,431 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:54:13,199 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-14 10:54:13,209 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Artificial Intelligence'
+2026-08-14 10:54:13,255 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:54:23,194 - INFO - [Context] Discarded irrelevant chunk for topic='Why React? – problem space and UI complexity'
+2026-08-14 10:54:23,194 - INFO - [Stream] Starting detailed streaming for Why React? – problem space and UI complexity
+2026-08-14 10:54:35,516 - INFO - [Stream] Starting detailed streaming for Homework: Todo List app with hooks and localStorage
+2026-08-14 10:55:06,354 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:55:06,417 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:55:16,280 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Homework: Todo List app with hooks and localStorage, difficulty=hard
+2026-08-14 10:55:35,305 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-14 10:55:35,317 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-14 10:55:35,362 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:55:35,521 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-14 10:55:35,853 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:55:37,214 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:55:37,214 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-14 10:55:37,215 - WARNING - [PracticeEngine] Generating local fallback questions for topic='Homework: Todo List app with hooks and localStorage'
+2026-08-14 10:55:37,222 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Homework: Todo List app with hooks and localStorage'
+2026-08-14 10:55:37,256 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Homework: Todo List app with hooks and localStorage'
+2026-08-14 10:55:43,468 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:55:43,512 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:55:53,163 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-14 10:55:53,214 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:56:05,317 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:56:05,366 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:56:13,166 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Homework: Todo List app with hooks and localStorage, difficulty=hard
+2026-08-14 10:56:13,171 - INFO - [Practice] Resuming existing active session 2757 for topic='Homework: Todo List app with hooks and localStorage'
+2026-08-14 10:56:23,682 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:56:34,104 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 10:56:37,501 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:56:37,544 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:56:44,471 - INFO - [Practice] Starting/resuming session: mode=topic, topic=System Boot, difficulty=hard
+2026-08-14 10:56:44,475 - INFO - [Practice] Resuming existing active session 2548 for topic='System Boot'
+2026-08-14 10:56:45,665 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Homework: Todo List app with hooks and localStorage'
+2026-08-14 10:56:45,666 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Homework: Todo List app with hooks and localStorage'
+2026-08-14 10:56:50,965 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:56:51,005 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:56:57,811 - INFO - [Practice] Starting/resuming session: mode=topic, topic=React’s goals and trade‑offs vs alternatives, difficulty=easy
+2026-08-14 10:57:18,753 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:57:18,753 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-14 10:57:18,754 - WARNING - [PracticeEngine] Generating local fallback questions for topic='React’s goals and trade‑offs vs alternatives'
+2026-08-14 10:57:18,760 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='React’s goals and trade‑offs vs alternatives'
+2026-08-14 10:57:18,792 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='React’s goals and trade‑offs vs alternatives'
+2026-08-14 10:57:32,077 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:57:42,265 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 10:57:48,379 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-14 10:57:48,398 - INFO - CACHE HIT (Fast Return): topic='Homework: Todo List app with hooks and localStorage', subject='Front‑End Development'
+2026-08-14 10:57:48,445 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:57:54,195 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:57:54,240 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-14 10:58:05,365 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:58:15,386 - INFO - 
+================================================================================
+2026-08-14 10:58:15,386 - INFO - [2026-08-14T10:58:15.386658] CHAT REQUEST
+2026-08-14 10:58:15,386 - INFO -   Student ID : 3
+2026-08-14 10:58:15,386 - INFO -   Question   : Summarize this document: "AI Lesson Plan - React js"
+2026-08-14 10:58:15,386 - INFO -   Role       : student
+2026-08-14 10:58:15,386 - INFO - ================================================================================
+2026-08-14 10:58:15,636 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 10:58:22,962 - INFO -   [Timing] FastAPI Request started processing at 154584.030
+2026-08-14 10:58:22,968 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-08-14 10:58:22,968 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-08-14 10:58:22,974 - INFO - [DocumentResolver] Explicit document target: AI Lesson Plan - React js.txt (108)
+2026-08-14 10:58:22,980 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-14 10:58:22,980 - INFO -   Adaptive filter: cutoff=0.9000, kept=24/24
+2026-08-14 10:58:22,980 - INFO -   [Timing] Retrieval & Context Building: 0.004s
+2026-08-14 10:58:22,985 - INFO -   [Timing] Context + Prompt Building: 0.005s
+2026-08-14 10:58:25,103 - INFO -   [Timing] Backend First Token Loop hit: 2.118s since LLM call
+2026-08-14 10:58:25,103 - INFO -   [Timing] Total TTFT (user → first token loop): 2.141s
+2026-08-14 10:58:26,566 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='React’s goals and trade‑offs vs alternatives'
+2026-08-14 10:58:26,566 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='React’s goals and trade‑offs vs alternatives'
+2026-08-14 10:58:28,618 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-14 10:58:28,619 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-14 10:58:28,624 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Homework: Todo List app with hooks and localStorage' (total=5 questions)
+2026-08-14 10:58:54,855 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:58:54,855 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:58:54,856 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:58:54,919 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-14 10:58:54,919 - INFO - DEBUG2 performances keys: []
+2026-08-14 10:58:54,919 - INFO - DEBUG2 matched perfs: []
+2026-08-14 10:58:55,372 - INFO -   [Timing] LLM Streaming Duration: 32.387s
+2026-08-14 10:58:55,372 - INFO -   [Timing] Total Response Time: 32.411s
+2026-08-14 10:59:12,805 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 10:59:23,195 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 11:00:09,436 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-14 11:00:09,436 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-14 11:00:09,443 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='React’s goals and trade‑offs vs alternatives' (total=5 questions)
+2026-08-14 13:09:38,792 - INFO - [ProfessorGen] Generating fresh material for topic='Supervised learning', subject='Machine learning', user_id=2, classroom_id=None
+2026-08-14 13:09:38,793 - INFO - [BgGen] Worker thread started for key: 2_0_machine_learning_quiz_supervised_learning_default
+2026-08-14 13:09:56,886 - INFO - [BgGen] Indexed 7 chunks into Chroma for doc_id=109
+2026-08-14 13:09:56,890 - INFO - [BgGen] Saved generated material as document & file: 'AI Quiz - Supervised learning.txt' privately in Content Studio
+2026-08-14 13:09:56,891 - INFO - [BgGen] Worker thread finished for key: 2_0_machine_learning_quiz_supervised_learning_default
+2026-08-14 13:10:26,985 - INFO - [ProfessorGen] Generating fresh material for topic='supervised learning', subject='Machine learning', user_id=2, classroom_id=None
+2026-08-14 13:10:26,985 - INFO - [BgGen] Worker thread started for key: 2_0_machine_learning_practice_supervised_learning_default
+2026-08-14 13:10:43,903 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 13:10:54,291 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 13:11:05,279 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-14 13:11:42,512 - INFO - [BgGen] Indexed 18 chunks into Chroma for doc_id=110
+2026-08-14 13:11:42,515 - INFO - [BgGen] Saved generated material as document & file: 'AI Practice Set - supervised learning.txt' privately in Content Studio
+2026-08-14 13:11:42,515 - INFO - [BgGen] Worker thread finished for key: 2_0_machine_learning_practice_supervised_learning_default
+2026-08-14 13:12:35,309 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-14 13:12:45,672 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-14 13:12:56,357 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-17 07:21:11,690 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 07:21:11,712 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 07:21:11,777 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 07:21:11,912 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 07:21:11,928 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-17 07:21:11,986 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 07:21:19,620 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 07:21:19,662 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:05:05,004 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:05:05,400 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:05:05,468 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:05:31,539 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:05:32,020 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:05:32,067 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:19:32,302 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:24:27,145 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:24:27,308 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:24:37,537 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:24:37,581 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:24:41,729 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 08:24:41,744 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-17 08:24:41,785 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:24:42,174 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:24:42,215 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:45:07,501 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:45:07,686 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:54:44,411 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:54:44,574 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 08:54:59,743 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-17 08:54:59,743 - INFO - DEBUG2 performances keys: ['OS Components and Services', 'System Calls', 'Multithreading Models', 'The Critical-Section Problem', 'Monitors', 'OS Design and Implementation']
+2026-08-17 08:54:59,743 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7eaaf84c0090>, <practice_models.TopicPerformance object at 0x7eaaf84c2e90>, <practice_models.TopicPerformance object at 0x7eaaf84c10d0>, <practice_models.TopicPerformance object at 0x7eaaf84c0850>, <practice_models.TopicPerformance object at 0x7eaaf84bbb90>, <practice_models.TopicPerformance object at 0x7eaaf848f190>]
+2026-08-17 08:54:59,823 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-17 08:54:59,823 - INFO - DEBUG2 performances keys: ['OS Components and Services', 'System Calls', 'Multithreading Models', 'The Critical-Section Problem', 'Monitors', 'OS Design and Implementation']
+2026-08-17 08:54:59,823 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7eaaf8465810>, <practice_models.TopicPerformance object at 0x7eaaf8465c10>, <practice_models.TopicPerformance object at 0x7eaaf8465910>, <practice_models.TopicPerformance object at 0x7eaaf84662d0>, <practice_models.TopicPerformance object at 0x7eaaf8467910>, <practice_models.TopicPerformance object at 0x7eaaf8467f90>]
+2026-08-17 08:55:04,995 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 08:55:05,007 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-17 08:55:05,060 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:06,085 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:43:06,085 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:43:06,085 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:43:06,161 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:43:06,161 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:43:06,161 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:43:08,875 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:08,896 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:43:08,951 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:09,051 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:09,067 - INFO - CACHE HIT (Fast Return): topic='Homework: Todo List app with hooks and localStorage', subject='Front‑End Development'
+2026-08-17 11:43:09,113 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:10,847 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:43:10,848 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:43:10,848 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:43:10,894 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:43:10,894 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:43:10,895 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:43:16,973 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:16,986 - INFO - CACHE HIT (Fast Return): topic='Homework: Todo List app with hooks and localStorage', subject='Front‑End Development'
+2026-08-17 11:43:17,039 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:18,188 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:43:18,188 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:43:18,188 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:43:18,245 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:43:18,246 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:43:18,246 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:43:19,583 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:19,598 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:43:19,648 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:19,791 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:19,803 - INFO - CACHE HIT (Fast Return): topic='Homework: Todo List app with hooks and localStorage', subject='Front‑End Development'
+2026-08-17 11:43:19,846 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:21,489 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:43:21,489 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:43:21,489 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:43:21,547 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:43:21,547 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:43:21,547 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:43:28,486 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:28,496 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:43:28,540 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:28,710 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:28,720 - INFO - CACHE HIT (Fast Return): topic='Homework: Todo List app with hooks and localStorage', subject='Front‑End Development'
+2026-08-17 11:43:28,763 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:29,964 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:43:29,964 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:43:29,964 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:43:30,009 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:43:30,009 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:43:30,009 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:43:37,144 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:37,159 - INFO - CACHE HIT (Fast Return): topic='Homework: Todo List app with hooks and localStorage', subject='Front‑End Development'
+2026-08-17 11:43:37,210 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:40,532 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-17 11:43:40,533 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-17 11:43:40,533 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x76642974d050>, <practice_models.TopicPerformance object at 0x76642b0142d0>, <practice_models.TopicPerformance object at 0x76642974c0d0>]
+2026-08-17 11:43:40,621 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-17 11:43:40,621 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-17 11:43:40,621 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x76642a68cad0>, <practice_models.TopicPerformance object at 0x76642a68d810>, <practice_models.TopicPerformance object at 0x76642a68c490>]
+2026-08-17 11:43:41,238 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:41,248 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:43:41,291 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:50,283 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:50,292 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:43:50,334 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:50,489 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:43:50,497 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-17 11:43:50,539 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:53,313 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:43:53,357 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:44:07,225 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:44:07,225 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:44:07,225 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:44:07,279 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:44:07,279 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:44:07,279 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:44:10,469 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-17 11:44:10,469 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-17 11:44:10,469 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x76642a717e50>, <practice_models.TopicPerformance object at 0x76642a715790>, <practice_models.TopicPerformance object at 0x76642a7177d0>]
+2026-08-17 11:44:10,583 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-17 11:44:10,583 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-17 11:44:10,583 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x76642a6961d0>, <practice_models.TopicPerformance object at 0x76642a695d90>, <practice_models.TopicPerformance object at 0x76642a694f50>]
+2026-08-17 11:44:18,726 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:44:18,737 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:44:18,786 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:44:19,005 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:44:19,016 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-17 11:44:19,062 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:44:27,151 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-17 11:44:27,151 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-17 11:44:27,151 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x76642a7595d0>, <practice_models.TopicPerformance object at 0x76642a75a750>, <practice_models.TopicPerformance object at 0x76642a75bf50>]
+2026-08-17 11:44:27,266 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-17 11:44:27,266 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-17 11:44:27,266 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x76642a7590d0>, <practice_models.TopicPerformance object at 0x76642a75ae90>, <practice_models.TopicPerformance object at 0x76642a759110>]
+2026-08-17 11:44:47,195 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:44:47,204 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:44:47,247 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:44:47,399 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:44:47,409 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-17 11:44:47,451 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:44:50,139 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-17 11:44:50,139 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-17 11:44:50,140 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x76642a5c6150>, <practice_models.TopicPerformance object at 0x76642a5c4ad0>, <practice_models.TopicPerformance object at 0x76642a5c7b90>]
+2026-08-17 11:44:50,242 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-17 11:44:50,242 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-17 11:44:50,242 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x76642a5c5890>, <practice_models.TopicPerformance object at 0x76642a5c6090>, <practice_models.TopicPerformance object at 0x76642a5c59d0>]
+2026-08-17 11:44:57,364 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:44:57,364 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:44:57,364 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:44:57,491 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:44:57,491 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:44:57,491 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:45:04,952 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:45:04,962 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:45:05,013 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:45:05,183 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:45:05,193 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-17 11:45:05,239 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:45:09,700 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:45:09,714 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:45:09,783 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:45:09,972 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:45:09,983 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Front‑End Development'
+2026-08-17 11:45:10,034 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:45:16,118 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:45:16,327 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:45:19,427 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:45:19,427 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:45:19,427 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:45:19,521 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:45:19,521 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:45:19,521 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:45:49,132 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:45:49,132 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:45:49,132 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:45:49,227 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:45:49,227 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:45:49,227 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:52:21,128 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:52:21,141 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:52:21,188 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:52:21,385 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:52:21,395 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-17 11:52:21,447 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:52:23,711 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:52:23,711 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:52:23,712 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:52:23,793 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:52:23,793 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:52:23,793 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:58:08,585 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-17 11:58:08,585 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-17 11:58:08,586 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x76642a5ba210>, <practice_models.TopicPerformance object at 0x76642a5bb150>, <practice_models.TopicPerformance object at 0x76642a5bb050>]
+2026-08-17 11:58:08,675 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-17 11:58:08,675 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-17 11:58:08,676 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x76642c05bc50>, <practice_models.TopicPerformance object at 0x76642a5b1490>, <practice_models.TopicPerformance object at 0x76642a69a250>]
+2026-08-17 11:58:09,769 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:58:09,957 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:58:15,733 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:58:15,734 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:58:15,734 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:58:15,829 - INFO - DEBUG2 predefined_topics: ['Why React? – problem space and UI complexity', 'Evolution of front‑end frameworks (jQuery → SPA)', 'React’s goals and trade‑offs vs alternatives', 'Components (functional vs class)', 'JSX syntax and rules', 'Props – read‑only data flow', 'State – useState hook and updates', 'Virtual DOM and reconciliation', 'useState for local state', 'useEffect for side effects and data fetching', 'useContext, useReducer, useMemo, useCallback overview', 'Comparing hooks with class component lifecycle', 'Live coding a Counter component', 'Props & composition – building a Dashboard component', 'Fetching data with useEffect – UserList example', 'Mini debate on framework choice', 'Comparative table: React, Vue, Angular, Svelte', 'Discussion of server‑side rendering and concurrent features', 'Homework: Todo List app with hooks and localStorage']
+2026-08-17 11:58:15,829 - INFO - DEBUG2 performances keys: []
+2026-08-17 11:58:15,829 - INFO - DEBUG2 matched perfs: []
+2026-08-17 11:58:22,127 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:58:22,140 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:58:22,191 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:58:22,333 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:58:22,344 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-17 11:58:22,395 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:58:32,684 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:58:32,693 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-17 11:58:32,737 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-17 11:58:32,889 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-17 11:58:32,898 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-17 11:58:32,942 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
