@@ -72,6 +72,10 @@ interface DashboardData {
   average_confidence: number;
   average_readiness: number;
   weak_students: number;
+  students_needing_support?: number;
+  high_risk_students?: number;
+  not_started_students?: number;
+  active_students_7d?: number;
   inactive_students: number;
   departments?: DepartmentData[];
   faculty_activity?: FacultyActivityData;
@@ -235,7 +239,7 @@ export default function AdminDashboardPage() {
                 Platform Admin Dashboard
               </h1>
               <p className="text-sm text-slate-400 mt-1">
-                Live platform overview · Updated {dashboardData?.last_updated ? new Date(dashboardData.last_updated).toLocaleTimeString() : "now"}
+                Live platform overview
               </p>
             </div>
             <button
@@ -290,7 +294,7 @@ export default function AdminDashboardPage() {
                   label="Active Today"
                   gradient="from-cyan-500 to-blue-500"
                   icon={Activity}
-                  subtitle={`All accounts · ${dashboardData?.inactive_students ?? 0} inactive in the last 7 days`}
+                  subtitle={`Today: ${dashboardData?.active_students_today ?? 0} · 7-day active: ${dashboardData?.active_students_7d ?? 0}`}
                 />
                 <StatCard
                   value={`${dashboardData?.average_confidence ?? 0}%`}

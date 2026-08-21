@@ -162,6 +162,9 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
                     PracticeQuestion.session_id == existing_session.id
                 ).order_by(PracticeQuestion.id.asc()).all()
                 if existing_questions:
+                    if existing_session.question_count != requested_count:
+                        existing_session.question_count = requested_count
+                        db.commit()
                     logger.info(f"[Practice] Resuming existing active session {existing_session.id} for topic='{req.topic}'")
                     return {
                         "session_id": existing_session.id,
@@ -170,9 +173,9 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
                         "difficulty": existing_session.difficulty,
                         "status": "ready",
                         "generation_status": "ready",
-                        "question_count": existing_session.question_count or len(existing_questions),
-                        "total_questions": existing_session.question_count or len(existing_questions),
-                        "questions": [_public_question(pq) for pq in existing_questions],
+                        "question_count": requested_count,
+                        "total_questions": requested_count,
+                        "questions": [_public_question(pq) for pq in existing_questions[:requested_count]],
                     }
                 if existing_session.is_active:
                     existing_session.question_count = requested_count
@@ -245,6 +248,9 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
                     PracticeQuestion.session_id == existing_session.id
                 ).order_by(PracticeQuestion.id.asc()).all()
                 if existing_questions:
+                    if existing_session.question_count != requested_count:
+                        existing_session.question_count = requested_count
+                        db.commit()
                     return {
                         "session_id": existing_session.id,
                         "mode": existing_session.mode,
@@ -252,9 +258,9 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
                         "difficulty": existing_session.difficulty,
                         "status": "ready",
                         "generation_status": "ready",
-                        "question_count": existing_session.question_count or len(existing_questions),
-                        "total_questions": existing_session.question_count or len(existing_questions),
-                        "questions": [_public_question(question) for question in existing_questions],
+                        "question_count": requested_count,
+                        "total_questions": requested_count,
+                        "questions": [_public_question(question) for question in existing_questions[:requested_count]],
                     }
                 existing_session.question_count = requested_count
                 db.commit()

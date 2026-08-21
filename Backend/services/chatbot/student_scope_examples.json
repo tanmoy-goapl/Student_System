@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "allowed": [
     {
       "category": "academic_learning",
@@ -48,27 +48,28 @@
         "Review my resume and suggest improvements.",
         "How can I prepare for placement interviews?"
       ]
+    },
+    {
+      "category": "general_information",
+      "examples": [
+        "What is the capital of France?",
+        "What is a peacock?",
+        "Explain how a solar eclipse happens.",
+        "How do I cook rice?",
+        "What is the difference between a comet and an asteroid?",
+        "Explain the history of the internet."
+      ]
     }
   ],
   "blocked": [
     {
-      "category": "general_trivia",
+      "category": "non_learning_entertainment",
       "examples": [
-        "What is a peacock?",
-        "Who is a famous actor?",
-        "Tell me an unrelated fun fact.",
-        "What is the capital of a country?",
-        "Tell me the latest celebrity news."
-      ]
-    },
-    {
-      "category": "lifestyle_and_entertainment",
-      "examples": [
-        "Give me a recipe for dinner.",
-        "What is today's weather forecast?",
-        "Who won the cricket match?",
-        "Plan my vacation trip.",
-        "Tell me a joke."
+        "Tell me a bad joke.",
+        "Sing me a song.",
+        "Write me a poem.",
+        "Give me a riddle.",
+        "Roleplay as a pirate."
       ]
     }
   ]

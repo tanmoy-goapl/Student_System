@@ -1,4 +1,6 @@
 import AIBehavioralInsights from "./AIBehavioralInsights";
+import SuggestedNext from "./SuggestedNext";
+import RevisionQueue, { type PracticeRevisionQueueItem } from "./RevisionQueue";
 import WeakTopics from "./WeakTopics";
 import AdaptiveEngine from "./AdaptiveEngine";
 
@@ -18,6 +20,7 @@ interface PracticeSidebarProps {
   }[];
   adaptiveEngine?: any;
   suggestedNext?: any[];
+  revisionQueue?: PracticeRevisionQueueItem[];
   performanceLoading?: boolean;
   answeredQuestions?: number;
   overallAccuracy?: number;
@@ -33,6 +36,7 @@ export default function PracticeSidebar({
   insights,
   adaptiveEngine,
   suggestedNext = [],
+  revisionQueue = [],
   performanceLoading = false,
   answeredQuestions = 0,
   overallAccuracy = 0,
@@ -44,6 +48,7 @@ export default function PracticeSidebar({
     <div className="w-full h-full bg-[#090D1F] flex flex-col border-l border-white/10 overflow-hidden">
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
+
         <AIBehavioralInsights
           insights={insights}
           loading={performanceLoading}
@@ -51,9 +56,13 @@ export default function PracticeSidebar({
           overallAccuracy={overallAccuracy}
         />
 
+        <RevisionQueue items={revisionQueue} />
+
         <WeakTopics topics={weakTopics} />
 
         <AdaptiveEngine config={adaptiveEngine} />
+
+        <SuggestedNext actions={suggestedNext} />
       </div>
 
       {/* Custom Scrollbar Styles */}

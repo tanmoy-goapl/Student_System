@@ -4,7 +4,7 @@ import os
 import json
 import re
 
-from practice_models import TopicPerformance, QuizHistory, PracticeSession, UserPerformance, BehavioralInsight, PracticeQuestion
+from practice_models import TopicPerformance, RevisionItem, QuizHistory, PracticeSession, UserPerformance, BehavioralInsight, PracticeQuestion
 from services.analytics_engine import (
     calculate_topic_metrics, get_student_subjects, get_predefined_topics, calculate_student_metrics
 )
@@ -18,26 +18,46 @@ def calculate_priority_score(confidence: float, accuracy: float, days_since_prac
 
 def calculate_exam_readiness(student_id: int, db: Session) -> dict:
     """
-    Computes preparation readiness from the shared live learning signal.
+    Return the shared readiness signal and a measured seven-day accuracy change.
     """
     metrics = calculate_student_metrics(student_id, db)
-    readiness = round(
-        metrics.get("overall_readiness", metrics.get("overall_progress", 0.0)),
-        2,
-    )
-    
-    # Calculate weekly change based on sessions in last 7 days
-    recent_sessions = db.query(PracticeSession).filter(
-        PracticeSession.student_id == student_id,
-        PracticeSession.created_at >= datetime.utcnow() - timedelta(days=7)
-    ).count()
-    
-    weekly_change = round(min(recent_sessions * 0.6, 12.0), 1)
-    
+    readiness = round(metrics.get("overall_readiness", 0.0), 2)
+
+    now = datetime.utcnow()
+    recent_start = now - timedelta(days=7)
+    previous_start = now - timedelta(days=14)
+    recent_rows = db.query(QuizHistory).filter(
+        QuizHistory.student_id == student_id,
+        QuizHistory.questions_attempted > 0,
+        QuizHistory.created_at >= recent_start,
+    ).all()
+    previous_rows = db.query(QuizHistory).filter(
+        QuizHistory.student_id == student_id,
+        QuizHistory.questions_attempted > 0,
+        QuizHistory.created_at >= previous_start,
+        QuizHistory.created_at < recent_start,
+    ).all()
+
+    def accuracy(rows):
+        questions = sum(max(int(row.questions_attempted or 0), 0) for row in rows)
+        correct = sum(
+            min(max(int(row.correct_answers or 0), 0), max(int(row.questions_attempted or 0), 0))
+            for row in rows
+        )
+        return (correct / questions * 100.0) if questions else None
+
+    recent_accuracy = accuracy(recent_rows)
+    previous_accuracy = accuracy(previous_rows)
+    weekly_change = round(recent_accuracy - previous_accuracy, 1) if (
+        recent_accuracy is not None and previous_accuracy is not None
+    ) else 0.0
+
     return {
         "readiness_percentage": readiness,
-        "weekly_change": weekly_change
+        "weekly_change": weekly_change,
+        "overall_accuracy": round(metrics.get("overall_accuracy", 0.0), 1),
     }
+
 
 def calculate_dashboard_health(readiness: float) -> str:
     """
@@ -152,34 +172,27 @@ def calculate_study_streak(student_id: int, db: Session) -> dict:
 
 def calculate_topics_covered(student_id: int, db: Session) -> dict:
     """
-    Returns covered topics (sessions > 0) vs total available topics in curriculum.
+    Return attempted curriculum coverage from the shared student metric.
     """
-    subjects = get_student_subjects(student_id, db)
-    total_topics = 0
-    covered_topics = 0
-    
-    for subj in subjects:
-        predefined = get_predefined_topics(student_id, subj, db)
-        total_topics += len(predefined)
-        performances = db.query(TopicPerformance).filter(
-            TopicPerformance.student_id == student_id,
-            TopicPerformance.topic.in_(predefined),
-            TopicPerformance.sessions > 0
-        ).count()
-        covered_topics += performances
-
-    exposure = round((covered_topics / total_topics * 100), 2) if total_topics > 0 else 0.0
-
+    metrics = calculate_student_metrics(student_id, db)
     return {
-        "covered_topics": covered_topics,
-        "total_topics": total_topics,
-        "exposure": exposure
+        "covered_topics": metrics.get("attempted_topics", 0),
+        "total_topics": metrics.get("total_topics", 0),
+        "exposure": round(metrics.get("overall_exposure", 0.0), 2),
     }
 
-def generate_study_plan(student_id: int, db: Session) -> list:
+
+def generate_study_plan(
+    student_id: int,
+    db: Session,
+    excluded_keys: set[tuple[str, str]] | None = None,
+) -> list:
     """
-    Generates a personalized daily study plan (no fake times).
-    Sorted by Priority Score: Weak topics first, then low confidence, then unstarted.
+    Generates the learning portion of the daily plan.
+
+    Revision is intentionally a separate workflow. Topics already present in
+    the revision queue, and the single topic used by Today's Focus, are not
+    repeated here.
     """
     subjects = get_student_subjects(student_id, db)
     all_topics = []
@@ -201,14 +214,12 @@ def generate_study_plan(student_id: int, db: Session) -> list:
             priority = calculate_priority_score(metrics["confidence"], metrics["accuracy"], days)
             
             # Recommendation reason
-            if metrics["status"] == "WEAK":
-                reason = "Targeted review: Accuracy is critically low in this topic."
-            elif metrics["status"] == "LEARNING" and metrics["confidence"] < 50:
-                reason = "Confidence boost: More practice needed to reinforce concept stability."
-            elif metrics["status"] == "NOT_STARTED":
-                reason = "Syllabus coverage: You haven't started this required curriculum topic."
+            if metrics["status"] == "NOT_STARTED":
+                reason = "New learning: You haven't started this required curriculum topic."
+            elif metrics["status"] == "LEARNING":
+                reason = "Continue learning: Build understanding before moving to revision."
             else:
-                reason = "Spacing revision: Review past concepts to prevent long-term memory decay."
+                reason = "Continue active coursework: Reinforce this topic while it is current."
 
             all_topics.append({
                 "topic": topic,
@@ -222,19 +233,44 @@ def generate_study_plan(student_id: int, db: Session) -> list:
                 "reason": reason
             })
             
-    # Sort study plan by priority score descending
-    sorted_plan = sorted(all_topics, key=lambda x: x["priority_score"], reverse=True)
-    
-    # Take top 3-5 sessions
+    # Keep the daily plan separate from the revision queue. Revision queue items
+    # are already practiced topics that need spaced review; the daily plan should
+    # focus on learning new curriculum topics or continuing active learning.
+    revision_keys = {
+        (str(item.get("subject", "")).strip().lower(), str(item.get("topic", "")).strip().lower())
+        for item in calculate_revision_queue(student_id, db)
+    }
+    excluded_keys = excluded_keys or set()
+    non_revision_topics = [
+        item for item in all_topics
+        if (
+            item["subject"].strip().lower(),
+            item["topic"].strip().lower(),
+        ) not in revision_keys
+        and (
+            item["subject"].strip().lower(),
+            item["topic"].strip().lower(),
+        ) not in excluded_keys
+    ]
+    active_learning_topics = [
+        item for item in non_revision_topics
+        if item["status"] in {"NOT_STARTED", "LEARNING"}
+    ]
+    sorted_plan = sorted(
+        active_learning_topics or non_revision_topics,
+        key=lambda x: x["priority_score"],
+        reverse=True,
+    )
+
     study_plan_items = []
     durations = ["45 min", "30 min", "40 min", "35 min", "50 min"]
-    
+
     for idx, item in enumerate(sorted_plan[:4]):
         study_plan_items.append({
             "topic": item["topic"],
             "subject": item["subject"],
             "duration": durations[idx % len(durations)],
-            "action": "Practice Session",
+            "action": "Learning Session" if item["status"] == "NOT_STARTED" else "Practice Session",
             "last_practiced": item["last_practiced"],
             "days_since_practice": item["days_since_practice"],
             "priority_score": item["priority_score"],
@@ -479,16 +515,17 @@ def generate_suggested_next(student_id: int, db: Session) -> list:
     return sorted(actions, key=lambda x: x["priority_score"], reverse=True)
 
 def calculate_revision_queue(student_id: int, db: Session) -> list:
-    """
-    Revision Queue returns:
-    - topics not revised recently (days > 3)
-    - forgotten topics (accuracy drop / weak status)
-    - mastered topics needing review
-    Sorted by Priority Score.
+    """Return both automatic recommendations and explicitly requested revisions.
+
+    Explicit revision requests are stored separately from TopicPerformance so
+    adding a topic for review never changes accuracy, confidence, or recency.
     """
     subjects = get_student_subjects(student_id, db)
-    queue = []
-    
+    queue_by_key = {}
+
+    def key_for(subject: str, topic: str):
+        return ((subject or "").strip().casefold(), (topic or "").strip().casefold())
+
     for subj in subjects:
         predefined = get_predefined_topics(student_id, subj, db)
         performances = db.query(TopicPerformance).filter(
@@ -499,15 +536,20 @@ def calculate_revision_queue(student_id: int, db: Session) -> list:
         for topic in predefined:
             p = perf_map.get(topic)
             metrics = calculate_topic_metrics(p)
-            
-            # If not practiced at all, skip from revision queue (needs initial learning instead)
+
+            # A topic that has never been practiced needs initial learning,
+            # unless the student explicitly added it to the revision queue.
             if metrics["sessions"] == 0:
                 continue
-                
-            days = (datetime.utcnow() - metrics["last_practiced_at"]).days if metrics["last_practiced_at"] else 30
-            priority = calculate_priority_score(metrics["confidence"], metrics["accuracy"], days)
-            
-            # Determine reason
+
+            days = (
+                (datetime.utcnow() - metrics["last_practiced_at"]).days
+                if metrics["last_practiced_at"] else 30
+            )
+            priority = calculate_priority_score(
+                metrics["confidence"], metrics["accuracy"], days
+            )
+
             if metrics["status"] == "WEAK":
                 reason = "Forgotten topic: Accuracy is low, review recommended."
             elif metrics["status"] == "STRONG" and days > 7:
@@ -515,9 +557,9 @@ def calculate_revision_queue(student_id: int, db: Session) -> list:
             elif days > 3:
                 reason = "Overdue revision: Topic hasn't been practiced recently."
             else:
-                continue # Practiced recently and in learning/good shape: no urgent review needed
-                
-            queue.append({
+                continue
+
+            queue_by_key[key_for(subj, topic)] = {
                 "topic": topic,
                 "subject": subj,
                 "confidence": metrics["confidence"],
@@ -525,11 +567,61 @@ def calculate_revision_queue(student_id: int, db: Session) -> list:
                 "last_practiced": metrics["last_practiced_at"].isoformat() if metrics["last_practiced_at"] else None,
                 "days_since_practice": days,
                 "priority_score": priority,
-                "reason": reason
-            })
-            
-    # Sort by priority score descending
-    return sorted(queue, key=lambda x: x["priority_score"], reverse=True)
+                "reason": reason,
+                "source": "automatic",
+                "revision_item_id": None,
+                "priority": "adaptive",
+            }
+
+    # Explicit requests are authoritative and also support topics outside the
+    # enrolled curriculum (for example personal-roadmap or custom topics).
+    explicit_items = db.query(RevisionItem).filter(
+        RevisionItem.student_id == student_id,
+        RevisionItem.status == "pending",
+    ).all()
+    priority_boost = {"low": 0, "medium": 10, "high": 20}
+    for item in explicit_items:
+        performance = db.query(TopicPerformance).filter(
+            TopicPerformance.student_id == student_id,
+            TopicPerformance.topic == item.topic,
+        ).first()
+        metrics = calculate_topic_metrics(performance)
+        days = (
+            (datetime.utcnow() - metrics["last_practiced_at"]).days
+            if metrics["last_practiced_at"] else 0
+        )
+        subject = (
+            item.subject
+            or (performance.subject if performance and performance.subject else "Personal topics")
+        )
+
+        # Remove an automatic copy of the same topic before inserting the
+        # explicit item, so the student sees one clear queue entry.
+        for existing_key, existing_item in list(queue_by_key.items()):
+            if existing_item["topic"].strip().casefold() == item.topic.strip().casefold():
+                queue_by_key.pop(existing_key, None)
+
+        base_priority = calculate_priority_score(
+            metrics["confidence"], metrics["accuracy"], days
+        )
+        queue_by_key[key_for(subject, item.topic)] = {
+            "topic": item.topic,
+            "subject": subject,
+            "confidence": metrics["confidence"],
+            "accuracy": metrics["accuracy"],
+            "last_practiced": metrics["last_practiced_at"].isoformat() if metrics["last_practiced_at"] else None,
+            "days_since_practice": days,
+            "priority_score": min(100.0, round(base_priority + priority_boost.get(item.priority, 20), 2)),
+            "reason": f"Added to your revision queue ({item.priority} priority).",
+            "source": "manual",
+            "revision_item_id": item.id,
+            "priority": item.priority,
+        }
+
+    return sorted(
+        queue_by_key.values(),
+        key=lambda item: (-item["priority_score"], item["topic"].casefold()),
+    )
 
 def calculate_focus_score(student_id: int, db: Session) -> float:
     """
@@ -624,60 +716,167 @@ def calculate_due_quizzes(student_id: int, db: Session) -> list:
     return due_quizzes
 
 def calculate_pending_dues(student_id: int, db: Session) -> dict:
-    overdue_list = calculate_overdue_topics(student_id, db)
     quiz_list = calculate_due_quizzes(student_id, db)
-    
+    revision_queue = calculate_revision_queue(student_id, db)
     subjects = get_student_subjects(student_id, db)
     unique_due_topics = set()
     reasons = []
-    
-    # 1. Unfinished learning & low confidence
+
+    # Unfinished learning and low-confidence signals remain separate from the
+    # explicit revision queue, but contribute to the same pending total.
     for subj in subjects:
         predefined = get_predefined_topics(student_id, subj, db)
         performances = db.query(TopicPerformance).filter(
             TopicPerformance.student_id == student_id,
             TopicPerformance.topic.in_(predefined)
         ).all()
-        
-        for p in performances:
-            metrics = calculate_topic_metrics(p)
-            topic = p.topic
-            
+
+        for performance in performances:
+            metrics = calculate_topic_metrics(performance)
+            topic = performance.topic
+
             if metrics["status"] == "LEARNING":
                 unique_due_topics.add(topic)
                 reasons.append(f"{topic} learning incomplete.")
-            
+
             if metrics["sessions"] > 0 and metrics["confidence"] < 40:
                 unique_due_topics.add(topic)
                 reasons.append(f"{topic} confidence dropped recently.")
-                
+
             if metrics["sessions"] > 0 and metrics["last_practiced_at"]:
                 days = (datetime.utcnow() - metrics["last_practiced_at"]).days
                 if days >= 5:
                     unique_due_topics.add(topic)
                     reasons.append(f"{topic} not practiced for {days} days.")
-            
-    # 2. Overdue revision
-    revision_due_count = 0
-    for o in overdue_list:
-        unique_due_topics.add(o["topic"])
-        reasons.append(o["reason"])
-        if o["type"] == "revision":
-            revision_due_count += 1
-            
-    # 3. Pending quizzes
-    for q in quiz_list:
-        unique_due_topics.add(q["topic"])
-        reasons.append(q["reason"])
-        
+
+    # Every explicit or automatic revision queue entry is a real revision due.
+    for item in revision_queue:
+        unique_due_topics.add(item["topic"])
+        reasons.append(item["reason"])
+
+    for quiz in quiz_list:
+        unique_due_topics.add(quiz["topic"])
+        reasons.append(quiz["reason"])
+
     return {
         "total": len(unique_due_topics),
-        "revision_due": revision_due_count,
+        "revision_due": len(revision_queue),
         "quiz_due": len(quiz_list),
-        "reasons": list(set(reasons))  # Unique list of reasons
+        "reasons": list(dict.fromkeys(reasons)),
     }
 
+def calculate_pending_tasks(student_id: int, db: Session) -> list:
+    """Return one actionable entry per topic contributing to pending dues."""
+    subjects = get_student_subjects(student_id, db)
+    tasks = {}
+    task_rank = {"learning": 1, "practice": 2, "revision": 3, "quiz": 4}
+
+    def add_task(topic, subject, task_type, reason, priority_score, days_since_practice, action_url):
+        if not topic:
+            return
+
+        existing = tasks.get(topic)
+        if existing is None:
+            tasks[topic] = {
+                "topic": topic,
+                "subject": subject or "General",
+                "task_type": task_type,
+                "task_types": {task_type},
+                "reason": reason,
+                "reasons": [reason],
+                "days_since_practice": days_since_practice,
+                "priority_score": round(priority_score, 2),
+                "action_url": action_url,
+            }
+            return
+
+        if reason not in existing["reasons"]:
+            existing["reasons"].append(reason)
+        existing["task_types"].add(task_type)
+        if task_rank.get(task_type, 0) > task_rank.get(existing["task_type"], 0):
+            existing["task_type"] = task_type
+            existing["action_url"] = action_url
+        if priority_score > existing["priority_score"]:
+            existing["priority_score"] = round(priority_score, 2)
+            existing["days_since_practice"] = days_since_practice
+
+    for subject in subjects:
+        predefined = get_predefined_topics(student_id, subject, db)
+        performances = db.query(TopicPerformance).filter(
+            TopicPerformance.student_id == student_id,
+            TopicPerformance.topic.in_(predefined)
+        ).all()
+        perf_map = {performance.topic: performance for performance in performances}
+
+        for topic in predefined:
+            metrics = calculate_topic_metrics(perf_map.get(topic))
+            days = (
+                (datetime.utcnow() - metrics["last_practiced_at"]).days
+                if metrics["last_practiced_at"] else 30
+            )
+            priority = calculate_priority_score(
+                metrics["confidence"], metrics["accuracy"], days
+            )
+
+            if metrics["status"] == "LEARNING":
+                add_task(
+                    topic, subject, "learning",
+                    "Learning is incomplete.",
+                    priority, days,
+                    f"/learning?topic={topic}&subject={subject}",
+                )
+            if metrics["sessions"] > 0 and metrics["confidence"] < 40:
+                add_task(
+                    topic, subject, "practice",
+                    "Confidence is below the practice threshold.",
+                    priority, days,
+                    f"/practice?mode=weakness&topic={topic}",
+                )
+            if metrics["sessions"] > 0 and metrics["last_practiced_at"] and days >= 5:
+                add_task(
+                    topic, subject, "revision",
+                    f"Not practiced for {days} days.",
+                    priority, days,
+                    f"/practice?topic={topic}",
+                )
+
+    for overdue in calculate_overdue_topics(student_id, db):
+        add_task(
+            overdue["topic"], overdue["subject"], overdue["type"],
+            overdue["reason"], 75.0 + min(overdue.get("days", 0), 20),
+            overdue.get("days", 0),
+            f"/practice?topic={overdue['topic']}",
+        )
+
+    for quiz in calculate_due_quizzes(student_id, db):
+        add_task(
+            quiz["topic"], quiz["subject"], "quiz",
+            quiz["reason"], 85.0, 0,
+            f"/practice?topic={quiz['topic']}",
+        )
+
+    # Include explicit revision requests, including personal/custom topics that
+    # are not represented in the enrolled curriculum.
+    for revision in calculate_revision_queue(student_id, db):
+        add_task(
+            revision["topic"], revision["subject"], "revision",
+            revision["reason"], revision["priority_score"],
+            revision["days_since_practice"],
+            f"/practice?topic={revision['topic']}",
+        )
+
+    result = []
+    for task in tasks.values():
+        task["task_types"] = sorted(task["task_types"])
+        task["reason"] = " ".join(task.pop("reasons")[:2])
+        result.append(task)
+
+    return sorted(
+        result,
+        key=lambda item: (-item["priority_score"], item["topic"].lower()),
+    )
 def calculate_todays_focus(student_id: int, db: Session) -> dict:
+
     subjects = get_student_subjects(student_id, db)
     all_topics = []
     
@@ -710,14 +909,34 @@ def calculate_todays_focus(student_id: int, db: Session) -> dict:
     if not all_topics:
         return {
             "topic": "Core Syllabus",
-            "reason": "Start your practice sessions.",
+            "subject": "",
+            "status": "NOT_STARTED",
+            "reason": "Start your learning sessions.",
             "confidence": 0,
             "estimated_time": 30
         }
         
-    # Sort by priority score descending
-    all_topics = sorted(all_topics, key=lambda x: x["priority_score"], reverse=True)
-    top = all_topics[0]
+    # Today's Focus should not compete with the revision queue. Prefer a topic
+    # that needs learning or active coursework; use a revision topic only when
+    # there is no other curriculum work available.
+    revision_keys = {
+        (str(item.get("subject", "")).strip().lower(), str(item.get("topic", "")).strip().lower())
+        for item in calculate_revision_queue(student_id, db)
+    }
+    non_revision_topics = [
+        item for item in all_topics
+        if (item["subject"].strip().lower(), item["topic"].strip().lower()) not in revision_keys
+    ]
+    active_topics = [
+        item for item in non_revision_topics
+        if item["status"] in {"NOT_STARTED", "LEARNING"}
+    ]
+    ranked_topics = sorted(
+        active_topics or non_revision_topics or all_topics,
+        key=lambda x: x["priority_score"],
+        reverse=True,
+    )
+    top = ranked_topics[0]
     
     # Construct human readable reason
     if top["status"] == "NOT_STARTED":
@@ -738,6 +957,8 @@ def calculate_todays_focus(student_id: int, db: Session) -> dict:
         
     return {
         "topic": top["topic"],
+        "subject": top["subject"],
+        "status": top["status"],
         "reason": reason,
         "confidence": round(top["confidence"]),
         "estimated_time": est_time

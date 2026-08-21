@@ -85,6 +85,27 @@ class TopicPerformance(Base):
 
 
 # ─────────────────────────────────────────────
+# Revision Queue Item (explicit student requests)
+# ─────────────────────────────────────────────
+class RevisionItem(Base):
+    __tablename__ = "revision_items"
+
+    id                   = Column(Integer, primary_key=True, index=True)
+    student_id           = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    topic                = Column(String, nullable=False, index=True)
+    subject              = Column(String, nullable=True)
+    priority             = Column(String, nullable=False, default="high")  # low | medium | high
+    status               = Column(String, nullable=False, default="pending")  # pending | completed | dismissed
+    added_at             = Column(DateTime, default=datetime.utcnow, nullable=False)
+    completed_at         = Column(DateTime, nullable=True)
+    completed_session_id = Column(Integer, ForeignKey("practice_sessions.id"), nullable=True)
+
+    # Relationships
+    student = relationship("User", backref="revision_items")
+    completed_session = relationship("PracticeSession", foreign_keys=[completed_session_id])
+
+
+# ─────────────────────────────────────────────
 # Behavioral Insight (AI-detected mistake patterns)
 # ─────────────────────────────────────────────
 class BehavioralInsight(Base):

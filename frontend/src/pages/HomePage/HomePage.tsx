@@ -10,7 +10,7 @@ import AIAlertCard from "@/components/homepage/AIAlertCard";
 import TodayMissionCard from "@/components/homepage/TodayMissionCard";
 import AIBehavioralInsights from "@/components/practicepage/Right/AIBehavioralInsights";
 import AIActions from "@/components/homepage/AIActions";
-import { getHomepageData, HomepageDataResponse } from "@/lib/api";
+import { addToRevision, getHomepageData, HomepageDataResponse } from "@/lib/api";
 
 import GoalSetupModal from "@/components/roadmap/GoalSetupModal";
 import { OfflineState, ErrorState, CardSkeleton, ChartSkeleton } from "@/components/UIStateSystem";
@@ -20,18 +20,28 @@ export default function HomePage() {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [roadmap, setRoadmap] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
+  const [isAddingFocusRevision, setIsAddingFocusRevision] = useState(false);
+  const [focusRevisionError, setFocusRevisionError] = useState<string | null>(null);
   const [activeWeek, setActiveWeek] = useState<number>(1);
   const [hasError, setHasError] = useState(false);
+  const [isRoadmapGenerating, setIsRoadmapGenerating] = useState(false);
 
   const fetchRoadmap = async () => {
     try {
       const studentId = localStorage.getItem("user_id") || "1";
       const res = await fetch(`/api/roadmap/current?student_id=${studentId}`);
       const rData = await res.json();
+      if (rData.generating) {
+        setIsRoadmapGenerating(true);
+        return;
+      }
       if (rData.success) {
+        setIsRoadmapGenerating(false);
         setRoadmap(rData.roadmap);
         setTasks(rData.tasks);
         if (rData.active_week) setActiveWeek(rData.active_week);
+      } else {
+        setIsRoadmapGenerating(false);
       }
     } catch (error) {
       console.error("Failed to load roadmap:", error);
@@ -50,10 +60,40 @@ export default function HomePage() {
     }
   };
 
+  const focusTopic = data?.todays_focus?.topic;
+  const isFocusInRevision = Boolean(
+    data?.todays_focus?.is_in_revision ??
+    data?.revisionQueue?.some((item) => item.topic === focusTopic)
+  );
+
+  const handleAddFocusToRevision = async () => {
+    if (!focusTopic || isFocusInRevision || isAddingFocusRevision) return;
+
+    const storedStudentId = Number(localStorage.getItem("user_id"));
+    const studentId = Number.isInteger(storedStudentId) && storedStudentId > 0 ? storedStudentId : 3;
+
+    setIsAddingFocusRevision(true);
+    setFocusRevisionError(null);
+    try {
+      await addToRevision(studentId, focusTopic, "high", data?.todays_focus?.subject);
+      await fetchData();
+    } catch (error) {
+      console.error("Failed to add today's focus to revision:", error);
+      setFocusRevisionError("Could not add this topic to revision. Please try again.");
+    } finally {
+      setIsAddingFocusRevision(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
     fetchRoadmap();
   }, []);
+  useEffect(() => {
+    if (!isRoadmapGenerating) return;
+    const interval = setInterval(fetchRoadmap, 5000);
+    return () => clearInterval(interval);
+  }, [isRoadmapGenerating]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-6 space-y-4 overflow-x-hidden w-full relative">
@@ -88,9 +128,14 @@ export default function HomePage() {
             "border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.15)]"
           }`}>
             <PrepDashboardHero 
+              studentId={data.student_id}
               examOverview={data.examOverview} 
               pending_dues={data.pending_dues}
               todays_focus={data.todays_focus}
+              onAddToRevision={handleAddFocusToRevision}
+              isRevisionAdded={isFocusInRevision}
+              isAddingRevision={isAddingFocusRevision}
+              revisionError={focusRevisionError}
             />
           </div>
 

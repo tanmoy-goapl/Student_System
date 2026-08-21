@@ -75,11 +75,12 @@ export default function LearningPage() {
     const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
     const [isMarkingRead, setIsMarkingRead] = useState(false);
     const [isCompletedSession, setIsCompletedSession] = useState(false);
-    const [refreshKey, setRefreshKey] = useState(0);
     const [showSummary, setShowSummary] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [isContentLoading, setIsContentLoading] = useState(false);
     const [isTypewriting, setIsTypewriting] = useState(false);
+    const [isAddingRevision, setIsAddingRevision] = useState(false);
+    const [revisionError, setRevisionError] = useState<string | null>(null);
 
     const [modalContent, setModalContent] = useState<{
         title: string;
@@ -372,7 +373,7 @@ export default function LearningPage() {
                 abortControllerRef.current.abort();
             }
         };
-    }, [activeTopic, activeSubject, activeSource, refreshKey, roadmapIdParam]);
+    }, [activeTopic, activeSubject, activeSource, roadmapIdParam]);
 
     // Fetch Cheat Sheet dynamically (deferred to avoid blocking topic switch)
     const cheatsheetTimerRef = useRef<any>(null);
@@ -547,16 +548,40 @@ export default function LearningPage() {
     };
 
     const handleAddRevision = async () => {
-        if (!data?.selectedTopic) return;
+        if (!data?.selectedTopic || isAddingRevision) return;
+        if (data.learningAssistantResponse?.data?.revisionStatus?.is_queued) return;
+
         const studentId = getStudentId();
+        setIsAddingRevision(true);
+        setRevisionError(null);
         try {
-            const res = await addToRevision(studentId, data.selectedTopic);
-            if (res.success) {
-                alert("Added to revision.");
-                setRefreshKey(prev => prev + 1);
+            const res = await addToRevision(studentId, data.selectedTopic, "high", activeSubject);
+            if (!res.success) {
+                throw new Error(res.message || "Could not add this topic to revision.");
             }
+
+            setData(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    learningAssistantResponse: {
+                        ...prev.learningAssistantResponse,
+                        data: {
+                            ...prev.learningAssistantResponse?.data,
+                            revisionStatus: {
+                                is_queued: true,
+                                priority: res.revision_item?.priority || "high",
+                                item_id: res.revision_item?.id || null,
+                            },
+                        },
+                    },
+                };
+            });
         } catch (err) {
             console.error("Failed to add to revision:", err);
+            setRevisionError(err instanceof Error ? err.message : "Could not add this topic to revision.");
+        } finally {
+            setIsAddingRevision(false);
         }
     };
 
@@ -690,6 +715,9 @@ export default function LearningPage() {
                         points={cheatsheetPoints.length > 0 ? cheatsheetPoints : (data.learningAssistantResponse?.data?.revision?.points || [])}
                         onSaveNotes={handleSaveNotes}
                         onAddRevision={handleAddRevision}
+                        isRevisionAdded={Boolean(data.learningAssistantResponse?.data?.revisionStatus?.is_queued)}
+                        isAddingRevision={isAddingRevision}
+                        revisionError={revisionError}
                     />
                     <button
                         onClick={() => {

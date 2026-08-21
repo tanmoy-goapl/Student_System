@@ -14,6 +14,8 @@ Adaptive similarity filtering:
 
 from __future__ import annotations
 
+import ast
+import math
 import re
 from datetime import datetime
 from typing import List, Optional
@@ -76,6 +78,69 @@ def _message_sources(message: ChatMessage) -> list[str]:
     return [str(source) for source in parsed if source] if isinstance(parsed, list) else []
 
 
+_ARITHMETIC_OPERATORS = {
+    ast.Add: lambda left, right: left + right,
+    ast.Sub: lambda left, right: left - right,
+    ast.Mult: lambda left, right: left * right,
+    ast.Div: lambda left, right: left / right,
+    ast.FloorDiv: lambda left, right: left // right,
+    ast.Mod: lambda left, right: left % right,
+    ast.Pow: lambda left, right: left ** right,
+}
+
+
+def _evaluate_basic_arithmetic(node: ast.AST, depth: int = 0) -> int | float:
+    """Evaluate a small arithmetic expression without invoking Python eval."""
+    if depth > 20:
+        raise ValueError("expression too deep")
+    if isinstance(node, ast.Expression):
+        return _evaluate_basic_arithmetic(node.body, depth + 1)
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)) and not isinstance(node.value, bool):
+        value = float(node.value) if isinstance(node.value, float) else node.value
+        if not math.isfinite(value) or abs(value) > 1_000_000_000_000:
+            raise ValueError("number out of range")
+        return value
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+        value = _evaluate_basic_arithmetic(node.operand, depth + 1)
+        return value if isinstance(node.op, ast.UAdd) else -value
+    if isinstance(node, ast.BinOp) and type(node.op) in _ARITHMETIC_OPERATORS:
+        left = _evaluate_basic_arithmetic(node.left, depth + 1)
+        right = _evaluate_basic_arithmetic(node.right, depth + 1)
+        if isinstance(node.op, ast.Pow) and abs(right) > 12:
+            raise ValueError("exponent out of range")
+        value = _ARITHMETIC_OPERATORS[type(node.op)](left, right)
+        if not math.isfinite(float(value)) or abs(value) > 1_000_000_000_000:
+            raise ValueError("result out of range")
+        return value
+    raise ValueError("unsupported expression")
+
+
+_BASIC_ARITHMETIC_RE = re.compile(
+    r"(?<![\w.])\d+(?:\.\d+)?(?:\s*(?:\*\*|//|[+\-*/%])\s*\d+(?:\.\d+)?)+(?![\w.])"
+)
+
+
+def _basic_chat_answer(question: str, user_name: str) -> str | None:
+    """Answer tiny utility/conversation requests without noisy retrieval or an LLM."""
+    normalized = re.sub(r"\s+", " ", question.strip().lower()).strip(" ?.!")
+    if normalized in {"hi", "hello", "hey", "good morning", "good afternoon", "good evening"}:
+        return f"Hi {user_name}! I’m MentorAI. What would you like to learn today?"
+    if normalized in {"thanks", "thank you", "thx"}:
+        return "You’re welcome! Ask me whenever you need help with your studies."
+
+    match = _BASIC_ARITHMETIC_RE.search(question)
+    if not match:
+        return None
+    expression = match.group(0).strip()
+    try:
+        result = _evaluate_basic_arithmetic(ast.parse(expression, mode="eval"))
+    except (ArithmeticError, SyntaxError, ValueError, TypeError, OverflowError):
+        return None
+    if isinstance(result, float) and result.is_integer():
+        result = int(result)
+    return f"{expression} = {result}."
+
+
 def _needs_conversation_context(question: str) -> bool:
     """Return whether a query likely refers to the immediately prior topic."""
     normalized = re.sub(r"\s+", " ", question.lower()).strip()
@@ -119,7 +184,11 @@ def _build_retrieval_question(question: str, previous_messages: list[ChatMessage
 #  ADAPTIVE SIMILARITY FILTER
 # ═════════════════════════════════════════════════════════════════════════════
 
-def _adaptive_filter(chunks: list[dict], mode: RetrievalMode) -> list[dict]:
+def _adaptive_filter(
+    chunks: list[dict],
+    mode: RetrievalMode,
+    allow_low_confidence_target: bool = False,
+) -> list[dict]:
     """
     Adaptive similarity filtering (replaces all fixed thresholds).
 
@@ -140,9 +209,29 @@ def _adaptive_filter(chunks: list[dict], mode: RetrievalMode) -> list[dict]:
 
     logger.info(f"  Adaptive filter: top_score={top_score:.4f}")
 
-    # Gate: minimum evidence threshold
-    if top_score < 0.20:
-        logger.info("  Adaptive filter: top_score < 0.20 → no evidence")
+    # Weak semantic matches are often generic study material rather than
+    # evidence for the question. In learning mode, dropping that noise lets
+    # the model answer a clear academic question from general knowledge.
+    minimum_scores = {
+        RetrievalMode.STRICT_DOCUMENT: 0.20,
+        RetrievalMode.FACTUAL_RAG: 0.35,
+        RetrievalMode.LEARNING: 0.48,
+        RetrievalMode.PERSONALIZED_ADVISOR: 0.35,
+    }
+    minimum_score = minimum_scores.get(mode, 0.35)
+    # Resume analysis often retrieves evidence from a sparse CV (project
+    # bullets, skills, or headings), so its semantic score can be lower than a
+    # full sentence from a study note. If the resolver identified a specific
+    # target document, retain that evidence and let the advisor prompt label
+    # uncertainty instead of silently removing the resume context.
+    if mode == RetrievalMode.PERSONALIZED_ADVISOR and allow_low_confidence_target:
+        minimum_score = 0.20
+    if top_score < minimum_score:
+        logger.info(
+            "  Adaptive filter: top_score=%.4f < minimum=%.2f → no evidence",
+            top_score,
+            minimum_score,
+        )
         return []
 
     # Keep chunks within adaptive window
@@ -284,7 +373,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         # ── Personal Onboarding Interception ──────────────────────────────────
         from services.chatbot.personal_roadmap import (
             is_onboarding_active, reset_learner_preferences, handle_preferences_onboarding,
-            get_learner_preferences, generate_personalized_roadmap
+            get_learner_preferences, start_personalized_roadmap_generation
         )
         
         q_lower = request.question.strip().lower()
@@ -305,14 +394,11 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         if onboarding_in_progress:
             if q_lower == "generate roadmap":
                 yield json.dumps({"status": "Creating your personalized roadmap..."}) + "\n"
-                time.sleep(1.0)
                 yield json.dumps({"status": "Analyzing your learning preferences..."}) + "\n"
-                time.sleep(1.0)
                 yield json.dumps({"status": "Building weekly learning plan..."}) + "\n"
-                time.sleep(0.5)
 
                 try:
-                    res = generate_personalized_roadmap(request.student_id, db)
+                    res = start_personalized_roadmap_generation(request.student_id, db)
                 except Exception as ex:
                     logger.error(f"Failed to generate personalized roadmap: {ex}", exc_info=True)
                     res = {
@@ -385,6 +471,30 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             yield json.dumps(payload) + "\n"
             return
 
+        basic_answer = _basic_chat_answer(request.question, student_name)
+        if basic_answer:
+            try:
+                db.add(ChatMessage(
+                    student_id=request.student_id,
+                    role="assistant",
+                    content=basic_answer,
+                    session_id=session_id,
+                    session_title=session_title,
+                    source_documents=json.dumps([]),
+                ))
+                db.commit()
+            except Exception as e:
+                logger.error(f"Failed to persist basic assistant reply: {e}")
+            yield json.dumps({"status": ""}) + "\n"
+            yield json.dumps({"content": basic_answer}) + "\n"
+            yield json.dumps({
+                "intent": "LEARNING",
+                "sources": [],
+                "session_id": session_id,
+                "session_title": session_title,
+            }) + "\n"
+            return
+
         # ── ROADMAP CREATION (separate pipeline, not retrieval) ──────────────
         if mode == RetrievalMode.ROADMAP_CREATION:
             yield from _handle_roadmap(request, db)
@@ -446,7 +556,19 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         # chunks for continuity. Apply the relevance gate before prompting the
         # model so a merely plausible retrieval cannot be mistaken for proof
         # that the documents answer the question.
-        grounded_chunks = _adaptive_filter(chunks, mode)
+        resume_targeted = mode == RetrievalMode.PERSONALIZED_ADVISOR and any(
+            (getattr(doc, "document_type", "") or "").lower() == "resume"
+            or any(
+                token in (getattr(doc, "filename", "") or "").lower()
+                for token in ("resume", "cv")
+            )
+            for doc in target_docs
+        )
+        grounded_chunks = _adaptive_filter(
+            chunks,
+            mode,
+            allow_low_confidence_target=resume_targeted,
+        )
         if grounded_chunks:
             context = format_context(grounded_chunks)
             retrieved_doc_names = list(dict.fromkeys(
@@ -615,16 +737,17 @@ CURRENT REQUEST: {request.question}"""
         goal_str = request.question
         duration_str = "6 weeks"
 
-    yield json.dumps({"status": "Building custom milestone curriculum (may take ~20s)..."}) + "\n"
+    yield json.dumps({"status": "Starting your custom roadmap in the background..."}) + "\n"
 
-    from roadmap_models import UserGoal, LearningRoadmap, DailyTask
-    from services.roadmap.roadmap_engine import generate_roadmap_from_llm
+    from roadmap_models import UserGoal
+    from services.roadmap.roadmap_engine import build_student_document_context, generate_roadmap_from_llm, persist_generated_roadmap
 
     goal_record = UserGoal(
         student_id=request.student_id,
         goal_type="custom",
         title=goal_str,
-        description=f"Generated via Chat for duration: {duration_str}",
+        description=f"Generated via Chat for duration: {duration_str}\nConversation context:\n{context_str[-2400:]}",
+        status="generating",
     )
     db.add(goal_record)
     db.commit()
@@ -633,46 +756,36 @@ CURRENT REQUEST: {request.question}"""
     import threading
     from database import SessionLocal
 
-    def bg_task(student_id, goal_id, goal_title, goal_duration):
+    def bg_task(student_id, goal_id, goal_title, goal_duration, goal_description, chat_context):
         bg_db = SessionLocal()
         try:
-            from services.roadmap.roadmap_engine import generate_roadmap_from_llm
-            from roadmap_models import LearningRoadmap, DailyTask, UserGoal
+            from services.roadmap.roadmap_engine import (
+                build_student_document_context,
+                generate_roadmap_from_llm,
+                persist_generated_roadmap,
+            )
+            from roadmap_models import UserGoal
 
             bg_goal = bg_db.query(UserGoal).filter(UserGoal.id == goal_id).first()
             if bg_goal:
                 bg_goal.status = "generating"
                 bg_db.commit()
 
-            roadmap_json = generate_roadmap_from_llm(goal_title, goal_duration, "")
-            title = roadmap_json.get("title", f"Roadmap for {goal_title}")
-            weeks = roadmap_json.get("weeks", [])
-            tasks_count = sum(len(w.get("days", [])) for w in weeks)
-
-            roadmap = LearningRoadmap(
-                student_id=student_id, goal_id=goal_id,
-                title=title, roadmap_data=roadmap_json,
+            material_context = build_student_document_context(student_id, bg_db, focus_topic=goal_title)
+            roadmap_json = generate_roadmap_from_llm(
+                goal_title,
+                goal_duration,
+                f"{goal_description}\nChat context:\n{chat_context[-1600:]}\n{material_context}",
+                goal_description,
             )
-            bg_db.add(roadmap)
-            bg_db.commit()
-            bg_db.refresh(roadmap)
-
-            for week in weeks:
-                wn = week.get("week_number", 1)
-                for day in week.get("days", []):
-                    bg_db.add(DailyTask(
-                        roadmap_id=roadmap.id, task_type="learning",
-                        topic=day.get("topic", f"Day {day.get('day_number', 1)}"),
-                        description=day.get("description", ""),
-                        assigned_date=datetime.utcnow(),
-                        week_number=wn, day_number=day.get("day_number", 1),
-                        subtopics=day.get("subtopics", []),
-                    ))
-            bg_db.commit()
-
-            if bg_goal:
-                bg_goal.status = "active"
-                bg_db.commit()
+            roadmap, tasks_count = persist_generated_roadmap(
+                bg_db,
+                student_id,
+                goal_id,
+                roadmap_json,
+            )
+            title = roadmap.title
+            weeks = roadmap_json.get("weeks", [])
 
             success_msg = (
                 f"### 🚀 Roadmap Created Successfully!\n\n"
@@ -696,7 +809,7 @@ CURRENT REQUEST: {request.question}"""
         finally:
             bg_db.close()
 
-    t = threading.Thread(target=bg_task, args=(request.student_id, goal_record.id, goal_str, duration_str))
+    t = threading.Thread(target=bg_task, args=(request.student_id, goal_record.id, goal_str, duration_str, goal_record.description, context_str))
     t.start()
 
     reply = f"I've started building your custom curriculum for '{goal_str}' in the background. It will be ready in your Personal Dashboard shortly! Feel free to ask me questions while you wait."

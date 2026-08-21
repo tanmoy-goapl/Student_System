@@ -2,11 +2,19 @@ import json
 import os
 import re
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from practice_models import TopicPerformance
+from practice_models import TopicPerformance, PracticeSession, QuizHistory, UserPerformance
 
 logger = logging.getLogger("chatbot")
+
+# These thresholds are shared by student, professor, and admin dashboards.
+ACTIVITY_WINDOW_DAYS = 7
+HIGH_RISK_ACCURACY = 50.0
+SUPPORT_ACCURACY = 70.0
+HIGH_RISK_CONFIDENCE = 40.0
+SUPPORT_CONFIDENCE = 60.0
+SUPPORT_EXPOSURE = 25.0
 
 _curriculum_cache = None
 _subject_topics_cache = None
@@ -51,37 +59,98 @@ def calculate_confidence(accuracy: float, sessions: int, questions_attempted: in
     base_conf = (accuracy * 0.6) + (40.0 * session_factor * question_factor * difficulty_factor)
     return round(min(base_conf, 100.0), 2)
 
-def calculate_topic_metrics(perf) -> dict:
-    if perf is not None:
-        sessions = perf.sessions
-        questions_attempted = perf.questions_attempted
-        accuracy = round(perf.accuracy, 2)
-        confidence = calculate_confidence(accuracy, sessions, questions_attempted)
-        status = get_topic_status(sessions, questions_attempted, accuracy)
-        last_practiced_at = perf.last_practiced_at if hasattr(perf, 'last_practiced_at') else None
-        if last_practiced_at is None and hasattr(perf, 'last_practiced'):
-            last_practiced_at = perf.last_practiced
+def _as_naive_datetime(value):
+    if value is None:
+        return None
+    if getattr(value, "tzinfo", None) is not None:
+        return value.replace(tzinfo=None)
+    return value
+
+
+def _aggregate_topic_metrics(perfs) -> dict:
+    if not perfs:
+        return {
+            "status": "NOT_STARTED",
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "sessions": 0,
+            "questions_attempted": 0,
+            "correct_answers": 0,
+            "last_practiced_at": None,
+        }
+
+    sessions = sum(max(int(getattr(perf, "sessions", 0) or 0), 0) for perf in perfs)
+    questions_attempted = 0
+    correct_answers = 0
+    fallback_accuracies = []
+    last_practiced_at = None
+
+    for perf in perfs:
+        questions = max(int(getattr(perf, "questions_attempted", 0) or 0), 0)
+        correct = max(int(getattr(perf, "correct_answers", 0) or 0), 0)
+        if questions:
+            questions_attempted += questions
+            correct_answers += min(correct, questions)
+        else:
+            fallback_accuracies.append(float(getattr(perf, "accuracy", 0.0) or 0.0))
+
+        candidate_last = getattr(perf, "last_practiced_at", None)
+        if candidate_last is None:
+            candidate_last = getattr(perf, "last_practiced", None)
+        if candidate_last and (
+            last_practiced_at is None
+            or _as_naive_datetime(candidate_last) > _as_naive_datetime(last_practiced_at)
+        ):
+            last_practiced_at = candidate_last
+
+    if questions_attempted:
+        accuracy = (correct_answers / questions_attempted) * 100.0
     else:
-        sessions = 0
-        questions_attempted = 0
-        accuracy = 0.0
-        confidence = 0.0
-        status = "NOT_STARTED"
-        last_practiced_at = None
+        accuracy = sum(fallback_accuracies) / len(fallback_accuracies) if fallback_accuracies else 0.0
+
+    confidence = calculate_confidence(accuracy, sessions, questions_attempted)
     return {
-        "status": status,
-        "accuracy": accuracy,
+        "status": get_topic_status(sessions, questions_attempted, accuracy),
+        "accuracy": round(max(0.0, min(100.0, accuracy)), 2),
         "confidence": confidence,
         "sessions": sessions,
         "questions_attempted": questions_attempted,
-        "last_practiced_at": last_practiced_at
+        "correct_answers": correct_answers,
+        "last_practiced_at": last_practiced_at,
     }
+
+
+def calculate_topic_metrics(perf) -> dict:
+    """Return one topic's live metrics using answer counts as the source of truth."""
+    if perf is None:
+        return {
+            "status": "NOT_STARTED",
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "sessions": 0,
+            "questions_attempted": 0,
+            "correct_answers": 0,
+            "last_practiced_at": None,
+        }
+    return _aggregate_topic_metrics([perf])
+
 
 def _normalize_subject_name(subject_name: str) -> str:
     """Return a stable alias for matching class and fallback curriculum names."""
     compact = re.sub(r"[^a-z0-9]+", " ", (subject_name or "").lower()).strip()
     if "operating" in compact or "os" in compact.split():
         return "Operating Systems"
+    if (
+        compact in {"ai", "artificial intelligence"}
+        or "artificial intelligence" in compact
+    ):
+        return "Artificial Intelligence"
+    if (
+        "front end" in compact
+        or "frontend" in compact
+        or "front-end" in compact
+    ):
+        return "Front-End Development"
     if "data structure" in compact or "dsa" in compact:
         return "Data Structures"
     if "database" in compact or "dbms" in compact:
@@ -195,60 +264,115 @@ def get_student_subjects(student_id: int, db: Session) -> list:
             subjects.append(curr.subject_name)
     return subjects
 
+def _subject_match_rank(perf, requested_subject: str):
+    """Prefer exact subject rows, then aliases, then legacy rows without a subject."""
+    stored_subject = (getattr(perf, "subject", None) or "").strip()
+    requested = (requested_subject or "").strip()
+    if not stored_subject:
+        return 2
+    if stored_subject.casefold() == requested.casefold():
+        return 0
+    if _normalize_subject_name(stored_subject).casefold() == _normalize_subject_name(requested).casefold():
+        return 1
+    return None
+
+
 def calculate_subject_metrics(student_id: int, subject: str, db: Session, topics_override=None) -> dict:
-    predefined_topics = topics_override if topics_override is not None else get_predefined_topics(student_id, subject, db)
+    predefined_topics = list(dict.fromkeys(
+        topic.strip()
+        for topic in (topics_override if topics_override is not None else get_predefined_topics(student_id, subject, db))
+        if isinstance(topic, str) and topic.strip()
+    ))
     total_topics = len(predefined_topics)
-    
+
+    performances = []
     if predefined_topics:
         performances = db.query(TopicPerformance).filter(
             TopicPerformance.student_id == student_id,
-            TopicPerformance.topic.in_(predefined_topics)
+            TopicPerformance.topic.in_(predefined_topics),
         ).all()
-    else:
-        performances = []
-    
-    perf_dict = {p.topic: p for p in performances}
-    
+
+    performances_by_topic = {}
+    for perf in performances:
+        rank = _subject_match_rank(perf, subject)
+        if rank is None:
+            continue
+        performances_by_topic.setdefault(perf.topic, []).append((rank, perf))
+
     mastered_topics = 0
     weak_topics = 0
     learning_topics = 0
     not_started_topics = 0
-    total_attempted_accuracy = 0
-    total_attempted_confidence = 0
-    attempted_topics_count = 0
-    
+    attempted_metrics = []
+    total_questions = 0
+    total_correct_answers = 0
+
     for topic in predefined_topics:
-        perf = perf_dict.get(topic)
-        metrics = calculate_topic_metrics(perf)
+        candidates = performances_by_topic.get(topic, [])
+        if candidates:
+            best_rank = min(rank for rank, _ in candidates)
+            topic_rows = [perf for rank, perf in candidates if rank == best_rank]
+        else:
+            topic_rows = []
+
+        metrics = _aggregate_topic_metrics(topic_rows)
         status = metrics["status"]
-        
+
         if status == "STRONG":
             mastered_topics += 1
         elif status == "LEARNING":
             learning_topics += 1
         elif status == "WEAK":
             weak_topics += 1
-        elif status == "NOT_STARTED":
+        else:
             not_started_topics += 1
-            
+
         if metrics["sessions"] > 0 or metrics["questions_attempted"] > 0:
-            attempted_topics_count += 1
-            total_attempted_accuracy += metrics["accuracy"]
-            total_attempted_confidence += metrics.get("confidence", 0.0)
-        
-    average_accuracy = total_attempted_accuracy / attempted_topics_count if attempted_topics_count > 0 else 0.0
-    average_confidence = total_attempted_confidence / attempted_topics_count if attempted_topics_count > 0 else 0.0
+            attempted_metrics.append(metrics)
+            total_questions += metrics["questions_attempted"]
+            total_correct_answers += metrics["correct_answers"]
+
+    attempted_topics_count = len(attempted_metrics)
+    fallback_weight = sum(
+        metric["questions_attempted"] if metric["questions_attempted"] > 0 else 1
+        for metric in attempted_metrics
+    )
+    if total_questions > 0:
+        average_accuracy = (total_correct_answers / total_questions) * 100.0
+    elif fallback_weight:
+        average_accuracy = sum(
+            metric["accuracy"] * (metric["questions_attempted"] if metric["questions_attempted"] > 0 else 1)
+            for metric in attempted_metrics
+        ) / fallback_weight
+    else:
+        average_accuracy = 0.0
+
+    if fallback_weight:
+        average_confidence = sum(
+            metric["confidence"] * (metric["questions_attempted"] if metric["questions_attempted"] > 0 else 1)
+            for metric in attempted_metrics
+        ) / fallback_weight
+    else:
+        average_confidence = 0.0
+
     exposure = (attempted_topics_count / total_topics * 100) if total_topics > 0 else 0.0
     progress = (mastered_topics / total_topics * 100) if total_topics > 0 else 0.0
-    
+    last_activity_at = max(
+        (
+            metric.get("last_practiced_at")
+            for metric in attempted_metrics
+            if metric.get("last_practiced_at") is not None
+        ),
+        default=None,
+    )
     if average_accuracy > 80:
         health = "GREEN"
     elif average_accuracy >= 60:
         health = "YELLOW"
     else:
         health = "RED"
-        
-    return {
+
+    result = {
         "total_topics": total_topics,
         "attempted_topics": attempted_topics_count,
         "mastered_topics": mastered_topics,
@@ -259,16 +383,20 @@ def calculate_subject_metrics(student_id: int, subject: str, db: Session, topics
         "exposure": round(exposure),
         "average_accuracy": round(average_accuracy, 1),
         "average_confidence": round(average_confidence, 1),
-        "health": health
+        "questions_attempted": total_questions,
+        "correct_answers": total_correct_answers,
+        "last_activity_at": _as_naive_datetime(last_activity_at),
+        "health": health,
     }
+    result["risk_tier"] = classify_risk(result)
+    return result
 
 
 def _activity_recency_score(last_activity_at) -> float:
     """Convert the latest learning activity into a bounded readiness signal."""
+    last_activity_at = _as_naive_datetime(last_activity_at)
     if not last_activity_at:
         return 0.0
-    if getattr(last_activity_at, "tzinfo", None) is not None:
-        last_activity_at = last_activity_at.replace(tzinfo=None)
     age_days = max(0.0, (datetime.utcnow() - last_activity_at).total_seconds() / 86400.0)
     if age_days <= 1:
         return 100.0
@@ -282,41 +410,226 @@ def _activity_recency_score(last_activity_at) -> float:
         return 20.0
     return 0.0
 
-def calculate_student_metrics(student_id: int, db: Session) -> dict:
+
+def calculate_readiness(
+    exposure: float,
+    confidence: float,
+    last_activity_at=None,
+    roadmap_progress: float = 0.0,
+) -> float:
+    """Apply the shared readiness weighting to a scoped metric."""
+    value = (
+        (float(exposure or 0.0) * 0.40)
+        + (float(confidence or 0.0) * 0.35)
+        + (_activity_recency_score(last_activity_at) * 0.15)
+        + (max(0.0, min(100.0, float(roadmap_progress or 0.0))) * 0.10)
+    )
+    return round(max(0.0, min(100.0, value)), 1)
+
+
+def get_activity_snapshot(student_ids, db: Session, now=None, topics=None) -> dict:
+    """Return one consistent activity window for all dashboard consumers."""
+    ids = {int(student_id) for student_id in (student_ids or [])}
+    now = _as_naive_datetime(now) or datetime.utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    window_start = now - timedelta(days=ACTIVITY_WINDOW_DAYS)
+
+    active_today = set()
+    active_7d = set()
+    quiz_7d = set()
+    practice_7d = set()
+    last_activity_by_student = {}
+
+    if not ids:
+        return {
+            "active_today": active_today,
+            "active_7d": active_7d,
+            "quiz_7d": quiz_7d,
+            "practice_7d": practice_7d,
+            "last_activity_by_student": last_activity_by_student,
+        }
+
+    quiz_query = db.query(QuizHistory.student_id, QuizHistory.created_at).filter(
+        QuizHistory.student_id.in_(ids),
+        QuizHistory.questions_attempted > 0,
+        QuizHistory.created_at >= window_start,
+    )
+    session_query = db.query(PracticeSession.student_id, PracticeSession.created_at).filter(
+        PracticeSession.student_id.in_(ids),
+        PracticeSession.created_at >= window_start,
+    )
+    scoped_topics = {
+        topic.strip()
+        for topic in (topics or [])
+        if isinstance(topic, str) and topic.strip()
+    }
+    if scoped_topics:
+        quiz_query = quiz_query.filter(QuizHistory.topic.in_(scoped_topics))
+        session_query = session_query.filter(PracticeSession.topic.in_(scoped_topics))
+    quiz_rows = quiz_query.all()
+    session_rows = session_query.all()
+
+    for student_id, timestamp in quiz_rows:
+        timestamp = _as_naive_datetime(timestamp)
+        if not timestamp:
+            continue
+        quiz_7d.add(student_id)
+        active_7d.add(student_id)
+        if timestamp >= today_start:
+            active_today.add(student_id)
+        previous = last_activity_by_student.get(student_id)
+        if previous is None or timestamp > previous:
+            last_activity_by_student[student_id] = timestamp
+
+    for student_id, timestamp in session_rows:
+        timestamp = _as_naive_datetime(timestamp)
+        if not timestamp:
+            continue
+        practice_7d.add(student_id)
+        active_7d.add(student_id)
+        if timestamp >= today_start:
+            active_today.add(student_id)
+        previous = last_activity_by_student.get(student_id)
+        if previous is None or timestamp > previous:
+            last_activity_by_student[student_id] = timestamp
+
+    return {
+        "active_today": active_today,
+        "active_7d": active_7d,
+        "quiz_7d": quiz_7d,
+        "practice_7d": practice_7d,
+        "last_activity_by_student": last_activity_by_student,
+    }
+
+
+def calculate_quiz_accuracy_window(
+    student_ids,
+    db: Session,
+    start_at,
+    end_at=None,
+    topics=None,
+):
+    """Return question-weighted quiz accuracy for one time and topic scope."""
+    ids = {int(student_id) for student_id in (student_ids or [])}
+    if not ids:
+        return None
+
+    query = db.query(
+        QuizHistory.questions_attempted,
+        QuizHistory.correct_answers,
+        QuizHistory.topic,
+    ).filter(
+        QuizHistory.student_id.in_(ids),
+        QuizHistory.questions_attempted > 0,
+        QuizHistory.created_at >= _as_naive_datetime(start_at),
+    )
+    if end_at is not None:
+        query = query.filter(QuizHistory.created_at < _as_naive_datetime(end_at))
+
+    scoped_topics = {
+        topic.strip()
+        for topic in (topics or [])
+        if isinstance(topic, str) and topic.strip()
+    }
+    if scoped_topics:
+        query = query.filter(QuizHistory.topic.in_(scoped_topics))
+
+    total_questions = 0
+    total_correct = 0
+    for questions, correct, _topic in query.all():
+        questions = max(int(questions or 0), 0)
+        correct = min(max(int(correct or 0), 0), questions)
+        total_questions += questions
+        total_correct += correct
+
+    if total_questions == 0:
+        return None
+    return round((total_correct / total_questions) * 100.0, 1)
+
+
+def classify_risk(metrics: dict) -> str:
+    """Shared academic risk tiers; no-attempt students are not called high risk."""
+    questions_attempted = int(metrics.get("questions_attempted", 0) or 0)
+    attempted_topics = int(metrics.get("attempted_topics", 0) or 0)
+    if questions_attempted <= 0 and attempted_topics <= 0:
+        return "NOT_STARTED"
+
+    accuracy = float(metrics.get("average_accuracy", 0.0) or 0.0)
+    confidence = float(metrics.get("average_confidence", 0.0) or 0.0)
+    exposure = float(metrics.get("exposure", 0.0) or 0.0)
+    if accuracy < HIGH_RISK_ACCURACY or confidence < HIGH_RISK_CONFIDENCE:
+        return "HIGH_RISK"
+    if accuracy < SUPPORT_ACCURACY or confidence < SUPPORT_CONFIDENCE or exposure < SUPPORT_EXPOSURE:
+        return "NEEDS_SUPPORT"
+    return "ON_TRACK"
+
+
+def calculate_student_metrics(student_id: int, db: Session, activity_snapshot=None) -> dict:
     subjects = get_student_subjects(student_id, db)
-    
+
     total_topics_all = 0
     total_attempted_topics_all = 0
     mastered_topics_all = 0
     weak_topics_all = 0
     strong_topics_all = 0
     learning_topics_all = 0
-    total_accuracy_sum = 0
-    total_confidence_sum = 0
-    
-    for subj in subjects:
-        metrics = calculate_subject_metrics(student_id, subj, db)
+    total_questions = 0
+    total_correct_answers = 0
+    weighted_accuracy_sum = 0.0
+    weighted_confidence_sum = 0.0
+    weighted_metric_count = 0
+
+    for subject in subjects:
+        metrics = calculate_subject_metrics(student_id, subject, db)
         total_topics_all += metrics["total_topics"]
         total_attempted_topics_all += metrics.get("attempted_topics", 0)
         mastered_topics_all += metrics["mastered_topics"]
         strong_topics_all += metrics["mastered_topics"]
         weak_topics_all += metrics["weak_topics"]
         learning_topics_all += metrics["learning_topics"]
-        
-        attempted = metrics.get("attempted_topics", 0)
-        total_accuracy_sum += metrics["average_accuracy"] * attempted
-        total_confidence_sum += metrics.get("average_confidence", 0.0) * attempted
-        
+        total_questions += metrics.get("questions_attempted", 0)
+        total_correct_answers += metrics.get("correct_answers", 0)
+
+        weight = metrics.get("questions_attempted", 0) or metrics.get("attempted_topics", 0)
+        if weight:
+            weighted_accuracy_sum += metrics.get("average_accuracy", 0.0) * weight
+            weighted_confidence_sum += metrics.get("average_confidence", 0.0) * weight
+            weighted_metric_count += weight
+
     overall_progress = (mastered_topics_all / total_topics_all * 100) if total_topics_all > 0 else 0.0
     overall_exposure = (total_attempted_topics_all / total_topics_all * 100) if total_topics_all > 0 else 0.0
-    overall_accuracy = (total_accuracy_sum / total_attempted_topics_all) if total_attempted_topics_all > 0 else 0.0
-    overall_confidence = (total_confidence_sum / total_attempted_topics_all) if total_attempted_topics_all > 0 else 0.0
+    overall_accuracy = (
+        (total_correct_answers / total_questions) * 100.0
+        if total_questions > 0
+        else (weighted_accuracy_sum / weighted_metric_count if weighted_metric_count else 0.0)
+    )
+    overall_confidence = (
+        weighted_confidence_sum / weighted_metric_count
+        if weighted_metric_count
+        else 0.0
+    )
 
     latest_topic_activity = db.query(TopicPerformance.last_practiced_at).filter(
         TopicPerformance.student_id == student_id,
         TopicPerformance.last_practiced_at.isnot(None),
     ).order_by(TopicPerformance.last_practiced_at.desc()).first()
     latest_activity_at = latest_topic_activity[0] if latest_topic_activity else None
+
+    user_performance = db.query(UserPerformance.last_practiced).filter(
+        UserPerformance.student_id == student_id,
+    ).first()
+    if user_performance and user_performance[0] and (
+        not latest_activity_at or _as_naive_datetime(user_performance[0]) > _as_naive_datetime(latest_activity_at)
+    ):
+        latest_activity_at = user_performance[0]
+
+    if activity_snapshot is None:
+        activity_snapshot = get_activity_snapshot([student_id], db)
+    activity_last = activity_snapshot.get("last_activity_by_student", {}).get(student_id)
+    if activity_last and (
+        not latest_activity_at or activity_last > _as_naive_datetime(latest_activity_at)
+    ):
+        latest_activity_at = activity_last
 
     roadmap_progress = 0.0
     latest_roadmap_activity = None
@@ -335,21 +648,22 @@ def calculate_student_metrics(student_id: int, db: Session) -> dict:
         ).order_by(DailyTask.completed_at.desc()).first()
         latest_roadmap_activity = completed_task[0] if completed_task else None
     except Exception:
-        # Readiness should remain available even when a student has no roadmap data.
         pass
 
-    if latest_roadmap_activity and (not latest_activity_at or latest_roadmap_activity > latest_activity_at):
+    if latest_roadmap_activity and (
+        not latest_activity_at or _as_naive_datetime(latest_roadmap_activity) > _as_naive_datetime(latest_activity_at)
+    ):
         latest_activity_at = latest_roadmap_activity
 
     overall_recency = _activity_recency_score(latest_activity_at)
-    overall_readiness = (
-        (overall_exposure * 0.40)
-        + (overall_confidence * 0.35)
-        + (overall_recency * 0.15)
-        + (roadmap_progress * 0.10)
+    overall_readiness = calculate_readiness(
+        overall_exposure,
+        overall_confidence,
+        latest_activity_at,
+        roadmap_progress,
     )
-    
-    return {
+
+    result = {
         "overall_progress": round(overall_progress),
         "overall_exposure": round(overall_exposure),
         "overall_accuracy": round(overall_accuracy, 1),
@@ -364,6 +678,20 @@ def calculate_student_metrics(student_id: int, db: Session) -> dict:
         "mastered_topics": mastered_topics_all,
         "weak_topics": weak_topics_all,
         "strong_topics": strong_topics_all,
+        "learning_topics": learning_topics_all,
         "attempted_topics": total_attempted_topics_all,
-        "total_topics": total_topics_all
+        "total_topics": total_topics_all,
+        "questions_attempted": total_questions,
+        "correct_answers": total_correct_answers,
+        "last_activity_at": _as_naive_datetime(latest_activity_at),
+        "active_today": student_id in activity_snapshot.get("active_today", set()),
+        "active_7d": student_id in activity_snapshot.get("active_7d", set()),
     }
+    result["risk_tier"] = classify_risk({
+        "questions_attempted": total_questions,
+        "attempted_topics": total_attempted_topics_all,
+        "average_accuracy": overall_accuracy,
+        "average_confidence": overall_confidence,
+        "exposure": overall_exposure,
+    })
+    return result

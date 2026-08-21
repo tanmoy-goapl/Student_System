@@ -32,7 +32,7 @@ def debug_analytics(student_id: int, db: Session = Depends(get_db)):
             "sessions": t.sessions,
             "questions_attempted": t.questions_attempted,
             "correct_answers": t.correct_answers,
-            "accuracy": round(t.accuracy, 1),
+            "accuracy": metrics["accuracy"],
             "status": metrics["status"]
         })
     return result
@@ -64,7 +64,7 @@ async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
     for t in all_topics:
         metrics = calculate_topic_metrics(t)
         status = metrics["status"]
-        is_completed = (t.sessions >= 1) or (status == "STRONG")
+        is_completed = (metrics["sessions"] >= 1) or (status == "STRONG")
         
         if is_completed:
             completed_topics_count += 1
@@ -74,12 +74,12 @@ async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
             mastered_topics_list.append(t.topic)
             
         # Weakness analysis (User rules: < 50% Weak, 50-75% Medium, > 75% Strong)
-        if t.accuracy < 50:
-            weak_topics.append({"topic": t.topic, "accuracy": round(t.accuracy)})
-        elif t.accuracy <= 75:
-            medium_topics.append({"topic": t.topic, "accuracy": round(t.accuracy)})
+        if metrics["accuracy"] < 50:
+            weak_topics.append({"topic": t.topic, "accuracy": round(metrics["accuracy"])})
+        elif metrics["accuracy"] <= 75:
+            medium_topics.append({"topic": t.topic, "accuracy": round(metrics["accuracy"])})
         else:
-            strong_topics.append({"topic": t.topic, "accuracy": round(t.accuracy)})
+            strong_topics.append({"topic": t.topic, "accuracy": round(metrics["accuracy"])})
 
     # Sort weakness
     weak_topics.sort(key=lambda x: x["accuracy"])

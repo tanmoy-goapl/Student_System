@@ -7,14 +7,16 @@ interface Task {
   id: number;
   task_type: string;
   topic: string;
-  description: string;
+  description?: string;
   status: string;
 }
 
 interface Week {
   week_number: number;
-  theme: string;
-  tasks: any[];
+  theme?: string;
+  focus_area?: string;
+  outcome?: string;
+  tasks?: any[];
   days?: any[];
 }
 
@@ -24,6 +26,7 @@ interface Roadmap {
   overall_progress: number;
   roadmap_data: {
     title: string;
+    summary?: string;
     weeks: Week[];
   };
 }
@@ -89,7 +92,7 @@ export default function RoadmapPage() {
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-2">
             {roadmap.title}
           </h1>
-          <p className="text-slate-400">Your personalized step-by-step path to success.</p>
+          <p className="text-slate-400">{roadmap.roadmap_data?.summary || "Your personalized step-by-step path to success."}</p>
           
           <div className="mt-6 flex items-center gap-4">
             <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
@@ -116,7 +119,8 @@ export default function RoadmapPage() {
                 </div>
                 
                 <div className="flex-1 pt-2">
-                  <h3 className="text-xl font-bold text-white mb-4">{week.theme}</h3>
+                  <h3 className="text-xl font-bold text-white mb-1">{week.focus_area || week.theme || `Week ${week.week_number}`}</h3>
+                  {week.outcome && <p className="text-sm text-slate-400 mb-4">Outcome: {week.outcome}</p>}
                   
                   <div className="space-y-3">
                     {(() => {
@@ -131,6 +135,7 @@ export default function RoadmapPage() {
                       // Find the actual task from DB to get completion status
                       const dbTask = tasks.find(t => t.topic === dayItem.topic);
                       const isCompleted = dbTask?.status === "completed";
+                      const dayDescription = dayItem.description || dbTask?.description || "Complete this focused learning step and record what you learned.";
                       const dayNumber = dayItem.day_number || parseInt(dayItem.topic.match(/Day\s*(\d+)/i)?.[1] || "0") || tIdx + 1;
                       
                       return (
@@ -153,7 +158,14 @@ export default function RoadmapPage() {
                                 {dayItem.topic.replace(new RegExp(`^Day\\s*${dayNumber}[:\\-]\\s*`, 'i'), '')}
                               </h4>
                             </div>
-                            <p className="text-sm text-slate-400 leading-relaxed">{dayItem.description}</p>
+                            <p className="text-sm text-slate-400 leading-relaxed">{dayDescription}</p>
+                            {(dayItem.activity || dayItem.deliverable || dayItem.estimated_minutes) && (
+                              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                                {dayItem.estimated_minutes && <span>{dayItem.estimated_minutes} min</span>}
+                                {dayItem.activity && <span><span className="text-slate-400">Practice:</span> {dayItem.activity}</span>}
+                                {dayItem.deliverable && <span><span className="text-slate-400">Checkpoint:</span> {dayItem.deliverable}</span>}
+                              </div>
+                            )}
                             {dayItem.subtopics && dayItem.subtopics.length > 0 && (
                               <div className="mt-3 flex flex-wrap gap-2">
                                 {dayItem.subtopics.map((sub: string, sIdx: number) => (

@@ -8,7 +8,13 @@ from classroom_models import Classroom, StudentClass, ClassResource, ClassCurric
 from practice_models import PracticeSession, QuizHistory
 from datetime import datetime, timedelta
 from typing import Optional
-from services.analytics_engine import calculate_student_metrics
+from services.analytics_engine import (
+    calculate_student_metrics,
+    calculate_subject_metrics,
+    calculate_readiness,
+    get_activity_snapshot,
+    get_predefined_topics,
+)
 from services.departments import normalize_department_code, split_department_codes, valid_department_input
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -141,16 +147,17 @@ def _build_admin_alerts(
     weak_students: int,
     inactive_students: int,
     active_students_today: int,
+    classroom_analytics: list[dict] | None = None,
 ) -> list[dict]:
     """Build fast, explainable alerts from live platform metrics."""
     alerts = []
 
     if weak_students:
         alerts.append({
-            "id": "low-confidence-students",
+            "id": "students-needing-support",
             "severity": "critical" if weak_students >= max(3, total_students // 5) else "warning",
-            "title": "Confidence gap detected",
-            "message": f"{weak_students} of {total_students} students are below 60% confidence.",
+            "title": "Students need support",
+            "message": f"{weak_students} of {total_students} students are high risk, need support, or have not started.",
             "metric": f"{weak_students} students",
             "action": "Review student analytics",
         })
@@ -166,32 +173,33 @@ def _build_admin_alerts(
         })
 
     class_alerts = []
-    classrooms = db.query(Classroom).all()
-    for classroom in classrooms:
-        enrollments = db.query(StudentClass.student_id).filter(
-            StudentClass.class_id == classroom.id
-        ).all()
-        class_metrics = [
-            metrics_by_student[row[0]]
-            for row in enrollments
-            if row[0] in metrics_by_student
-        ]
-        if not class_metrics:
+    if classroom_analytics is None:
+        classroom_analytics = get_classrooms_analytics(db)
+    for classroom in classroom_analytics:
+        high_risk_count = int(classroom.get("high_risk_students", 0) or 0)
+        if classroom.get("student_count", 0) <= 0 or high_risk_count <= 0:
             continue
-        average_confidence = sum(
-            metric.get("overall_confidence", 0.0) for metric in class_metrics
-        ) / len(class_metrics)
-        if average_confidence < 60:
-            class_alerts.append((average_confidence, classroom.name))
+        average_confidence = float(classroom.get("avg_confidence", 0.0) or 0.0)
+        class_alerts.append((
+            high_risk_count,
+            average_confidence,
+            classroom.get("name", "Class"),
+        ))
 
     if class_alerts:
-        average_confidence, class_name = min(class_alerts, key=lambda item: item[0])
+        high_risk_count, average_confidence, class_name = min(
+            class_alerts,
+            key=lambda item: (item[0] == 0, item[1]),
+        )
         alerts.append({
             "id": "class-needs-attention",
-            "severity": "critical" if average_confidence < 50 else "warning",
+            "severity": "critical",
             "title": f"{class_name} needs attention",
-            "message": f"The live average confidence is {round(average_confidence)}% for this class.",
-            "metric": f"{round(average_confidence)}% confidence",
+            "message": (
+                f"{high_risk_count} high-risk students are enrolled; "
+                f"the class average confidence is {round(average_confidence)}%."
+            ),
+            "metric": f"{high_risk_count} high risk",
             "action": "Review classroom analytics",
         })
 
@@ -295,7 +303,7 @@ def _build_department_summaries(
     recent_activity_student_ids: set[int],
     active_student_ids_today: set[int],
 ) -> list[dict]:
-    """Build live department summaries from course grouping and enrollments."""
+    """Build department KPIs from the classes that belong to each department."""
     department_meta = {
         department["code"]: {
             "id": str(department["code"]).lower(),
@@ -306,11 +314,40 @@ def _build_department_summaries(
     }
     department_students = {department_id: set() for department_id in department_meta}
     department_courses = {department_id: [] for department_id in department_meta}
+    department_contexts = {department_id: [] for department_id in department_meta}
 
     enrollment_rows = db.query(StudentClass.class_id, StudentClass.student_id).all()
     students_by_class: dict[int, set[int]] = {}
     for class_id, student_id in enrollment_rows:
         students_by_class.setdefault(class_id, set()).add(student_id)
+
+    def class_subject_and_topics(classroom, student_ids):
+        curriculum = db.query(ClassCurriculum).filter(
+            ClassCurriculum.class_id == classroom.id
+        ).first()
+        subject_name = (
+            curriculum.subject_name
+            if curriculum and curriculum.subject_name
+            else classroom.name
+        )
+        topics = []
+        curriculum_json = curriculum.curriculum_json if curriculum else None
+        if isinstance(curriculum_json, dict):
+            if "units" in curriculum_json:
+                for unit in curriculum_json.get("units", []):
+                    topics.extend(unit.get("topics", []))
+            elif "semesters" in curriculum_json:
+                for semester in curriculum_json.get("semesters", []):
+                    for course in semester.get("courses", []):
+                        topics.extend(course.get("topics", []))
+        if not topics:
+            representative_id = next(iter(student_ids), 0)
+            topics = get_predefined_topics(representative_id, subject_name, db)
+        return subject_name, list(dict.fromkeys(
+            topic.strip()
+            for topic in topics
+            if isinstance(topic, str) and topic.strip()
+        ))
 
     classrooms = db.query(Classroom).order_by(Classroom.id).all()
     for classroom in classrooms:
@@ -323,6 +360,8 @@ def _build_department_summaries(
             }
             department_students[department_id] = set()
             department_courses[department_id] = []
+            department_contexts[department_id] = []
+
         student_ids = students_by_class.get(classroom.id, set())
         department_students[department_id].update(student_ids)
         department_courses[department_id].append({
@@ -331,20 +370,83 @@ def _build_department_summaries(
             "code": classroom.course_code or classroom.code,
             "student_count": len(student_ids),
         })
+        subject_name, topics = class_subject_and_topics(classroom, student_ids)
+        department_contexts[department_id].append({
+            "subject": subject_name,
+            "topics": topics,
+            "student_ids": student_ids,
+        })
 
     summaries = []
     for department_id in department_meta:
         student_ids = department_students[department_id]
-        metrics = [metrics_by_student[student_id] for student_id in student_ids if student_id in metrics_by_student]
-        confidences = [metric.get("overall_confidence", 0.0) for metric in metrics]
-        readinesses = [metric.get("overall_readiness", metric.get("overall_progress", 0.0)) for metric in metrics]
+        department_topics = set(
+            topic
+            for context in department_contexts[department_id]
+            for topic in context["topics"]
+        )
+        activity = get_activity_snapshot(
+            student_ids,
+            db,
+            topics=department_topics,
+        )
+        confidences = []
+        readinesses = []
+
+        for student_id in student_ids:
+            scoped_metrics = []
+            for context in department_contexts[department_id]:
+                if student_id in context["student_ids"]:
+                    scoped_metrics.append(calculate_subject_metrics(
+                        student_id,
+                        context["subject"],
+                        db,
+                        topics_override=context["topics"],
+                    ))
+            if not scoped_metrics:
+                fallback = metrics_by_student.get(student_id)
+                if fallback:
+                    confidences.append(fallback.get("overall_confidence", 0.0))
+                    readinesses.append(fallback.get("overall_readiness", 0.0))
+                continue
+
+            total_topics = sum(metric.get("total_topics", 0) for metric in scoped_metrics)
+            attempted_topics = sum(metric.get("attempted_topics", 0) for metric in scoped_metrics)
+            total_questions = sum(metric.get("questions_attempted", 0) for metric in scoped_metrics)
+            total_correct = sum(metric.get("correct_answers", 0) for metric in scoped_metrics)
+            weight = sum(
+                metric.get("questions_attempted", 0) or metric.get("attempted_topics", 0)
+                for metric in scoped_metrics
+            )
+            confidence = (
+                sum(
+                    metric.get("average_confidence", 0.0)
+                    * (metric.get("questions_attempted", 0) or metric.get("attempted_topics", 0))
+                    for metric in scoped_metrics
+                ) / weight
+                if weight else 0.0
+            )
+            exposure = (
+                attempted_topics / total_topics * 100
+                if total_topics else 0.0
+            )
+            last_activity = activity["last_activity_by_student"].get(student_id)
+            if total_questions == 0 and weight == 0:
+                confidence = 0.0
+            confidences.append(confidence)
+            readinesses.append(calculate_readiness(
+                exposure,
+                confidence,
+                last_activity,
+            ))
+
         summaries.append({
             **department_meta[department_id],
             "student_count": len(student_ids),
             "course_count": len(department_courses[department_id]),
-            "active_students": len(student_ids & recent_activity_student_ids),
-            "active_students_today": len(student_ids & active_student_ids_today),
-            "inactive_students": len(student_ids - recent_activity_student_ids),
+            "active_students": len(activity["active_7d"]),
+            "active_students_today": len(activity["active_today"]),
+            "inactive_students": len(student_ids - activity["active_7d"]),
             "average_confidence": round(sum(confidences) / len(confidences), 1) if confidences else 0.0,
             "average_readiness": round(sum(readinesses) / len(readinesses), 1) if readinesses else 0.0,
             "courses": department_courses[department_id],
@@ -352,72 +454,64 @@ def _build_department_summaries(
 
     return summaries
 
+
 @router.get("/dashboard")
 def get_admin_dashboard(db: Session = Depends(get_db)):
+    """Return platform KPIs from the same scoped student metrics used elsewhere."""
     total_students = db.query(User).filter(User.role == "student").count()
     total_professors = db.query(User).filter(User.role == "professor").count()
     total_classes = db.query(Classroom).count()
     enrollment_rows = db.query(StudentClass.class_id, StudentClass.student_id).all()
     enrolled_student_ids = {student_id for _, student_id in enrollment_rows}
 
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    active_qh = db.query(QuizHistory.student_id).filter(
-        QuizHistory.created_at >= today_start,
-        QuizHistory.questions_attempted > 0,
-    ).distinct().all()
-    active_ps = db.query(PracticeSession.student_id).filter(PracticeSession.created_at >= today_start).distinct().all()
-    active_students = set([r[0] for r in active_qh] + [r[0] for r in active_ps])
-    active_students_today = len(active_students)
-
     students = db.query(User).filter(User.role == "student").all()
+    student_ids = [student.id for student in students]
+    activity_snapshot = get_activity_snapshot(student_ids, db)
+    active_students_today = len(activity_snapshot["active_today"])
+    recent_activity_student_ids = set(activity_snapshot["active_7d"])
+
     confidences = []
     readinesses = []
-    weak_students = 0
-    inactive_students = 0
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    students_needing_support = 0
+    high_risk_students = 0
+    not_started_students = 0
     metrics_by_student = {}
-    recent_activity_student_ids = set()
 
     for student in students:
-        metrics = calculate_student_metrics(student.id, db)
+        metrics = calculate_student_metrics(
+            student.id,
+            db,
+            activity_snapshot=activity_snapshot,
+        )
         metrics_by_student[student.id] = metrics
-        conf = metrics.get("overall_confidence", 0.0)
-        readiness = metrics.get("overall_readiness", metrics.get("overall_progress", 0.0))
-        confidences.append(conf)
-        readinesses.append(readiness)
+        confidences.append(metrics.get("overall_confidence", 0.0))
+        readinesses.append(metrics.get("overall_readiness", 0.0))
 
-        if conf < 60:
-            weak_students += 1
+        if metrics.get("risk_tier") in {"HIGH_RISK", "NEEDS_SUPPORT", "NOT_STARTED"}:
+            students_needing_support += 1
+        if metrics.get("risk_tier") == "HIGH_RISK":
+            high_risk_students += 1
+        if metrics.get("risk_tier") == "NOT_STARTED":
+            not_started_students += 1
 
-        has_recent_activity = db.query(QuizHistory).filter(
-            QuizHistory.student_id == student.id,
-            QuizHistory.created_at >= seven_days_ago,
-            QuizHistory.questions_attempted > 0,
-        ).first() is not None or db.query(PracticeSession).filter(
-            PracticeSession.student_id == student.id,
-            PracticeSession.created_at >= seven_days_ago
-        ).first() is not None
-
-        if not has_recent_activity:
-            inactive_students += 1
-        else:
-            recent_activity_student_ids.add(student.id)
-
+    inactive_students = len(set(student_ids) - recent_activity_student_ids)
     average_confidence = sum(confidences) / len(confidences) if confidences else 0.0
     average_readiness = sum(readinesses) / len(readinesses) if readinesses else 0.0
+    classroom_analytics = get_classrooms_analytics(db)
     alerts = _build_admin_alerts(
         db,
         metrics_by_student,
         total_students,
-        weak_students,
+        students_needing_support,
         inactive_students,
         active_students_today,
+        classroom_analytics,
     )
     departments = _build_department_summaries(
         db,
         metrics_by_student,
         recent_activity_student_ids,
-        active_students,
+        activity_snapshot["active_today"],
     )
 
     return {
@@ -427,9 +521,14 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
         "total_professors": total_professors,
         "total_classes": total_classes,
         "active_students_today": active_students_today,
+        "active_students_7d": len(recent_activity_student_ids),
         "average_confidence": round(average_confidence, 1),
         "average_readiness": round(average_readiness, 1),
-        "weak_students": weak_students,
+        # Kept for API compatibility; it now means high-risk, needs-support, or not-started.
+        "weak_students": students_needing_support,
+        "students_needing_support": students_needing_support,
+        "high_risk_students": high_risk_students,
+        "not_started_students": not_started_students,
         "inactive_students": inactive_students,
         "departments": departments,
         "alerts": alerts,
@@ -525,27 +624,22 @@ def update_user_department(
 @router.get("/students")
 def get_admin_students(db: Session = Depends(get_db)):
     students = db.query(User).filter(User.role == "student").all()
+    activity_snapshot = get_activity_snapshot([student.id for student in students], db)
     results = []
-    for s in students:
-        metrics = calculate_student_metrics(s.id, db)
-        latest_qh = db.query(QuizHistory.created_at).filter(
-            QuizHistory.student_id == s.id,
-            QuizHistory.questions_attempted > 0,
-        ).order_by(QuizHistory.created_at.desc()).first()
-        latest_ps = db.query(PracticeSession.created_at).filter(PracticeSession.student_id == s.id).order_by(PracticeSession.created_at.desc()).first()
-        times = []
-        if latest_qh:
-            times.append(latest_qh[0])
-        if latest_ps:
-            times.append(latest_ps[0])
-        latest_time = max(times) if times else None
-
+    for student in students:
+        metrics = calculate_student_metrics(
+            student.id,
+            db,
+            activity_snapshot=activity_snapshot,
+        )
+        latest_time = metrics.get("last_activity_at")
         results.append({
-            "id": s.id,
-            "name": s.name or s.email,
+            "id": student.id,
+            "name": student.name or student.email,
             "confidence": round(metrics.get("overall_confidence", 0.0)),
-            "readiness": round(metrics.get("overall_readiness", metrics.get("overall_progress", 0.0))),
-            "last_active": relative_time(latest_time) if latest_time else "Never active"
+            "readiness": round(metrics.get("overall_readiness", 0.0)),
+            "last_active": relative_time(latest_time) if latest_time else "Never active",
+            "risk_tier": metrics.get("risk_tier", "NOT_STARTED"),
         })
     return results
 
@@ -637,80 +731,124 @@ def get_admin_system_status(db: Session = Depends(get_db)):
 
 @router.get("/classrooms-analytics")
 def get_classrooms_analytics(db: Session = Depends(get_db)):
-    """Return per-classroom performance stats for the admin analytics page."""
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    """Return class-scoped performance stats using the shared metric definitions."""
     classrooms = db.query(Classroom).all()
     result = []
 
-    for cls in classrooms:
-        # Get students enrolled in this classroom
-        enrollments = db.query(StudentClass).filter(StudentClass.class_id == cls.id).all()
-        student_ids = [e.student_id for e in enrollments]
+    def class_subject_and_topics(classroom, student_ids):
+        curriculum = db.query(ClassCurriculum).filter(
+            ClassCurriculum.class_id == classroom.id
+        ).first()
+        subject_name = (
+            curriculum.subject_name
+            if curriculum and curriculum.subject_name
+            else classroom.name
+        )
+        topics = []
+        curriculum_json = curriculum.curriculum_json if curriculum else None
+        if isinstance(curriculum_json, dict):
+            if "units" in curriculum_json:
+                for unit in curriculum_json.get("units", []):
+                    topics.extend(unit.get("topics", []))
+            elif "semesters" in curriculum_json:
+                for semester in curriculum_json.get("semesters", []):
+                    for course in semester.get("courses", []):
+                        topics.extend(course.get("topics", []))
+        if not topics:
+            representative_id = student_ids[0] if student_ids else 0
+            topics = get_predefined_topics(representative_id, subject_name, db)
+        return subject_name, list(dict.fromkeys(
+            topic.strip()
+            for topic in topics
+            if isinstance(topic, str) and topic.strip()
+        ))
+
+    for classroom in classrooms:
+        student_ids = sorted({
+            enrollment.student_id
+            for enrollment in db.query(StudentClass).filter(
+                StudentClass.class_id == classroom.id
+            ).all()
+        })
+        professor_name = classroom.professor.name if classroom.professor else "—"
 
         if not student_ids:
             result.append({
-                "id": cls.id,
-                "name": cls.name,
-                "code": cls.code,
-                "professor": cls.professor.name if cls.professor else "—",
+                "id": classroom.id,
+                "name": classroom.name,
+                "code": classroom.code,
+                "professor": professor_name,
                 "student_count": 0,
                 "avg_confidence": 0,
                 "avg_readiness": 0,
                 "active_students": 0,
                 "inactive_students": 0,
                 "status": "EMPTY",
+                "high_risk_students": 0,
+                "students_needing_support": 0,
+                "not_started_students": 0,
             })
             continue
 
-        confidences = []
-        readinesses = []
-        active_count = 0
-        inactive_count = 0
-
-        for sid in student_ids:
-            metrics = calculate_student_metrics(sid, db)
-            conf = metrics.get("overall_confidence", 0.0)
-            readiness = metrics.get("overall_readiness", metrics.get("overall_progress", 0.0))
-            confidences.append(conf)
-            readinesses.append(readiness)
-
-            has_activity = (
-                db.query(QuizHistory).filter(
-                    QuizHistory.student_id == sid,
-                    QuizHistory.created_at >= seven_days_ago,
-                    QuizHistory.questions_attempted > 0,
-                ).first() is not None
-                or db.query(PracticeSession).filter(
-                    PracticeSession.student_id == sid,
-                    PracticeSession.created_at >= seven_days_ago
-                ).first() is not None
+        subject_name, topics = class_subject_and_topics(classroom, student_ids)
+        class_activity = get_activity_snapshot(
+            student_ids,
+            db,
+            topics=topics,
+        )
+        class_metrics = [
+            calculate_subject_metrics(
+                student_id,
+                subject_name,
+                db,
+                topics_override=topics,
             )
-            if has_activity:
-                active_count += 1
-            else:
-                inactive_count += 1
-
+            for student_id in student_ids
+        ]
+        confidences = [metric.get("average_confidence", 0.0) for metric in class_metrics]
+        readinesses = [
+            calculate_readiness(
+                metric.get("exposure", 0.0),
+                metric.get("average_confidence", 0.0),
+                metric.get("last_activity_at"),
+            )
+            for metric in class_metrics
+        ]
+        risk_tiers = [metric.get("risk_tier", "NOT_STARTED") for metric in class_metrics]
+        high_risk_count = risk_tiers.count("HIGH_RISK")
+        support_count = sum(
+            tier in {"HIGH_RISK", "NEEDS_SUPPORT", "NOT_STARTED"}
+            for tier in risk_tiers
+        )
+        not_started_count = risk_tiers.count("NOT_STARTED")
+        active_count = sum(
+            student_id in class_activity["active_7d"]
+            for student_id in student_ids
+        )
         avg_conf = round(sum(confidences) / len(confidences), 1) if confidences else 0.0
         avg_ready = round(sum(readinesses) / len(readinesses), 1) if readinesses else 0.0
 
-        if avg_conf >= 75:
-            status = "STRONG"
-        elif avg_conf >= 50:
+        if high_risk_count:
+            status = "NEEDS ATTENTION"
+        elif support_count:
             status = "STABLE"
         else:
-            status = "NEEDS ATTENTION"
+            status = "STRONG"
 
         result.append({
-            "id": cls.id,
-            "name": cls.name,
-            "code": cls.code,
-            "professor": cls.professor.name if cls.professor else "—",
+            "id": classroom.id,
+            "name": classroom.name,
+            "code": classroom.code,
+            "professor": professor_name,
             "student_count": len(student_ids),
             "avg_confidence": avg_conf,
             "avg_readiness": avg_ready,
             "active_students": active_count,
-            "inactive_students": inactive_count,
+            "inactive_students": len(student_ids) - active_count,
             "status": status,
+            "high_risk_students": high_risk_count,
+            "students_needing_support": support_count,
+            "not_started_students": not_started_count,
         })
 
     return result

@@ -529,13 +529,15 @@ export function SuccessState({
 export function ProcessingState({
   title = "Analyzing details...",
   steps = [],
-  currentStepIndex = 0
+  currentStepIndex = 0,
+  indeterminate = false
 }: {
   title?: string;
   steps?: string[];
   currentStepIndex?: number;
+  indeterminate?: boolean;
 }) {
-  const targetPct = steps.length > 0 ? Math.round(((currentStepIndex + 1) / steps.length) * 100) : 0;
+  const targetPct = indeterminate ? 100 : (steps.length > 0 ? Math.round(((currentStepIndex + 1) / steps.length) * 100) : 0);
   const [pct, setPct] = useState(10);
 
   useEffect(() => {
@@ -567,13 +569,13 @@ export function ProcessingState({
           </div>
           <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
         </div>
-        <span className="text-xs font-extrabold text-[#5B5FFF] bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/25 tracking-wide">{pct}%</span>
+        {!indeterminate && <span className="text-xs font-extrabold text-[#5B5FFF] bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/25 tracking-wide">{pct}%</span>}
       </div>
 
       {/* Premium Progress Bar */}
       <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-white/5 relative">
         <div
-          className="h-full bg-gradient-to-r from-[#5B5FFF] via-cyan-400 to-[#5B5FFF] bg-[length:200%_auto] animate-gradient-shift transition-all duration-700 ease-out shadow-[0_0_12px_rgba(91,95,255,0.4)]"
+          className={`h-full bg-gradient-to-r from-[#5B5FFF] via-cyan-400 to-[#5B5FFF] bg-[length:200%_auto] ${indeterminate ? "w-full animate-pulse" : "transition-all duration-700 ease-out"} shadow-[0_0_12px_rgba(91,95,255,0.4)]`}
           style={{ width: `${pct}%` }}
         />
       </div>

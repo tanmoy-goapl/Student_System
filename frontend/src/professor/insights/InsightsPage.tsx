@@ -114,14 +114,14 @@ export default function InsightsPage() {
   // ── Derived overview cards ────────────────────────────────
   const overviewCards = data ? [
     { label: "Avg Class Score", value: `${data.overview.avgScore}%`, subtitle: `Across ${data.classes.length} class${data.classes.length !== 1 ? "es" : ""}`, icon: TrendingUp, gradient: "from-blue-600 to-indigo-500" },
-    { label: "Engagement Rate", value: `${data.overview.engagementRate}%`, subtitle: "Active + completed quiz participation", icon: CheckCircle, gradient: "from-emerald-500 to-teal-500" },
-    { label: "At-Risk Students", value: `${data.overview.atRiskStudents}`, subtitle: "Unique students below 50% in any class", icon: AlertTriangle, gradient: "from-rose-500 to-red-500" },
-    { label: "Topic Mastery", value: `${data.overview.topicMastery}%`, subtitle: "Active topics average", icon: BookOpenIcon, gradient: "from-indigo-600 to-purple-600" },
+    { label: "Engagement Rate", value: `${data.overview.engagementRate}%`, subtitle: "Any quiz or practice activity in the last 7 days", icon: CheckCircle, gradient: "from-emerald-500 to-teal-500" },
+    { label: "At-Risk Students", value: `${data.overview.atRiskStudents}`, subtitle: "Accuracy below 50% or confidence below 40%", icon: AlertTriangle, gradient: "from-rose-500 to-red-500" },
+    { label: "Topic Mastery", value: `${data.overview.topicMastery}%`, subtitle: "Question-weighted accuracy on attempted topics", icon: BookOpenIcon, gradient: "from-indigo-600 to-purple-600" },
   ] : [];
 
   // ── Engagement metrics ────────────────────────────────────
   const engagementMetrics = data ? [
-    { label: "Active Students", value: `${data.engagement.attendance}%`, color: "text-blue-400", bg: "bg-blue-500" },
+    { label: "Active in 7 Days", value: `${data.engagement.attendance}%`, color: "text-blue-400", bg: "bg-blue-500" },
     { label: "Quiz Participation", value: `${data.engagement.quizParticipation}%`, color: "text-purple-400", bg: "bg-purple-500" },
     { label: "Curriculum Progress", value: `${data.engagement.revisionConsistency}%`, color: "text-amber-400", bg: "bg-amber-500" },
     { label: "Topic Activity", value: `${data.engagement.contentInteraction}%`, color: "text-emerald-400", bg: "bg-emerald-500" },

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from practice_models import PracticeSession, PracticeQuestion, TopicPerformance, UserPerformance, QuizHistory
+from practice_models import PracticeSession, PracticeQuestion, TopicPerformance, RevisionItem, UserPerformance, QuizHistory
 from services.analytics_engine import get_topic_status
 
 logger = logging.getLogger("chatbot")
@@ -229,7 +229,26 @@ def finalize_session_history(session, db: Session):
         
     unique_topics = db.query(QuizHistory.topic).filter(QuizHistory.student_id == session.student_id).distinct().count()
     perf.topics_covered = unique_topics
-    
+
+    # Completing a practice session marks explicitly queued topics as reviewed.
+    # Automatic weak/overdue recommendations may still reappear from live
+    # performance, but the manual request itself is no longer pending.
+    reviewed_topics = {
+        question.topic
+        for question in questions
+        if question.student_answer is not None and question.topic
+    }
+    if reviewed_topics:
+        revision_items = db.query(RevisionItem).filter(
+            RevisionItem.student_id == session.student_id,
+            RevisionItem.status == "pending",
+            RevisionItem.topic.in_(reviewed_topics),
+        ).all()
+        for revision_item in revision_items:
+            revision_item.status = "completed"
+            revision_item.completed_at = datetime.utcnow()
+            revision_item.completed_session_id = session.id
+
     db.commit()
 
     if score_percentage >= 75.0:

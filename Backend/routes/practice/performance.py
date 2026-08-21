@@ -239,6 +239,18 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
 
     insights = detect_behavioral_patterns(student_id, db)
 
+    # Keep the Practice page self-contained: the same revision queue shown on
+    # the student home page is also available beside the live practice insights.
+    # A queue failure must not hide the performance data itself.
+    try:
+        from services.homepage_engine import calculate_pending_tasks, calculate_revision_queue
+        revision_queue = calculate_revision_queue(student_id, db)
+        pending_tasks = calculate_pending_tasks(student_id, db)
+    except Exception:
+        logger.exception("[Practice] Could not calculate revision queue for student_id=%s", student_id)
+        revision_queue = []
+        pending_tasks = []
+
     return {
         "overall_accuracy": round(overall_accuracy, 1),
         "questions_attempted": questions_attempted,
@@ -259,7 +271,9 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
         ],
         "overall_accuracy": round(overall_accuracy, 1), # Duplicated key in original code, kept for consistency
         "adaptive_engine": adaptive_engine,
-        "suggested_next": suggested_next
+        "suggested_next": suggested_next,
+        "revision_queue": revision_queue,
+        "pending_tasks": pending_tasks
     }
 
 

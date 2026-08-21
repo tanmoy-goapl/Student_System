@@ -70,6 +70,10 @@ export default function Navbar({ collapsed = false, onToggle }: NavbarProps) {
   };
 
   const isActive = (path: string) => {
+    if (pathname?.startsWith('/practice') && path.startsWith('/practice')) {
+      return true;
+    }
+
     if (pathname?.startsWith('/learning')) {
       if (path.startsWith('/learning')) return true;
       if (path.startsWith('/classes')) return false;

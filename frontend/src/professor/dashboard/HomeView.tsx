@@ -610,7 +610,7 @@ export default function HomeView() {
                       <div className="space-y-1">
                         <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">At-Risk Students</span>
                         <span className="text-3xl font-extrabold text-white tracking-tight">{data.kpi.atRiskCount}</span>
-                        <p className="text-[10px] text-slate-400 font-medium">Below 50% in any class</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Accuracy under 50% or confidence under 40% in any class</p>
                       </div>
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-500 shadow-lg shadow-rose-500/10 shrink-0">
                         <AlertTriangle className="h-5 w-5 text-white" />
@@ -637,7 +637,7 @@ export default function HomeView() {
                       <div className="space-y-1">
                         <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Weak Topics</span>
                         <span className="text-3xl font-extrabold text-white tracking-tight">{data.kpi.weakTopicCount}</span>
-                        <p className="text-[10px] text-slate-400 font-medium">Topics below 60% avg</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Topics below 50% accuracy</p>
                       </div>
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-500/10 shrink-0">
                         <BookOpen className="h-5 w-5 text-white" />

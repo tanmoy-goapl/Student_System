@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { 
+import {
   BookOpen, Users, TrendingUp, BarChart3, AlertTriangle, Search,
   UserPlus, PlusCircle, Sparkles, Target, Activity, ArrowUpRight,
   ArrowDownRight, Minus, X, Trash2
@@ -74,10 +74,10 @@ export default function ClassroomsPage() {
       const professorId = userId ? parseInt(userId, 10) : 1;
       const res = await fetch(`/api/classroom/my_classes/${professorId}`);
       if (!res.ok) throw new Error("Failed to load classes");
-      
+
       const data = await res.json();
       const myClasses = data.classes || [];
-      
+
       const mappedPromises = myClasses.map(async (c: any) => {
         let avgScore = 0;
         let engagement = 0;
@@ -117,16 +117,15 @@ export default function ClassroomsPage() {
               weakTopics = weakTopicDetails.length > 0
                 ? weakTopicDetails.slice(0, 3).map(topic => topic.name)
                 : ["No weak topics recorded"];
-              
-              // Keep the risk signal meaningful: 25% is the low-performance cutoff.
-              // A score of zero means no measured performance yet, not a risk diagnosis.
-              if (analyticsAvailable && avgScore > 0 && avgScore < 25) {
+
+              // The API owns risk classification. The card only renders it,
+              // so classes and insights cannot disagree about the threshold.
+              if (analyticsAvailable && Number(aData.metrics.atRiskStudents || 0) > 0) {
                 badge = "AT RISK";
 
-                actionRequired = `ACTION REQUIRED - ${aData.metrics.inactiveStudents || 0} STUDENTS INACTIVE`;
+                actionRequired = "ACTION REQUIRED - " + aData.metrics.atRiskStudents + " HIGH-RISK STUDENTS";
                 isRedButton = true;
                }
-              
               if (aData.metrics.alerts && aData.metrics.alerts.length > 0) {
                 insight = aData.metrics.alerts[0];
                 if (insight.toLowerCase().includes("critically low") || insight.toLowerCase().includes("needs review")) {
@@ -143,8 +142,8 @@ export default function ClassroomsPage() {
           console.error(`Failed to load dynamic analytics for class ${c.id}:`, e);
         }
 
-        const badgeColor = badge === "AT RISK" 
-          ? "text-rose-450 border-rose-500/20 bg-rose-500/10" 
+        const badgeColor = badge === "AT RISK"
+          ? "text-rose-450 border-rose-500/20 bg-rose-500/10"
           : "text-emerald-400 border-emerald-500/20 bg-emerald-500/10";
         const badgeBg = badge === "AT RISK" ? "bg-rose-500" : "bg-emerald-500";
 
@@ -222,7 +221,7 @@ export default function ClassroomsPage() {
     try {
       const userId = localStorage.getItem("user_id");
       const professorId = userId ? parseInt(userId, 10) : 1;
-      
+
       const res = await createClass({
         name: className.trim(),
         course_code: courseCode.trim(),
@@ -330,7 +329,7 @@ export default function ClassroomsPage() {
     {
       label: "Avg Active Rate",
       value: `${averageEngagement}%`,
-      subtitle: "Active in the last 30 days",
+      subtitle: "Students active in the last 7 days",
       icon: TrendingUp,
       gradient: "from-indigo-600 to-purple-600",
     },
@@ -394,7 +393,7 @@ export default function ClassroomsPage() {
             */}
 
             {/* Create Class */}
-            <button 
+            <button
               onClick={() => setIsCreateOpen(true)}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition cursor-pointer"
             >
@@ -488,7 +487,7 @@ export default function ClassroomsPage() {
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-white">Engagement Watchlist</h3>
-                    <p className="text-[9px] text-slate-500 mt-1">Lowest active rates in 30 days</p>
+                    <p className="text-[9px] text-slate-500 mt-1">Lowest active rates in 7 days</p>
                   </div>
                 </div>
 
@@ -673,7 +672,7 @@ export default function ClassroomsPage() {
                     </div>
 
                     <div className="flex gap-2 pt-4 border-t border-white/5 mt-4">
-                      <button 
+                      <button
                         onClick={() => router.push(`/classes/${cls.id}`)}
                         className="flex-1 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 shadow shadow-blue-500/10 text-[9px] font-bold uppercase tracking-wider text-white transition"
                       >

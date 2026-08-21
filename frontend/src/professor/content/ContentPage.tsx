@@ -7,14 +7,14 @@ import {
   Trash2, X, Loader2, Download, Eye, AlertCircle, Lightbulb, GraduationCap
 } from "lucide-react";
 import ProfessorSidebar from "../components/ProfessorSidebar";
+import { useProfessorGeneration } from "../components/ProfessorGenerationProvider";
 import { DashboardContentLoader } from "@/components/DashboardLoading";
 import ReactMarkdown from "react-markdown";
 import {
   getMyClasses,
   getDocumentsData,
   deleteDocument,
-  streamDocumentSummaryExample,
-  streamGenerateMaterial
+  streamDocumentSummaryExample
 } from "@/lib/api";
 import { normalizeReadableMath } from "@/lib/readableMath";
 import { getDocumentPreviewKind, getDocumentTextPreviewUrl, getDocumentViewUrl } from "@/lib/documentPreview";
@@ -353,8 +353,11 @@ export default function ContentPage() {
   const [showGenMaterialModal, setShowGenMaterialModal] = useState(false);
   const [genTopic, setGenTopic] = useState("");
   const [genSubject, setGenSubject] = useState("Computer Science");
+  const [genActionType, setGenActionType] = useState("notes");
+  const [genDescription, setGenDescription] = useState("");
   const [genClassId, setGenClassId] = useState("");
   const [isGeneratingMaterial, setIsGeneratingMaterial] = useState(false);
+  const { startGeneration } = useProfessorGeneration();
 
   // Document Preview Modal states
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
@@ -609,6 +612,15 @@ export default function ContentPage() {
     setAiStreamText("");
   };
 
+  const openGenerateMaterialModal = () => {
+    setGenTopic("");
+    setGenSubject("Computer Science");
+    setGenActionType("notes");
+    setGenDescription("");
+    setGenClassId("");
+    setShowGenMaterialModal(true);
+  };
+
   // Generate Custom Study Material Action
   const handleGenerateMaterialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -618,39 +630,36 @@ export default function ContentPage() {
       abortController.abort();
     }
 
-    const controller = new AbortController();
-    setAbortController(controller);
-
-    setAiModalTitle(`Generating Study Material: ${genTopic}`);
+    setAiModalTitle(`Generating ${genActionType === "notes" ? "Study Notes" : genActionType === "simplify" ? "Simple Explanation" : genActionType === "revision" ? "Revision Sheet" : genActionType === "practice" ? "Practice Set" : genActionType === "lesson" ? "Student Lesson" : "Quiz"}: ${genTopic}`);
     setAiStreamText("");
     setShowGenMaterialModal(false);
     setShowAIModal(true);
     setIsStreaming(true);
     setIsGeneratingMaterial(true);
 
-    try {
-      await streamGenerateMaterial(
-        genTopic.trim(),
-        genSubject,
-        userId,
-        (text) => {
-          setAiStreamText(text);
-        },
-        controller.signal,
-        genClassId || undefined
-      );
-      
-      // Auto-reload the documents in the grid
-      await loadData(userId);
-    } catch (err: any) {
-      if (err.name !== "AbortError") {
-        console.error("Study Guide generation stream error:", err);
+    startGeneration({
+      title: `Generate ${genActionType === "notes" ? "Study Notes" : genActionType === "simplify" ? "Simple Explanation" : genActionType === "revision" ? "Revision Sheet" : genActionType === "practice" ? "Practice Set" : genActionType === "lesson" ? "Student Lesson" : "Quiz"}`,
+      topic: genTopic.trim(),
+      subjectName: genSubject,
+      actionType: genActionType as "notes" | "lesson" | "quiz" | "revision" | "simplify" | "practice",
+      classroomId: genClassId || undefined,
+      description: genDescription.trim() || undefined,
+      professorId: userId,
+      targetPath: "/professor/content",
+      onChunk: (text) => setAiStreamText(text),
+      onComplete: async (text) => {
+        setAiStreamText(text);
+        setIsStreaming(false);
+        setIsGeneratingMaterial(false);
+        await loadData(userId);
+      },
+      onError: (message) => {
+        console.error("Study Guide generation stream error:", message);
         setAiStreamText("Error generating study material. Please try again.");
-      }
-    } finally {
-      setIsStreaming(false);
-      setIsGeneratingMaterial(false);
-    }
+        setIsStreaming(false);
+        setIsGeneratingMaterial(false);
+      },
+    });
   };
 
   // Filter materials based on search query and filter pills
@@ -776,7 +785,7 @@ export default function ContentPage() {
 
             {/* Generate Material */}
             <button 
-              onClick={() => setShowGenMaterialModal(true)}
+              onClick={openGenerateMaterialModal}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-xs font-bold transition shadow-lg shadow-violet-500/20 cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5 text-white" />
@@ -991,6 +1000,22 @@ export default function ContentPage() {
               </div>
 
               <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Content Type</label>
+                <select
+                  value={genActionType}
+                  onChange={e => setGenActionType(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500/40"
+                >
+                  <option value="notes">Detailed study notes</option>
+                  <option value="lesson">Student lesson</option>
+                  <option value="quiz">Multiple-choice quiz</option>
+                  <option value="revision">Revision sheet</option>
+                  <option value="simplify">Simple explanation</option>
+                  <option value="practice">Open-ended practice set</option>
+                </select>
+              </div>
+
+              <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Subject</label>
                 <input 
                   type="text" 
@@ -1000,6 +1025,18 @@ export default function ContentPage() {
                   required
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-blue-500/40"
                 />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Description / Teaching Brief <span className="text-slate-500 normal-case">(Optional)</span></label>
+                <textarea
+                  value={genDescription}
+                  onChange={e => setGenDescription(e.target.value.slice(0, 1000))}
+                  placeholder="e.g. Explain page replacement for second-year students, focus on FIFO vs LRU, and include one worked example."
+                  rows={4}
+                  className="w-full resize-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs leading-relaxed text-white placeholder:text-white/20 focus:outline-none focus:border-blue-500/40"
+                />
+                <p className="mt-1 text-right text-[9px] text-slate-500">{genDescription.length}/1000</p>
               </div>
 
               <div>
@@ -1117,7 +1154,8 @@ export default function ContentPage() {
             >
               <X size={16} />
             </button>
-            <h3 className="text-sm font-bold text-white mb-4">Generate Study Material</h3>
+            <h3 className="text-sm font-bold text-white mb-1">Generate Student Content</h3>
+            <p className="text-[10px] leading-relaxed text-slate-400 mb-4">Choose the resource format and give the AI a little context. The description is optional but helps it match your class, level, and intended outcome.</p>
 
             <form onSubmit={handleGenerateMaterialSubmit} className="space-y-4">
               <div>
@@ -1172,7 +1210,7 @@ export default function ContentPage() {
                   className="flex-1 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-xs font-bold text-white rounded-xl shadow-lg shadow-violet-500/10 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-white" />
-                  <span>Generate Study Notes</span>
+                  <span>Generate {genActionType === "notes" ? "Study Notes" : genActionType === "simplify" ? "Simple Explanation" : genActionType === "revision" ? "Revision Sheet" : genActionType === "practice" ? "Practice Set" : genActionType === "lesson" ? "Student Lesson" : "Quiz"}</span>
                 </button>
               </div>
             </form>

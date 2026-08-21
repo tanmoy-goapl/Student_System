@@ -33,7 +33,6 @@ async def get_homepage_data(student_id: int | None = None, db: Session = Depends
     health = calculate_dashboard_health(readiness_data["readiness_percentage"])
     streak_data = calculate_study_streak(student_id, db)
     covered_data = calculate_topics_covered(student_id, db)
-    study_plan = generate_study_plan(student_id, db)
     alerts = generate_ai_alerts(student_id, db)
     behavioral_insights = get_behavioral_insights(student_id, db)
     revision_queue = calculate_revision_queue(student_id, db)
@@ -41,9 +40,28 @@ async def get_homepage_data(student_id: int | None = None, db: Session = Depends
     adaptive_engine = generate_adaptive_engine(student_id, db)
     suggested_next = generate_suggested_next(student_id, db)
 
-    # New planner mode computations
+    # Keep the planner surfaces distinct:
+    # - Today's Focus is one next action.
+    # - Today's Study Plan contains other learning/continuation sessions.
+    # - Revision Queue owns practiced topics that are weak or overdue.
     pending_dues = calculate_pending_dues(student_id, db)
     todays_focus = calculate_todays_focus(student_id, db)
+    focus_key = (
+        str(todays_focus.get("subject", "")).strip().lower(),
+        str(todays_focus.get("topic", "")).strip().lower(),
+    )
+    todays_focus["is_in_revision"] = any(
+        (
+            str(item.get("subject", "")).strip().lower(),
+            str(item.get("topic", "")).strip().lower(),
+        ) == focus_key
+        for item in revision_queue
+    )
+    study_plan = generate_study_plan(
+        student_id,
+        db,
+        excluded_keys={focus_key} if focus_key[1] else None,
+    )
 
     # Health color mapping for Readiness
     readiness_color_map = {
@@ -68,7 +86,7 @@ async def get_homepage_data(student_id: int | None = None, db: Session = Depends
             "id": "readiness",
             "title": "Exam Readiness",
             "value": f"{readiness_data['readiness_percentage']}%",
-            "subtitle": f"+ {readiness_data['weekly_change']}% this week",
+            "subtitle": f"{readiness_data['weekly_change']:+.1f} accuracy points · last 7 days",
             "iconName": "Target",
             "iconClassName": readiness_class,
         },
@@ -91,26 +109,41 @@ async def get_homepage_data(student_id: int | None = None, db: Session = Depends
     ]
 
     # 2. Mentor Card (recommends highest priority Suggested Next action)
+    focus_is_revision = todays_focus.get("is_in_revision", False)
+    focus_status = todays_focus.get("status")
+    focus_action = (
+        "Review"
+        if focus_is_revision
+        else "Start learning"
+        if focus_status == "NOT_STARTED"
+        else "Continue"
+    )
+    focus_url = (
+        f"/practice?topic={todays_focus['topic']}"
+        if focus_is_revision or focus_status != "NOT_STARTED"
+        else (
+            f"/learning?topic={todays_focus['topic']}"
+            f"&subject={todays_focus.get('subject', '')}"
+        )
+    )
     mentor_card = {
         "title": "Today's Focus",
-        "message": f"Revise {todays_focus['topic']}",
+        "message": f"{focus_action} {todays_focus['topic']}",
         "primaryAction": "Start Session",
         "secondaryAction": "See Plan",
         "recommended_topic": todays_focus["topic"],
-        "action_url": f"/practice?topic={todays_focus['topic']}"
+        "action_url": focus_url
     }
 
     # 3. Performance Snapshots
-    from practice_models import UserPerformance
-    perf = db.query(UserPerformance).filter(UserPerformance.student_id == student_id).first()
-    accuracy = round(perf.lifetime_accuracy) if perf else 0
+    accuracy = readiness_data.get("overall_accuracy", 0.0)
 
     performance_snapshots = [
         {
             "id": "overall-accuracy",
             "title": "Overall Accuracy",
             "value": f"{accuracy}%",
-            "subtitle": "Lifetime accuracy",
+            "subtitle": "Question-weighted answer accuracy",
             "iconName": "Target",
             "iconClassName": "text-violet-300 bg-violet-500/10 border border-violet-500/20 shadow-[0_0_20px_rgba(139,92,246,0.15)]",
             "valueClassName": "text-violet-200",
@@ -184,6 +217,7 @@ async def get_homepage_data(student_id: int | None = None, db: Session = Depends
                     "title": f"{s['topic']} ({s['duration']})",
                     "time": s["reason"],
                     "duration": s["duration"],
+                    "action": s["action"],
                     "tag": s["subject"],
                     "tagColor": "violet",
                     "completed": False
@@ -193,6 +227,7 @@ async def get_homepage_data(student_id: int | None = None, db: Session = Depends
         "performanceSnapshots": performance_snapshots,
         "aiAlerts": mapped_alerts,
         "aiBehavioralInsights": behavioral_insights,
+        "student_id": student_id,
         "revisionQueue": revision_queue,
         "adaptiveEngine": adaptive_engine,
         "dashboard_health": health,

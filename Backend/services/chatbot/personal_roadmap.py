@@ -1,12 +1,7 @@
-import json
 import logging
-import re
-from datetime import datetime
 from sqlalchemy.orm import Session
 
-from models import User, ChatMessage, Document
-from roadmap_models import LearnerPreferences, UserGoal, LearningRoadmap, DailyTask
-from services.roadmap.roadmap_engine import _roadmap_llm_call, _balance_json, _fallback_roadmap
+from roadmap_models import LearnerPreferences, UserGoal
 
 logger = logging.getLogger(__name__)
 
@@ -146,131 +141,94 @@ def handle_preferences_onboarding(student_id: int, message: str, db: Session) ->
         }
 
 def generate_personalized_roadmap(student_id: int, db: Session) -> dict:
+    """Start the same background roadmap flow used by the direct dashboard."""
+    return start_personalized_roadmap_generation(student_id, db)
+
+def start_personalized_roadmap_generation(student_id: int, db: Session) -> dict:
+    """Create the goal immediately and finish the expensive roadmap work in a worker."""
     prefs = get_learner_preferences(student_id, db)
     if not prefs:
         return {"content": "Preferences not found. Please setup preferences first."}
 
-    # Fetch uploaded docs
-    docs = db.query(Document).filter(Document.student_id == student_id).all()
-    doc_list = ", ".join([d.filename for d in docs]) if docs else "None uploaded"
-
-    # Define durations
     duration_map = {
         "1 week": "1 week",
         "1 month": "4 weeks",
         "2 months": "8 weeks",
-        "3 months": "12 weeks"
+        "3 months": "12 weeks",
     }
     duration_str = duration_map.get(str(prefs.time_frame).lower(), "6 weeks")
+    goal_title = str(prefs.goal or "Personal learning").strip()
+    profile_context = (
+        f"Requested learning focus: {prefs.goal}\n"
+        f"Available time: {prefs.time_frame}\n"
+        f"Current proficiency: {prefs.proficiency}\n"
+        f"Daily study time: {prefs.daily_time}\n"
+        f"Learning style: {prefs.learning_style}\n"
+        f"Use uploaded documents: {prefs.use_documents}\n"
+    )
+    use_documents_requested = str(prefs.use_documents or "").lower() not in {"no", "none"}
 
-    system_prompt = f"""You are an expert curriculum designer. Create a highly personalized learning roadmap.
-    
-    Student Profile:
-    - Goal: {prefs.goal}
-    - Available Time: {prefs.time_frame}
-    - Current Proficiency: {prefs.proficiency}
-    - Study Time Daily: {prefs.daily_time}
-    - Learning Style: {prefs.learning_style}
-    - Integrated Documents: {prefs.use_documents} (Available: {doc_list})
-    
-    Adapt the language, descriptions, and pace to match a student with "{prefs.proficiency}" level.
-    If the goal is placement or interview-focused, make it rigorous and include technical topics, DS&A, and system design.
-    
-    You MUST generate exactly the number of weeks corresponding to the duration ({duration_str}).
-    Provide exactly 5 achievable learning units (Days) for each week.
-    
-    Output ONLY valid JSON (no markdown, no comments, no extra whitespace). Do NOT include descriptions or subtopics.
-    Format exactly like this:
-    {{"title":"Catchy Roadmap Title matching Student's Goal","weeks":[{{"week_number":1,"focus_area":"Focus Area Title","days":[{{"day_number":1,"topic":"Topic Name"}}]}}]}}"""
-
-    user_prompt = f"Goal: {prefs.goal}"
-    
-    logger.info(f"[PersonalRoadmap] Generating personalized roadmap for student {student_id}")
-    content = _roadmap_llm_call(system_prompt, user_prompt)
-    
-    if not content:
-        roadmap_json = _fallback_roadmap("LLM call returned empty response")
-    else:
-        try:
-            content_str = content.strip()
-            if content_str.startswith("```json"):
-                content_str = content_str[7:]
-            elif content_str.startswith("```"):
-                content_str = content_str[3:]
-            if content_str.endswith("```"):
-                content_str = content_str[:-3]
-            content_str = _balance_json(content_str.strip())
-            roadmap_json = json.loads(content_str)
-            if not isinstance(roadmap_json, dict):
-                roadmap_json = _fallback_roadmap(f"Parsed object type was {type(roadmap_json).__name__}, expected dictionary.")
-        except Exception as e:
-            logger.error(f"[PersonalRoadmap] Failed to parse roadmap JSON: {e}")
-            roadmap_json = _fallback_roadmap(str(e))
-
-    # Save to Database
-    title = roadmap_json.get("title") or f"Roadmap for {prefs.goal}"
     goal_record = UserGoal(
         student_id=student_id,
         goal_type="custom",
-        title=title,
-        description=f"Personalized: Goal={prefs.goal}, Proficiency={prefs.proficiency}, Style={prefs.learning_style}"
+        title=f"{goal_title} Roadmap",
+        description=profile_context,
+        status="generating",
     )
     db.add(goal_record)
     db.commit()
     db.refresh(goal_record)
 
-    weeks = roadmap_json.get("weeks") or []
-    tasks_count = sum(len((w.get("days") or []) if isinstance(w, dict) else []) for w in weeks)
-
-    roadmap = LearningRoadmap(
-        student_id=student_id,
-        goal_id=goal_record.id,
-        title=title,
-        roadmap_data=roadmap_json
+    from database import SessionLocal
+    from services.roadmap.roadmap_engine import (
+        build_student_document_context,
+        generate_roadmap_from_llm,
+        persist_generated_roadmap,
     )
-    db.add(roadmap)
-    db.commit()
-    db.refresh(roadmap)
+    import threading
 
-    for week in weeks:
-        if not isinstance(week, dict):
-            continue
-        wn = week.get("week_number", 1)
-        days = week.get("days") or []
-        for day in days:
-            if not isinstance(day, dict):
-                continue
-            db.add(DailyTask(
-                roadmap_id=roadmap.id,
-                task_type="learning",
-                topic=day.get("topic", f"Day {day.get('day_number', 1)}"),
-                description=day.get("description", ""),
-                assigned_date=datetime.utcnow(),
-                week_number=wn,
-                day_number=day.get("day_number", 1),
-                subtopics=day.get("subtopics") or []
-            ))
-    db.commit()
+    goal_id = goal_record.id
 
-    success_msg = (
-        f"### 🚀 Personalized Roadmap Created Successfully!\n\n"
-        f"**{title}**\n\n"
-        f"Based on your preferences:\n"
-        f"- **Goal:** {prefs.goal}\n"
-        f"- **Duration:** {len(weeks)} weeks ({prefs.time_frame})\n"
-        f"- **Proficiency:** {prefs.proficiency}\n"
-        f"- **Daily Time:** {prefs.daily_time}\n"
-        f"- **Learning Style:** {prefs.learning_style}\n\n"
-        f"Click below to open your personalized roadmap dashboard."
-    )
+    def bg_task():
+        bg_db = SessionLocal()
+        try:
+            use_documents = use_documents_requested
+            material_context = (
+                build_student_document_context(student_id, bg_db, focus_topic=goal_title)
+                if use_documents else ""
+            )
+            roadmap_json = generate_roadmap_from_llm(
+                goal_title,
+                duration_str,
+                material_context,
+                profile_context,
+            )
+            persist_generated_roadmap(bg_db, student_id, goal_id, roadmap_json)
+            logger.info("[PersonalRoadmap] Background roadmap completed for student %s", student_id)
+        except Exception as exc:
+            logger.error("[PersonalRoadmap] Background roadmap failed: %s", exc, exc_info=True)
+            failed_goal = bg_db.query(UserGoal).filter(UserGoal.id == goal_id).first()
+            if failed_goal:
+                failed_goal.status = "failed"
+                bg_db.commit()
+        finally:
+            bg_db.close()
+
+    threading.Thread(target=bg_task, daemon=True).start()
 
     return {
-        "content": success_msg,
+        "content": (
+            f"### 🚀 Roadmap generation started\n\n"
+            f"**{goal_title}** is being built in the background using your learning preferences"
+            f" and the requested timeframe ({prefs.time_frame}).\n\n"
+            "You can continue using Mentor AI. The completed roadmap will appear in your Personal Dashboard."
+        ),
         "intent": "ROADMAP_CREATION",
         "roadmap_metadata": {
-            "title": title,
+            "title": f"{goal_title} Roadmap",
             "duration": prefs.time_frame,
-            "weeks": len(weeks),
-            "tasks": tasks_count
-        }
+            "weeks": 0,
+            "tasks": 0,
+            "status": "generating",
+        },
     }

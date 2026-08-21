@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from database import get_db
-from practice_models import TopicPerformance, LearningContent
+from practice_models import RevisionItem, TopicPerformance, LearningContent
 from services.practice.topic_extractor import extract_topics_from_documents
 from services.practice.content_generator import has_valid_revision
 
@@ -60,6 +60,23 @@ def resolve_standard_subject(topic: str, current_subject: Optional[str] = None) 
     if current_subject == "undefined" or current_subject == "null" or not current_subject:
         return None
     return current_subject
+
+
+def _get_revision_status(student_id: int, topic: Optional[str], db: Session) -> dict:
+    if not topic:
+        return {"is_queued": False, "priority": None, "item_id": None}
+
+    item = db.query(RevisionItem).filter(
+        RevisionItem.student_id == student_id,
+        RevisionItem.topic == topic,
+        RevisionItem.status == "pending",
+    ).first()
+    return {
+        "is_queued": bool(item),
+        "priority": item.priority if item else None,
+        "item_id": item.id if item else None,
+    }
+
 
 @router.get("/data")
 def get_learning_data(
@@ -239,6 +256,7 @@ def get_learning_data(
             "success": True,
             "data": {
                 "revision": {"title": "Quick Revision", "points": revision_points},
+                "revisionStatus": _get_revision_status(student_id, selected_topic, db),
                 "actions": [
                     {"id": 'simpler', "label": 'Explain Simpler', "iconName": 'Lightbulb', "variant": 'primary'},
                     {"id": 'example', "label": 'Give Example', "iconName": 'FlaskConical', "variant": 'cyan'},
@@ -863,6 +881,7 @@ def get_learning_data(
         "success": True,
         "data": {
             "revision": {"title": "Quick Revision", "points": revision_points},
+            "revisionStatus": _get_revision_status(student_id, selected_topic, db),
             "actions": [
                 {"id": 'simpler', "label": 'Explain Simpler', "iconName": 'Lightbulb', "variant": 'primary'},
                 {"id": 'example', "label": 'Give Example', "iconName": 'FlaskConical', "variant": 'cyan'},

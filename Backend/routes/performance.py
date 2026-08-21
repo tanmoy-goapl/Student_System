@@ -1,4 +1,6 @@
 from fastapi import APIRouter
+from datetime import datetime, timedelta
+from sqlalchemy import func
 
 router = APIRouter(prefix="/performance", tags=["performance"])
 
@@ -115,64 +117,128 @@ SIDEBAR_DATA = {
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from database import get_db
-from practice_models import TopicPerformance, BehavioralInsight
+from practice_models import (
+    TopicPerformance,
+    BehavioralInsight,
+    UserPerformance,
+    QuizHistory,
+)
 from typing import Optional
+from services.analytics_engine import (
+    calculate_student_metrics,
+    calculate_subject_metrics,
+    calculate_readiness,
+    calculate_topic_metrics,
+    get_activity_snapshot,
+    get_student_subjects,
+)
 
 @router.get("/sidebar")
 async def get_performance_sidebar(student_id: int = 3, db: Session = Depends(get_db)):
-    # 1. Fetch performance data
-    all_perfs = db.query(TopicPerformance).filter(TopicPerformance.student_id == student_id).all()
-    
-    # 2. Compute weak topics
-    sorted_perfs = sorted(all_perfs, key=lambda x: x.accuracy or 0.0)
-    weak_topics = []
-    for p in sorted_perfs[:4]:
-        weak_topics.append({
-            "name": p.topic,
-            "subject": p.subject or "General",
-            "questionsCount": p.questions_attempted or 0,
-            "percentage": round(p.accuracy or 0.0)
-        })
-    if not weak_topics:
-        weak_topics = SIDEBAR_DATA["weakTopics"]
-        
-    # 3. Compute readiness by subject
-    subject_readiness = {}
-    for p in all_perfs:
-        subj = p.subject or "General"
-        if subj not in subject_readiness:
-            subject_readiness[subj] = []
-        subject_readiness[subj].append(p.accuracy or 0.0)
-        
+    """Return student performance sidebar data from live topic and activity records."""
+    all_perfs = db.query(TopicPerformance).filter(
+        TopicPerformance.student_id == student_id
+    ).all()
+    topic_metrics = [
+        (perf, calculate_topic_metrics(perf))
+        for perf in all_perfs
+        if (perf.sessions or 0) > 0 or (perf.questions_attempted or 0) > 0
+    ]
+    weak_topics = [
+        {
+            "name": perf.topic,
+            "subject": perf.subject or "General",
+            "questionsCount": metrics["questions_attempted"],
+            "percentage": round(metrics["accuracy"]),
+        }
+        for perf, metrics in sorted(topic_metrics, key=lambda item: item[1]["accuracy"])[:4]
+    ]
+
+    subjects = get_student_subjects(student_id, db)
     readiness = []
-    for subj, accs in subject_readiness.items():
-        avg_acc = sum(accs) / len(accs) if accs else 0.0
+    for subject in subjects:
+        metrics = calculate_subject_metrics(student_id, subject, db)
         readiness.append({
-            "subject": f"{subj} readiness",
-            "value": round(avg_acc)
+            "subject": f"{subject} readiness",
+            "value": calculate_readiness(
+                metrics.get("exposure", 0.0),
+                metrics.get("average_confidence", 0.0),
+                metrics.get("last_activity_at"),
+            ),
         })
-    if not readiness:
-        readiness = SIDEBAR_DATA["readiness"]
-        
-    # 4. Fetch behavioral insights
-    insights = []
-    db_insights = db.query(BehavioralInsight).filter(BehavioralInsight.student_id == student_id).all()
-    for idx, ins in enumerate(db_insights[:4]):
-        insights.append({
-            "id": ins.id,
-            "color": "yellow" if idx % 2 == 0 else "purple",
-            "iconName": "Activity" if idx % 2 == 0 else "Timer",
-            "text": f"{ins.title}: {ins.description}"
-        })
+
+    db_insights = db.query(BehavioralInsight).filter(
+        BehavioralInsight.student_id == student_id
+    ).order_by(BehavioralInsight.detected_at.desc()).limit(4).all()
+    insights = [
+        {
+            "id": insight.id,
+            "color": "yellow" if index % 2 == 0 else "purple",
+            "iconName": "Activity" if index % 2 == 0 else "Timer",
+            "text": f"{insight.title}: {insight.description or 'Review this pattern in your next practice session.'}",
+        }
+        for index, insight in enumerate(db_insights)
+    ]
+
+    overall = calculate_student_metrics(student_id, db)
+    activity = get_activity_snapshot([student_id], db)
     if not insights:
-        insights = SIDEBAR_DATA["insights"]
-        
+        if weak_topics:
+            insights.append({
+                "id": "weak-topic",
+                "color": "yellow",
+                "iconName": "Activity",
+                "text": f"{weak_topics[0]['name']} is currently at {weak_topics[0]['percentage']}% accuracy. Review it before the next quiz.",
+            })
+        elif not activity["active_7d"]:
+            insights.append({
+                "id": "reengage",
+                "color": "purple",
+                "iconName": "Timer",
+                "text": "No quiz or practice activity was recorded in the last 7 days. Start a short session to refresh your progress.",
+            })
+        else:
+            insights.append({
+                "id": "steady",
+                "color": "green",
+                "iconName": "Activity",
+                "text": f"Your current readiness is {overall.get('overall_readiness', 0)}%. Keep practicing to make the signal more reliable.",
+            })
+
+    action_cards = [
+        {
+            "title": f"Practice {topic['name']}",
+            "subtitle": f"Build accuracy from {topic['percentage']}% toward 70%+",
+            "tag": "Recommended",
+            "color": "red",
+        }
+        for topic in weak_topics[:3]
+    ]
     return {
         "insights": insights,
         "weakTopics": weak_topics,
-        "statCards": SIDEBAR_DATA["statCards"],
-        "actionCards": SIDEBAR_DATA["actionCards"],
-        "readiness": readiness
+        "statCards": [
+            {
+                "title": "Overall Readiness",
+                "value": f"{overall.get('overall_readiness', 0)}%",
+                "subtitle": "Exposure, confidence, recency and roadmap progress",
+                "color": "purple",
+            },
+            {
+                "title": "Average Confidence",
+                "value": f"{overall.get('overall_confidence', 0)}%",
+                "subtitle": "Answer accuracy plus repeated practice",
+                "color": "green",
+            },
+            {
+                "title": "Question Accuracy",
+                "value": f"{overall.get('overall_accuracy', 0)}%",
+                "subtitle": f"{overall.get('correct_answers', 0)} of {overall.get('questions_attempted', 0)} correct",
+                "color": "yellow",
+            },
+        ],
+        "actionCards": action_cards,
+        "readiness": readiness,
     }
 
 # Static data for the main Performance Page
@@ -321,92 +387,164 @@ async def get_performance_main(student_id: int = 3, db: Session = Depends(get_db
     
     db.commit()
     
-    # 1. Fetch performance data
-    all_perfs = db.query(TopicPerformance).filter(TopicPerformance.student_id == student_id).all()
-    
-    # 2. Compute overall stats
-    questions_attempted = sum((p.questions_attempted or 0) for p in all_perfs)
-    correct_answers = sum((p.correct_answers or 0) for p in all_perfs)
-    overall_accuracy = (correct_answers / questions_attempted * 100) if questions_attempted > 0 else 0.0
-    
-    mastered_count = len([p for p in all_perfs if (p.accuracy or 0.0) >= 80])
-    total_count = len(all_perfs)
-    
+    # Use the shared student metric model for every performance card.
+    all_perfs = db.query(TopicPerformance).filter(
+        TopicPerformance.student_id == student_id
+    ).all()
+    overall = calculate_student_metrics(student_id, db)
+    user_performance = db.query(UserPerformance).filter(
+        UserPerformance.student_id == student_id
+    ).first()
+
+    now = datetime.utcnow()
+    seven_days_ago = now - timedelta(days=7)
+    fourteen_days_ago = now - timedelta(days=14)
+
+    def quiz_accuracy(start_at, end_at=None):
+        query = db.query(
+            func.sum(QuizHistory.correct_answers),
+            func.sum(QuizHistory.questions_attempted),
+        ).filter(
+            QuizHistory.student_id == student_id,
+            QuizHistory.questions_attempted > 0,
+            QuizHistory.created_at >= start_at,
+        )
+        if end_at is not None:
+            query = query.filter(QuizHistory.created_at < end_at)
+        correct, questions = query.first()
+        return (
+            float(correct or 0) / float(questions) * 100
+            if questions else None
+        )
+
+    recent_accuracy = quiz_accuracy(seven_days_ago)
+    previous_accuracy = quiz_accuracy(fourteen_days_ago, seven_days_ago)
+    improvement = (
+        round(recent_accuracy - previous_accuracy, 1)
+        if recent_accuracy is not None and previous_accuracy is not None
+        else 0.0
+    )
+    current_streak = user_performance.current_streak if user_performance else 0
+    longest_streak = user_performance.longest_streak if user_performance else 0
+    mastered_count = overall.get("mastered_topics", 0)
+    total_count = overall.get("total_topics", 0)
+
     stats = [
         {
             "title": "Overall Accuracy",
-            "value": f"{round(overall_accuracy)}%",
-            "subtitle": f"{correct_answers} of {questions_attempted} correct",
-            "badge": "+4.2%" if questions_attempted > 0 else "0%",
+            "value": f"{overall.get('overall_accuracy', 0)}%",
+            "subtitle": f"{overall.get('correct_answers', 0)} of {overall.get('questions_attempted', 0)} correct",
+            "badge": f"{improvement:+g}% vs previous 7 days",
             "iconName": "Target",
             "valueColor": "text-indigo-400",
-            "iconColor": "text-indigo-400"
+            "iconColor": "text-indigo-400",
         },
         {
             "title": "Improvement",
-            "value": "+18%" if questions_attempted > 0 else "0%",
-            "subtitle": "vs. last 7 days",
-            "badge": "Steady progress",
+            "value": f"{improvement:+g}%",
+            "subtitle": "last 7 days vs the preceding 7 days",
+            "badge": "Live quiz accuracy",
             "iconName": "TrendingUp",
             "valueColor": "text-emerald-400",
-            "iconColor": "text-emerald-400"
+            "iconColor": "text-emerald-400",
         },
         {
             "title": "Study Streak",
-            "value": "12 days",
-            "subtitle": "Personal best: 18",
-            "badge": "Keep it going!",
+            "value": f"{current_streak} days",
+            "subtitle": f"Personal best: {longest_streak} days",
+            "badge": "Keep it going!" if current_streak else "Start a streak",
             "iconName": "Flame",
             "valueColor": "text-amber-400",
-            "iconColor": "text-amber-400"
+            "iconColor": "text-amber-400",
         },
         {
             "title": "Topics Mastered",
             "value": str(mastered_count),
-            "subtitle": f"of {total_count} total topics" if total_count > 0 else "0 total topics",
-            "badge": "Keep learning!",
+            "subtitle": f"of {total_count} curriculum topics",
+            "badge": "Shared mastery rule",
             "iconName": "BookOpen",
             "valueColor": "text-cyan-400",
-            "iconColor": "text-cyan-400"
-        }
+            "iconColor": "text-cyan-400",
+        },
     ]
-    
-    # 3. Compute subject mastery
-    colors = ["from-indigo-500 to-violet-500", "from-purple-500 to-fuchsia-500", "from-cyan-500 to-sky-500", "from-emerald-500 to-teal-500", "from-amber-500 to-orange-500"]
-    subj_topics = {}
-    for p in all_perfs:
-        subj = p.subject or "General"
-        if subj not in subj_topics:
-            subj_topics[subj] = []
-        subj_topics[subj].append(p)
-        
+
+    subjects = get_student_subjects(student_id, db)
+    if not subjects:
+        subjects = list(dict.fromkeys(
+            perf.subject or "General"
+            for perf in all_perfs
+        ))
+    colors = [
+        "from-indigo-500 to-violet-500",
+        "from-purple-500 to-fuchsia-500",
+        "from-cyan-500 to-sky-500",
+        "from-emerald-500 to-teal-500",
+        "from-amber-500 to-orange-500",
+    ]
     mastery = []
-    for idx, (subj, topics_list) in enumerate(subj_topics.items()):
-        subj_accs = [p.accuracy or 0.0 for p in topics_list]
-        avg_acc = sum(subj_accs) / len(subj_accs) if subj_accs else 0.0
-        
+    for index, subject in enumerate(subjects):
+        subject_metrics = calculate_subject_metrics(student_id, subject, db)
+        subject_key = subject.casefold()
+        subject_perfs = [
+            perf for perf in all_perfs
+            if not perf.subject
+            or perf.subject.strip().casefold() == subject_key
+        ]
+        topics = []
+        for perf in sorted(subject_perfs, key=lambda item: item.topic):
+            topic_metrics = calculate_topic_metrics(perf)
+            if topic_metrics["sessions"] == 0 and topic_metrics["questions_attempted"] == 0:
+                continue
+            topics.append({
+                "name": perf.topic,
+                "progress": round(topic_metrics["accuracy"]),
+                "status": (
+                    "strong"
+                    if topic_metrics["status"] == "STRONG"
+                    else "weak"
+                    if topic_metrics["status"] == "WEAK"
+                    else "learning"
+                ),
+            })
         mastery.append({
-            "id": subj.lower().replace(" ", "-"),
-            "subject": subj,
-            "iconName": "BookOpen" if idx % 2 == 0 else "Activity",
-            "progress": round(avg_acc),
-            "progressColor": colors[idx % len(colors)],
-            "topics": [
-                {
-                    "name": p.topic,
-                    "progress": round(p.accuracy or 0.0),
-                    "status": "strong" if (p.accuracy or 0.0) >= 70 else "weak"
-                }
-                for p in topics_list
-            ]
+            "id": subject.lower().replace(" ", "-"),
+            "subject": subject,
+            "iconName": "BookOpen" if index % 2 == 0 else "Activity",
+            "progress": round(subject_metrics.get("average_accuracy", 0.0)),
+            "progressColor": colors[index % len(colors)],
+            "topics": topics,
         })
-        
-    if not mastery:
-        mastery = MAIN_DATA["mastery"]
-        
+
+    trend_labels = []
+    trend_accuracy = []
+    trend_volume = []
+    for offset in range(6, -1, -1):
+        day_start = (now - timedelta(days=offset)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        day_end = day_start + timedelta(days=1)
+        correct, questions = db.query(
+            func.sum(QuizHistory.correct_answers),
+            func.sum(QuizHistory.questions_attempted),
+        ).filter(
+            QuizHistory.student_id == student_id,
+            QuizHistory.questions_attempted > 0,
+            QuizHistory.created_at >= day_start,
+            QuizHistory.created_at < day_end,
+        ).first()
+        trend_labels.append(day_start.strftime("%a"))
+        trend_accuracy.append(
+            round(float(correct or 0) / float(questions) * 100, 1)
+            if questions else None
+        )
+        trend_volume.append(int(questions or 0))
+
     return {
         "stats": stats,
         "mastery": mastery,
-        "trend": MAIN_DATA["trend"]
+        "trend": {
+            "labels": trend_labels,
+            "accuracy": trend_accuracy,
+            "practiceVolume": trend_volume,
+        },
     }
-

@@ -26,7 +26,7 @@ def init_db():
     from models import User, Document, Department  # removed DocumentChunk
     from practice_models import (      # Adaptive Learning Engine tables
         PracticeSession, PracticeQuestion,
-        TopicPerformance, BehavioralInsight, CustomTopic, LearningContent, UserNote
+        TopicPerformance, RevisionItem, BehavioralInsight, CustomTopic, LearningContent, UserNote
     )
     from roadmap_models import UserGoal, LearningRoadmap, DailyTask, LearnerPreferences
     from classroom_models import Classroom, StudentClass, ClassResource, ClassCurriculum

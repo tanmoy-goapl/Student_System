@@ -286,6 +286,7 @@ export interface HomepageDataResponse {
   performanceSnapshots: any[];
   aiAlerts: any[];
   aiBehavioralInsights?: any[];
+  student_id?: number;
   dashboard_health?: string;
   revisionQueue?: any[];
   pending_dues?: {
@@ -296,9 +297,12 @@ export interface HomepageDataResponse {
   };
   todays_focus?: {
     topic: string;
+    subject?: string;
+    status?: string;
     reason: string;
     confidence: number;
     estimated_time: number;
+    is_in_revision?: boolean;
   };
 }
 
@@ -629,6 +633,26 @@ export interface PracticePerformanceResponse {
     reason: string;
     action_url: string;
   }[];
+  revision_queue?: {
+    topic: string;
+    subject: string;
+    confidence: number;
+    accuracy: number;
+    last_practiced?: string | null;
+    days_since_practice: number;
+    priority_score: number;
+    reason: string;
+  }[];
+  pending_tasks?: {
+    topic: string;
+    subject: string;
+    task_type: string;
+    task_types: string[];
+    reason: string;
+    days_since_practice: number;
+    priority_score: number;
+    action_url: string;
+  }[];
 }
 
 export async function getStudentPerformance(studentId: number): Promise<PracticePerformanceResponse> {
@@ -779,15 +803,20 @@ export async function streamGenerateMaterial(
   userId: number,
   onChunk?: (text: string) => void,
   signal?: AbortSignal,
-  classroomId?: string
+  classroomId?: string,
+  actionType: string = "notes",
+  description: string = ""
 ): Promise<string> {
   let url = "/api/learning/generate_material/stream";
   const params = new URLSearchParams();
   params.append("topic", topic);
   params.append("subject", subject);
   params.append("user_id", userId.toString());
+  params.append("action_type", actionType);
+  if (description.trim()) params.append("description", description.trim().slice(0, 1000));
   if (classroomId) {
     params.append("classroom_id", classroomId);
+    params.append("target_classroom_id", classroomId);
   }
   const q = params.toString();
   if (q) url += `?${q}`;
@@ -962,10 +991,21 @@ export async function saveNotes(studentId: number, topicName: string, generatedN
   });
 }
 
-export async function addToRevision(studentId: number, topicName: string, priority: string = "high"): Promise<any> {
+export async function addToRevision(
+  studentId: number,
+  topicName: string,
+  priority: string = "high",
+  subject?: string,
+): Promise<any> {
   return request<any>("/api/learning/revision", {
     method: "POST",
-    body: JSON.stringify({ student_id: studentId, topic_name: topicName, priority }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      student_id: studentId,
+      topic_name: topicName,
+      priority,
+      ...(subject ? { subject } : {}),
+    }),
   });
 }
 

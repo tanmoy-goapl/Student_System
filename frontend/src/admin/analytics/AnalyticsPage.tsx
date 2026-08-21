@@ -43,6 +43,7 @@ interface StudentStat {
   confidence: number;
   readiness: number;
   last_active: string;
+  risk_tier?: "HIGH_RISK" | "NEEDS_SUPPORT" | "NOT_STARTED" | "ON_TRACK";
 }
 
 interface AdminAlert {
@@ -64,6 +65,9 @@ interface DashboardData {
   average_confidence: number;
   average_readiness: number;
   weak_students: number;
+  students_needing_support?: number;
+  high_risk_students?: number;
+  not_started_students?: number;
   inactive_students: number;
   departments: DepartmentStat[];
   alerts: AdminAlert[];
@@ -130,31 +134,38 @@ export default function AnalyticsPage() {
   const totalStudents = dashboardData?.total_students ?? students.length;
   const enrolledStudents = dashboardData?.enrolled_students ?? 0;
   const activeToday = dashboardData?.active_students_today ?? 0;
-  const weakCount = dashboardData?.weak_students ?? students.filter((student) => student.confidence < 60).length;
+  const supportQueueCount = dashboardData?.students_needing_support ?? dashboardData?.weak_students ?? 0;
   const inactiveCount = dashboardData?.inactive_students ?? 0;
   const activeRate = totalStudents ? Math.round((activeToday / totalStudents) * 100) : 0;
   const enrollmentRate = totalStudents ? Math.round((enrolledStudents / totalStudents) * 100) : 0;
   const riskCounts = students.reduce(
     (counts, student) => {
-      const riskScore = (student.readiness + student.confidence) / 2;
-      if (riskScore < 40) {
+      if (student.risk_tier === "HIGH_RISK") {
         counts.highRisk += 1;
-      } else if (riskScore < 70) {
+      } else if (student.risk_tier === "NEEDS_SUPPORT") {
         counts.support += 1;
+      } else if (student.risk_tier === "NOT_STARTED") {
+        counts.notStarted += 1;
       } else {
         counts.onTrack += 1;
       }
       return counts;
     },
-    { highRisk: 0, support: 0, onTrack: 0 },
+    { highRisk: 0, support: 0, notStarted: 0, onTrack: 0 },
   );
   const riskRosterCount = students.length > 0 ? students.length : totalStudents;
-  const highRiskCount = students.length > 0 ? riskCounts.highRisk : 0;
-  const supportCount = students.length > 0 ? riskCounts.support : 0;
-  const onTrackCount = students.length > 0 ? riskCounts.onTrack : totalStudents;
+  const highRiskCount = students.length > 0 ? riskCounts.highRisk : (dashboardData?.high_risk_students ?? 0);
+  const notStartedCount = students.length > 0 ? riskCounts.notStarted : (dashboardData?.not_started_students ?? 0);
+  const supportCount = students.length > 0
+    ? riskCounts.support
+    : Math.max(supportQueueCount - highRiskCount - notStartedCount, 0);
+  const onTrackCount = students.length > 0
+    ? riskCounts.onTrack
+    : Math.max(riskRosterCount - highRiskCount - supportCount - notStartedCount, 0);
   const riskDistribution = [
     { label: "High risk", value: highRiskCount, color: "text-rose-400", bg: "bg-rose-500/10", bar: "bg-rose-500" },
     { label: "Needs support", value: supportCount, color: "text-amber-400", bg: "bg-amber-500/10", bar: "bg-amber-500" },
+    { label: "Not started", value: notStartedCount, color: "text-slate-300", bg: "bg-slate-500/10", bar: "bg-slate-500" },
     { label: "On track", value: onTrackCount, color: "text-emerald-400", bg: "bg-emerald-500/10", bar: "bg-emerald-500" },
   ];
   const departmentRows = dashboardData?.departments ?? [];
@@ -164,18 +175,18 @@ export default function AnalyticsPage() {
   const selectedClassroom = classrooms.find((classroom) => classroom.id === selectedCourseId) ?? null;
 
   const overviewCards = [
-    { label: "Student Confidence", value: kpi.confidence, subtitle: `${weakCount} below the 60% support threshold`, icon: TrendingUp, gradient: "from-blue-600 to-indigo-500", trend: "Live" },
+    { label: "Student Confidence", value: kpi.confidence, subtitle: `${highRiskCount} high risk · ${supportCount} need support`, icon: TrendingUp, gradient: "from-blue-600 to-indigo-500", trend: "Live" },
     { label: "Learning Readiness", value: kpi.readiness, subtitle: `${onTrackCount} students currently on track`, icon: BookOpen, gradient: "from-emerald-500 to-teal-500", trend: "Live" },
     { label: "Faculty Members", value: kpi.faculty, subtitle: `${dashboardData?.total_classes ?? 0} active classes in the platform`, icon: Users, gradient: "from-indigo-600 to-purple-600", trend: "Roster" },
     { label: "Active Today", value: kpi.active, subtitle: `${activeRate}% of the student roster`, icon: Activity, gradient: "from-rose-500 to-red-500", trend: "Live" },
   ];
 
   const executiveInsights: ExecutiveInsight[] = [];
-  if (weakCount > 0) {
+  if (supportQueueCount > 0) {
     executiveInsights.push({
       title: "Confidence support queue is open",
-      reason: `${weakCount} students are below 60% confidence. This is an early support signal for targeted practice planning.`,
-      affected: `${weakCount} students`, score: `${dashboardData?.average_confidence ?? 0}% average`, alertType: "HIGH PRIORITY", tone: "critical",
+      reason: `${supportQueueCount} students are high risk, need support, or have not started. This is an early support signal for targeted practice planning.`,
+      affected: `${supportQueueCount} students`, score: `${dashboardData?.average_confidence ?? 0}% average`, alertType: highRiskCount > 0 ? "HIGH PRIORITY" : "SUPPORT", tone: highRiskCount > 0 ? "critical" : "warning",
     });
   }
   if (inactiveCount > 0) {
@@ -530,7 +541,7 @@ export default function AnalyticsPage() {
                 <ShieldAlert className="h-4 w-4 text-rose-400" />
                 <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Risk distribution</h2>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {riskDistribution.map((risk) => (
                   <div key={risk.label} className={`rounded-xl border border-white/5 p-3 text-center ${risk.bg}`}>
                     <p className={`text-xl font-extrabold ${risk.color}`}>{risk.value}</p>
@@ -554,7 +565,7 @@ export default function AnalyticsPage() {
                     </div>
                   ))}
                 </div>
-                <p className="text-[9px] leading-relaxed text-slate-600">Risk score = average of confidence and readiness: below 40% high risk, 40–69% needs support, 70%+ on track.</p>
+                <p className="text-[9px] leading-relaxed text-slate-600">High risk: accuracy &lt;50% or confidence &lt;40%. Needs support: accuracy &lt;70%, confidence &lt;60%, or exposure &lt;25%. Not started is shown separately.</p>
                 <div className="flex items-center justify-between text-[10px] text-slate-500"><span>{inactiveCount} inactive in the last 7 days</span></div>
               </div>
               {dashboardData?.alerts?.length ? (
@@ -607,7 +618,7 @@ export default function AnalyticsPage() {
             <div className="mb-4 flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /><h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Operational alert summary</h2></div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               {[
-                { type: weakCount > 0 ? "HIGH PRIORITY" : "STABLE", label: "Student support signal", note: weakCount + " students below the confidence support threshold", icon: ShieldAlert },
+                { type: highRiskCount > 0 ? "HIGH PRIORITY" : supportQueueCount > 0 ? "SUPPORT" : "STABLE", label: "Student support signal", note: `${highRiskCount} high risk · ${supportCount} need support · ${notStartedCount} not started`, icon: ShieldAlert },
                 { type: inactiveCount > 0 ? "ENGAGEMENT" : "STABLE", label: "Engagement signal", note: inactiveCount + " students inactive in the last seven days", icon: UserX },
                 { type: enrollmentRate < 90 && totalStudents > 0 ? "DATA GAP" : "STABLE", label: "Enrollment coverage", note: enrolledStudents + " of " + totalStudents + " students enrolled in classes", icon: Target },
               ].map((alert) => {

@@ -1,21 +1,24 @@
 from services.chatbot.chat_intent import RetrievalMode
 from llm_state import get_user_preferences
-from services.chatbot.student_scope_router import is_student_question_in_scope as semantic_scope_check
+from services.chatbot.student_scope_router import (
+    is_non_learning_entertainment_request,
+    is_student_question_in_scope as semantic_scope_check,
+)
 
 MAX_CONTEXT_LEN = 6000
 
 
-# Student Chat is an academic mentor, not an unrestricted general-purpose
-# assistant. Keep this gate deterministic so an out-of-scope question is
-# rejected before document retrieval and before an LLM call adds latency.
-STUDENT_SCOPE_MESSAGE = (
-    "I’m MentorAI, focused on your studies and student goals. "
-    "I can help with coursework, academic concepts, coding, exams, "
-    "your documents, career preparation, and learning plans. "
-    "I can’t answer unrelated general-trivia or lifestyle questions. "
-    "Please rephrase your question around your learning or student needs."
+# Keep this boundary narrow and shared by student, professor, and admin chat.
+# General informational questions are allowed; direct entertainment generation is not.
+ENTERTAINMENT_SCOPE_MESSAGE = (
+    "I’m MentorAI for learning, academic, career, planning, and general "
+    "informational support. I can’t generate entertainment content such as "
+    "jokes, songs or lyrics, poems, riddles, or roleplay. "
+    "Please ask me a factual, educational, technical, career, or planning question."
 )
 
+# Backward-compatible alias for any older imports.
+STUDENT_SCOPE_MESSAGE = ENTERTAINMENT_SCOPE_MESSAGE
 
 
 def _is_student_question_in_scope(question: str) -> bool:
@@ -49,8 +52,8 @@ You are assisting a STUDENT ({user_name}).
 
 • You have access to universal documents, course-shared documents for enrolled courses, and your own private documents.
 • You can ask about coursework, academic concepts, coding, marks, improvement,
-  career preparation, and learning plans.
-• Keep questions connected to your education or student goals.
+  career preparation, learning plans, general knowledge, and everyday informational topics.
+• Answer general questions directly when they are not entertainment-generation requests.
 • You MUST NOT reference documents that are private to professors or admins.
 """
     return ""
@@ -138,8 +141,11 @@ CRITICAL RULES:
 • First decide whether the context directly supports the requested answer.
 • If it directly supports the answer, use ONLY the document passages and do not supplement them with general knowledge.
 • If it is empty or does not directly answer the question, say that the exact answer was not found in the available documents, then provide a clearly labelled general academic explanation when the question is in scope. Never present that explanation as document content.
-• Do not answer unrelated trivia, entertainment, sports, animal, recipe, travel, or lifestyle questions.
-• If a question is outside the academic/student-support scope, politely refuse and redirect the student to coursework, coding, study help, documents, career preparation, or learning plans.
+• If the question is clear and in scope, answer it directly from general academic knowledge when the context is empty or unrelated. Never reply with only a generic offer to help, and do not ask the student to rephrase a clear question.
+• For simple arithmetic or basic factual questions, give the direct answer first and keep the explanation brief.
+• General informational questions are allowed, including science, history, geography, everyday how-to questions, and basic factual questions, even when they are not in the retrieved documents.
+• If the question is a current/live fact and no reliable current source is available, say so instead of pretending the information is current.
+• Direct entertainment-generation requests are handled by the shared guardrail; do not generate jokes, songs or lyrics, poems, riddles, or roleplay.
 • Never hallucinate facts.
 
 ===== REFERENCE CONTEXT =====
@@ -154,6 +160,10 @@ CRITICAL RULES:
 • Never fabricate scores, attendance, CGPA, companies or policies.
 • Every factual statement derived from a document MUST contain its source filename (e.g. 'Source: filename.pdf').
 • Provide actionable, personalized advice.
+• For resume/CV analysis, do not require the resume to explicitly name its own weaknesses. First summarize the evidence that is actually documented, then identify potential gaps as "not evidenced in the resume" or "potential gap", and explain why each gap may matter.
+• Separate documented facts, reasonable inferences, and recommendations. Never state an inferred gap as proof that the user lacks the skill.
+• If the target role is not stated, make the evaluation general and say that the recommendations should be refined against a target role; do not invent a target role.
+• Do not respond only with "the resume does not list weaknesses" when the user asks for weak areas, gaps, or improvement opportunities. Give a useful, evidence-based assessment instead.
 
 ===== REFERENCE CONTEXT =====
 {context[:MAX_CONTEXT_LEN]}
@@ -170,9 +180,10 @@ CRITICAL RULES:
 GENERAL GROUNDING RULES:
 1. Every factual statement about the user's project, resume, research, or documents must come directly from retrieved documents.
 2. If a detail is not present in the retrieved documents, explicitly state that it is not mentioned.
-3. General knowledge may only be used when the active mode explicitly permits a fallback and the current retrieved context is empty or does not directly answer the question. Never use it to supplement a directly supported document answer.
-4. Never use general knowledge to invent implementation details about the user's work.
-5. Prefer saying: "The document does not mention..." instead of making assumptions.
+3. In an explicitly requested analysis or advice response, absence of evidence may be described as a potential gap or recommendation, but it must be labelled as an inference and never presented as a confirmed fact.
+4. General knowledge may only be used when the active mode explicitly permits a fallback and the current retrieved context is empty or does not directly answer the question. Never use it to supplement a directly supported document answer.
+5. Never use general knowledge to invent implementation details about the user's work.
+6. Prefer saying: "The document does not mention..." instead of making assumptions.
 """
 
     prof_instruction = ""
@@ -204,16 +215,7 @@ GENERAL FORMATTING RULES:
 
 
 def apply_role_guardrails(role: str, question: str) -> str:
-    """Apply the Student Chat domain boundary before retrieval/LLM execution.
-
-    The domain gate intentionally applies only to student chat. Professor and
-    admin flows retain their existing capability behavior; their role still
-    controls document visibility.
-    """
-    if (role or "").strip().lower() != "student":
-        return ""
-
-    if _is_student_question_in_scope(question):
-        return ""
-
-    return STUDENT_SCOPE_MESSAGE
+    """Apply the same narrow non-learning entertainment boundary to every role."""
+    if is_non_learning_entertainment_request(question):
+        return ENTERTAINMENT_SCOPE_MESSAGE
+    return ""

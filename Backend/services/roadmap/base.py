@@ -1,4 +1,5 @@
 import logging
+import os
 import httpx
 from openai import OpenAI
 from config import GPT_API_KEY, GPT_BASE_URL, GPT_MODEL, LLAMA_API_KEY, LLAMA_BASE_URL, LLAMA_MODEL
@@ -29,21 +30,29 @@ def _roadmap_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 40
         # Hardcoded active fallback to avoid timeouts when local gpt-oss is frozen
         configs.append(("Backup-GPT", "4c8c56fede640bf281a7e36128fef8c18ad0b5f97a5a6bbb2e41e29d4f5a895d", "http://10.10.90.94:2026/v1", "gpt-4o-mini"))
 
-    # Prioritize the fast Backup-GPT endpoint first for ultra-fast (2-3s) roadmap generation
+    # Try the configured provider first. The backup endpoint is useful for
+    # failover, but trying it first made a slow or unavailable backup delay
+    # every roadmap request even when the active provider was healthy.
     if provider == "gpt4o":
-        add_backup(); add_gpt(); add_llama()
+        add_gpt(); add_backup(); add_llama()
     elif provider == "llama":
-        add_backup(); add_llama(); add_gpt()
+        add_llama(); add_gpt(); add_backup()
     else:
-        add_backup(); add_gpt(); add_llama()
+        add_gpt(); add_backup(); add_llama()
 
     logger.info(f"[RoadmapEngine] Resolved configuration chain: {[c[0] for c in configs]}")
 
     for name, api_key, base_url, model in configs:
         try:
             logger.info(f"[RoadmapEngine] Trying provider '{name}' at {base_url} using model {model}...")
-            # Reduced connect timeout to 1.5s for fast failover
-            timeout = httpx.Timeout(15.0, connect=1.5)
+            # Roadmaps can contain several weeks of structured content. Keep
+            # connection failover quick, but allow the model enough time to
+            # finish a compact long-roadmap response.
+            try:
+                read_timeout = max(15.0, float(os.getenv("ROADMAP_LLM_TIMEOUT_SECONDS", "25")))
+            except (TypeError, ValueError):
+                read_timeout = 25.0
+            timeout = httpx.Timeout(read_timeout, connect=1.5)
             client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
 
             response = client.chat.completions.create(

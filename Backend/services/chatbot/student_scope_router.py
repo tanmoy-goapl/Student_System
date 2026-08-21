@@ -1,8 +1,8 @@
-"""Semantic routing for the Student Chat domain boundary.
+"""Shared chatbot preflight filtering.
 
-The router intentionally uses configurable examples instead of a keyword list.
-The embedding model is loaded lazily and shared with the existing embedding
-service. This keeps the decision local and avoids an extra GPT request.
+General informational questions are allowed for every role. The only narrow
+boundary enforced here is direct entertainment generation, such as requesting
+a joke, song, poem, riddle, or roleplay.
 """
 
 from __future__ import annotations
@@ -48,6 +48,54 @@ def normalize_for_scope(question: str) -> str:
     value = value.replace("’", "'").replace("`", "'")
     value = re.sub(r"\s+", " ", value).strip().lower()
     return value
+
+
+_BASIC_ARITHMETIC_RE = re.compile(
+    r"(?<![\w.])\d+(?:\.\d+)?(?:\s*(?:\*\*|//|[+\-*/%])\s*\d+(?:\.\d+)?)+(?![\w.])"
+)
+
+# The chatbot is intentionally broad for factual, educational, technical,
+# career, planning, and everyday informational questions. Only direct
+# entertainment-generation requests are blocked before retrieval/LLM work.
+_ENTERTAINMENT_GENERATION_PATTERNS = (
+    re.compile(
+        r"\b(?:tell|give|make|write|compose|create|generate|share|send)\s+"
+        r"(?:me\s+)?(?:a|an|some)?\s*"
+        r"(?:bad|funny|dark|dirty)?\s*"
+        r"(?:joke|riddle|meme|roast|poem|poetry|rap|song|lyrics?|story)\b",
+        flags=re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:sing|hum|perform|recite|play)\s+"
+        r"(?:me\s+)?(?:a|an|some)?\s*"
+        r"(?:song|lyrics?|poem|poetry|rap|joke)\b",
+        flags=re.IGNORECASE,
+    ),
+    re.compile(
+        r"^(?:sing|hum|perform|recite)\b",
+        flags=re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:roleplay|role-play)\b",
+        flags=re.IGNORECASE,
+    ),
+)
+
+
+def is_non_learning_entertainment_request(question: str) -> bool:
+    """Return True only for direct requests to generate entertainment content."""
+    normalized = normalize_for_scope(question)
+    if not normalized:
+        return False
+    return any(pattern.search(normalized) for pattern in _ENTERTAINMENT_GENERATION_PATTERNS)
+
+
+def is_basic_student_question(question: str) -> bool:
+    """Recognize safe, clearly supported utility questions before semantic routing."""
+    normalized = normalize_for_scope(question)
+    if not normalized:
+        return False
+    return bool(_BASIC_ARITHMETIC_RE.search(normalized))
 
 
 def _is_short_supported_conversation(question: str) -> bool:
@@ -134,53 +182,26 @@ def classify_student_scope(
     question: str,
     embed_fn: Callable[[list[str]], list[list[float]]] | None = None,
 ) -> ScopeResult:
+    """Classify the narrow blocked category while allowing general questions."""
     normalized = normalize_for_scope(question)
     if not normalized:
         return ScopeResult(ScopeDecision.BLOCK, matched_category="empty")
-    if _is_short_supported_conversation(normalized):
-        return ScopeResult(ScopeDecision.ALLOW, matched_category="conversation")
-
-    if embed_fn is None:
-        allowed, blocked = _get_prototypes()
-        query_vector = _unit_vector(get_embeddings([normalized])[0])
-    else:
-        allowed, blocked = _build_prototypes(embed_fn)
-        query_vector = _unit_vector(embed_fn([normalized])[0])
-
-    allowed_score, allowed_category = _best_match(query_vector, allowed)
-    blocked_score, blocked_category = _best_match(query_vector, blocked)
-    margin = allowed_score - blocked_score
-
-    # A strong semantic match to an academic category should win over a broad
-    # blocked prototype such as generic animal trivia. This allows legitimate
-    # science questions without opening the door to bare trivia.
-    academic_categories = {
-        "academic_learning",
-        "coding_and_computer_science",
-        "student_support",
-        "career_and_roadmap",
-    }
-    if allowed_score >= 0.50 and allowed_category in academic_categories:
-        return ScopeResult(ScopeDecision.ALLOW, allowed_score, blocked_score, allowed_category)
-    if allowed_score >= 0.20 and margin >= 0.03:
-        return ScopeResult(ScopeDecision.ALLOW, allowed_score, blocked_score, allowed_category)
-    if blocked_score >= 0.52 and margin <= -0.03:
-        return ScopeResult(ScopeDecision.BLOCK, allowed_score, blocked_score, blocked_category)
-    return ScopeResult(ScopeDecision.UNCERTAIN, allowed_score, blocked_score, allowed_category or blocked_category)
+    if is_non_learning_entertainment_request(normalized):
+        return ScopeResult(
+            ScopeDecision.BLOCK,
+            matched_category="non_learning_entertainment",
+        )
+    return ScopeResult(
+        ScopeDecision.ALLOW,
+        matched_category="general_information",
+    )
 
 
 def is_student_question_in_scope(question: str) -> bool:
-    """Compatibility boolean for the existing role-guardrail call site."""
+    """Compatibility wrapper: allow everything except blocked entertainment."""
     try:
         result = classify_student_scope(question)
     except Exception:
         logger.exception("Student scope router unavailable; rejecting question safely")
         return False
-    if result.decision == ScopeDecision.UNCERTAIN:
-        logger.info(
-            "Student scope uncertain: allowed=%.3f blocked=%.3f category=%s",
-            result.allowed_score,
-            result.blocked_score,
-            result.matched_category,
-        )
     return result.decision == ScopeDecision.ALLOW

@@ -3,7 +3,7 @@ interface QuestionCounterProps {
   onChange: (count: number) => void;
 }
 
-const QUESTION_OPTIONS = [5];
+const QUESTION_OPTIONS = [5, 10, 20];
 
 export default function QuestionCounter({
   value,

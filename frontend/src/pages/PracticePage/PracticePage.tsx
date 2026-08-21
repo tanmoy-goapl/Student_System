@@ -106,10 +106,33 @@ export default function PracticePage({
     const getStudentId = (): number => {
         if (typeof window !== "undefined") {
             const id = localStorage.getItem("user_id");
-            return id ? parseInt(id, 10) : 1;
+            const requestedId = searchParams?.get("student_id");
+            const parsedId = requestedId ? Number(requestedId) : (id ? Number(id) : 3);
+            return Number.isInteger(parsedId) && parsedId > 0 ? parsedId : 3;
         }
-        return 1;
+        return 3;
     };
+
+    // Keep the backend generation session resumable after navigation.
+    const pendingGenerationKey = (): string => `mentor_ai_practice_generation_${getStudentId()}`;
+    const clearPendingGeneration = useCallback(() => {
+        if (typeof window !== "undefined") localStorage.removeItem(pendingGenerationKey());
+    }, []);
+    const savePendingGeneration = useCallback((response: StartSessionResponse) => {
+        if (typeof window !== "undefined") localStorage.setItem(pendingGenerationKey(), JSON.stringify({
+            sessionId: response.session_id, mode: response.mode, topic: response.topic,
+            difficulty: response.difficulty, questionCount: response.total_questions || response.question_count || totalQuestions, startedAt: Date.now(),
+        }));
+    }, [totalQuestions]);
+    const readPendingGeneration = useCallback(() => {
+        if (typeof window === "undefined") return null;
+        try {
+            const raw = localStorage.getItem(pendingGenerationKey());
+            if (!raw) return null;
+            const value = JSON.parse(raw);
+            return Number.isInteger(Number(value?.sessionId)) && Number(value.sessionId) > 0 ? { ...value, sessionId: Number(value.sessionId) } : null;
+        } catch { clearPendingGeneration(); return null; }
+    }, [clearPendingGeneration]);
 
     const refreshPerformance = useCallback(async (showLoading = false) => {
         if (showLoading) setPerformanceLoading(true);
@@ -196,10 +219,12 @@ export default function PracticePage({
 
                 if (status.generation_status === "ready" && status.questions?.length) {
                     applySessionQuestions(status);
+                    clearPendingGeneration();
                     setIsLoading(false);
                     setIsGenerating(false);
                     stopGenerationPolling();
                 } else if (status.generation_status === "failed") {
+                    clearPendingGeneration();
                     setIsLoading(false);
                     setIsGenerating(false);
                     setHasError(true);
@@ -217,11 +242,30 @@ export default function PracticePage({
         generationPollRef.current = setInterval(() => {
             void poll();
         }, 1000);
-    }, [applySessionQuestions, stopGenerationPolling]);
+    }, [applySessionQuestions, clearPendingGeneration, stopGenerationPolling]);
+
+    const recoverPendingGeneration = useCallback(async () => {
+        const pending = readPendingGeneration();
+        if (!pending) return false;
+        setSessionId(pending.sessionId); setSessionMode(pending.mode || "topic"); setSessionTopic(pending.topic || "");
+        setSessionDifficulty(pending.difficulty || "mixed"); setTotalQuestions(pending.questionCount || 5);
+        setIsLoading(true); setIsGenerating(true);
+        try {
+            const status = await getSessionStatus(pending.sessionId);
+            if (!mountedRef.current) return true;
+            if (status.generation_status === "ready" && status.questions?.length) {
+                applySessionQuestions(status); clearPendingGeneration(); setIsLoading(false); setIsGenerating(false);
+            } else if (status.generation_status === "failed") {
+                clearPendingGeneration(); setIsLoading(false); setIsGenerating(false); setHasError(true);
+            } else beginGenerationPolling(pending.sessionId);
+            return true;
+        } catch { beginGenerationPolling(pending.sessionId); return true; }
+    }, [applySessionQuestions, beginGenerationPolling, clearPendingGeneration, readPendingGeneration]);
 
     // Start a new practice session
     const handleStartSession = async (mode: string, topic?: string, difficulty?: string, questionCount?: number) => {
         stopGenerationPolling();
+        clearPendingGeneration();
         setIsLoading(true);
         setIsGenerating(true);
         setSessionComplete(false);
@@ -239,6 +283,7 @@ export default function PracticePage({
                 count
             );
 
+            if (!response.questions?.length || response.generation_status === "generating" || response.status === "generating") savePendingGeneration(response);
             if (!mountedRef.current) return;
             applySessionQuestions(response);
             setLiveStats({ accuracy: 0, streak: 0, points: 0, avgSpeed: "0s", answered: 0, correct: 0 });
@@ -246,9 +291,8 @@ export default function PracticePage({
             waitingForGeneration = !response.questions?.length
                 || response.generation_status === "generating"
                 || response.status === "generating";
-            if (waitingForGeneration) {
-                beginGenerationPolling(response.session_id);
-            }
+            if (waitingForGeneration) beginGenerationPolling(response.session_id);
+            else clearPendingGeneration();
         } catch (error) {
             console.error("Failed to start session:", error);
             if (mountedRef.current) setHasError(true);
@@ -262,13 +306,15 @@ export default function PracticePage({
     
     // Auto-start practice session if topic query param is present on mount
     useEffect(() => {
+        if (hasAutoStarted.current) return;
+        if (readPendingGeneration()) { hasAutoStarted.current = true; void recoverPendingGeneration(); return; }
         const topicParam = searchParams?.get("topic");
         const modeParam = searchParams?.get("mode") || "topic";
         if (topicParam && !hasAutoStarted.current) {
             hasAutoStarted.current = true;
             handleStartSession(modeParam, topicParam);
         }
-    }, [searchParams]);
+    }, [readPendingGeneration, recoverPendingGeneration, searchParams]);
 
     // Submit answer
     const handleSubmitAnswer = async () => {
@@ -330,6 +376,7 @@ export default function PracticePage({
                 const batch = await getNextBatch(sessionId);
 
                 if (batch.session_complete || batch.questions.length === 0) {
+                    clearPendingGeneration();
                     setSessionComplete(true);
                     const perfData = await getStudentPerformance(getStudentId());
                     setPerformance(perfData);
@@ -404,6 +451,7 @@ export default function PracticePage({
                             "✨ Finalizing quiz workspace..."
                         ]}
                         currentStepIndex={loadingStep}
+                        indeterminate
                     />
                 </div>
             );
@@ -647,6 +695,7 @@ export default function PracticePage({
                     insights={performance?.insights}
                     adaptiveEngine={performance?.adaptive_engine}
                     suggestedNext={performance?.suggested_next}
+                    revisionQueue={performance?.revision_queue}
                     performanceLoading={performanceLoading}
                     answeredQuestions={performance?.questions_attempted ?? performance?.total_attempts ?? 0}
                     overallAccuracy={performance?.overall_accuracy ?? 0}

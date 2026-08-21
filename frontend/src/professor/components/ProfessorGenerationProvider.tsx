@@ -11,7 +11,7 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import { AlertTriangle, Bell, CheckCircle2, Loader2, X } from "lucide-react";
 
-export type GenerationActionType = "lesson" | "quiz" | "revision" | "simplify" | "practice";
+export type GenerationActionType = "notes" | "lesson" | "quiz" | "revision" | "simplify" | "practice";
 export type GenerationJobStatus = "generating" | "complete" | "error";
 
 export interface GenerationJob {
@@ -21,6 +21,7 @@ export interface GenerationJob {
   status: GenerationJobStatus;
   result: string;
   error?: string;
+  targetPath?: string;
 }
 
 interface StartGenerationRequest {
@@ -31,6 +32,10 @@ interface StartGenerationRequest {
   classroomId?: string;
   description?: string;
   professorId?: number;
+  targetPath?: string;
+  onChunk?: (text: string) => void;
+  onComplete?: (text: string) => void;
+  onError?: (message: string) => void;
 }
 
 interface GenerationContextValue {
@@ -152,7 +157,7 @@ function ProfessorGenerationNotifications({
           job={job}
           onView={() => {
             onView(job.id);
-            router.push("/professor");
+            router.push(job.targetPath || "/professor");
           }}
           onDismiss={() => onDismiss(job.id)}
         />
@@ -181,7 +186,7 @@ export default function ProfessorGenerationProvider({
 
     setGenerationJobs((jobs) => [
       ...jobs,
-      { id: jobId, title: request.title, topic: request.topic, status: "generating" as const, result: "" },
+      { id: jobId, title: request.title, topic: request.topic, status: "generating" as const, result: "", targetPath: request.targetPath },
     ].slice(-8));
 
     void (async () => {
@@ -213,23 +218,27 @@ export default function ProfessorGenerationProvider({
             if (value) {
               fullText += decoder.decode(value, { stream: true });
               updateGenerationJob(jobId, { result: fullText });
+              request.onChunk?.(fullText);
             }
           }
           const finalChunk = decoder.decode();
           if (finalChunk) {
             fullText += finalChunk;
             updateGenerationJob(jobId, { result: fullText });
+            request.onChunk?.(fullText);
           }
         } finally {
           reader.releaseLock();
         }
 
         updateGenerationJob(jobId, { status: "complete" });
+        request.onComplete?.(fullText);
       } catch (error: unknown) {
         updateGenerationJob(jobId, {
           status: "error",
           error: error instanceof Error ? error.message : "Failed to generate content",
         });
+        request.onError?.(error instanceof Error ? error.message : "Failed to generate content");
       }
     })();
 

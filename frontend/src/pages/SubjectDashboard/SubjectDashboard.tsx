@@ -371,7 +371,7 @@ export default function SubjectDashboard({ subjectName, classId, hideBackButton,
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                 <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
                   <AlertTriangle className="w-4 h-4 text-rose-400" />
-                  Weak Topics (Below 70%)
+                  Weak Topics (Below 50% accuracy)
                 </h3>
                 {weakTopics.length === 0 ? (
                   <p className="text-sm text-slate-500 py-6 text-center">Great! No weak topics detected for this subject.</p>

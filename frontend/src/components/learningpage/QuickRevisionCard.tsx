@@ -1,5 +1,5 @@
 import { RevisionPoint } from "@/constants/learningpage-data";
-import { Sparkles } from "lucide-react";
+import { BookmarkPlus, Check, LoaderCircle, Sparkles } from "lucide-react";
 
 interface QuickRevisionCardProps {
   title?: string;
@@ -7,12 +7,18 @@ interface QuickRevisionCardProps {
   cta?: string;
   onAddRevision?: () => void;
   onSaveNotes?: () => void;
+  isRevisionAdded?: boolean;
+  isAddingRevision?: boolean;
+  revisionError?: string | null;
 }
 
 export function QuickRevisionCard({
   points,
   onAddRevision,
-  onSaveNotes
+  onSaveNotes,
+  isRevisionAdded = false,
+  isAddingRevision = false,
+  revisionError,
 }: QuickRevisionCardProps) {
   // Limit to 4-6 points
   const displayPoints = points.slice(0, 6);
@@ -28,8 +34,33 @@ export function QuickRevisionCard({
           </h2>
         </div>
 
-
+        {onAddRevision && (
+          <button
+            type="button"
+            onClick={onAddRevision}
+            disabled={isRevisionAdded || isAddingRevision}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-medium transition-colors ${
+              isRevisionAdded
+                ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
+                : "border-violet-500/25 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20 disabled:cursor-wait disabled:opacity-60"
+            }`}
+          >
+            {isAddingRevision ? (
+              <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+            ) : isRevisionAdded ? (
+              <Check className="h-3.5 w-3.5" />
+            ) : (
+              <BookmarkPlus className="h-3.5 w-3.5" />
+            )}
+            {isAddingRevision ? "Adding..." : isRevisionAdded ? "In Revision" : "Add to Revision"}
+          </button>
+        )}
       </div>
+      {revisionError && (
+        <p className="mb-3 text-[11px] text-rose-300" role="status">
+          {revisionError}
+        </p>
+      )}
 
       {/* ITEMS */}
       <ul className="space-y-2.5">

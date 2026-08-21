@@ -10,50 +10,49 @@ if str(BACKEND_ROOT) not in sys.path:
 from services.chatbot.chat_prompts import apply_role_guardrails
 
 
-class StudentChatGuardrailTests(unittest.TestCase):
-    def test_rejects_unrelated_animal_trivia(self):
-        self.assertTrue(apply_role_guardrails("student", "What is a peacock?"))
+class ChatGuardrailTests(unittest.TestCase):
+    def test_all_roles_allow_general_informational_questions(self):
+        questions = [
+            "What is the capital of France?",
+            "What is a peacock?",
+            "Explain how a solar eclipse happens.",
+            "How do I cook rice?",
+            "What is the difference between a comet and an asteroid?",
+        ]
+        for role in ("student", "professor", "admin"):
+            for question in questions:
+                with self.subTest(role=role, question=question):
+                    self.assertEqual(apply_role_guardrails(role, question), "")
 
-    def test_rejects_unrelated_question_without_academic_signal(self):
-        self.assertTrue(apply_role_guardrails("student", "What is the capital of France?"))
-    def test_allows_informal_academic_abbreviation(self):
+    def test_all_roles_allow_academic_questions(self):
+        question = "Explain the difference between stacks and queues in a data structure course."
+        for role in ("student", "professor", "admin"):
+            with self.subTest(role=role):
+                self.assertEqual(apply_role_guardrails(role, question), "")
+
+    def test_blocks_direct_joke_requests_for_all_roles(self):
+        for role in ("student", "professor", "admin"):
+            with self.subTest(role=role):
+                self.assertTrue(apply_role_guardrails(role, "Tell me a bad joke."))
+
+    def test_blocks_direct_song_requests_for_all_roles(self):
+        for role in ("student", "professor", "admin"):
+            with self.subTest(role=role):
+                self.assertTrue(apply_role_guardrails(role, "Sing me a song."))
+
+    def test_blocks_other_entertainment_generation(self):
+        self.assertTrue(apply_role_guardrails("student", "Write me a poem."))
+        self.assertTrue(apply_role_guardrails("professor", "Give me a riddle."))
+        self.assertTrue(apply_role_guardrails("admin", "Roleplay as a pirate."))
+
+    def test_allows_informational_song_question(self):
         self.assertEqual(
-            apply_role_guardrails("student", "What is a bankers algo?"),
+            apply_role_guardrails("student", "Explain the history of songwriting."),
             "",
         )
 
-    def test_allows_short_academic_concept_question(self):
-        self.assertEqual(
-            apply_role_guardrails("student", "What is banker algo?"),
-            "",
-        )
-
-    def test_allows_general_science_question(self):
-        self.assertEqual(
-            apply_role_guardrails("student", "What is the biology of a peacock?"),
-            "",
-        )
-
-    def test_allows_natural_science_learning_question(self):
-        self.assertEqual(
-            apply_role_guardrails("student", "How does a tree grow?"),
-            "",
-        )
-    def test_allows_academic_learning_question(self):
-        self.assertEqual(
-            apply_role_guardrails("student", "Explain the difference between stacks and queues in a data structure course."),
-            "",
-        )
-
-    def test_allows_academic_context_for_animal_topic(self):
-        self.assertEqual(
-            apply_role_guardrails("student", "Explain peacock biology for my assignment."),
-            "",
-        )
-
-    def test_preserves_professor_and_admin_behavior(self):
-        self.assertEqual(apply_role_guardrails("professor", "What is a peacock?"), "")
-        self.assertEqual(apply_role_guardrails("admin", "What is a peacock?"), "")
+    def test_allows_basic_arithmetic(self):
+        self.assertEqual(apply_role_guardrails("student", "What is 2 + 2?"), "")
 
 
 if __name__ == "__main__":

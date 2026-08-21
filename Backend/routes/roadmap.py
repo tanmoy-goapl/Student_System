@@ -34,7 +34,7 @@ def get_goals(student_id: int, db: Session = Depends(get_db)):
     goals = db.query(UserGoal).filter(UserGoal.student_id == student_id).all()
     return {"success": True, "goals": goals}
 
-from services.roadmap.roadmap_engine import generate_roadmap_from_llm
+from services.roadmap.roadmap_engine import build_student_document_context, generate_roadmap_from_llm, persist_generated_roadmap
 from sqlalchemy import desc
 
 class GenerateRoadmapReq(BaseModel):
@@ -58,36 +58,15 @@ def background_generate_roadmap(student_id: int, goal_id: int):
         else:
             duration_str = "6 weeks" # Default if no deadline
             
-        roadmap_json = generate_roadmap_from_llm(goal.title, duration_str, "")
-        
-        roadmap = LearningRoadmap(
-            student_id=student_id,
-            goal_id=goal.id,
-            title=roadmap_json.get("title", f"Roadmap for {goal.title}"),
-            roadmap_data=roadmap_json
+        document_context = build_student_document_context(student_id, db, focus_topic=goal.title)
+        roadmap_json = generate_roadmap_from_llm(
+            goal.title,
+            duration_str,
+            document_context,
+            goal.description or "",
+            goal.goal_type,
         )
-        db.add(roadmap)
-        db.commit()
-        db.refresh(roadmap)
-        
-        for week in roadmap_json.get("weeks", []):
-            week_num = week.get("week_number", 1)
-            for day in week.get("days", []):
-                dt = DailyTask(
-                    roadmap_id=roadmap.id,
-                    task_type="learning",
-                    topic=day.get("topic", f"Day {day.get('day_number', 1)}"),
-                    description=day.get("description", ""),
-                    assigned_date=datetime.utcnow(),
-                    week_number=week_num,
-                    day_number=day.get("day_number", 1),
-                    subtopics=day.get("subtopics", [])
-                )
-                db.add(dt)
-        db.commit()
-        
-        goal.status = "active"
-        db.commit()
+        persist_generated_roadmap(db, student_id, goal.id, roadmap_json)
     except Exception as e:
         import logging
         import traceback
@@ -110,22 +89,62 @@ def generate_roadmap(req: GenerateRoadmapReq, background_tasks: BackgroundTasks,
     
     background_tasks.add_task(background_generate_roadmap, req.student_id, goal.id)
     
+
     return {"success": True, "message": "Roadmap is being generated in the background."}
 
 @router.get("/current/{student_id}")
 def get_current_roadmap(student_id: int, roadmap_id: Optional[int] = None, db: Session = Depends(get_db)):
     from sqlalchemy import desc
-    # Get latest roadmap or specific one
+
+    latest_goal = None
+    if not roadmap_id:
+        latest_goal = db.query(UserGoal).filter(
+            UserGoal.student_id == student_id
+        ).order_by(desc(UserGoal.created_at)).first()
+
+    # Get latest roadmap or specific one.
     if roadmap_id:
-        roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.id == roadmap_id, LearningRoadmap.student_id == student_id).first()
+        roadmap = db.query(LearningRoadmap).filter(
+            LearningRoadmap.id == roadmap_id,
+            LearningRoadmap.student_id == student_id,
+        ).first()
     else:
-        roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == student_id).order_by(desc(LearningRoadmap.created_at)).first()
-        
-    if not roadmap:
-        # Check if there is a goal currently being generated
-        latest_goal = db.query(UserGoal).filter(UserGoal.student_id == student_id).order_by(desc(UserGoal.created_at)).first()
+        roadmap = db.query(LearningRoadmap).filter(
+            LearningRoadmap.student_id == student_id
+        ).order_by(desc(LearningRoadmap.created_at)).first()
+
+    # Never show an older subject while a newer goal is still being generated
+    # or has failed. That makes the UI reflect the requested topic accurately.
+    if not roadmap or (
+        latest_goal
+        and latest_goal.created_at
+        and roadmap.created_at
+        and latest_goal.created_at > roadmap.created_at
+    ):
         if latest_goal and latest_goal.status == "generating":
-            return {"success": True, "generating": True, "goal_title": latest_goal.title}
+            return {
+                "success": True,
+                "generating": True,
+                "goal_id": latest_goal.id,
+                "goal_title": latest_goal.title,
+            }
+        if latest_goal and latest_goal.status == "failed":
+            return {
+                "success": False,
+                "failed": True,
+                "goal_id": latest_goal.id,
+                "goal_title": latest_goal.title,
+                "message": "Roadmap generation could not complete. Please retry this goal.",
+            }
+        if latest_goal and not roadmap_id and (
+            not roadmap or not latest_goal.created_at or not roadmap.created_at or latest_goal.created_at > roadmap.created_at
+        ):
+            return {
+                "success": False,
+                "goal_id": latest_goal.id,
+                "goal_title": latest_goal.title,
+                "message": "No roadmap is available for the latest goal yet.",
+            }
         return {"success": False, "message": "No roadmap found"}
     all_tasks = db.query(DailyTask).filter(DailyTask.roadmap_id == roadmap.id).all()
     
