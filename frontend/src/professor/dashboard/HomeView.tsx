@@ -360,7 +360,9 @@ export default function HomeView() {
     const description = descriptionInput.trim();
     if (!topic || !action) return;
 
-    const professorId = Number(localStorage.getItem("user_id") || 2);
+    const rawProfessorId = localStorage.getItem("user_id");
+    if (!rawProfessorId) return;
+    const professorId = Number(rawProfessorId);
     const targetClass = data?.classes?.find(c => c.id.toString() === selectedClassId) || (data?.classes && data.classes[0]);
     const subjectName = targetClass ? targetClass.name : "Computer Science";
     const classroomId = targetClass?.id != null ? String(targetClass.id) : undefined;
@@ -391,7 +393,8 @@ export default function HomeView() {
     setLoading(true);
     setError(null);
     try {
-      const userId = localStorage.getItem("user_id") || "2";
+      const userId = localStorage.getItem("user_id");
+      if (!userId) throw new Error("Authentication required. Please sign in again.");
       const res = await fetch(`/api/professor/dashboard?professor_id=${userId}`);
       if (!res.ok) throw new Error("Failed to load dashboard");
       const json: DashboardData = await res.json();

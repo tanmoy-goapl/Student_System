@@ -29,12 +29,18 @@ export function getDocumentId(id: string | number): string {
   return String(id).replace(/^db-/, "");
 }
 
+function currentUserQuery(): string {
+  if (typeof window === "undefined") return "";
+  const userId = window.localStorage.getItem("user_id");
+  return userId ? `&user_id=${encodeURIComponent(userId)}` : "";
+}
+
 export function getDocumentViewUrl(id: string | number): string {
-  return "/api/documents/view?document_id=" + encodeURIComponent(getDocumentId(id));
+  return "/api/documents/view?document_id=" + encodeURIComponent(getDocumentId(id)) + currentUserQuery();
 }
 
 export function getDocumentTextPreviewUrl(id: string | number): string {
-  return "/api/documents/preview?document_id=" + encodeURIComponent(getDocumentId(id));
+  return "/api/documents/preview?document_id=" + encodeURIComponent(getDocumentId(id)) + currentUserQuery();
 }
 
 export function getDocumentPreviewKind(document: DocumentLike): DocumentPreviewKind {

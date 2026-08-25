@@ -35,9 +35,10 @@ from services.chatbot.chat_intent import RetrievalMode, detect_retrieval_mode
 from services.chatbot.chat_prompts import _build_system_prompt, apply_role_guardrails
 from services.llm_client import _call_llm, _call_llm_stream
 from services.llm_client import LLMStreamTimeout
-from services.query_planner import plan_retrieval_strategy
+from services.query_planner import plan_retrieval_strategy, is_broad_query
 from services.document_resolver import resolve_documents, get_role_visible_docs
 from services.context_builder import build_context, format_context
+from services.authorization import require_user
 
 import os
 import logging
@@ -148,7 +149,8 @@ def _needs_conversation_context(question: str) -> bool:
         return False
 
     follow_up_terms = {
-        "it", "this", "that", "same", "above", "previous", "more",
+        "it", "this", "that", "they", "them", "those", "these",
+        "same", "above", "previous", "more",
         "definition", "meaning", "explain", "elaborate", "example",
         "simplify", "why", "how does", "how do",
     }
@@ -188,6 +190,7 @@ def _adaptive_filter(
     chunks: list[dict],
     mode: RetrievalMode,
     allow_low_confidence_target: bool = False,
+    allow_broad_context: bool = False,
 ) -> list[dict]:
     """
     Adaptive similarity filtering (replaces all fixed thresholds).
@@ -203,9 +206,24 @@ def _adaptive_filter(
     def _sim(c: dict) -> float:
         return c.get("similarity", 1.0 - (c.get("distance", 2.0) / 2.0))
 
-    # Sort descending by similarity
-    scored = sorted(chunks, key=_sim, reverse=True)
-    top_score = _sim(scored[0])
+    def _relevance(c: dict) -> float:
+        # ContextBuilder's score combines semantic similarity, lexical overlap,
+        # and document-aware signals. Older chunks still fall back to semantic
+        # similarity for compatibility.
+        score = c.get("retrieval_score")
+        if score is None:
+            # Full-document reconstruction intentionally keeps its original
+            # semantic score for compatibility; ordinary retrieval chunks carry
+            # retrieval_score from ContextBuilder.
+            score = _sim(c)
+        try:
+            return float(score)
+        except (TypeError, ValueError):
+            return _sim(c)
+
+    # Sort by the same document-aware relevance score used to build context.
+    scored = sorted(chunks, key=_relevance, reverse=True)
+    top_score = _relevance(scored[0])
 
     logger.info(f"  Adaptive filter: top_score={top_score:.4f}")
 
@@ -219,6 +237,8 @@ def _adaptive_filter(
         RetrievalMode.PERSONALIZED_ADVISOR: 0.35,
     }
     minimum_score = minimum_scores.get(mode, 0.35)
+    if allow_broad_context:
+        minimum_score = min(minimum_score, 0.20)
     # Resume analysis often retrieves evidence from a sparse CV (project
     # bullets, skills, or headings), so its semantic score can be lower than a
     # full sentence from a study note. If the resolver identified a specific
@@ -234,9 +254,17 @@ def _adaptive_filter(
         )
         return []
 
-    # Keep chunks within adaptive window
-    cutoff = top_score - 0.10
-    kept = [c for c in scored if _sim(c) >= cutoff]
+    # Broad list/aggregation requests need complete evidence from the
+    # already-selected document family. ContextBuilder has narrowed the
+    # candidate set to competitive documents and expanded neighboring chunks;
+    # applying another relevance window here would silently drop lower-ranked
+    # rows such as later companies in a report.
+    if allow_broad_context:
+        cutoff = top_score
+        kept = scored
+    else:
+        cutoff = top_score - 0.10
+        kept = [c for c in scored if _relevance(c) >= cutoff]
     logger.info(f"  Adaptive filter: cutoff={cutoff:.4f}, kept={len(kept)}/{len(scored)}")
 
     # Per-mode chunk limits
@@ -246,7 +274,7 @@ def _adaptive_filter(
         RetrievalMode.LEARNING: 5,
         RetrievalMode.PERSONALIZED_ADVISOR: 8,
     }
-    limit = limits.get(mode, 5)
+    limit = 40 if allow_broad_context else limits.get(mode, 5)
     return kept[:limit]
 
 
@@ -294,10 +322,13 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     logger.info(f"  Role       : {request.role}")
     logger.info(f"{'='*80}")
 
-    # ── Verify student ────────────────────────────────────────────────────────
-    user = db.query(User).filter(User.id == request.student_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Student not found")
+    # ── Verify the active account and derive role server-side ─────────────────
+    # The client-provided role is presentation data; never use it to expand
+    # document visibility or professor/admin capabilities.
+    user = require_user(request.student_id, db)
+    if request.role != user.role:
+        logger.warning("Ignoring mismatched client role for user %s: %s", request.student_id, request.role)
+    request.role = user.role
 
     # ── Role guardrail ────────────────────────────────────────────────────────
     guardrail = apply_role_guardrails(request.role, request.question)
@@ -361,12 +392,15 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         if retrieval_question != request.question:
             logger.info("  Retrieval query enriched with previous conversation topic")
         # ── Persist user message ─────────────────────────────────────────────
+        persisted_user_message_id: int | None = None
         try:
-            db.add(ChatMessage(
+            current_user_message = ChatMessage(
                 student_id=request.student_id, role="user", content=request.question,
                 session_id=session_id, session_title=session_title
-            ))
+            )
+            db.add(current_user_message)
             db.commit()
+            persisted_user_message_id = current_user_message.id
         except Exception as e:
             logger.error(f"Failed to persist user message: {e}")
 
@@ -511,7 +545,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         else:
             target_docs, searched_docs = resolve_documents(
                 mode=mode,
-                question=request.question,
+                question=retrieval_question,
                 student_id=request.student_id,
                 role=request.role,
                 db=db
@@ -536,8 +570,9 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
 
         # ── STAGE 2: Query Planning ──────────────────────────────────────────
         strategy = plan_retrieval_strategy(
-            question=request.question,
-            has_specific_target_docs=bool(target_docs)
+            question=retrieval_question,
+            has_specific_target_docs=bool(target_docs),
+            target_doc_types=[getattr(doc, "document_type", "") for doc in target_docs],
         )
 
         yield json.dumps({"status": "Searching documents..."}) + "\n"
@@ -564,13 +599,18 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             )
             for doc in target_docs
         )
+        broad_context = is_broad_query(retrieval_question)
         grounded_chunks = _adaptive_filter(
             chunks,
             mode,
             allow_low_confidence_target=resume_targeted,
+            allow_broad_context=broad_context,
         )
         if grounded_chunks:
-            context = format_context(grounded_chunks)
+            context = format_context(
+                grounded_chunks,
+                max_chars=14000 if broad_context else None,
+            )
             retrieved_doc_names = list(dict.fromkeys(
                 c["document"] for c in grounded_chunks if c.get("document")
             ))
@@ -613,7 +653,13 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             .filter(ChatMessage.session_id == session_id)
             .order_by(ChatMessage.created_at.asc())
             .all()
-        )[-LLM_HISTORY_LIMIT:]
+        )
+        if persisted_user_message_id is not None:
+            history = [
+                message for message in history
+                if message.id != persisted_user_message_id
+            ]
+        history = history[-LLM_HISTORY_LIMIT:]
 
         system_prompt = _build_system_prompt(answer_mode, searched_doc_names, context, request.role, student_name, proficiency=proficiency)
 
@@ -661,7 +707,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         except LLMStreamTimeout:
             logger.warning("LLM response reached the time budget; preserving the response generated so far")
             if not full_answer:
-                fallback_message = "I could not complete that explanation in time. Please ask for a shorter answer."
+                fallback_message = "The AI service did not finish generating this answer. The relevant documents were retrieved; please retry in a moment."
                 full_answer = fallback_message
                 yield json.dumps({"content": fallback_message}) + "\n"
         finally:
@@ -826,6 +872,7 @@ CURRENT REQUEST: {request.question}"""
 
 @router.get("/chat/sessions/{student_id}")
 def get_sessions(student_id: int, db: Session = Depends(get_db)):
+    require_user(student_id, db)
     from sqlalchemy import func
     # Find the latest message timestamp for each unique session_id
     subq = (
@@ -865,6 +912,7 @@ def get_sessions(student_id: int, db: Session = Depends(get_db)):
 
 @router.get("/chat/history/{student_id}", response_model=List[Message])
 def get_history(student_id: int, session_id: Optional[str] = None, db: Session = Depends(get_db)):
+    require_user(student_id, db)
     query = db.query(ChatMessage).filter(ChatMessage.student_id == student_id)
     if session_id:
         query = query.filter(ChatMessage.session_id == session_id)
@@ -897,6 +945,7 @@ def get_history(student_id: int, session_id: Optional[str] = None, db: Session =
 
 @router.delete("/chat/history/{student_id}")
 def clear_history(student_id: int, session_id: Optional[str] = None, db: Session = Depends(get_db)):
+    require_user(student_id, db)
     query = db.query(ChatMessage).filter(ChatMessage.student_id == student_id)
     if session_id:
         query = query.filter(ChatMessage.session_id == session_id)
@@ -915,6 +964,7 @@ def delete_history_item(
     role: str = "user",
     db: Session = Depends(get_db),
 ):
+    require_user(student_id, db)
     """Delete a single history entry identified by timestamp and role."""
     try:
         ts = datetime.fromisoformat(created_at)

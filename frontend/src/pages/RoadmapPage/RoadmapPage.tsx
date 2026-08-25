@@ -49,7 +49,11 @@ export default function RoadmapPage() {
   useEffect(() => {
     const fetchRoadmap = async () => {
       try {
-        const studentId = localStorage.getItem("user_id") || "1";
+        const studentId = localStorage.getItem("user_id");
+        if (!studentId) {
+          setLoading(false);
+          return;
+        }
         const roadmapId = searchParams?.get("roadmap_id");
         const query = roadmapId ? `&roadmap_id=${roadmapId}` : "";
         const res = await fetch(`/api/roadmap/current?student_id=${studentId}${query}`);
@@ -65,24 +69,20 @@ export default function RoadmapPage() {
       }
     };
     fetchRoadmap();
-  }, []);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!loading && !roadmap) {
+      router.replace("/personal");
+    }
+  }, [loading, roadmap, router]);
 
   if (loading) {
     return <PageLoadingState text="Loading roadmap..." />;
   }
 
   if (!roadmap) {
-    return (
-      <div className="min-h-screen bg-slate-950 p-6">
-        <div className="max-w-4xl mx-auto text-center mt-20">
-          <h1 className="text-3xl font-bold text-white mb-4">No Roadmap Found</h1>
-          <p className="text-slate-400 mb-8">You haven't generated a personalized learning roadmap yet.</p>
-          <a href="/" className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold transition-colors">
-            Go to Dashboard to Create One
-          </a>
-        </div>
-      </div>
-    );
+    return <PageLoadingState text="Opening your personal dashboard..." />;
   }
 
   return (

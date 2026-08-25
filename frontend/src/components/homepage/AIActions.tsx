@@ -67,7 +67,11 @@ export default function AIActions() {
 
     async function fetchActions() {
       try {
-        const studentId = localStorage.getItem("user_id") || undefined;
+        const studentId = localStorage.getItem("user_id");
+        if (!studentId) {
+          if (!cancelled) setActions([]);
+          return;
+        }
         const data: AIActionCardResponse[] = await getAIActions(studentId);
 
         if (!cancelled && data && Array.isArray(data)) {

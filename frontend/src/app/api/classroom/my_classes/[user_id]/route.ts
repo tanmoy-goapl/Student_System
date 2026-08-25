@@ -10,6 +10,9 @@ export async function GET(
 ) {
   try {
     const { user_id } = await params;
+    if (!user_id) {
+      return NextResponse.json({ success: false, error: "Missing user_id" }, { status: 400 });
+    }
     const response = await fetch(`${BACKEND_URL}/classroom/my_classes/${user_id}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },

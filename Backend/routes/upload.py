@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 from database import get_db
@@ -11,9 +11,12 @@ from pydantic import BaseModel
 from datetime import datetime
 from chroma_store import upsert_chunks, delete_document_chunks
 from services.practice.base import normalize_generated_text
+from services.authorization import require_user, require_document_access, require_document_owner, require_professor_class
 
 router = APIRouter()
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+CHAT_ATTACHMENT_EXTENSIONS = {".pdf", ".txt"}
 
 
 def _listed_page_count(doc: Document) -> int | None:
@@ -28,10 +31,11 @@ class UpdateDocumentTypeRequest(BaseModel):
     document_type: str
 
 @router.put("/documents/{document_id}/type")
-def update_document_type(document_id: int, req: UpdateDocumentTypeRequest, db: Session = Depends(get_db)):
+def update_document_type(document_id: int, req: UpdateDocumentTypeRequest, user_id: int = Query(...), db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+    require_document_owner(doc, user_id, db)
     valid_types = ["resume", "marksheet", "certificate", "policy", "syllabus", "curriculum", "notes", "placement_record", "academic_calendar", "general"]
     if req.document_type not in valid_types:
         raise HTTPException(status_code=400, detail="Invalid document type")
@@ -103,8 +107,12 @@ Respond with only the category name in lowercase (e.g. 'policy'). Do not include
 
 @router.get("/documents/{student_id}")
 def get_documents(student_id: int, db: Session = Depends(get_db)):
-    """Return list of documents uploaded by a student."""
-    docs = db.query(Document).filter(Document.student_id == student_id).order_by(Document.uploaded_at.desc()).all()
+    """Return only documents owned by the active user."""
+    user = require_user(student_id, db)
+    docs = db.query(Document).filter(
+        (Document.owner_id == user.id) |
+        ((Document.owner_id.is_(None)) & (Document.student_id == user.id))
+    ).order_by(Document.uploaded_at.desc()).all()
     return [
         {
             "id": d.id,
@@ -125,11 +133,13 @@ def get_documents(student_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/documents/view/{document_id}")
-def view_document(document_id: int, db: Session = Depends(get_db)):
+def view_document(document_id: int, user_id: int = Query(...), db: Session = Depends(get_db)):
     """Serve a document file for viewing."""
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+
+    require_document_access(doc, user_id, db)
 
     if not os.path.exists(doc.file_path):
         raise HTTPException(status_code=404, detail="File not found on disk")
@@ -171,11 +181,13 @@ def view_document(document_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/documents/preview/{document_id}")
-def preview_document(document_id: int, db: Session = Depends(get_db)):
+def preview_document(document_id: int, user_id: int = Query(...), db: Session = Depends(get_db)):
     """Return readable text for formats that browsers cannot render inline."""
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+
+    require_document_access(doc, user_id, db)
 
     if not os.path.exists(doc.file_path):
         raise HTTPException(status_code=404, detail="File not found on disk")
@@ -212,11 +224,12 @@ def preview_document(document_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/documents/{document_id}")
-def delete_document(document_id: int, db: Session = Depends(get_db)):
+def delete_document(document_id: int, user_id: int = Query(...), db: Session = Depends(get_db)):
     """Delete a document and its chunks."""
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+    require_document_owner(doc, user_id, db)
     # Delete file from disk
     if os.path.exists(doc.file_path):
         os.remove(doc.file_path)
@@ -241,24 +254,37 @@ async def upload_file(
     document_type: str = Form(None),
     tags: str = Form(None),
     classroom_id: int = Form(None),
+    chat_attachment: bool = Form(False),
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
+    if user_id is not None and student_id is not None and user_id != student_id:
+        raise HTTPException(status_code=403, detail="User identity fields do not match")
     actual_student_id = user_id if user_id is not None else student_id
     if not actual_student_id:
         raise HTTPException(status_code=400, detail="Missing user_id or student_id")
 
+    if chat_attachment:
+        extension = os.path.splitext(file.filename or "")[1].lower()
+        if extension not in CHAT_ATTACHMENT_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail="Chatbot attachments support PDF and TXT files only.",
+            )
+
     # Verify user
-    uploader = db.query(User).filter(User.id == actual_student_id).first()
-    if not uploader:
-        raise HTTPException(status_code=404, detail="User not found")
+    uploader = require_user(actual_student_id, db)
 
     # A professor course-shared upload must belong to one of their classrooms.
-    if classroom_id is not None and uploader.role == "professor":
-        from classroom_models import Classroom
-        target_classroom = db.query(Classroom).filter(Classroom.id == classroom_id).first()
-        if not target_classroom or target_classroom.professor_id != actual_student_id:
-            raise HTTPException(status_code=403, detail="You can only publish to your own classroom.")
+    if classroom_id is not None:
+        if uploader.role == "professor":
+            require_professor_class(actual_student_id, classroom_id, db)
+        elif uploader.role == "student":
+            raise HTTPException(status_code=403, detail="Students cannot upload directly to a classroom.")
+        else:
+            from classroom_models import Classroom
+            if not db.query(Classroom).filter(Classroom.id == classroom_id).first():
+                raise HTTPException(status_code=404, detail="Classroom not found")
 
     content = await file.read()
 
@@ -301,7 +327,7 @@ async def upload_file(
         
         # Determine uploader user role and define visibility
         inferred_role = uploader.role if uploader else "student"
-        final_owner_role = owner_role if owner_role else inferred_role
+        final_owner_role = inferred_role
         
         if not visibility:
             if inferred_role == "admin":
@@ -311,7 +337,7 @@ async def upload_file(
             else:
                 final_visibility = "private"
         else:
-            # Normalize legacy visibility types
+            # Normalize legacy visibility types, then constrain them by role.
             norm_vis = visibility.lower().strip()
             if norm_vis in ["institution", "all", "universal"]:
                 final_visibility = "universal"
@@ -321,6 +347,15 @@ async def upload_file(
                 final_visibility = "admin_shared"
             else:
                 final_visibility = "private"
+
+        if inferred_role == "student":
+            if final_visibility != "private":
+                raise HTTPException(status_code=403, detail="Students can upload private documents only.")
+        elif inferred_role == "professor":
+            if final_visibility == "admin_shared":
+                raise HTTPException(status_code=403, detail="Professors cannot create admin-only documents.")
+            if final_visibility == "course_shared" and classroom_id is None:
+                raise HTTPException(status_code=400, detail="Select one of your classes before sharing this document.")
 
         # Auto-classify (rule-based first)
         inferred_type = classify_document_rules(file.filename)

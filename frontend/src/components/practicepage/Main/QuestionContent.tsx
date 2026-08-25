@@ -18,8 +18,8 @@ export default function QuestionContent({
         </div>
 
         {/* Question Text */}
-        <div className="flex-1">
-          <p className="text-base text-white leading-relaxed">
+        <div className="min-w-0 flex-1">
+          <p className="text-base text-white leading-relaxed break-words whitespace-pre-wrap">
             {question.questionText}
           </p>
         </div>

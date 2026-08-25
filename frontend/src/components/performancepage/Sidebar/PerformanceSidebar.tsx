@@ -41,6 +41,10 @@ export default function PerformanceSidebar({ studentId }: PerformanceSidebarProp
 
     useEffect(() => {
         async function fetchData() {
+            if (!studentId) {
+                setLoading(false);
+                return;
+            }
             try {
                 const response = await getPerformanceSidebar(studentId);
                 setData(response);

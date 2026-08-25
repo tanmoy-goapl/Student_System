@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from datetime import datetime, timedelta
 from sqlalchemy import func
 
@@ -132,10 +132,12 @@ from services.analytics_engine import (
     get_activity_snapshot,
     get_student_subjects,
 )
+from services.authorization import require_student
 
 @router.get("/sidebar")
-async def get_performance_sidebar(student_id: int = 3, db: Session = Depends(get_db)):
+async def get_performance_sidebar(student_id: int = Query(...), db: Session = Depends(get_db)):
     """Return student performance sidebar data from live topic and activity records."""
+    require_student(student_id, db)
     all_perfs = db.query(TopicPerformance).filter(
         TopicPerformance.student_id == student_id
     ).all()
@@ -304,7 +306,8 @@ MAIN_DATA = {
 }
 
 @router.get("/main")
-async def get_performance_main(student_id: int = 3, db: Session = Depends(get_db)):
+async def get_performance_main(student_id: int = Query(...), db: Session = Depends(get_db)):
+    require_student(student_id, db)
     # Auto-repair: fix TopicPerformance records that lost their quiz data
     from practice_models import PracticeQuestion, PracticeSession
     from services.analytics_engine import get_topic_status as _gts

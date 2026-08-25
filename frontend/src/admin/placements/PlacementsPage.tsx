@@ -7,6 +7,7 @@ import {
   Target, TrendingUp, UserX, Users,
 } from "lucide-react";
 import AdminSidebar from "../components/AdminSidebar";
+import { getAdminScopedEndpoint } from "@/lib/adminAuth";
 
 interface ClassroomStat {
   id: number;
@@ -63,7 +64,7 @@ interface PlacementInsight {
 }
 
 async function fetchAdminJson<T>(endpoint: string): Promise<T> {
-  const response = await fetch(endpoint, { cache: "no-store" });
+  const response = await fetch(getAdminScopedEndpoint(endpoint), { cache: "no-store" });
   if (!response.ok) throw new Error(`Unable to load ${endpoint} (${response.status})`);
   return response.json() as Promise<T>;
 }

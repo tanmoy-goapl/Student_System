@@ -17,7 +17,13 @@ export type ChatMessage = {
   session_id?: string | null;
   intent?: string;
   sources?: string[];
-  roadmap_metadata?: { title: string; duration: string; weeks: number; tasks: number };
+  roadmap_metadata?: {
+    title: string;
+    duration: string;
+    weeks: number;
+    tasks: number;
+    status?: "generating" | "ready" | "failed" | "complete" | string;
+  };
   suggest_roadmap?: boolean;
   options?: string[];
 };

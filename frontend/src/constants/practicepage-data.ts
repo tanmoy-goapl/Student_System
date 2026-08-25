@@ -173,6 +173,7 @@ export const SUBJECTS: Subject[] = [
 ];
 export const DIFFICULTIES: Difficulty[] = [
   { label: "Easy", value: "easy" },
+  { label: "Medium", value: "medium" },
   { label: "Mixed", value: "mixed" },
   { label: "Hard", value: "hard" },
 ];

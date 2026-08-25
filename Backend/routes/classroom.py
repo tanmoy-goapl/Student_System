@@ -13,7 +13,8 @@ from models import Department
 from classroom_models import Classroom, StudentClass, ClassResource, ClassCurriculum
 from services.extract import extract_text_from_pdf
 from services.practice.base import _practice_llm_call
-from services.departments import normalize_department_code, split_department_codes
+from services.departments import department_display_name, normalize_department_code, split_department_codes
+from services.authorization import require_user, require_student, require_professor
 import json
 
 router = APIRouter(prefix="/classroom", tags=["Classroom"])
@@ -22,10 +23,7 @@ ALLOWED_CURRICULUM_EXTENSIONS = {".pdf", ".txt", ".docx", ".doc"}
 
 
 def _get_user(user_id: int, db: Session) -> User:
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return require_user(user_id, db)
 
 
 def _get_classroom(class_id: int, db: Session) -> Classroom:
@@ -89,7 +87,7 @@ def _normalise_curriculum(payload: object, default_subject: str) -> dict:
         raw_topics = raw_unit.get("topics")
         if not title or not isinstance(raw_topics, list):
             continue
-        topics = [str(topic).strip() for topic in raw_topics if str(topic).strip()]
+        topics = [topic.strip() for topic in raw_topics if isinstance(topic, str) and topic.strip()]
         if topics:
             units.append({"title": title, "topics": topics})
 
@@ -103,18 +101,18 @@ def generate_class_code(length=6):
 
 
 @router.get("/departments")
-def get_classroom_departments(professor_id: int | None = None, db: Session = Depends(get_db)):
+def get_classroom_departments(professor_id: int, db: Session = Depends(get_db)):
+    user = require_user(professor_id, db)
     departments = db.query(Department).filter(
         Department.is_active == True
     ).order_by(Department.name.asc()).all()
-    if professor_id:
-        professor = db.query(User).filter(User.id == professor_id, User.role == "professor").first()
-        assigned_codes = split_department_codes(professor.department if professor else None)
+    if user.role == "professor":
+        assigned_codes = split_department_codes(user.department)
         if assigned_codes:
             departments = [department for department in departments if department.code in assigned_codes]
     return {
         "departments": [
-            {"id": department.id, "code": department.code, "name": department.name}
+            {"id": department.id, "code": department.code, "name": department_display_name(department.code, department.name)}
             for department in departments
         ]
     }
@@ -128,9 +126,7 @@ class CreateClassRequest(BaseModel):
 
 @router.post("/create")
 def create_class(req: CreateClassRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == req.professor_id).first()
-    if not user or user.role != "professor":
-        raise HTTPException(status_code=403, detail="Only professors can create classes.")
+    user = require_professor(req.professor_id, db)
 
     assigned_departments = split_department_codes(user.department)
     requested_department = normalize_department_code(req.department)
@@ -173,9 +169,7 @@ class JoinClassRequest(BaseModel):
 
 @router.post("/join")
 def join_class(req: JoinClassRequest, db: Session = Depends(get_db)):
-    user = _get_user(req.student_id, db)
-    if user.role != "student":
-        raise HTTPException(status_code=403, detail="Only students can join classes")
+    user = require_student(req.student_id, db)
         
     classroom = db.query(Classroom).filter(Classroom.code == req.code.upper()).first()
     if not classroom:
@@ -404,9 +398,7 @@ def delete_classroom(class_id: int, user_id: int, db: Session = Depends(get_db))
 
 @router.get("/resource/download/{resource_id}")
 def download_class_resource(resource_id: int, user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = require_user(user_id, db)
         
     resource = db.query(ClassResource).filter(ClassResource.id == resource_id).first()
     if not resource:
@@ -447,6 +439,30 @@ Output STRICT JSON with the exact following schema:
 Do NOT output any markdown blocks like ```json, just output the raw JSON string. Do not include any conversational text.
 """
 
+AI_CURRICULUM_PROMPT = """You are an expert academic curriculum designer.
+Create a concise, domain-specific curriculum outline from the class context below.
+The result is an editable draft for a professor, not an official institutional syllabus.
+
+Return STRICT JSON with exactly this schema:
+{
+  "subject_name": "Name of the subject",
+  "units": [
+    {
+      "title": "Unit 1: ...",
+      "topics": ["...", "..."]
+    }
+  ]
+}
+
+Rules:
+- Include only units and topics. Do not include subtopics, lessons, outcomes, assessments, schedules, or extra fields.
+- Use real concepts from the requested subject, ordered from foundations to applications.
+- Prefer 4-8 units with 3-6 meaningful topics per unit.
+- Do not repeat the class title as every topic, use vague filler, or invent institution-specific requirements.
+- If the context is broad, produce a sensible general academic outline for that domain.
+- Output raw JSON only; never use markdown fences or conversational text.
+"""
+
 def _clean_json_response(text: str) -> str:
     text = text.strip()
     if text.startswith("```json"):
@@ -456,6 +472,31 @@ def _clean_json_response(text: str) -> str:
     if text.endswith("```"):
         text = text[:-3]
     return text.strip()
+
+
+@router.post("/{class_id}/generate_curriculum")
+def generate_curriculum(class_id: int, req: dict, db: Session = Depends(get_db)):
+    """Generate an unsaved AI curriculum draft for the owning professor."""
+    user_id = req.get("user_id")
+    description = str(req.get("description") or "").strip()[:2000]
+    _, classroom = _get_professor_class(class_id, user_id, db)
+
+    context = (
+        f"Class name: {classroom.name}\n"
+        f"Course code: {classroom.course_code or 'Not provided'}\n"
+        f"Professor's additional description: {description or 'Not provided'}"
+    )
+
+    try:
+        llm_response = _practice_llm_call(AI_CURRICULUM_PROMPT, context)
+        cleaned_json = _clean_json_response(llm_response)
+        parsed_curriculum = _normalise_curriculum(json.loads(cleaned_json), classroom.name)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"AI returned an invalid curriculum format: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI curriculum generation failed: {str(e)}")
+
+    return {"success": True, "curriculum": parsed_curriculum, "draft": True}
 
 @router.post("/{class_id}/upload_curriculum")
 def upload_curriculum(

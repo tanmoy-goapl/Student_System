@@ -71,7 +71,8 @@ export default function ClassroomsPage() {
   const fetchClasses = async () => {
     try {
       const userId = localStorage.getItem("user_id");
-      const professorId = userId ? parseInt(userId, 10) : 1;
+      if (!userId) throw new Error("Authentication required. Please sign in again.");
+      const professorId = parseInt(userId, 10);
       const res = await fetch(`/api/classroom/my_classes/${professorId}`);
       if (!res.ok) throw new Error("Failed to load classes");
 
@@ -97,7 +98,7 @@ export default function ClassroomsPage() {
         let isRedButton = false;
 
         try {
-          const analyticsRes = await fetch(`/api/professor/class/${c.id}`);
+          const analyticsRes = await fetch(`/api/professor/class/${c.id}?professor_id=${encodeURIComponent(String(professorId))}`);
           if (analyticsRes.ok) {
             const aData = await analyticsRes.json();
             if (aData && aData.metrics) {
@@ -186,7 +187,8 @@ export default function ClassroomsPage() {
   const fetchDepartments = async () => {
     try {
       const userId = localStorage.getItem("user_id");
-      const professorId = userId ? parseInt(userId, 10) : undefined;
+      const professorId = userId ? parseInt(userId, 10) : NaN;
+      if (!Number.isInteger(professorId) || professorId <= 0) return;
       const rows = await listClassroomDepartments(professorId);
       setDepartments(rows);
       if (rows.length > 0 && !rows.some((row) => row.code === department)) {
@@ -220,7 +222,8 @@ export default function ClassroomsPage() {
 
     try {
       const userId = localStorage.getItem("user_id");
-      const professorId = userId ? parseInt(userId, 10) : 1;
+      if (!userId) throw new Error("Authentication required. Please sign in again.");
+      const professorId = parseInt(userId, 10);
 
       const res = await createClass({
         name: className.trim(),
@@ -253,7 +256,8 @@ export default function ClassroomsPage() {
     setLoading(true);
     try {
       const userId = localStorage.getItem("user_id");
-      const professorId = userId ? parseInt(userId, 10) : 1;
+      if (!userId) throw new Error("Authentication required. Please sign in again.");
+      const professorId = parseInt(userId, 10);
       const res = await deleteClass(classId, professorId);
       if (res.success) {
         await fetchClasses();

@@ -7,7 +7,10 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const professorId = searchParams.get('professor_id') || '2';
+    const professorId = searchParams.get('professor_id');
+    if (!professorId) {
+      return NextResponse.json({ error: 'professor_id is required' }, { status: 400 });
+    }
     const classId = searchParams.get('class_id') || '0';
 
     const response = await fetch(

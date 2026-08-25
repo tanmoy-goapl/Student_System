@@ -3,6 +3,7 @@ import re
 from sqlalchemy.orm import Session
 from models import Document
 from chroma_store import query_chunks
+from services.document_resolver import get_role_visible_docs
 
 logger = logging.getLogger("chatbot")
 
@@ -75,11 +76,14 @@ def search_relevant_chunks(
     if boost_types is None:
         boost_types = []
 
-    # 1. Fetch student's documents from PostgreSQL
+    # 1. Fetch documents from the same role-visible scope used by chat.
+    # Even an explicitly supplied ID list must be intersected with that scope.
+    visible_docs = get_role_visible_docs(student_id, role, db)
     if allowed_doc_ids is not None:
-        docs = db.query(Document).filter(Document.id.in_(allowed_doc_ids)).all()
+        allowed_ids = set(allowed_doc_ids)
+        docs = [document for document in visible_docs if document.id in allowed_ids]
     else:
-        docs = db.query(Document).filter(Document.student_id == student_id).all()
+        docs = visible_docs
         
     if not docs:
         logger.info("[Search] No documents found in database matching allowed criteria.")

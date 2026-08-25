@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from models import Document, DocumentChunk
 from practice_models import AICache, LearningContent, PracticeQuestion, PracticeSession
 from chroma_store import query_chunks
-from services.practice.base import _practice_llm_call
+from services.practice.base import _practice_llm_call, normalize_generated_text
 from database import SessionLocal
 
 logger = logging.getLogger("chatbot")
@@ -17,6 +17,15 @@ logger = logging.getLogger("chatbot")
 # Global lock to prevent duplicate background generation jobs for the same topic
 generating_topics = set()
 _generating_topics_lock = threading.Lock()
+
+# Bump this when the question contract changes. Old cached banks may still be
+# useful for analytics, but they must not be served as new practice questions.
+PRACTICE_CACHE_VERSION = "v2"
+MASTER_QUESTION_BANK_CACHE = f"master_question_bank_{PRACTICE_CACHE_VERSION}"
+
+
+def _quiz_cache_action(difficulty: str) -> str:
+    return f"quiz_questions_{PRACTICE_CACHE_VERSION}_{difficulty.lower()}"
 
 
 def generate_master_question_bank(student_id: int, topic: str, db: Optional[Session] = None):
@@ -133,13 +142,13 @@ RULES:
             local_db.query(AICache).filter(
                 AICache.student_id == student_id,
                 AICache.topic == topic,
-                AICache.action_type == "master_question_bank"
+                AICache.action_type == MASTER_QUESTION_BANK_CACHE
             ).delete()
             
             local_db.add(AICache(
                 student_id=student_id,
                 topic=topic,
-                action_type="master_question_bank",
+                action_type=MASTER_QUESTION_BANK_CACHE,
                 content=json.dumps(bank_5)
             ))
             local_db.commit()
@@ -157,6 +166,7 @@ RULES:
 Generate a question bank containing exactly 25 multiple-choice questions on the topic: "{topic}".
 Categorize the questions into three difficulty levels: "easy", "medium", and "hard".
 Generate approximately 8-9 questions for each difficulty level (to sum up to 25).
+For medium questions require application or analysis beyond recall. For hard questions require multi-step reasoning, an edge case, trade-off, debugging trace, or calculation supported by the context.
 
 AUTHORITATIVE TOPIC SUMMARY AND RELEVANT EVIDENCE:
 {context[:4000]}
@@ -232,13 +242,13 @@ Return ONLY valid JSON array containing objects with a "difficulty" field:
             local_db.query(AICache).filter(
                 AICache.student_id == student_id,
                 AICache.topic == topic,
-                AICache.action_type == "master_question_bank"
+                AICache.action_type == MASTER_QUESTION_BANK_CACHE
             ).delete()
             
             local_db.add(AICache(
                 student_id=student_id,
                 topic=topic,
-                action_type="master_question_bank",
+                action_type=MASTER_QUESTION_BANK_CACHE,
                 content=json.dumps(bank_final)
             ))
             local_db.commit()
@@ -305,6 +315,58 @@ _GENERIC_FALLBACK_MARKERS = (
     "performance bottleneck points associated with",
 )
 
+_MEDIUM_REASONING_MARKERS = (
+    "if ",
+    "when ",
+    "given ",
+    "suppose",
+    "scenario",
+    "case ",
+    "compare",
+    "contrast",
+    "why ",
+    "how ",
+    "predict",
+    "trace",
+    "before ",
+    "after ",
+    "under what",
+    "most likely",
+    "which change",
+    "which approach",
+    "what happens",
+    "effect of",
+    "impact of",
+    "choose",
+)
+
+_HARD_REASONING_MARKERS = (
+    "multi-step",
+    "step 1",
+    "step 2",
+    "edge case",
+    "trade-off",
+    "tradeoff",
+    "debug",
+    "trace",
+    "calculate",
+    "compute",
+    "derive",
+    "analy",
+    "failure",
+    "constraint",
+    "under both",
+    "despite",
+    "invariant",
+)
+
+_LOW_QUALITY_OPTION_MARKERS = (
+    "all of the above",
+    "none of the above",
+    "all of these",
+    "both a and b",
+)
+
 
 def _is_generic_fallback(question: str) -> bool:
     normalized = question.strip().lower()
@@ -313,6 +375,101 @@ def _is_generic_fallback(question: str) -> bool:
         or any(marker in normalized for marker in _BAD_CONTENT_MARKERS)
         or bool(re.search(r"\[[^\]]+\.(py|js|ts|tsx|java|md|pdf)\]", normalized))
     )
+
+
+def _has_difficulty_signal(question: str, difficulty: str) -> bool:
+    """Reject recall questions that are mislabeled as medium or hard."""
+    level = difficulty.lower()
+    if level in ("easy", "mixed"):
+        return True
+
+    normalized = f" {question.strip().lower()} "
+    word_count = len(normalized.split())
+    medium_hits = sum(marker in normalized for marker in _MEDIUM_REASONING_MARKERS)
+    hard_hits = sum(marker in normalized for marker in _HARD_REASONING_MARKERS)
+
+    if level == "medium":
+        # Medium must describe a condition, relationship, comparison, or
+        # consequence. A long definition alone is still not enough.
+        return word_count >= 10 and (medium_hits >= 1 or word_count >= 17)
+
+    # Hard needs a visibly multi-step/constraint/edge-case signal, or at least
+    # two independent medium-level reasoning cues. This blocks simple
+    # "What is ...?" and one-word "Why ...?" prompts from hard sessions.
+    return word_count >= 16 and (hard_hits >= 1 or medium_hits >= 2)
+
+
+def _normalise_quiz_item(
+    item: dict,
+    topic: str,
+    difficulty: str,
+    subtopic: Optional[str],
+) -> Optional[dict]:
+    """Validate one model/cache item before it reaches a practice session."""
+    if not isinstance(item, dict):
+        return None
+
+    level = str(difficulty or "mixed").strip().lower()
+    item_level = str(item.get("difficulty", level)).strip().lower()
+    if item_level not in ("easy", "medium", "hard"):
+        return None
+    if level in ("easy", "medium", "hard") and item_level != level:
+        return None
+
+    question = normalize_generated_text(_sanitize_study_text(str(item.get("question", "")))).strip()
+    options = item.get("options")
+    if not question or not isinstance(options, list) or len(options) < 4:
+        return None
+    if len(question.split()) < 6 or _is_generic_fallback(question):
+        return None
+
+    option_ids = ("A", "B", "C", "D")
+    clean_options = []
+    option_keys = set()
+    for index, option in enumerate(options[:4]):
+        text = normalize_generated_text(_sanitize_study_text(
+            str(option.get("text", "") if isinstance(option, dict) else option)
+        )).strip()
+        option_key = re.sub(r"\s+", " ", text.lower())
+        if (
+            not text
+            or option_key in option_keys
+            or any(marker in option_key for marker in _LOW_QUALITY_OPTION_MARKERS)
+        ):
+            return None
+        option_keys.add(option_key)
+        clean_options.append({"id": option_ids[index], "text": text[:500]})
+
+    correct = str(item.get("correct_answer", "")).strip().upper()
+    if correct not in option_ids:
+        for option_id, option in zip(option_ids, clean_options):
+            if correct == option["text"].upper():
+                correct = option_id
+                break
+    if correct not in option_ids:
+        return None
+
+    explanation = normalize_generated_text(_sanitize_study_text(
+        str(item.get("explanation", ""))
+    )).strip()
+    if len(explanation.split()) < (8 if item_level in ("medium", "hard") else 5):
+        return None
+    if not _has_difficulty_signal(question, item_level):
+        return None
+
+    combined = " ".join([question, explanation, *(option["text"] for option in clean_options)]).lower()
+    if any(marker in combined for marker in _BAD_CONTENT_MARKERS):
+        return None
+
+    return {
+        "topic": _sanitize_study_text(str(item.get("topic") or topic)).strip() or topic,
+        "subtopic": _sanitize_study_text(str(item.get("subtopic") or subtopic or "General")).strip() or "General",
+        "difficulty": item_level,
+        "question": question,
+        "options": clean_options,
+        "correct_answer": correct,
+        "explanation": explanation,
+    }
 
 
 def _sanitize_study_text(text: str) -> str:
@@ -371,7 +528,7 @@ def _cached_source_questions(student_id: int, topic: str, db: Session) -> list[d
     cached = db.query(AICache).filter(
         AICache.student_id == student_id,
         AICache.topic == topic,
-        AICache.action_type == "master_question_bank",
+        AICache.action_type == MASTER_QUESTION_BANK_CACHE,
     ).order_by(AICache.created_at.desc()).first()
     if not cached:
         return []
@@ -386,7 +543,7 @@ def _cached_source_questions(student_id: int, topic: str, db: Session) -> list[d
         return []
 
 def _parse_quiz_questions(response: str, topic: str, difficulty: str, subtopic: Optional[str]) -> list[dict]:
-    """Parse and normalize a model response without doing another repair call."""
+    """Parse and validate a model response without doing another repair call."""
     if not response or response.startswith("ERROR:"):
         return []
     match = re.search(r"\[[\s\S]*\]", response)
@@ -401,43 +558,24 @@ def _parse_quiz_questions(response: str, topic: str, difficulty: str, subtopic: 
 
     normalized = []
     seen_questions = []
-    option_ids = ("A", "B", "C", "D")
     for item in payload:
-        if not isinstance(item, dict):
+        question = _normalise_quiz_item(item, topic, difficulty, subtopic)
+        if not question:
             continue
-        question = str(item.get("question", "")).strip()
-        options = item.get("options")
-        if not question or not isinstance(options, list) or len(options) < 4:
+        if _question_is_duplicate(question["question"], seen_questions):
             continue
-        clean_options = []
-        for index, option in enumerate(options[:4]):
-            text = str(option.get("text", "") if isinstance(option, dict) else option).strip()
-            if not text:
-                break
-            clean_options.append({"id": option_ids[index], "text": text})
-        if len(clean_options) != 4:
-            continue
-        correct = str(item.get("correct_answer", "")).strip().upper()
-        if correct not in option_ids:
-            for option_id, option in zip(option_ids, clean_options):
-                if correct == option["text"].upper():
-                    correct = option_id
-                    break
-        if correct not in option_ids:
-            continue
-        key = _question_key(question)
-        if not key or _question_is_duplicate(question, seen_questions) or _is_generic_fallback(question):
-            continue
-        seen_questions.append(question)
-        normalized.append({"topic": item.get("topic", topic), "subtopic": item.get("subtopic", subtopic or "General"), "difficulty": str(item.get("difficulty", difficulty)).lower(), "question": question, "options": clean_options, "correct_answer": correct, "explanation": str(item.get("explanation", "")).strip()})
+        seen_questions.append(question["question"])
+        normalized.append(question)
 
     return normalized
+
+
 def _read_fast_cache(student_id: int, topic: str, difficulty: str, count: int, db: Session) -> list[dict]:
     used_texts = _used_question_texts(student_id, topic, db)
     cached = db.query(AICache).filter(
         AICache.student_id == student_id,
         AICache.topic == topic,
-        AICache.action_type == f"quiz_questions_{difficulty}",
+        AICache.action_type == _quiz_cache_action(difficulty),
     ).order_by(AICache.created_at.desc()).first()
     if not cached:
         return []
@@ -447,12 +585,12 @@ def _read_fast_cache(student_id: int, topic: str, difficulty: str, count: int, d
             return []
         usable = []
         seen_texts = []
-        for question in questions:
-            if not isinstance(question, dict):
+        for item in questions:
+            question = _normalise_quiz_item(item, topic, difficulty, None)
+            if not question:
                 continue
-            text = str(question.get("question", ""))
-            key = _question_key(text)
-            if not key or _question_is_duplicate(text, used_texts + seen_texts) or _is_generic_fallback(text):
+            text = question["question"]
+            if _question_is_duplicate(text, used_texts + seen_texts):
                 continue
             seen_texts.append(text)
             usable.append(question)
@@ -468,7 +606,7 @@ def _cache_fast_questions(student_id: int, topic: str, difficulty: str, question
         return
     local_db = SessionLocal()
     try:
-        action_type = f"quiz_questions_{difficulty}"
+        action_type = _quiz_cache_action(difficulty)
         existing = local_db.query(AICache).filter(
             AICache.student_id == student_id,
             AICache.topic == topic,
@@ -486,10 +624,13 @@ def _cache_fast_questions(student_id: int, topic: str, difficulty: str, question
         merged = []
         merged_texts = []
         for candidate in existing_questions + questions:
-            text = str(candidate.get("question", "")).strip()
-            if not text or _is_generic_fallback(text) or _question_is_duplicate(text, merged_texts):
+            normalized = _normalise_quiz_item(candidate, topic, difficulty, None)
+            if not normalized:
                 continue
-            merged.append(candidate)
+            text = normalized["question"]
+            if _question_is_duplicate(text, merged_texts):
+                continue
+            merged.append(normalized)
             merged_texts.append(text)
 
         if existing:
@@ -504,10 +645,11 @@ def _cache_fast_questions(student_id: int, topic: str, difficulty: str, question
         local_db.commit()
     except Exception as exc:
         local_db.rollback()
-
         logger.warning(f"[PracticeEngine] Fast quiz cache write failed: {exc}")
     finally:
         local_db.close()
+
+
 def _cached_learning_context(student_id: int, topic: str, db: Session) -> str:
     """Build a compact, topic-grounded context for fast question generation."""
     parts = []
@@ -599,6 +741,11 @@ def generate_content_fallback_questions(
     results = []
     seen = set(excluded)
     source_questions = source_questions or []
+    if difficulty.lower() in ("easy", "medium", "hard"):
+        source_questions = [
+            source for source in source_questions
+            if str(source.get("difficulty", "")).lower() == difficulty.lower()
+        ]
     source_answers = []
     for source in source_questions:
         correct = str(source.get("correct_answer", "")).upper()
@@ -681,10 +828,16 @@ def _generate_fast_questions(
     if cached:
         return cached
     source_questions = _cached_source_questions(student_id, topic, db)
+    requested_level = difficulty.lower()
     source_available = [
         question for question in source_questions
-        if not _question_is_duplicate(question["question"], used_texts)
+        if (requested_level == "mixed" or question.get("difficulty") == requested_level)
+        and not _question_is_duplicate(question["question"], used_texts)
         and not _is_generic_fallback(question["question"])
+    ]
+    source_questions_for_difficulty = [
+        question for question in source_questions
+        if requested_level == "mixed" or question.get("difficulty") == requested_level
     ]
     questions = source_available[:count]
     if len(questions) >= count:
@@ -693,26 +846,35 @@ def _generate_fast_questions(
 
     remaining = count - len(questions)
     guidance = {
-        "easy": "basic definitions and recall",
-        "medium": "understanding and practical application",
-        "hard": "deep reasoning and multi-step application",
+        "easy": "direct recall of one clearly taught concept; do not add unnecessary tricks",
+        "medium": "application or analysis of one or two taught concepts in a concrete scenario, comparison, trace, or decision",
+        "hard": "multi-step reasoning that combines at least two taught concepts, an edge case, trade-off, debugging trace, or calculation when supported",
         "mixed": "a balanced mix of easy, medium, and hard",
     }.get(difficulty.lower(), "a balanced mix of easy, medium, and hard")
+    difficulty_contract = {
+        "easy": "Keep it direct and fair: one concept, no obscure detail.",
+        "medium": "Require at least one reasoning step beyond recall. Include the relevant condition, scenario, data, or relationship in the stem.",
+        "hard": "Require a defensible multi-step inference. Combine concepts from the material and make every necessary assumption explicit; do not use obscure trivia or ambiguity.",
+        "mixed": "Label each item with its actual level and keep a balanced spread.",
+    }.get(difficulty.lower(), "Label each item with its actual level and keep a balanced spread.")
     context = _cached_learning_context(student_id, topic, db)
     avoid = (used_texts + [q["question"] for q in questions])[-20:]
     system_prompt = (
         f"Create exactly {remaining} valid MCQs about '{topic}' using only the study content below. "
-        f"Target {guidance}. Every question must test a specific fact, concept, relationship, or example "
-        "from the content; do not write questions about the topic heading itself. "
-        "Vary the question forms across definition, mechanism, application, comparison, debugging, and prediction. "
-        "Use different concrete concepts where possible and never repeat a stem with only the topic name changed. "
+        f"Target {guidance}\n{difficulty_contract}\n"
+        f"Every item must use difficulty exactly '{difficulty.lower()}' when a single level was requested. "
+        "Every question must test a specific fact, concept, relationship, or example from the content; "
+        "do not write questions about the topic heading itself. "
+        "Vary question forms across mechanism, application, comparison, debugging, prediction, and calculation when supported. "
+        "Use concrete subtopics, plausible misconception-based distractors, and an explanation that states the reasoning and evidence. "
+        "Never repeat a stem with only the topic name changed. Reject any question that depends on missing information. "
         "Return ONLY a JSON array with question, four A/B/C/D options, correct_answer, difficulty, and explanation.\n\n"
         f"STUDY CONTENT:\n{context}\n\nAVOID THESE USED QUESTION TEXTS:\n{avoid}"
     )
     response = _practice_llm_call(
         system_prompt,
         f"Generate {remaining} new content-grounded questions for {topic}.",
-        max_tokens=min(2200, max(1000, remaining * 260)),
+        max_tokens=min(4800, max(1600, remaining * (400 if difficulty.lower() in ("medium", "hard") else 300))),
         # Session creation is a backend job, so quality gets priority over a
         # short request timeout. The browser is not held open while this runs.
         timeout_seconds=12.0,
@@ -737,20 +899,29 @@ def _generate_fast_questions(
             difficulty,
             context,
             excluded_keys=seen,
-            source_questions=source_questions,
+            source_questions=source_questions_for_difficulty,
         ))
-    result = questions[:count]
-    if len(result) < count:
-        local_questions = generate_local_fallback_questions(
+    if len(questions) < count:
+        questions.extend(generate_local_fallback_questions(
             topic,
-            count - len(result),
+            count - len(questions),
             difficulty=difficulty,
             context=context,
             excluded_keys=seen,
-            source_questions=source_questions,
-        )
-        result.extend(local_questions)
-    result = result[:count]
+            source_questions=source_questions_for_difficulty,
+        ))
+
+    validated_result = []
+    validated_texts = []
+    for item in questions:
+        normalized = _normalise_quiz_item(item, topic, difficulty, subtopic)
+        if not normalized:
+            continue
+        if _question_is_duplicate(normalized["question"], validated_texts):
+            continue
+        validated_result.append(normalized)
+        validated_texts.append(normalized["question"])
+    result = validated_result[:count]
     _cache_fast_questions(student_id, topic, difficulty, result)
     return result
 def _start_master_generation(student_id: int, topic: str) -> None:
@@ -792,7 +963,7 @@ def generate_questions(
         master_cached = db.query(AICache).filter(
             AICache.student_id == student_id,
             AICache.topic == topic,
-            AICache.action_type == "master_question_bank"
+            AICache.action_type == MASTER_QUESTION_BANK_CACHE
         ).order_by(AICache.created_at.desc()).first()
         
         if master_cached:
@@ -803,10 +974,22 @@ def generate_questions(
         try:
             bank = json.loads(master_cached.content)
             diff_key = difficulty.lower()
-            # Pool questions based on requested difficulty
+            # Pool questions based strictly on requested difficulty. Falling
+            # through to dynamic generation is safer than filling a hard session
+            # with easy cached questions.
             all_pool = bank.get("easy", []) + bank.get("medium", []) + bank.get("hard", [])
             preferred_pool = bank.get(diff_key, []) if diff_key in ("easy", "medium", "hard") else all_pool
-            pool = preferred_pool if len(preferred_pool) >= count else all_pool
+            raw_pool = preferred_pool
+            pool = []
+            for item in raw_pool:
+                normalized = _normalise_quiz_item(
+                    item,
+                    topic,
+                    diff_key if diff_key in ("easy", "medium", "hard") else "mixed",
+                    subtopic,
+                )
+                if normalized:
+                    pool.append(normalized)
                 
             # Exclude every question already shown, including unfinished sessions.
             shown_question_rows = (
@@ -965,7 +1148,7 @@ Return ONLY valid JSON array, no markdown fencing:
                         existing = local_db.query(AICache).filter(
                             AICache.student_id == student_id,
                             AICache.topic == topic,
-                            AICache.action_type == f"quiz_questions_{difficulty}"
+                            AICache.action_type == _quiz_cache_action(difficulty)
                         ).first()
                         if existing:
                             local_db.delete(existing)
@@ -974,7 +1157,7 @@ Return ONLY valid JSON array, no markdown fencing:
                         local_db.add(AICache(
                             student_id=student_id,
                             topic=topic,
-                            action_type=f"quiz_questions_{difficulty}",
+                            action_type=_quiz_cache_action(difficulty),
                             content=json.dumps(validated)
                         ))
                         local_db.commit()
@@ -1015,6 +1198,8 @@ def generate_local_fallback_questions(
         source_questions=source_questions,
     )
     if len(grounded) >= count:
+        return grounded[:count]
+    if difficulty.lower() in ("medium", "hard"):
         return grounded[:count]
 
     seen = set(excluded_keys or set()) | {_question_key(q["question"]) for q in grounded}

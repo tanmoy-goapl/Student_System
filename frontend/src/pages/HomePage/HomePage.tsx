@@ -28,7 +28,8 @@ export default function HomePage() {
 
   const fetchRoadmap = async () => {
     try {
-      const studentId = localStorage.getItem("user_id") || "1";
+      const studentId = localStorage.getItem("user_id");
+      if (!studentId) return;
       const res = await fetch(`/api/roadmap/current?student_id=${studentId}`);
       const rData = await res.json();
       if (rData.generating) {
@@ -51,7 +52,11 @@ export default function HomePage() {
   const fetchData = async () => {
     try {
       setHasError(false);
-      const studentId = localStorage.getItem("user_id") || undefined;
+      const studentId = localStorage.getItem("user_id");
+      if (!studentId) {
+        setHasError(true);
+        return;
+      }
       const response = await getHomepageData(studentId);
       setData(response);
     } catch (error) {
@@ -70,7 +75,11 @@ export default function HomePage() {
     if (!focusTopic || isFocusInRevision || isAddingFocusRevision) return;
 
     const storedStudentId = Number(localStorage.getItem("user_id"));
-    const studentId = Number.isInteger(storedStudentId) && storedStudentId > 0 ? storedStudentId : 3;
+    if (!Number.isInteger(storedStudentId) || storedStudentId <= 0) {
+      setFocusRevisionError("Authentication required. Please sign in again.");
+      return;
+    }
+    const studentId = storedStudentId;
 
     setIsAddingFocusRevision(true);
     setFocusRevisionError(null);

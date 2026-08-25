@@ -440,7 +440,8 @@ export default function ContentPage() {
     if (!publishingDoc || !publishClassId) return;
     setIsPublishing(true);
     try {
-      const professorId = localStorage.getItem("user_id") || "2";
+      const professorId = localStorage.getItem("user_id");
+      if (!professorId) throw new Error("Authentication required. Please sign in again.");
       const res = await fetch(`/api/documents/publish?document_id=${publishingDoc.id}&classroom_id=${publishClassId}&user_id=${professorId}`, {
         method: "POST"
       });

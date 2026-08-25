@@ -9,11 +9,41 @@ import type {
 // All requests go through Next.js API proxy routes (/api/*)
 // so there are no CORS issues and no NEXT_PUBLIC_* env vars needed.
 
+function formatApiError(detail: unknown, fallback: string): string {
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (Array.isArray(detail)) {
+    const messages = detail.map((item) => {
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object") {
+        const value = item as { msg?: unknown; message?: unknown; loc?: unknown };
+        const message = value.msg ?? value.message;
+        if (typeof message === "string" && message.trim()) {
+          const location = Array.isArray(value.loc) ? value.loc.filter(Boolean).join(".") : "";
+          return location ? `${location}: ${message}` : message;
+        }
+      }
+      return "";
+    }).filter(Boolean);
+    if (messages.length) return messages.join("; ");
+  }
+  if (detail && typeof detail === "object") {
+    const value = detail as { message?: unknown; error?: unknown };
+    if (typeof value.message === "string" && value.message.trim()) return value.message;
+    if (typeof value.error === "string" && value.error.trim()) return value.error;
+  }
+  return fallback;
+}
+
 async function request<T>(url: string, options: RequestInit): Promise<T> {
   const res = await fetch(url, options);
-  const data = await res.json();
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
   if (!res.ok) {
-    throw new Error(data?.detail || `Request failed (${res.status})`);
+    throw new Error(formatApiError(data?.detail ?? data?.error, `Request failed (${res.status})`));
   }
   return data as T;
 }
@@ -101,8 +131,8 @@ export async function updateUserDepartment(
   });
 }
 
-export async function listClassroomDepartments(professorId?: number): Promise<DepartmentOption[]> {
-  const query = professorId ? "?professor_id=" + encodeURIComponent(String(professorId)) : "";
+export async function listClassroomDepartments(professorId: number): Promise<DepartmentOption[]> {
+  const query = "?professor_id=" + encodeURIComponent(String(professorId));
   const data = await request<{ departments: DepartmentOption[] }>("/api/classroom/departments" + query, {
     method: "GET",
   });
@@ -122,13 +152,32 @@ export async function deleteUser(adminId: number, userId: number): Promise<void>
 export async function uploadDocument(
   studentId: number,
   file: File,
-  readableBy: string = "owner"        // ← ADD THIS
+  readableBy: string = "owner",
+  chatAttachment: boolean = false
 ): Promise<UploadResponse> {
   const form = new FormData();
   form.append("student_id", String(studentId));
   form.append("file", file);
   form.append("readable_by", readableBy);
+  if (chatAttachment) form.append("chat_attachment", "true");
   return request<UploadResponse>("/api/upload", { method: "POST", body: form });
+}
+
+export const CHAT_ATTACHMENT_ACCEPT = ".pdf,.txt";
+
+export function isChatAttachmentFile(file: File): boolean {
+  const extension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+  return extension === ".pdf" || extension === ".txt";
+}
+
+export async function uploadChatAttachment(
+  studentId: number,
+  file: File
+): Promise<UploadResponse> {
+  if (!isChatAttachmentFile(file)) {
+    throw new Error("Chatbot attachments support PDF and TXT files only.");
+  }
+  return uploadDocument(studentId, file, "owner", true);
 }
 
 // -- Chat --
@@ -142,6 +191,16 @@ export async function updateDailyGoal(userId: number, pointsToAdd: number, subje
 
 // -- Classroom Curriculum API --
 
+export interface ClassCurriculumDraftResponse {
+    success: boolean;
+    curriculum?: {
+        subject_name?: string;
+        units: { title: string; topics: string[] }[];
+    };
+    error?: string;
+    draft?: boolean;
+}
+
 export async function uploadClassCurriculum(classId: number, file: File, userId: number) {
     const formData = new FormData();
     formData.append("file", file);
@@ -152,8 +211,24 @@ export async function uploadClassCurriculum(classId: number, file: File, userId:
         body: formData,
     });
     
-    if (!res.ok) throw new Error("Upload failed");
+    if (!res.ok) {
+        let data: { detail?: string; error?: string } | null = null;
+        try {
+            data = await res.json();
+        } catch {
+            // Keep the generic message when the proxy returns no JSON body.
+        }
+        throw new Error(data?.detail || data?.error || "Upload failed");
+    }
     return res.json();
+}
+
+export async function generateClassCurriculum(classId: number, description: string, userId: number) {
+    return request<ClassCurriculumDraftResponse>(`/api/classroom/${classId}/curriculum/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, description })
+    });
 }
 
 export async function getClassCurriculum(classId: number, userId: number) {
@@ -218,8 +293,8 @@ export interface AIActionCardResponse {
   cardClassName: string;
 }
 
-export async function getAIActions(studentId?: string | number): Promise<AIActionCardResponse[]> {
-  const url = studentId ? `/api/cards?student_id=${studentId}` : "/api/cards";
+export async function getAIActions(studentId: string | number): Promise<AIActionCardResponse[]> {
+  const url = `/api/cards?student_id=${encodeURIComponent(studentId)}`;
   return request<AIActionCardResponse[]>(url, {
     method: "GET",
   });
@@ -235,8 +310,8 @@ export interface PerformanceSidebarResponse {
   readiness: { subject: string; value: number }[];
 }
 
-export async function getPerformanceSidebar(studentId?: string | number): Promise<PerformanceSidebarResponse> {
-  const url = studentId ? `/api/performance/sidebar?student_id=${studentId}` : "/api/performance/sidebar";
+export async function getPerformanceSidebar(studentId: string | number): Promise<PerformanceSidebarResponse> {
+  const url = `/api/performance/sidebar?student_id=${encodeURIComponent(studentId)}`;
   return request<PerformanceSidebarResponse>(url, {
     method: "GET",
   });
@@ -269,8 +344,8 @@ export interface PerformanceMainResponse {
   };
 }
 
-export async function getPerformanceMain(studentId?: string | number): Promise<PerformanceMainResponse> {
-  const url = studentId ? `/api/performance/main?student_id=${studentId}` : "/api/performance/main";
+export async function getPerformanceMain(studentId: string | number): Promise<PerformanceMainResponse> {
+  const url = `/api/performance/main?student_id=${encodeURIComponent(studentId)}`;
   return request<PerformanceMainResponse>(url, {
     method: "GET",
   });
@@ -306,8 +381,8 @@ export interface HomepageDataResponse {
   };
 }
 
-export async function getHomepageData(studentId?: string | number): Promise<HomepageDataResponse> {
-  const url = studentId ? `/api/homepage/data?student_id=${studentId}` : "/api/homepage/data";
+export async function getHomepageData(studentId: string | number): Promise<HomepageDataResponse> {
+  const url = `/api/homepage/data?student_id=${encodeURIComponent(studentId)}`;
   return request<HomepageDataResponse>(url, {
     method: "GET",
     cache: "no-store",
@@ -346,10 +421,10 @@ export interface PracticeDataResponse {
   sampleQuestions: any[];
 }
 
-export const getPracticeData = async (studentId?: number, classId?: number): Promise<PracticeDataResponse> => {
+export const getPracticeData = async (studentId: number, classId?: number): Promise<PracticeDataResponse> => {
     const timestamp = new Date().getTime();
     const params = new URLSearchParams();
-    if (studentId) params.append("student_id", studentId.toString());
+    params.append("student_id", studentId.toString());
     if (classId) params.append("class_id", classId.toString());
     params.append("_t", timestamp.toString());
     
@@ -422,7 +497,8 @@ export async function submitPracticeAnswer(
   sessionId: number,
   questionId: number,
   answer: string,
-  timeSpent: number
+  timeSpent: number,
+  studentId: number
 ): Promise<SubmitAnswerResponse> {
   return request<SubmitAnswerResponse>(`/api/practice/session/${sessionId}/answer`, {
     method: "POST",
@@ -431,6 +507,7 @@ export async function submitPracticeAnswer(
       question_id: questionId,
       answer,
       time_spent: timeSpent,
+      student_id: studentId,
     }),
   });
 }
@@ -454,15 +531,15 @@ export interface PracticeSessionStatus {
   stats: any;
 }
 
-export async function getNextBatch(sessionId: number): Promise<NextBatchResponse> {
-  return request<NextBatchResponse>(`/api/practice/session/${sessionId}/next-batch`, {
+export async function getNextBatch(sessionId: number, studentId: number): Promise<NextBatchResponse> {
+  return request<NextBatchResponse>(`/api/practice/session/${sessionId}/next-batch?student_id=${encodeURIComponent(String(studentId))}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   });
 }
 
-export async function getSessionStatus(sessionId: number): Promise<PracticeSessionStatus> {
-  return request<PracticeSessionStatus>(`/api/practice/session/${sessionId}/status`, {
+export async function getSessionStatus(sessionId: number, studentId: number): Promise<PracticeSessionStatus> {
+  return request<PracticeSessionStatus>(`/api/practice/session/${sessionId}/status?student_id=${encodeURIComponent(String(studentId))}`, {
     method: "GET",
     cache: "no-store",
   });
@@ -1017,8 +1094,8 @@ export interface DocumentsDataResponse {
   documents: any[];
 }
 
-export async function getDocumentsData(studentId?: number): Promise<DocumentsDataResponse> {
-  const url = studentId ? `/api/documents/data?student_id=${studentId}` : "/api/documents/data";
+export async function getDocumentsData(studentId: number): Promise<DocumentsDataResponse> {
+  const url = `/api/documents/data?student_id=${encodeURIComponent(String(studentId))}`;
   return request<DocumentsDataResponse>(url, {
     method: "GET",
     cache: "no-store",
@@ -1073,9 +1150,14 @@ export async function getChatSidebarData(): Promise<ChatSidebarDataResponse> {
   });
 }
 
-export async function deleteDocument(documentId: string): Promise<void> {
+export async function deleteDocument(documentId: string, userId?: number): Promise<void> {
   const id = documentId.startsWith("db-") ? documentId.substring(3) : documentId;
-  await request(`/api/documents?document_id=${id}`, {
+  const storedUserId = typeof window !== "undefined" ? Number(window.localStorage.getItem("user_id")) : 0;
+  const resolvedUserId = userId ?? storedUserId;
+  if (!Number.isInteger(resolvedUserId) || resolvedUserId <= 0) {
+    throw new Error("Authentication required");
+  }
+  await request(`/api/documents?document_id=${encodeURIComponent(id)}&user_id=${encodeURIComponent(String(resolvedUserId))}`, {
     method: "DELETE",
   });
 }

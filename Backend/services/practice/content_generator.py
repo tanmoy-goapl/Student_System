@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 from typing import Optional
 from sqlalchemy.orm import Session
 
@@ -87,6 +88,25 @@ def has_valid_revision(revision) -> bool:
     )
 
 
+def split_revision_payload(content: str, topic: str = "the topic", subject: Optional[str] = None):
+    """Return clean lesson text and the optional structured revision trailer."""
+    if not isinstance(content, str):
+        return content, None
+
+    marker = re.search(r"---\s*REVISION\s*---", content, flags=re.IGNORECASE)
+    if not marker:
+        return content, None
+
+    clean_content = content[:marker.start()].strip()
+    revision = None
+    try:
+        parsed = _parse_json_object(content[marker.end():])
+        revision = normalize_revision(parsed, topic, subject)
+    except Exception:
+        logger.debug("Could not parse embedded revision payload for topic '%s'", topic)
+    return clean_content, revision
+
+
 def _generate_revision(topic: str, subject: Optional[str], markdown_content: str) -> dict:
     """Generate the short revision payload separately from the long study guide."""
     system_prompt = """You are a university professor creating a quick revision card.
@@ -106,14 +126,10 @@ Write exactly three concise, topic-specific takeaways. Do not use markdown, code
 
 
 def _revision_from_response(full_response: str, topic: str, subject: Optional[str]) -> dict:
-    if "---REVISION---" in full_response:
-        try:
-            revision = normalize_revision(_parse_json_object(full_response.split("---REVISION---", 1)[1]), topic, subject)
-            if has_valid_revision(revision):
-                return revision
-        except Exception:
-            pass
-    return _generate_revision(topic, subject, full_response.split("---REVISION---", 1)[0].strip())
+    markdown_content, embedded_revision = split_revision_payload(full_response, topic, subject)
+    if embedded_revision and has_valid_revision(embedded_revision):
+        return embedded_revision
+    return _generate_revision(topic, subject, markdown_content)
 
 def generate_learning_content(student_id: int, topic: str, db: Session, subject: Optional[str] = None) -> dict:
     """
@@ -127,15 +143,11 @@ def generate_learning_content(student_id: int, topic: str, db: Session, subject:
         LearningContent.topic == topic
     ).first()
 
-    if not cached:
-        cached = db.query(LearningContent).filter(
-            LearningContent.topic == topic
-        ).first()
-
     if cached:
+        cached_content, embedded_revision = split_revision_payload(cached.content, topic, subject)
         return {
-            "notesResponse": cached.content,
-            "revision": cached.revision
+            "notesResponse": cached_content,
+            "revision": cached.revision or embedded_revision
         }
 
     context = _get_context(student_id, topic, subject, db)
@@ -390,7 +402,7 @@ Ensure the JSON is valid and contains exactly 3 key takeaways. Do not wrap the J
 
     # Generate the short revision separately so a long guide cannot truncate it.
     if not had_error and full_response.strip():
-        markdown_content = full_response.split("---REVISION---", 1)[0].strip()
+        markdown_content, _ = split_revision_payload(full_response, topic, subject)
         revision_data = _revision_from_response(full_response, topic, subject)
         full_response = f"{markdown_content}\n\n---REVISION---\n{json.dumps(revision_data)}"
         yield f"\n\n---REVISION---\n{json.dumps(revision_data)}"
@@ -403,22 +415,8 @@ Ensure the JSON is valid and contains exactly 3 key takeaways. Do not wrap the J
 def _save_to_cache(student_id: int, topic: str, subject: Optional[str], full_response: str):
     """Parse the streamed response and save it permanently to the database."""
     try:
-        parts = full_response.split("---REVISION---", 1)
-        markdown_content = parts[0].strip()
-        revision_data = _fallback_revision(topic, subject)
-        if len(parts) > 1:
-            try:
-                raw_json = parts[1].strip()
-                if raw_json.startswith("```json"):
-                    raw_json = raw_json[7:]
-                elif raw_json.startswith("```"):
-                    raw_json = raw_json[3:]
-                if raw_json.endswith("```"):
-                    raw_json = raw_json[:-3]
-                raw_json = raw_json.strip()
-                revision_data = normalize_revision(_parse_json_object(raw_json), topic, subject)
-            except Exception as e:
-                logger.error(f"[StreamContent] Failed to parse revision JSON: {e}")
+        markdown_content, embedded_revision = split_revision_payload(full_response, topic, subject)
+        revision_data = embedded_revision or _fallback_revision(topic, subject)
 
         if not has_valid_revision(revision_data):
             revision_data = _generate_revision(topic, subject, markdown_content)

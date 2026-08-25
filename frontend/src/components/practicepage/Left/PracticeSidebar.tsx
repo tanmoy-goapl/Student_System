@@ -46,6 +46,10 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
     try {
       setIsLoading(true);
       const studentId = getStudentId();
+      if (!studentId) {
+        setData(null);
+        return;
+      }
       const response = await getPracticeData(studentId);
       setData(response);
 
@@ -76,15 +80,15 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
           return prev;
         });
       }
-    } catch (error) {
+    } catch {
       // Failed to load — will show empty state
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [topicParam]);
 
   useEffect(() => {
-    loadPracticeData();
+    void loadPracticeData();
   }, [loadPracticeData]);
 
   const toggleSubject = (subjectId: string) => {
@@ -102,7 +106,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
 
   if (isLoading) {
     return (
-      <div className="bg-[#090D1F] w-[20vw] h-screen flex flex-col text-white p-4 space-y-4 animate-pulse">
+      <div className="bg-[#090D1F] w-full min-w-0 h-full flex flex-col text-white p-4 space-y-4 animate-pulse">
         <div className="h-24 bg-slate-800 rounded-xl"></div>
         <div className="h-64 bg-slate-800 rounded-xl"></div>
       </div>
@@ -118,7 +122,7 @@ export default function PracticeSidebar({ onStartSession }: PracticeSidebarProps
   const hasSubjects = filteredSubjects.length > 0;
 
   return (
-    <div className="bg-[#090D1F] w-[20vw] h-screen flex flex-col text-white">
+    <div className="bg-[#090D1F] w-full min-w-0 h-full flex flex-col text-white">
       <div className="flex-1 overflow-y-auto purple-scrollbar">
         {/* Topic Selector Section */}
         {hasSubjects ? (

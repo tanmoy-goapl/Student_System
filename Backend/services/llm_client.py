@@ -17,9 +17,23 @@ class LLMStreamTimeout(Exception):
 
 def _chat_stream_budget() -> float:
     try:
-        return max(10.0, float(os.getenv("CHAT_LLM_MAX_SECONDS", "120")))
+        return max(30.0, float(os.getenv("CHAT_LLM_MAX_SECONDS", "240")))
     except (TypeError, ValueError):
-        return 120.0
+        return 240.0
+
+
+def _chat_request_timeout() -> float:
+    try:
+        return max(15.0, float(os.getenv("CHAT_LLM_REQUEST_TIMEOUT_SECONDS", "45")))
+    except (TypeError, ValueError):
+        return 45.0
+
+
+def _chat_max_tokens() -> int:
+    try:
+        return max(600, int(os.getenv("CHAT_LLM_MAX_TOKENS", "1600")))
+    except (TypeError, ValueError):
+        return 1600
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  CACHED CLIENTS — avoids re-creating HTTP sessions + TLS on every call
@@ -80,9 +94,9 @@ def _call_llm(system_prompt: str, history: list, question: str) -> str:
             resp = client.chat.completions.create(
                 model=model,
                 messages=messages,
-                max_tokens=600,
+                max_tokens=_chat_max_tokens(),
                 temperature=0.2,
-                timeout=10.0,
+                timeout=_chat_request_timeout(),
             )
             logger.info(f"  [LLM Call] Success with provider '{name}'!")
             return resp.choices[0].message.content
@@ -122,9 +136,9 @@ def _call_llm_stream(system_prompt: str, history: list, question: str):
             resp = client.chat.completions.create(
                 model=model,
                 messages=messages,
-                max_tokens=450,
+                max_tokens=_chat_max_tokens(),
                 temperature=0.2,
-                timeout=10.0,
+                timeout=_chat_request_timeout(),
                 stream=True,
             )
             

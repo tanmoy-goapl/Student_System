@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from database import get_db
+from services.authorization import require_student
 
 from services.homepage_engine import (
     calculate_exam_readiness,
@@ -23,10 +24,8 @@ router = APIRouter(prefix="/homepage", tags=["homepage"])
 
 
 @router.get("/data")
-async def get_homepage_data(student_id: int | None = None, db: Session = Depends(get_db)):
-    if not student_id:
-        # Default fallback / mock student id if not supplied
-        student_id = 3
+async def get_homepage_data(student_id: int = Query(...), db: Session = Depends(get_db)):
+    require_student(student_id, db)
 
     # Calculate all metrics dynamically
     readiness_data = calculate_exam_readiness(student_id, db)
@@ -236,9 +235,8 @@ async def get_homepage_data(student_id: int | None = None, db: Session = Depends
     }
 
 @router.get("/ai-actions")
-def get_ai_actions(student_id: int | None = None, db: Session = Depends(get_db)):
-    if not student_id:
-        student_id = 3
+def get_ai_actions(student_id: int = Query(...), db: Session = Depends(get_db)):
+    require_student(student_id, db)
     suggested = generate_suggested_next(student_id, db)
     
     icon_map = {
@@ -271,6 +269,7 @@ def get_ai_actions(student_id: int | None = None, db: Session = Depends(get_db))
 
 @router.get("/debug/{student_id}")
 def get_homepage_debug(student_id: int, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     readiness_data = calculate_exam_readiness(student_id, db)
     health = calculate_dashboard_health(readiness_data["readiness_percentage"])
     weak_data = calculate_weak_topics(student_id, db)

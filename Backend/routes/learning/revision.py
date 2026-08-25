@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from practice_models import CustomTopic, RevisionItem, TopicPerformance
+from services.authorization import require_student
 
 router = APIRouter()
 
@@ -43,6 +44,7 @@ def _resolve_subject(req: AddRevisionRequest, db: Session) -> str:
 
 @router.post("/revision")
 def add_to_revision(req: AddRevisionRequest, db: Session = Depends(get_db)):
+    require_student(req.student_id, db)
     topic_name = req.topic_name.strip()
     if not topic_name:
         raise HTTPException(status_code=400, detail="A topic is required to add a revision item.")
@@ -102,6 +104,7 @@ def add_to_revision(req: AddRevisionRequest, db: Session = Depends(get_db)):
 
 @router.get("/revision/{student_id}")
 def get_revision_items(student_id: int, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     items = db.query(RevisionItem).filter(
         RevisionItem.student_id == student_id,
         RevisionItem.status == "pending",

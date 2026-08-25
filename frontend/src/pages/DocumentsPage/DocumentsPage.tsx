@@ -17,7 +17,11 @@ export default function DocumentsPage() {
     const fetchDocs = async () => {
         try {
             const userId = localStorage.getItem("user_id");
-            const sid = userId ? parseInt(userId, 10) : 1;
+            const sid = userId ? parseInt(userId, 10) : NaN;
+            if (!Number.isInteger(sid) || sid <= 0) {
+                setData(null);
+                return;
+            }
             const res = await getDocumentsData(sid);
             setData(res);
         } catch (error) {
@@ -27,7 +31,12 @@ export default function DocumentsPage() {
 
     const handleDelete = async (docId: string) => {
         try {
-            await deleteDocument(docId);
+            const rawUserId = localStorage.getItem("user_id");
+            const userId = rawUserId ? parseInt(rawUserId, 10) : NaN;
+            if (!Number.isInteger(userId) || userId <= 0) {
+                throw new Error("Session expired. Please log in again.");
+            }
+            await deleteDocument(docId, userId);
             await fetchDocs();
         } catch (error) {
             console.error("Failed to delete document:", error);

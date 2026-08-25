@@ -3,7 +3,7 @@ import logging
 import re
 import os
 from typing import Optional
-from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, Request, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from fastapi.responses import StreamingResponse
@@ -17,10 +17,13 @@ router = APIRouter()
 from services.practice.base import _practice_llm_stream, normalize_generated_text
 
 from practice_models import AICache
+from services.authorization import require_student, require_professor, require_document_access, require_professor_class
 
 @router.get("/explain/stream")
 async def explain_topic_stream(request: Request, student_id: int, topic_name: str, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     cached = db.query(AICache).filter(
+        AICache.student_id == student_id,
         AICache.topic == topic_name,
         AICache.action_type == "explain"
     ).first()
@@ -110,7 +113,9 @@ Provide a single-sentence key takeaway here."""
 
 @router.get("/examples/stream")
 async def give_examples_stream(request: Request, student_id: int, topic_name: str, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     cached = db.query(AICache).filter(
+        AICache.student_id == student_id,
         AICache.topic == topic_name,
         AICache.action_type == "examples"
     ).first()
@@ -221,9 +226,7 @@ async def summary_example_stream(
     import asyncio
     import threading as _threading
 
-    professor = db.query(User).filter(User.id == professor_id).first()
-    if not professor or professor.role != "professor":
-        raise HTTPException(status_code=403, detail="Only professors can use this action.")
+    professor = require_professor(professor_id, db)
 
     document = db.query(Document).filter(Document.id == document_id).first()
     if not document:
@@ -233,17 +236,7 @@ async def summary_example_stream(
         classroom.id
         for classroom in db.query(Classroom).filter(Classroom.professor_id == professor_id).all()
     }
-    has_access = (
-        document.owner_id == professor_id
-        or document.student_id == professor_id
-        or document.visibility == "universal"
-        or (
-            document.visibility == "course_shared"
-            and document.classroom_id in taught_class_ids
-        )
-    )
-    if not has_access:
-        raise HTTPException(status_code=403, detail="You do not have access to this document.")
+    require_document_access(document, professor_id, db)
 
     if not document.file_path or not os.path.exists(document.file_path):
         raise HTTPException(status_code=404, detail="Document file is missing.")
@@ -357,7 +350,9 @@ Source document content (reference only):
 
 @router.get("/flashcard/stream")
 async def flashcard_topic_stream(request: Request, student_id: int, topic_name: str, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     cached = db.query(AICache).filter(
+        AICache.student_id == student_id,
         AICache.topic == topic_name,
         AICache.action_type == "flashcard"
     ).first()
@@ -487,7 +482,8 @@ class SaveNotesRequest(BaseModel):
 
 
 @router.post("/explain")
-def explain_topic(req: ExplainRequest):
+def explain_topic(req: ExplainRequest, db: Session = Depends(get_db)):
+    require_student(req.student_id, db)
     from routes.chat import _call_llm
     prompt = f"""You are an expert tutor explaining a technical concept.
 Explain the topic "{req.topic_name}" in very simple language for a beginner.
@@ -524,7 +520,8 @@ Do not include any backticks or markdown markers. Return ONLY the JSON object.
 
 
 @router.post("/examples")
-def give_examples(req: ExampleRequest):
+def give_examples(req: ExampleRequest, db: Session = Depends(get_db)):
+    require_student(req.student_id, db)
     from routes.chat import _call_llm
     prompt = f"""You are an expert instructor.
 Provide 3 real-world, highly relatable examples or scenarios for the concept "{req.topic_name}".
@@ -561,7 +558,8 @@ Do not include any backticks or markdown markers. Return ONLY the JSON object.
 
 
 @router.post("/summarize")
-def summarize_topic(req: SummarizeRequest):
+def summarize_topic(req: SummarizeRequest, db: Session = Depends(get_db)):
+    require_student(req.student_id, db)
     from routes.chat import _call_llm
     prompt = f"""You are an educational assistant.
 Summarize "{req.topic_name}" for quick exam revision.
@@ -593,7 +591,8 @@ Do not include any backticks or markdown markers. Return ONLY the JSON object.
 
 
 @router.get("/related/{topic}")
-def get_related_concepts(topic: str, student_id: int = 1, db: Session = Depends(get_db)):
+def get_related_concepts(topic: str, student_id: int = Query(...), db: Session = Depends(get_db)):
+    require_student(student_id, db)
     try:
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         subject_topics_path = os.path.join(base_dir, "config", "subject_topics.json")
@@ -621,7 +620,8 @@ def get_related_concepts(topic: str, student_id: int = 1, db: Session = Depends(
 
 
 @router.post("/cheatsheet")
-def get_cheatsheet(req: CheatSheetRequest):
+def get_cheatsheet(req: CheatSheetRequest, db: Session = Depends(get_db)):
+    require_student(req.student_id, db)
     from routes.chat import _call_llm
     prompt = f"""You are a technical interviewer.
 Provide 3-5 high-yield interview cheat sheet points for "{req.topic_name}".
@@ -655,6 +655,7 @@ Do not include any backticks or markdown markers. Return ONLY the JSON object.
 
 @router.post("/save-notes")
 def save_notes(req: SaveNotesRequest, db: Session = Depends(get_db)):
+    require_student(req.student_id, db)
     from practice_models import UserNote
     new_note = UserNote(
         student_id=req.student_id,
@@ -669,7 +670,7 @@ def save_notes(req: SaveNotesRequest, db: Session = Depends(get_db)):
 def generate_material_stream(
     topic: str,
     subject: str = "Computer Science",
-    user_id: int = 1,
+    user_id: int = Query(...),
     classroom_id: Optional[int] = None,
     target_classroom_id: Optional[int] = None,
     action_type: Optional[str] = "notes", # "notes", "quiz", "lesson", "revision", "simplify", "practice"
@@ -684,6 +685,7 @@ def generate_material_stream(
     flow used by Content Studio.
     """
 
+    require_professor(user_id, db)
     requested_action = (action_type or "notes").strip().lower()
     action_type = "lesson" if requested_action == "lesson_plan" else requested_action
     if action_type not in {"notes", "quiz", "lesson", "revision", "simplify", "practice"}:
@@ -692,13 +694,7 @@ def generate_material_stream(
     doc_name = f"AI Study Material - {topic}.txt"
     intended_classroom_id = target_classroom_id if target_classroom_id is not None else classroom_id
     if intended_classroom_id is not None:
-        from classroom_models import Classroom
-        assigned_class = db.query(Classroom).filter(
-            Classroom.id == intended_classroom_id,
-            Classroom.professor_id == user_id
-        ).first()
-        if not assigned_class:
-            raise HTTPException(status_code=403, detail="You can only assign generated material to your own class.")
+        require_professor_class(user_id, intended_classroom_id, db)
     system_prompt = f"""You are a senior university professor and published textbook author preparing comprehensive lecture notes for distribution to students.
 
 Generate an extremely detailed, rigorous, and well-structured study material document for the topic: "{topic}" under the subject "{subject}".
@@ -887,7 +883,7 @@ OPTIONAL PROFESSOR DESCRIPTION:
                         category="Studies",
                         subject=subject,
                         uploaded_at=datetime.datetime.now(),
-                        visibility="course_shared" if classroom_id else "private",
+                        visibility="course_shared" if intended_classroom_id is not None else "private",
                         document_type="notes",
                         classroom_id=intended_classroom_id,
                         document_format="TXT",

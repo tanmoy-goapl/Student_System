@@ -10,10 +10,10 @@ export async function GET(
 ) {
   try {
     const { studentId } = await params;
-    const professorId = new URL(request.url).searchParams.get('professor_id') || '2';
+    const professorId = new URL(request.url).searchParams.get('professor_id');
 
-    if (!studentId) {
-      return NextResponse.json({ error: 'Student ID is required' }, { status: 400 });
+    if (!studentId || !professorId) {
+      return NextResponse.json({ error: 'student_id and professor_id are required' }, { status: 400 });
     }
 
     const response = await fetch(

@@ -1,13 +1,14 @@
 import json
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, BackgroundTasks, Request
+from fastapi import APIRouter, Depends, BackgroundTasks, Request, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from database import get_db
 from practice_models import LearningContent
-from services.practice.content_generator import generate_learning_content, stream_learning_content, has_valid_revision
+from services.practice.content_generator import generate_learning_content, stream_learning_content, has_valid_revision, split_revision_payload
+from services.authorization import require_student
 
 logger = logging.getLogger("chatbot")
 
@@ -102,27 +103,13 @@ def pre_generate_questions_bg(student_id: int, topic: str, subject: Optional[str
         bg_db = SessionLocal()
         cached = None
         try:
-            # Check if there is already a student-specific or shared cache (case-insensitive)
+            # Question banks are student-scoped. Never reuse another student's
+            # private practice bank.
             cached = bg_db.query(AICache).filter(
+                AICache.student_id == student_id,
                 AICache.topic.ilike(topic),
                 AICache.action_type == "master_question_bank"
             ).first()
-            
-            # If a shared cache exists but not cloned for this student, clone it instantly
-            if cached and cached.student_id != student_id:
-                try:
-                    clone = AICache(
-                        student_id=student_id,
-                        topic=topic,
-                        action_type="master_question_bank",
-                        content=cached.content
-                    )
-                    bg_db.add(clone)
-                    bg_db.commit()
-                    logger.info(f"[BGTask] Cloned shared question bank for topic '{topic}' to student {student_id}")
-                except Exception as e:
-                    bg_db.rollback()
-                    logger.error(f"[BGTask] Failed to clone shared question bank: {e}")
         except Exception as e:
             logger.error(f"[BGTask] Failed to check master question bank cache: {e}")
         finally:
@@ -139,12 +126,10 @@ def pre_generate_questions_bg(student_id: int, topic: str, subject: Optional[str
 router = APIRouter()
 
 @router.api_route("/clear_content_cache", methods=["GET", "DELETE"])
-def clear_content_cache(student_id: int = None, db: Session = Depends(get_db)):
-    """Delete all cached learning content (or for a specific student). Used to flush corrupted entries."""
-    if student_id:
-        count = db.query(LearningContent).filter(LearningContent.student_id == student_id).delete()
-    else:
-        count = db.query(LearningContent).delete()
+def clear_content_cache(student_id: int = Query(...), db: Session = Depends(get_db)):
+    """Delete only the active student's cached learning content."""
+    require_student(student_id, db)
+    count = db.query(LearningContent).filter(LearningContent.student_id == student_id).delete()
     db.commit()
     return {"deleted": count}
 
@@ -188,7 +173,7 @@ def resolve_standard_subject(topic: str, current_subject: Optional[str] = None) 
 
 @router.get("/content")
 def get_learning_content_endpoint(
-    student_id: int = 1,
+    student_id: int,
     topic: Optional[str] = None,
     subject: Optional[str] = None,
     force: Optional[bool] = False,
@@ -196,6 +181,7 @@ def get_learning_content_endpoint(
     db: Session = Depends(get_db)
 ):
     """Fetch ONLY the generated LLM content for a topic (which may be slow if not cached)."""
+    require_student(student_id, db)
     if not topic:
         return {"notesResponse": [], "revision": {}}
         
@@ -206,12 +192,6 @@ def get_learning_content_endpoint(
         LearningContent.subject == subject,
         LearningContent.topic == topic
     ).first()
-    
-    if not cached and subject:
-        cached = db.query(LearningContent).filter(
-            LearningContent.student_id == student_id,
-            LearningContent.topic == topic
-        ).first()
     
     if cached and not has_valid_revision(cached.revision):
         logger.info(f"INVALIDATING incomplete revision cache: topic='{topic}', subject='{subject}'")
@@ -246,6 +226,7 @@ def get_learning_content_endpoint(
             is_old_format = True
 
         if "could not be generated" not in cached_str and not is_old_format:
+            clean_content, embedded_revision = split_revision_payload(cached.content, topic, subject)
             logger.info(f"CACHE HIT: topic='{topic}', subject='{subject}'")
             import threading
             threading.Thread(target=pre_generate_questions_bg, args=(student_id, topic, subject), daemon=True).start()
@@ -255,9 +236,9 @@ def get_learning_content_endpoint(
                     "generatedBy": "AI Assistant (Cached)",
                     "status": "Personal Study Guide",
                     "topic": topic,
-                    "content": cached.content
+                    "content": clean_content
                 },
-                "revision": cached.revision
+                "revision": cached.revision or embedded_revision
             }
         elif is_old_format:
             logger.info(f"CACHE INVALIDATED (Old format): topic='{topic}', subject='{subject}'. Forcing regeneration...")
@@ -302,14 +283,15 @@ def get_learning_content_endpoint(
 @router.get("/stream_content")
 async def stream_content(
     request: Request,
+    student_id: int,
     topic: Optional[str] = None,
-    student_id: int = 1,
     subject: Optional[str] = None,
     bypass_cache: Optional[bool] = False,
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
     """Stream learning content progressively. Detects client disconnect to abort LLM generation."""
+    require_student(student_id, db)
     if not topic:
         return {"error": "Topic is required"}
         
@@ -325,11 +307,6 @@ async def stream_content(
             LearningContent.topic == topic
         ).first()
         
-        if not cached:
-            cached = db.query(LearningContent).filter(
-                LearningContent.topic == topic
-            ).first()
-    
     if cached and not has_valid_revision(cached.revision):
         logger.info(f"INVALIDATING incomplete revision stream cache: topic='{topic}', subject='{subject}'")
         db.delete(cached)
@@ -343,6 +320,7 @@ async def stream_content(
 
         def generate_cached():
             content = cached.content
+            embedded_revision = None
             if isinstance(content, list):
                 md_content = f"# {topic}\n\n"
                 for block in content:
@@ -357,11 +335,11 @@ async def stream_content(
                     else:
                         md_content += f"{block.get('text')}\n\n"
             else:
-                md_content = str(content)
-                
+                md_content, embedded_revision = split_revision_payload(str(content), topic, subject)
+
             yield md_content
             yield "\n\n---REVISION---\n"
-            yield json.dumps(cached.revision)
+            yield json.dumps(embedded_revision or cached.revision)
             
         return StreamingResponse(
             generate_cached(), 
@@ -372,6 +350,7 @@ async def stream_content(
     # When regenerating, delete old cache so the new stream replaces it
     if is_bypass:
         db.query(LearningContent).filter(
+            LearningContent.student_id == student_id,
             LearningContent.topic == topic
         ).delete()
         db.commit()

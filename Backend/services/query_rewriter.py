@@ -15,12 +15,30 @@ def rewrite_query(question: str) -> list[str]:
     if not original:
         return []
 
+    typo_map = {
+        "plicy": "policy",
+        "polcy": "policy",
+        "policys": "policies",
+        "attendence": "attendance",
+        "eligiblity": "eligibility",
+    }
+    corrected = original
+    for misspelling, correction in typo_map.items():
+        corrected = re.sub(
+            rf"\b{re.escape(misspelling)}\b",
+            correction,
+            corrected,
+            flags=re.IGNORECASE,
+        )
+
     queries = [original]
+    if corrected != original:
+        queries.append(corrected)
 
     # Normalize possessives and common shorthand without embedding any
     # answer-specific knowledge in the retriever. This lets queries such as
     # "Banker's algo" reach documents that say "Banker’s algorithm".
-    normalized_text = re.sub(r"\b([\w-]+)['’]s\b", r"\1", original.lower())
+    normalized_text = re.sub(r"\b([\w-]+)['’]s\b", r"\1", corrected.lower())
     words = re.findall(r'\b\w+\b', normalized_text)
     keywords = [w for w in words if w not in STOP_WORDS]
     keywords_str = " ".join(keywords)

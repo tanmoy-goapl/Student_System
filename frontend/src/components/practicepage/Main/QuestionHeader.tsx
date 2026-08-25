@@ -12,7 +12,7 @@ export default function QuestionHeader({
   return (
     <div className="bg-gradient-to-r from-slate-900/50 to-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
       {/* Top Row: Number and Badges */}
-      <div className="flex items-end justify-between mb-2">
+      <div className="min-w-0 flex flex-wrap items-end justify-between gap-3 mb-2">
         <div className="space-y-2">
           {/* Question Number */}
           <ProgressIndicator
@@ -21,16 +21,16 @@ export default function QuestionHeader({
           />
 
           {/* Badge Group */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
             {question.category && question.category.toLowerCase().replace(/[^a-z0-9]/g, '') !== question.topic.toLowerCase().replace(/[^a-z0-9]/g, '') && (
               <span className="px-2 py-1 bg-[#5B5FFF]/10 border border-[#5B5FFF]/30 rounded-lg text-[0.65rem] font-semibold text-[#8F93FF]">
                 {question.category}
               </span>
             )}
-            <span className="px-2 py-1 bg-slate-700/40 border border-slate-600/40 rounded-lg text-[0.65rem] font-medium text-slate-300">
+            <span className="max-w-full break-words px-2 py-1 bg-slate-700/40 border border-slate-600/40 rounded-lg text-[0.65rem] font-medium text-slate-300">
               {question.topic}
             </span>
-            <span className="px-2 py-1 bg-red-500/20 border border-red-500/40 rounded-lg text-[0.65rem] font-semibold text-red-300">
+            <span className="shrink-0 px-2 py-1 bg-red-500/20 border border-red-500/40 rounded-lg text-[0.65rem] font-semibold text-red-300">
               {question.difficulty}
             </span>
           </div>
@@ -45,7 +45,7 @@ export default function QuestionHeader({
       </div>
 
       {/* Meta Info */}
-      <p className="text-[0.65rem] text-slate-400">
+      <p className="text-[0.65rem] text-slate-400 break-words">
         {question.mode} • {question.description}
       </p>
     </div>

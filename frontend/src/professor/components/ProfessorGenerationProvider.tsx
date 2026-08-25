@@ -182,7 +182,9 @@ export default function ProfessorGenerationProvider({
 
   const startGeneration = useCallback((request: StartGenerationRequest) => {
     const jobId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const professorId = request.professorId ?? Number(window.localStorage.getItem("user_id") || 2);
+    const rawProfessorId = window.localStorage.getItem("user_id");
+    const professorId = request.professorId ?? (rawProfessorId ? Number(rawProfessorId) : NaN);
+    if (!Number.isInteger(professorId) || professorId <= 0) return "";
 
     setGenerationJobs((jobs) => [
       ...jobs,

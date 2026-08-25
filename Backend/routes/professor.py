@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Dict, Any
@@ -8,6 +8,7 @@ from database import get_db
 from models import User
 from practice_models import TopicPerformance, UserPerformance, QuizHistory, PracticeSession
 from classroom_models import Classroom, StudentClass, ClassCurriculum
+from services.authorization import require_professor, require_professor_class
 
 router = APIRouter(prefix="/professor", tags=["professor"])
 
@@ -31,6 +32,8 @@ def _is_at_risk_metric(metrics: Dict[str, Any]) -> bool:
 
 @router.get("/classes/{professor_id}")
 def get_professor_classes(professor_id: int, db: Session = Depends(get_db)):
+    require_professor(professor_id, db)
+
     classes = db.query(Classroom).filter(Classroom.professor_id == professor_id).all()
     result = []
     for c in classes:
@@ -46,8 +49,8 @@ def get_professor_classes(professor_id: int, db: Session = Depends(get_db)):
     return {"success": True, "classes": result}
 
 @router.get("/class/{class_id}/analytics")
-def get_class_analytics(class_id: int, db: Session = Depends(get_db)):
-    classroom = db.query(Classroom).filter(Classroom.id == class_id).first()
+def get_class_analytics(class_id: int, professor_id: int = Query(...), db: Session = Depends(get_db)):
+    _, classroom = require_professor_class(professor_id, class_id, db)
     if not classroom:
         raise HTTPException(status_code=404, detail="Class not found")
 
@@ -406,6 +409,8 @@ def get_class_analytics(class_id: int, db: Session = Depends(get_db)):
 # ─────────────────────────────────────────────────────────────
 @router.get("/student/{student_id}/profile")
 def get_student_profile(student_id: int, professor_id: int, db: Session = Depends(get_db)):
+    require_professor(professor_id, db)
+
     """Return live profile data for a student enrolled in this professor's classes."""
     student = db.query(User).filter(User.id == student_id, User.role == "student").first()
     if not student:
@@ -631,6 +636,8 @@ def get_student_profile(student_id: int, professor_id: int, db: Session = Depend
 
 @router.get("/insights-legacy/{professor_id}")
 def get_professor_insights(professor_id: int, class_id: int = 0, db: Session = Depends(get_db)):
+    require_professor(professor_id, db)
+
     """
     Aggregated insights dashboard for a professor.
     If class_id > 0 it scopes to that single class, otherwise aggregates all.
@@ -640,6 +647,7 @@ def get_professor_insights(professor_id: int, class_id: int = 0, db: Session = D
     # 1. Resolve classes ──────────────────────────────────────
     all_classrooms = db.query(Classroom).filter(Classroom.professor_id == professor_id).all()
     if class_id > 0:
+        require_professor_class(professor_id, class_id, db)
         classrooms = [c for c in all_classrooms if c.id == class_id]
     else:
         classrooms = all_classrooms
@@ -988,6 +996,8 @@ def get_professor_insights(professor_id: int, class_id: int = 0, db: Session = D
 
 @router.get("/insights/{professor_id}")
 def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Session = Depends(get_db)):
+    require_professor(professor_id, db)
+
     """
     Return live, class-scoped professor insights from completed activity and
     stored topic performance. No deterministic or ID-based synthetic values
@@ -1518,6 +1528,8 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
 # ─────────────────────────────────────────────────────────────
 @router.get("/dashboard/{professor_id}")
 def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
+    require_professor(professor_id, db)
+
     """Return professor-home KPIs from the same class-scoped metric rules."""
     classrooms = db.query(Classroom).filter(
         Classroom.professor_id == professor_id

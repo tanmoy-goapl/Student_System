@@ -76,7 +76,8 @@ export default function InsightsPage() {
     if (showLoading) setLoading(true);
     if (showLoading) setError(null);
     try {
-      const userId = localStorage.getItem("user_id") || "2";
+      const userId = localStorage.getItem("user_id");
+      if (!userId) throw new Error("Authentication required. Please sign in again.");
       const url = `/api/professor/insights?professor_id=${userId}&class_id=${classId}`;
       const res = await fetch(url, { cache: "no-store", signal: controller.signal });
       if (!res.ok) throw new Error("Failed to load insights");

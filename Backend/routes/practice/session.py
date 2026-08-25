@@ -2,14 +2,14 @@ import logging
 import threading
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from database import SessionLocal, get_db
 from practice_models import PracticeSession, PracticeQuestion
 from services.practice.topic_extractor import extract_topics_from_documents
-from services.practice.question_generator import generate_questions
+from services.practice.question_generator import generate_questions, _normalise_quiz_item
 from services.practice.session_manager import (
     get_adaptive_difficulty,
     update_topic_performance,
@@ -17,6 +17,7 @@ from services.practice.session_manager import (
     finalize_session_history
 )
 from services.practice.analytics import get_weakness_topics_for_quiz
+from services.authorization import require_student
 
 logger = logging.getLogger("chatbot")
 
@@ -136,7 +137,37 @@ class StartSessionRequest(BaseModel):
     difficulty: str = "mixed"   # easy | medium | hard | mixed
     question_count: int = 5
 
+def _stored_questions_match_requested_level(
+    questions: list[PracticeQuestion],
+    topic: str,
+    difficulty: str,
+) -> bool:
+    """Keep old active sessions from resurfacing invalid medium/hard items."""
+    if difficulty not in ("medium", "hard"):
+        return True
+
+    for question in questions:
+        validated = _normalise_quiz_item(
+            {
+                "topic": question.topic or topic,
+                "subtopic": question.subtopic,
+                "difficulty": question.difficulty,
+                "question": question.question_text,
+                "options": question.options,
+                "correct_answer": question.correct_answer,
+                "explanation": question.explanation,
+            },
+            topic,
+            difficulty,
+            question.subtopic,
+        )
+        if not validated:
+            return False
+    return True
+
+
 class SubmitAnswerRequest(BaseModel):
+    student_id: int
     question_id: int
     answer: str                 # "A", "B", "C", "D"
     time_spent: int = 0         # seconds
@@ -145,22 +176,43 @@ class SubmitAnswerRequest(BaseModel):
 @router.post("/session/start")
 def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
     """Start a new practice session, or resume the active one if it exists."""
+    require_student(req.student_id, db)
     try:
         logger.info(f"[Practice] Starting/resuming session: mode={req.mode}, topic={req.topic}, difficulty={req.difficulty}")
         requested_count = max(1, min(int(req.question_count or 5), 20))
+        requested_difficulty = (req.difficulty or "mixed").strip().lower()
+        if requested_difficulty not in ("easy", "medium", "hard", "mixed", "adaptive"):
+            requested_difficulty = "mixed"
 
-        # Check for existing active session for this student and topic to support instant refresh recovery
-        # Check for existing active session for this student and topic to support instant refresh recovery
+        # Check for an active session for this student/topic, but never resume a
+        # different explicitly selected difficulty.
         if req.mode == "topic" and req.topic:
-            existing_session = db.query(PracticeSession).filter(
+            existing_query = db.query(PracticeSession).filter(
                 PracticeSession.student_id == req.student_id,
                 PracticeSession.topic == req.topic,
                 PracticeSession.is_active == True
-            ).first()
+            )
+            if requested_difficulty in ("easy", "medium", "hard"):
+                existing_query = existing_query.filter(
+                    PracticeSession.difficulty == requested_difficulty
+                )
+            existing_session = existing_query.first()
             if existing_session:
                 existing_questions = db.query(PracticeQuestion).filter(
                     PracticeQuestion.session_id == existing_session.id
                 ).order_by(PracticeQuestion.id.asc()).all()
+                if existing_questions and requested_difficulty in ("medium", "hard") and not _stored_questions_match_requested_level(
+                    existing_questions, req.topic, requested_difficulty
+                ):
+                    logger.info(
+                        "[Practice] Retiring stale %s session %s before starting a validated batch",
+                        requested_difficulty,
+                        existing_session.id,
+                    )
+                    existing_session.is_active = False
+                    existing_session.ended_at = datetime.utcnow()
+                    db.commit()
+                    existing_questions = []
                 if existing_questions:
                     if existing_session.question_count != requested_count:
                         existing_session.question_count = requested_count
@@ -230,7 +282,7 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
         else:
             # Topic-based mode
             topic_for_gen = req.topic or "General"
-            difficulty = req.difficulty
+            difficulty = requested_difficulty
             
         if difficulty == "mixed" or difficulty == "adaptive":
             difficulty = get_adaptive_difficulty(req.student_id, topic_for_gen, db)
@@ -327,7 +379,11 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
 @router.post("/session/{session_id}/answer")
 def submit_answer(session_id: int, req: SubmitAnswerRequest, db: Session = Depends(get_db)):
     """Submit an answer for a question and get feedback."""
-    session = db.query(PracticeSession).filter(PracticeSession.id == session_id).first()
+    require_student(req.student_id, db)
+    session = db.query(PracticeSession).filter(
+        PracticeSession.id == session_id,
+        PracticeSession.student_id == req.student_id,
+    ).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
@@ -372,9 +428,17 @@ def submit_answer(session_id: int, req: SubmitAnswerRequest, db: Session = Depen
 
 
 @router.get("/session/{session_id}/status")
-def session_status(session_id: int, db: Session = Depends(get_db)):
+def session_status(
+    session_id: int,
+    student_id: int = Query(...),
+    db: Session = Depends(get_db),
+):
     """Get live session statistics."""
-    session = db.query(PracticeSession).filter(PracticeSession.id == session_id).first()
+    require_student(student_id, db)
+    session = db.query(PracticeSession).filter(
+        PracticeSession.id == session_id,
+        PracticeSession.student_id == student_id,
+    ).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
@@ -401,9 +465,17 @@ def session_status(session_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/session/{session_id}/next-batch")
-def next_batch(session_id: int, db: Session = Depends(get_db)):
+def next_batch(
+    session_id: int,
+    student_id: int = Query(...),
+    db: Session = Depends(get_db),
+):
     """Generate the next batch of questions with adaptive difficulty."""
-    session = db.query(PracticeSession).filter(PracticeSession.id == session_id).first()
+    require_student(student_id, db)
+    session = db.query(PracticeSession).filter(
+        PracticeSession.id == session_id,
+        PracticeSession.student_id == student_id,
+    ).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
@@ -429,8 +501,13 @@ def next_batch(session_id: int, db: Session = Depends(get_db)):
 
     gen_count = min(remaining, 5)
 
-    # Adaptive difficulty based on current session performance
-    difficulty = get_adaptive_difficulty(session.student_id, session.topic or "General", db)
+    # Keep an explicitly selected level stable for the whole session. Only
+    # mixed/adaptive sessions should change level from live performance.
+    difficulty = (
+        session.difficulty
+        if session.difficulty in ("easy", "medium", "hard")
+        else get_adaptive_difficulty(session.student_id, session.topic or "General", db)
+    )
 
     raw_questions = generate_questions(
         student_id=session.student_id,

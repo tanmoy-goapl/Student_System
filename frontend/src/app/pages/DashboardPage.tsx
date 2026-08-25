@@ -8,12 +8,16 @@ export default function DashboardPage() {
     chatMessages: 0,
   });
 
-  const getStudentId = () => parseInt(localStorage.getItem("user_id") || "0", 10);
+  const getStudentId = (): number | null => {
+    const rawId = localStorage.getItem("user_id");
+    const parsed = rawId ? parseInt(rawId, 10) : NaN;
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  };
 
   useEffect(() => {
     async function loadStats() {
       const sid = getStudentId();
-      if (!sid || isNaN(sid)) return;
+      if (sid === null) return;
 
       try {
         // Fetch document count

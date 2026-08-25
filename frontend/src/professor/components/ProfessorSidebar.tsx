@@ -42,7 +42,8 @@ export default function ProfessorSidebar() {
     const fetchSidebarClasses = async () => {
       try {
         const userId = localStorage.getItem("user_id");
-        const professorId = userId ? parseInt(userId, 10) : 1;
+        if (!userId) return;
+        const professorId = parseInt(userId, 10);
         const res = await fetch(`/api/classroom/my_classes/${professorId}`);
         if (!res.ok) throw new Error("Failed to load sidebar classes");
         const data = await res.json();

@@ -97,18 +97,19 @@ const LearningSidebar = memo(function LearningSidebar({ data, onSelectTopic, roa
     }
   }, [data?.selectedTopic, data?.sidebarData, topicParam]);
 
-  const getStudentId = (): number => {
+  const getStudentId = (): number | null => {
     if (typeof window !== "undefined") {
       const id = localStorage.getItem("user_id");
-      return id ? parseInt(id, 10) : 1;
+      return id ? parseInt(id, 10) : null;
     }
-    return 1;
+    return null;
   };
 
   useEffect(() => {
     async function fetchUserRoadmaps() {
       try {
         const studentId = getStudentId();
+        if (!studentId) return;
         const res = await fetch(`/api/roadmap/all/${studentId}`);
         const result = await res.json();
         if (result.success) {

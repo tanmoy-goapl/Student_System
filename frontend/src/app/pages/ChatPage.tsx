@@ -6,7 +6,14 @@ import { useChatSession, type ChatMessage } from "@/components/ChatSessionProvid
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
 import { AlertTriangle, Paperclip, Send, Square, CheckCircle2, ChevronRight, Activity, CalendarDays, Sparkles, History, Plus, Sidebar, TrendingUp } from "lucide-react";
-import { getChatSidebarData, getHomepageData, uploadDocument, type HomepageDataResponse } from "@/lib/api";
+import {
+  CHAT_ATTACHMENT_ACCEPT,
+  getChatSidebarData,
+  getHomepageData,
+  isChatAttachmentFile,
+  uploadChatAttachment,
+  type HomepageDataResponse,
+} from "@/lib/api";
 import Link from "next/link";
 import { OfflineState, ChatThinking } from "@/components/UIStateSystem";
 
@@ -114,10 +121,15 @@ export default function ChatPage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
+    if (!isChatAttachmentFile(file)) {
+      setError("Chatbot attachments support PDF and TXT files only.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     setError("");
     setFileUploading(true);
     try {
-      const res = await uploadDocument(user.id, file, "owner");
+      const res = await uploadChatAttachment(user.id, file);
       appendAssistantMessage(`📁 **Uploaded "${res.filename}"** (${res.chunks_created} chunks processed). I have parsed it and added it to my knowledge. You can now ask questions about it!`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to upload document");
@@ -254,14 +266,14 @@ export default function ChatPage() {
               ref={fileInputRef}
               onChange={handleFileChange}
               className="hidden"
-              accept=".pdf,.txt,.doc,.docx,.png,.jpg,.jpeg,.bmp,.webp,.tiff,.tif,.gif"
+              accept={CHAT_ATTACHMENT_ACCEPT}
             />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={fileUploading || !user?.id}
               className="text-gray-400 hover:text-white transition disabled:opacity-40"
-              title="Attach Document"
+              title="Attach a PDF or TXT document"
             >
               {fileUploading ? (
                 <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
@@ -458,6 +470,7 @@ function parseMarkdownAndTables(text: string): TableBlock[] {
 
 function ChatBubble({ msg, isGenerating, onAsk }: { msg: ChatMessage, isGenerating?: boolean, onAsk?: (q: string) => void }) {
   const isUser = msg.role === "user";
+  const roadmapIsGenerating = msg.roadmap_metadata?.status === "generating";
   
   if (!isUser && !msg.content && !msg.roadmap_metadata && !isGenerating) {
     return null;
@@ -546,12 +559,20 @@ function ChatBubble({ msg, isGenerating, onAsk }: { msg: ChatMessage, isGenerati
         {/* Custom Success Card for Roadmap Creation */}
         {msg.intent === "ROADMAP_CREATION" && msg.roadmap_metadata && (
           <div className="mt-4 bg-[#0a0f1e]/80 border border-blue-500/20 rounded-xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-xl shadow-blue-500/5">
-            <div className="flex items-center gap-2 text-emerald-400 mb-1">
-              <CheckCircle2 className="w-5 h-5" />
-              <span className="font-bold">Roadmap Created</span>
+            <div className={`flex items-center gap-2 mb-1 ${roadmapIsGenerating ? "text-blue-400" : "text-emerald-400"}`}>
+              {roadmapIsGenerating ? (
+                <Activity className="w-5 h-5 animate-pulse" />
+              ) : (
+                <CheckCircle2 className="w-5 h-5" />
+              )}
+              <span className="font-bold">{roadmapIsGenerating ? "Roadmap generation started" : "Roadmap Created"}</span>
             </div>
             
             <h4 className="text-white font-semibold text-lg">{msg.roadmap_metadata.title}</h4>
+
+            {roadmapIsGenerating && (
+              <p className="text-sm text-slate-300">Generating in the background. You can continue using Mentor AI.</p>
+            )}
             
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white/5 rounded-lg p-2.5 flex items-center gap-3">
@@ -570,8 +591,8 @@ function ChatBubble({ msg, isGenerating, onAsk }: { msg: ChatMessage, isGenerati
               </div>
             </div>
 
-            <Link href="/roadmap" className="mt-2 flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm py-2.5 rounded-lg transition-colors group">
-              Open Personal Dashboard
+            <Link href="/personal" className="mt-2 flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm py-2.5 rounded-lg transition-colors group">
+              {roadmapIsGenerating ? "View Generation Status" : "Open Personal Dashboard"}
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>

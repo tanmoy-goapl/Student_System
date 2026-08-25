@@ -15,18 +15,19 @@ export default function PerformancePage() {
     const [aiQuery, setAiQuery] = useState("");
     const [mainData, setMainData] = useState<PerformanceMainResponse | null>(null);
 
-    const getStudentId = (): number => {
+    const getStudentId = (): number | null => {
         if (typeof window !== "undefined") {
             const id = localStorage.getItem("user_id");
-            return id ? parseInt(id, 10) : 3;
+            return id ? parseInt(id, 10) : null;
         }
-        return 3;
+        return null;
     };
     const studentId = getStudentId();
 
     useEffect(() => {
         async function fetchMainData() {
             try {
+                if (!studentId) return;
                 const data = await getPerformanceMain(studentId);
                 setMainData(data);
             } catch (error) {
@@ -72,7 +73,7 @@ export default function PerformancePage() {
             </div>
 
             <div className="w-[20vw]">
-                <PerformanceSidebar studentId={studentId}/>
+                <PerformanceSidebar studentId={studentId ?? undefined}/>
             </div>
         </div>
     );

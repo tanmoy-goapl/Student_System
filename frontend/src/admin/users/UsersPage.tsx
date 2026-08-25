@@ -23,12 +23,21 @@ const roleBadge: Record<string, string> = {
 };
 type UserFilter = "student" | "professor" | "admin";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 function userHasDepartment(user: UserRow, departmentCode: string): boolean {
   return (user.department || "")
     .split(/[,;/|]+/)
     .map((code) => code.trim().toUpperCase())
     .filter(Boolean)
     .includes(departmentCode.toUpperCase());
+}
+
+function departmentLabels(user: UserRow): string[] {
+  return (user.department_name || user.department || "")
+    .split(/[,;/|]+/)
+    .map((name) => name.trim())
+    .filter(Boolean);
 }
 
 function UserTable({
@@ -76,25 +85,48 @@ function UserTable({
                 return (
                   <tr key={u.id} className="border-b border-white/5 transition hover:bg-slate-800/40">
                     <td className="px-5 py-3.5 text-sm font-medium text-slate-200">{displayName}</td>
-                    <td className="px-5 py-3.5">
+                    <td className="min-w-[280px] px-5 py-3.5">
                       {u.role === "admin" ? (
                         <span className="text-xs font-semibold text-violet-300">Admin</span>
-                      ) : u.department ? (
-                        <span className="text-xs font-medium text-slate-300">{u.department_name || u.department}</span>
-                      ) : (
+                      ) : u.role === "student" ? (
                         <select
-                          value=""
+                          value={u.department || ""}
                           onChange={(e) => onDepartmentChange(u, e.target.value || null)}
-                          className="rounded-lg border border-cyan-500/30 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 focus:border-cyan-500/50 focus:outline-none"
-                          aria-label={"Assign department to " + displayName}
+                          className="w-full max-w-[220px] rounded-lg border border-cyan-500/30 bg-slate-800 px-2.5 py-2 text-xs text-slate-200 focus:border-cyan-500/50 focus:outline-none"
+                          aria-label={"Change department for " + displayName}
                         >
-                          <option value="" disabled>Assign department</option>
+                          <option value="">Unassigned</option>
                           {departments.map((department) => (
                             <option key={department.code} value={department.code}>
                               {department.name}
                             </option>
                           ))}
                         </select>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="flex min-w-0 flex-wrap gap-1">
+                            {departmentLabels(u).length ? departmentLabels(u).map((label) => (
+                              <span key={label} className="rounded-md border border-blue-400/20 bg-blue-500/10 px-2 py-1 text-[11px] font-medium text-blue-200">
+                                {label}
+                              </span>
+                            )) : <span className="text-xs text-slate-500">Unassigned</span>}
+                          </div>
+                          <select
+                            value=""
+                            onChange={(e) => onDepartmentChange(u, e.target.value || null)}
+                            className="shrink-0 rounded-lg border border-cyan-500/30 bg-slate-800 px-2.5 py-2 text-xs text-slate-200 focus:border-cyan-500/50 focus:outline-none"
+                            aria-label={(u.department ? "Add department for " : "Assign department to ") + displayName}
+                          >
+                            <option value="" disabled>{u.department ? "Add department" : "Assign department"}</option>
+                            {departments
+                              .filter((department) => !userHasDepartment(u, department.code))
+                              .map((department) => (
+                                <option key={department.code} value={department.code}>
+                                  {department.name}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
                       )}
                     </td>
                     <td className="px-5 py-3.5 text-sm text-slate-400">{u.email}</td>
@@ -219,13 +251,18 @@ export default function UsersPage() {
   };
 
   const handleCreateUser = async () => {
-    if (!newEmail || !newPassword) { setUserError("Email and password are required"); return; }
+    const email = newEmail.trim().toLowerCase();
+    if (!email || !newPassword) { setUserError("Email and password are required."); return; }
+    if (!EMAIL_PATTERN.test(email)) {
+      setUserError("Enter a valid email address, for example: user@gmail.com.");
+      return;
+    }
     const adminId = Number(localStorage.getItem("user_id") || 0);
     if (!adminId) { setUserError("Admin session expired."); return; }
     setUserError(""); setUserMsg(""); setUserLoading(true);
     try {
-      await createUser(adminId, newEmail, newPassword, newRole, newName || undefined, newDepartment || undefined);
-      setUserMsg(`User "${newEmail}" created.`);
+      await createUser(adminId, email, newPassword, newRole, newName || undefined, newDepartment || undefined);
+      setUserMsg(`User "${email}" created.`);
       setNewName(""); setNewDepartment(""); setNewEmail(""); setNewPassword("");
       const [data, departmentRows] = await Promise.all([listUsers(adminId), listAdminDepartments(adminId)]);
       setUsers(data); setFilteredUsers(data);
@@ -399,18 +436,6 @@ export default function UsersPage() {
                   </button>
                 );
               })}
-              <button
-                type="button"
-                onClick={() => setDepartmentFilter(departmentFilter === "unassigned" ? "all" : "unassigned")}
-                className={"shrink-0 rounded-xl border px-3 py-2 text-left transition " + (
-                  departmentFilter === "unassigned"
-                    ? "border-amber-400/40 bg-amber-500/10"
-                    : "border-white/10 bg-slate-950/30 hover:border-white/20 hover:bg-white/5"
-                )}
-              >
-                <span className="block text-xs font-semibold text-white">Unassigned</span>
-                <span className="mt-0.5 block text-[10px] text-slate-500">Students and faculty</span>
-              </button>
             </div>
           </section>
 
@@ -474,7 +499,8 @@ export default function UsersPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-slate-400">Email</label>
-                  <input type="email" className={inputCls} value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="user@example.com" />
+                  <input type="email" inputMode="email" autoComplete="email" className={inputCls} value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="user@gmail.com" aria-describedby="create-user-email-help" />
+                  <p id="create-user-email-help" className="mt-1.5 text-[11px] text-slate-500">Use a valid address, for example user@gmail.com.</p>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-slate-400">Role</label>

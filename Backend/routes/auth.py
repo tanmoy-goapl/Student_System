@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from database import get_db
 from models import User, Department
-from services.departments import normalize_department_code, split_department_codes
+from services.departments import department_display_name, normalize_department_code, split_department_codes
+from services.authorization import require_admin
 import bcrypt
 
 router = APIRouter()
@@ -56,7 +57,7 @@ ALLOWED_ROLES = {"student", "admin", "professor"}
 @router.post("/login", response_model=AuthResponse)
 def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == credentials.email).first()
-    if not user or not verify_password(credentials.password, user.password_hash):
+    if not user or user.is_active is False or not verify_password(credentials.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Invalid email or password")
     return AuthResponse(user_id=user.id, role=user.role, message="Login successful")
@@ -85,13 +86,8 @@ def admin_create_user(payload: CreateUserRequest, db: Session = Depends(get_db))
     - admin logs in via /login and gets their user_id + role
     - frontend calls this endpoint with admin_id from that login response
     """
-    # 1) Verify that the caller is an admin
-    admin = db.query(User).filter(User.id == payload.admin_id).first()
-    if not admin or admin.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can create users.",
-        )
+    # 1) Verify that the caller is an active admin
+    require_admin(payload.admin_id, db)
 
     # 2) Prevent duplicate emails
     if db.query(User).filter(User.email == payload.email).first():
@@ -137,15 +133,13 @@ def admin_list_users(admin_id: int, db: Session = Depends(get_db)):
     Return all users in the system — only for admins.
     admin_id is passed as a query parameter and is used to verify permissions.
     """
-    admin = db.query(User).filter(User.id == admin_id).first()
-    if not admin or admin.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can view users.",
-        )
+    require_admin(admin_id, db)
 
     users = db.query(User).order_by(User.created_at.asc()).all()
-    departments = {department.code: department.name for department in db.query(Department).all()}
+    departments = {
+        department.code: department_display_name(department.code, department.name)
+        for department in db.query(Department).all()
+    }
     return [
         UserOut(
             id=u.id,
@@ -171,12 +165,7 @@ def admin_delete_user(user_id: int, admin_id: int, db: Session = Depends(get_db)
     Delete a user by ID — only for admins.
     admin_id is passed as query param; prevents non-admins from deleting.
     """
-    admin = db.query(User).filter(User.id == admin_id).first()
-    if not admin or admin.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can delete users.",
-        )
+    admin = require_admin(admin_id, db)
 
     # Optional: prevent admin from deleting themselves
     if user_id == admin_id:

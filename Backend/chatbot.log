@@ -18211,3 +18211,1698 @@ UnboundLocalError: cannot access local variable 'threading' where it is not asso
 2026-08-21 13:57:06,942 - INFO -   Adaptive filter: cutoff=0.1500, kept=6/6
 2026-08-21 14:00:27,516 - INFO -   Adaptive filter: top_score=0.2500
 2026-08-21 14:00:27,517 - INFO -   Adaptive filter: cutoff=0.1500, kept=6/6
+2026-08-21 14:03:22,328 - INFO - 
+================================================================================
+2026-08-21 14:03:22,328 - INFO - [2026-08-21T14:03:22.328605] CHAT REQUEST
+2026-08-21 14:03:22,328 - INFO -   Student ID : 3
+2026-08-21 14:03:22,328 - INFO -   Question   : tell me about weak points in my resume
+2026-08-21 14:03:22,328 - INFO -   Role       : student
+2026-08-21 14:03:22,328 - INFO - ================================================================================
+2026-08-21 14:03:22,362 - INFO -   [Timing] FastAPI Request started processing at 114449.113
+2026-08-21 14:03:22,372 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-08-21 14:03:22,372 - INFO -   [Timing] Docs + Mode Detection: 0.010s
+2026-08-21 14:03:23,071 - INFO -   Adaptive filter: top_score=0.2500
+2026-08-21 14:03:23,072 - INFO -   Adaptive filter: cutoff=0.1500, kept=6/6
+2026-08-21 14:03:23,072 - INFO -   [Timing] Retrieval & Context Building: 0.672s
+2026-08-21 14:03:23,076 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-21 14:03:24,960 - INFO -   [Timing] Backend First Token Loop hit: 1.884s since LLM call
+2026-08-21 14:03:24,960 - INFO -   [Timing] Total TTFT (user → first token loop): 2.598s
+2026-08-21 14:03:36,336 - INFO -   [Timing] LLM Streaming Duration: 13.260s
+2026-08-21 14:03:36,336 - INFO -   [Timing] Total Response Time: 13.975s
+2026-08-21 14:03:57,028 - INFO - 
+================================================================================
+2026-08-21 14:03:57,028 - INFO - [2026-08-21T14:03:57.028506] CHAT REQUEST
+2026-08-21 14:03:57,028 - INFO -   Student ID : 3
+2026-08-21 14:03:57,028 - INFO -   Question   : which companies come for placements
+2026-08-21 14:03:57,028 - INFO -   Role       : student
+2026-08-21 14:03:57,028 - INFO - ================================================================================
+2026-08-21 14:03:57,032 - INFO -   [Timing] FastAPI Request started processing at 114483.783
+2026-08-21 14:03:57,035 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-21 14:03:57,035 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-21 14:03:58,587 - INFO -   Adaptive filter: top_score=0.5860
+2026-08-21 14:03:58,587 - INFO -   Adaptive filter: cutoff=0.4860, kept=11/11
+2026-08-21 14:03:58,587 - INFO -   [Timing] Retrieval & Context Building: 1.544s
+2026-08-21 14:03:58,590 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-21 14:03:59,892 - INFO -   [Timing] Backend First Token Loop hit: 1.302s since LLM call
+2026-08-21 14:03:59,893 - INFO -   [Timing] Total TTFT (user → first token loop): 2.860s
+2026-08-21 14:04:10,095 - INFO -   [Timing] LLM Streaming Duration: 11.505s
+2026-08-21 14:04:10,096 - INFO -   [Timing] Total Response Time: 13.063s
+2026-08-21 14:04:17,716 - INFO - 
+================================================================================
+2026-08-21 14:04:17,716 - INFO - [2026-08-21T14:04:17.716388] CHAT REQUEST
+2026-08-21 14:04:17,716 - INFO -   Student ID : 3
+2026-08-21 14:04:17,716 - INFO -   Question   : what about packages
+2026-08-21 14:04:17,716 - INFO -   Role       : student
+2026-08-21 14:04:17,716 - INFO - ================================================================================
+2026-08-21 14:04:17,719 - INFO -   [Timing] FastAPI Request started processing at 114504.471
+2026-08-21 14:04:17,724 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-21 14:04:17,724 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-21 14:04:19,572 - INFO -   Adaptive filter: top_score=0.3460
+2026-08-21 14:04:19,573 - INFO -   Adaptive filter: top_score=0.3460 < minimum=0.35 → no evidence
+2026-08-21 14:04:19,573 - INFO -   [Timing] Retrieval & Context Building: 1.836s
+2026-08-21 14:04:19,576 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-21 14:04:21,210 - INFO -   [Timing] Backend First Token Loop hit: 1.634s since LLM call
+2026-08-21 14:04:21,210 - INFO -   [Timing] Total TTFT (user → first token loop): 3.491s
+2026-08-21 14:04:21,215 - INFO -   [Timing] LLM Streaming Duration: 1.639s
+2026-08-21 14:04:21,215 - INFO -   [Timing] Total Response Time: 3.495s
+2026-08-21 14:04:38,253 - INFO - 
+================================================================================
+2026-08-21 14:04:38,253 - INFO - [2026-08-21T14:04:38.253883] CHAT REQUEST
+2026-08-21 14:04:38,253 - INFO -   Student ID : 3
+2026-08-21 14:04:38,254 - INFO -   Question   : the package offered by each company in placements
+2026-08-21 14:04:38,254 - INFO -   Role       : student
+2026-08-21 14:04:38,254 - INFO - ================================================================================
+2026-08-21 14:04:38,256 - INFO -   [Timing] FastAPI Request started processing at 114525.008
+2026-08-21 14:04:38,264 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-21 14:04:38,264 - INFO -   [Timing] Docs + Mode Detection: 0.007s
+2026-08-21 14:04:39,280 - INFO -   Adaptive filter: top_score=0.5860
+2026-08-21 14:04:39,280 - INFO -   Adaptive filter: cutoff=0.4860, kept=4/12
+2026-08-21 14:04:39,281 - INFO -   [Timing] Retrieval & Context Building: 1.009s
+2026-08-21 14:04:39,283 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-21 14:04:41,018 - INFO -   [Timing] Backend First Token Loop hit: 1.734s since LLM call
+2026-08-21 14:04:41,018 - INFO -   [Timing] Total TTFT (user → first token loop): 2.761s
+2026-08-21 14:04:49,850 - INFO -   [Timing] LLM Streaming Duration: 10.567s
+2026-08-21 14:04:49,851 - INFO -   [Timing] Total Response Time: 11.594s
+2026-08-24 05:42:58,530 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 05:42:58,551 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-24 05:42:58,574 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 05:42:59,168 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 05:42:59,182 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-24 05:42:59,205 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 05:43:04,914 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 05:43:05,044 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 05:43:29,554 - INFO - 
+================================================================================
+2026-08-24 05:43:29,581 - INFO - [2026-08-24T05:43:29.581261] CHAT REQUEST
+2026-08-24 05:43:29,581 - INFO -   Student ID : 3
+2026-08-24 05:43:29,581 - INFO -   Question   : tell me about my weak points from my resume
+2026-08-24 05:43:29,582 - INFO -   Role       : student
+2026-08-24 05:43:29,582 - INFO - ================================================================================
+2026-08-24 05:43:29,888 - INFO -   [Timing] FastAPI Request started processing at 343656.237
+2026-08-24 05:43:29,976 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-08-24 05:43:29,976 - INFO -   [Timing] Docs + Mode Detection: 0.085s
+2026-08-24 05:43:32,196 - INFO -   Adaptive filter: top_score=0.2500
+2026-08-24 05:43:32,197 - INFO -   Adaptive filter: cutoff=0.1500, kept=6/6
+2026-08-24 05:43:32,198 - INFO -   [Timing] Retrieval & Context Building: 2.123s
+2026-08-24 05:43:32,208 - INFO -   [Timing] Context + Prompt Building: 0.010s
+2026-08-24 05:44:04,598 - INFO -   [Timing] Backend First Token Loop hit: 32.390s since LLM call
+2026-08-24 05:44:04,599 - INFO -   [Timing] Total TTFT (user → first token loop): 34.711s
+2026-08-24 05:44:04,608 - INFO -   [Timing] LLM Streaming Duration: 32.399s
+2026-08-24 05:44:04,608 - INFO -   [Timing] Total Response Time: 34.720s
+2026-08-24 07:06:45,711 - INFO - 
+================================================================================
+2026-08-24 07:06:45,712 - INFO - [2026-08-24T07:06:45.712147] CHAT REQUEST
+2026-08-24 07:06:45,712 - INFO -   Student ID : 3
+2026-08-24 07:06:45,712 - INFO -   Question   : hi
+2026-08-24 07:06:45,712 - INFO -   Role       : student
+2026-08-24 07:06:45,712 - INFO - ================================================================================
+2026-08-24 07:06:45,751 - INFO -   [Timing] FastAPI Request started processing at 348652.100
+2026-08-24 07:06:45,762 - INFO -   Detected Mode: LEARNING
+2026-08-24 07:06:45,762 - INFO -   [Timing] Docs + Mode Detection: 0.011s
+2026-08-24 07:07:06,746 - INFO - 
+================================================================================
+2026-08-24 07:07:06,746 - INFO - [2026-08-24T07:07:06.746444] CHAT REQUEST
+2026-08-24 07:07:06,746 - INFO -   Student ID : 3
+2026-08-24 07:07:06,746 - INFO -   Question   : what is the placements plicy
+2026-08-24 07:07:06,746 - INFO -   Role       : student
+2026-08-24 07:07:06,746 - INFO - ================================================================================
+2026-08-24 07:07:06,749 - INFO -   [Timing] FastAPI Request started processing at 348673.098
+2026-08-24 07:07:06,756 - INFO -   Detected Mode: LEARNING
+2026-08-24 07:07:06,756 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 07:07:44,681 - INFO -   Adaptive filter: top_score=1.5100
+2026-08-24 07:07:44,681 - INFO -   Adaptive filter: cutoff=1.4100, kept=2/12
+2026-08-24 07:07:44,681 - INFO -   [Timing] Retrieval & Context Building: 37.917s
+2026-08-24 07:07:44,685 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-24 07:07:52,442 - INFO -   [Timing] Backend First Token Loop hit: 7.757s since LLM call
+2026-08-24 07:07:52,442 - INFO -   [Timing] Total TTFT (user → first token loop): 45.693s
+2026-08-24 07:08:53,232 - INFO -   [Timing] LLM Streaming Duration: 68.547s
+2026-08-24 07:08:53,233 - INFO -   [Timing] Total Response Time: 106.483s
+2026-08-24 07:09:11,925 - INFO - 
+================================================================================
+2026-08-24 07:09:11,925 - INFO - [2026-08-24T07:09:11.925418] CHAT REQUEST
+2026-08-24 07:09:11,925 - INFO -   Student ID : 3
+2026-08-24 07:09:11,925 - INFO -   Question   : what is attendance criteria here?
+2026-08-24 07:09:11,925 - INFO -   Role       : student
+2026-08-24 07:09:11,925 - INFO - ================================================================================
+2026-08-24 07:09:11,931 - INFO -   [Timing] FastAPI Request started processing at 348798.281
+2026-08-24 07:09:11,936 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-24 07:09:11,936 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 07:09:24,588 - INFO -   Adaptive filter: top_score=1.1910
+2026-08-24 07:09:24,588 - INFO -   Adaptive filter: cutoff=1.0910, kept=2/42
+2026-08-24 07:09:24,588 - INFO -   [Timing] Retrieval & Context Building: 12.645s
+2026-08-24 07:09:24,591 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 07:09:31,745 - INFO -   [Timing] Backend First Token Loop hit: 7.154s since LLM call
+2026-08-24 07:09:31,745 - INFO -   [Timing] Total TTFT (user → first token loop): 19.814s
+2026-08-24 07:09:31,748 - INFO -   [Timing] LLM Streaming Duration: 7.157s
+2026-08-24 07:09:31,748 - INFO -   [Timing] Total Response Time: 19.817s
+2026-08-24 07:09:55,654 - INFO - 
+================================================================================
+2026-08-24 07:09:55,654 - INFO - [2026-08-24T07:09:55.654309] CHAT REQUEST
+2026-08-24 07:09:55,654 - INFO -   Student ID : 3
+2026-08-24 07:09:55,654 - INFO -   Question   : what is placement policy
+2026-08-24 07:09:55,654 - INFO -   Role       : student
+2026-08-24 07:09:55,654 - INFO - ================================================================================
+2026-08-24 07:09:55,657 - INFO -   [Timing] FastAPI Request started processing at 348842.006
+2026-08-24 07:09:55,660 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-24 07:09:55,660 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 07:10:57,989 - INFO -   Adaptive filter: top_score=1.8360
+2026-08-24 07:10:57,989 - INFO -   Adaptive filter: cutoff=1.7360, kept=2/21
+2026-08-24 07:10:57,989 - INFO -   [Timing] Retrieval & Context Building: 62.322s
+2026-08-24 07:10:57,992 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-24 07:11:04,900 - INFO -   [Timing] Backend First Token Loop hit: 6.908s since LLM call
+2026-08-24 07:11:04,900 - INFO -   [Timing] Total TTFT (user → first token loop): 69.243s
+2026-08-24 07:11:04,904 - INFO -   [Timing] LLM Streaming Duration: 6.911s
+2026-08-24 07:11:04,904 - INFO -   [Timing] Total Response Time: 69.247s
+2026-08-24 07:11:35,885 - INFO - 
+================================================================================
+2026-08-24 07:11:35,885 - INFO - [2026-08-24T07:11:35.885706] CHAT REQUEST
+2026-08-24 07:11:35,885 - INFO -   Student ID : 3
+2026-08-24 07:11:35,885 - INFO -   Question   : what is weak points in my resume
+2026-08-24 07:11:35,885 - INFO -   Role       : student
+2026-08-24 07:11:35,885 - INFO - ================================================================================
+2026-08-24 07:11:35,890 - INFO -   [Timing] FastAPI Request started processing at 348942.240
+2026-08-24 07:11:35,893 - INFO -   Detected Mode: PERSONALIZED_ADVISOR
+2026-08-24 07:11:35,894 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 07:11:48,284 - INFO -   Adaptive filter: top_score=0.6500
+2026-08-24 07:11:48,284 - INFO -   Adaptive filter: cutoff=0.5500, kept=6/6
+2026-08-24 07:11:48,284 - INFO -   [Timing] Retrieval & Context Building: 12.384s
+2026-08-24 07:11:48,288 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 07:11:55,568 - INFO -   [Timing] Backend First Token Loop hit: 7.280s since LLM call
+2026-08-24 07:11:55,569 - INFO -   [Timing] Total TTFT (user → first token loop): 19.678s
+2026-08-24 07:13:03,524 - INFO -   [Timing] LLM Streaming Duration: 75.236s
+2026-08-24 07:13:03,524 - INFO -   [Timing] Total Response Time: 87.633s
+2026-08-24 07:14:05,480 - INFO - 
+================================================================================
+2026-08-24 07:14:05,481 - INFO - [2026-08-24T07:14:05.480987] CHAT REQUEST
+2026-08-24 07:14:05,481 - INFO -   Student ID : 3
+2026-08-24 07:14:05,481 - INFO -   Question   : what is placement policy
+2026-08-24 07:14:05,481 - INFO -   Role       : student
+2026-08-24 07:14:05,481 - INFO - ================================================================================
+2026-08-24 07:14:05,484 - INFO -   [Timing] FastAPI Request started processing at 349091.833
+2026-08-24 07:14:05,488 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-24 07:14:05,488 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 07:15:08,985 - INFO -   Adaptive filter: top_score=1.8360
+2026-08-24 07:15:08,985 - INFO -   Adaptive filter: cutoff=1.7360, kept=2/21
+2026-08-24 07:15:08,985 - INFO -   [Timing] Retrieval & Context Building: 63.485s
+2026-08-24 07:15:08,988 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-24 07:15:16,477 - INFO -   [Timing] Backend First Token Loop hit: 7.488s since LLM call
+2026-08-24 07:15:16,477 - INFO -   [Timing] Total TTFT (user → first token loop): 70.993s
+2026-08-24 07:15:16,480 - INFO -   [Timing] LLM Streaming Duration: 7.492s
+2026-08-24 07:15:16,480 - INFO -   [Timing] Total Response Time: 70.996s
+2026-08-24 07:28:39,724 - INFO - 
+================================================================================
+2026-08-24 07:28:39,724 - INFO - [2026-08-24T07:28:39.724574] CHAT REQUEST
+2026-08-24 07:28:39,724 - INFO -   Student ID : 3
+2026-08-24 07:28:39,724 - INFO -   Question   : tell me about attendance policy
+2026-08-24 07:28:39,724 - INFO -   Role       : student
+2026-08-24 07:28:39,724 - INFO - ================================================================================
+2026-08-24 07:28:39,758 - INFO -   [Timing] FastAPI Request started processing at 349966.107
+2026-08-24 07:28:39,769 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-24 07:28:39,769 - INFO -   [Timing] Docs + Mode Detection: 0.011s
+2026-08-24 07:28:39,870 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-24 07:28:39,871 - INFO -   Adaptive filter: cutoff=0.9000, kept=11/11
+2026-08-24 07:28:39,871 - INFO -   [Timing] Retrieval & Context Building: 0.073s
+2026-08-24 07:28:39,874 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 07:28:45,589 - INFO -   [Timing] Backend First Token Loop hit: 5.714s since LLM call
+2026-08-24 07:28:45,589 - INFO -   [Timing] Total TTFT (user → first token loop): 5.831s
+2026-08-24 07:29:08,021 - INFO -   [Timing] LLM Streaming Duration: 28.147s
+2026-08-24 07:29:08,021 - INFO -   [Timing] Total Response Time: 28.263s
+2026-08-24 07:29:32,913 - INFO - 
+================================================================================
+2026-08-24 07:29:32,914 - INFO - [2026-08-24T07:29:32.914072] CHAT REQUEST
+2026-08-24 07:29:32,914 - INFO -   Student ID : 3
+2026-08-24 07:29:32,914 - INFO -   Question   : what about placement policies and all the companies come for placements
+2026-08-24 07:29:32,914 - INFO -   Role       : student
+2026-08-24 07:29:32,914 - INFO - ================================================================================
+2026-08-24 07:29:32,917 - INFO -   [Timing] FastAPI Request started processing at 350019.266
+2026-08-24 07:29:32,921 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-24 07:29:32,921 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 07:29:32,933 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-24 07:29:32,933 - INFO -   Adaptive filter: cutoff=0.9000, kept=13/13
+2026-08-24 07:29:32,933 - INFO -   [Timing] Retrieval & Context Building: 0.004s
+2026-08-24 07:29:32,935 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-24 07:29:39,256 - INFO -   [Timing] Backend First Token Loop hit: 6.321s since LLM call
+2026-08-24 07:29:39,256 - INFO -   [Timing] Total TTFT (user → first token loop): 6.339s
+2026-08-24 07:29:40,517 - INFO -   [Timing] LLM Streaming Duration: 7.582s
+2026-08-24 07:29:40,517 - INFO -   [Timing] Total Response Time: 7.600s
+2026-08-24 07:38:36,276 - INFO - 
+================================================================================
+2026-08-24 07:38:36,276 - INFO - [2026-08-24T07:38:36.276808] CHAT REQUEST
+2026-08-24 07:38:36,276 - INFO -   Student ID : 3
+2026-08-24 07:38:36,277 - INFO -   Question   : tell me about placements?
+2026-08-24 07:38:36,277 - INFO -   Role       : student
+2026-08-24 07:38:36,277 - INFO - ================================================================================
+2026-08-24 07:38:36,312 - INFO -   [Timing] FastAPI Request started processing at 350562.662
+2026-08-24 07:38:36,324 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-24 07:38:36,324 - INFO -   [Timing] Docs + Mode Detection: 0.011s
+2026-08-24 07:39:01,812 - INFO -   Adaptive filter: top_score=0.6930
+2026-08-24 07:39:01,813 - INFO -   Adaptive filter: cutoff=0.5930, kept=1/3
+2026-08-24 07:39:01,813 - INFO -   [Timing] Retrieval & Context Building: 25.460s
+2026-08-24 07:39:01,823 - INFO -   [Timing] Context + Prompt Building: 0.010s
+2026-08-24 07:39:08,244 - INFO -   [Timing] Backend First Token Loop hit: 6.420s since LLM call
+2026-08-24 07:39:08,244 - INFO -   [Timing] Total TTFT (user → first token loop): 31.932s
+2026-08-24 07:39:31,807 - INFO -   [Timing] LLM Streaming Duration: 29.983s
+2026-08-24 07:39:31,807 - INFO -   [Timing] Total Response Time: 55.494s
+2026-08-24 07:39:51,430 - INFO - 
+================================================================================
+2026-08-24 07:39:51,431 - INFO - [2026-08-24T07:39:51.431133] CHAT REQUEST
+2026-08-24 07:39:51,431 - INFO -   Student ID : 3
+2026-08-24 07:39:51,431 - INFO -   Question   : which companies come for the placements
+2026-08-24 07:39:51,431 - INFO -   Role       : student
+2026-08-24 07:39:51,431 - INFO - ================================================================================
+2026-08-24 07:39:51,434 - INFO -   [Timing] FastAPI Request started processing at 350637.783
+2026-08-24 07:39:51,438 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-24 07:39:51,438 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 07:40:17,181 - INFO -   Adaptive filter: top_score=0.8900
+2026-08-24 07:40:17,181 - INFO -   Adaptive filter: cutoff=0.7900, kept=3/3
+2026-08-24 07:40:17,181 - INFO -   [Timing] Retrieval & Context Building: 25.734s
+2026-08-24 07:40:17,184 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 07:40:20,539 - INFO -   [Timing] Backend First Token Loop hit: 3.354s since LLM call
+2026-08-24 07:40:20,539 - INFO -   [Timing] Total TTFT (user → first token loop): 29.105s
+2026-08-24 07:41:02,774 - INFO -   [Timing] LLM Streaming Duration: 45.590s
+2026-08-24 07:41:02,775 - INFO -   [Timing] Total Response Time: 71.341s
+2026-08-24 07:41:43,248 - INFO - 
+================================================================================
+2026-08-24 07:41:43,248 - INFO - [2026-08-24T07:41:43.248685] CHAT REQUEST
+2026-08-24 07:41:43,248 - INFO -   Student ID : 3
+2026-08-24 07:41:43,248 - INFO -   Question   : what package they offered?
+2026-08-24 07:41:43,248 - INFO -   Role       : student
+2026-08-24 07:41:43,249 - INFO - ================================================================================
+2026-08-24 07:41:43,251 - INFO -   [Timing] FastAPI Request started processing at 350749.600
+2026-08-24 07:41:43,255 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-24 07:41:43,255 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 07:41:47,404 - INFO -   Adaptive filter: top_score=1.2680
+2026-08-24 07:41:47,404 - INFO -   Adaptive filter: cutoff=1.1680, kept=2/43
+2026-08-24 07:41:47,404 - INFO -   [Timing] Retrieval & Context Building: 4.140s
+2026-08-24 07:41:47,410 - INFO -   [Timing] Context + Prompt Building: 0.005s
+2026-08-24 07:41:53,685 - INFO -   [Timing] Backend First Token Loop hit: 6.275s since LLM call
+2026-08-24 07:41:53,685 - INFO -   [Timing] Total TTFT (user → first token loop): 10.434s
+2026-08-24 07:42:31,314 - INFO -   [Timing] LLM Streaming Duration: 43.904s
+2026-08-24 07:42:31,314 - INFO -   [Timing] Total Response Time: 48.063s
+2026-08-24 07:43:29,760 - INFO - 
+================================================================================
+2026-08-24 07:43:29,760 - INFO - [2026-08-24T07:43:29.760657] CHAT REQUEST
+2026-08-24 07:43:29,760 - INFO -   Student ID : 3
+2026-08-24 07:43:29,760 - INFO -   Question   : what package all the companies offered to students
+2026-08-24 07:43:29,760 - INFO -   Role       : student
+2026-08-24 07:43:29,760 - INFO - ================================================================================
+2026-08-24 07:43:29,763 - INFO -   [Timing] FastAPI Request started processing at 350856.112
+2026-08-24 07:43:29,766 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-24 07:43:29,766 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 07:43:42,283 - INFO -   Adaptive filter: top_score=0.7010
+2026-08-24 07:43:42,283 - INFO -   Adaptive filter: cutoff=0.6010, kept=2/2
+2026-08-24 07:43:42,284 - INFO -   [Timing] Retrieval & Context Building: 12.508s
+2026-08-24 07:43:42,288 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-24 07:43:50,311 - INFO -   [Timing] Backend First Token Loop hit: 8.023s since LLM call
+2026-08-24 07:43:50,311 - INFO -   [Timing] Total TTFT (user → first token loop): 20.548s
+2026-08-24 07:43:50,995 - INFO -   [Timing] LLM Streaming Duration: 8.707s
+2026-08-24 07:43:50,995 - INFO -   [Timing] Total Response Time: 21.232s
+2026-08-24 08:00:19,296 - INFO -   Adaptive filter: top_score=1.9360
+2026-08-24 08:00:19,296 - INFO -   Adaptive filter: cutoff=1.5860, kept=54/75
+2026-08-24 08:02:31,619 - INFO -   Adaptive filter: top_score=1.9360
+2026-08-24 08:02:31,620 - INFO -   Adaptive filter: cutoff=1.5860, kept=8/13
+2026-08-24 08:03:57,146 - INFO -   Adaptive filter: top_score=1.9360
+2026-08-24 08:03:57,147 - INFO -   Adaptive filter: cutoff=1.9360, kept=13/13
+2026-08-24 08:05:17,546 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-24 08:05:17,546 - INFO -   Adaptive filter: cutoff=0.9000, kept=11/11
+2026-08-24 08:05:21,824 - INFO -   Adaptive filter: top_score=1.9360
+2026-08-24 08:05:21,824 - INFO -   Adaptive filter: cutoff=1.9360, kept=13/13
+2026-08-24 08:05:25,224 - INFO -   Adaptive filter: top_score=0.6500
+2026-08-24 08:05:25,224 - INFO -   Adaptive filter: cutoff=0.5500, kept=6/6
+2026-08-24 08:05:49,749 - INFO -   Adaptive filter: top_score=1.2680
+2026-08-24 08:05:49,749 - INFO -   Adaptive filter: cutoff=1.1680, kept=2/43
+2026-08-24 08:08:40,428 - INFO - 
+================================================================================
+2026-08-24 08:08:40,428 - INFO - [2026-08-24T08:08:40.428753] CHAT REQUEST
+2026-08-24 08:08:40,428 - INFO -   Student ID : 3
+2026-08-24 08:08:40,428 - INFO -   Question   : what package all the companies offered to students
+2026-08-24 08:08:40,428 - INFO -   Role       : student
+2026-08-24 08:08:40,429 - INFO - ================================================================================
+2026-08-24 08:08:40,463 - INFO -   [Timing] FastAPI Request started processing at 352366.812
+2026-08-24 08:08:40,473 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-24 08:08:40,473 - INFO -   [Timing] Docs + Mode Detection: 0.010s
+2026-08-24 08:08:53,489 - INFO -   Adaptive filter: top_score=1.9360
+2026-08-24 08:08:53,489 - INFO -   Adaptive filter: cutoff=1.9360, kept=13/13
+2026-08-24 08:08:53,489 - INFO -   [Timing] Retrieval & Context Building: 12.986s
+2026-08-24 08:08:53,493 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-24 08:09:07,339 - INFO -   [Timing] Backend First Token Loop hit: 13.846s since LLM call
+2026-08-24 08:09:07,340 - INFO -   [Timing] Total TTFT (user → first token loop): 26.876s
+2026-08-24 08:10:09,243 - INFO -   [Timing] LLM Streaming Duration: 75.750s
+2026-08-24 08:10:09,244 - INFO -   [Timing] Total Response Time: 88.780s
+2026-08-24 08:11:04,930 - INFO - 
+================================================================================
+2026-08-24 08:11:04,930 - INFO - [2026-08-24T08:11:04.930708] CHAT REQUEST
+2026-08-24 08:11:04,930 - INFO -   Student ID : 3
+2026-08-24 08:11:04,930 - INFO -   Question   : tell me about my projects
+2026-08-24 08:11:04,930 - INFO -   Role       : student
+2026-08-24 08:11:04,930 - INFO - ================================================================================
+2026-08-24 08:11:04,936 - INFO -   [Timing] FastAPI Request started processing at 352511.286
+2026-08-24 08:11:04,940 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:11:04,940 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 08:11:18,290 - INFO -   Adaptive filter: top_score=1.1590
+2026-08-24 08:11:18,290 - INFO -   Adaptive filter: cutoff=1.0590, kept=10/42
+2026-08-24 08:11:18,290 - INFO -   [Timing] Retrieval & Context Building: 13.338s
+2026-08-24 08:11:18,294 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-24 08:11:21,717 - INFO -   [Timing] Backend First Token Loop hit: 3.423s since LLM call
+2026-08-24 08:11:21,717 - INFO -   [Timing] Total TTFT (user → first token loop): 16.781s
+2026-08-24 08:11:48,390 - INFO -   [Timing] LLM Streaming Duration: 30.096s
+2026-08-24 08:11:48,390 - INFO -   [Timing] Total Response Time: 43.454s
+2026-08-24 08:12:29,095 - INFO - 
+================================================================================
+2026-08-24 08:12:29,095 - INFO - [2026-08-24T08:12:29.095375] CHAT REQUEST
+2026-08-24 08:12:29,095 - INFO -   Student ID : 3
+2026-08-24 08:12:29,095 - INFO -   Question   : what is my college name?
+2026-08-24 08:12:29,095 - INFO -   Role       : student
+2026-08-24 08:12:29,095 - INFO - ================================================================================
+2026-08-24 08:12:29,098 - INFO -   [Timing] FastAPI Request started processing at 352595.447
+2026-08-24 08:12:29,101 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:12:29,101 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 08:12:33,188 - INFO -   Adaptive filter: top_score=1.3690
+2026-08-24 08:12:33,188 - INFO -   Adaptive filter: cutoff=1.2690, kept=3/48
+2026-08-24 08:12:33,188 - INFO -   [Timing] Retrieval & Context Building: 4.079s
+2026-08-24 08:12:33,191 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 08:12:37,474 - INFO -   [Timing] Backend First Token Loop hit: 4.283s since LLM call
+2026-08-24 08:12:37,474 - INFO -   [Timing] Total TTFT (user → first token loop): 8.376s
+2026-08-24 08:12:37,477 - INFO -   [Timing] LLM Streaming Duration: 4.286s
+2026-08-24 08:12:37,477 - INFO -   [Timing] Total Response Time: 8.379s
+2026-08-24 08:13:01,044 - INFO - 
+================================================================================
+2026-08-24 08:13:01,044 - INFO - [2026-08-24T08:13:01.044807] CHAT REQUEST
+2026-08-24 08:13:01,044 - INFO -   Student ID : 3
+2026-08-24 08:13:01,044 - INFO -   Question   : what is my specializations?
+2026-08-24 08:13:01,045 - INFO -   Role       : student
+2026-08-24 08:13:01,045 - INFO - ================================================================================
+2026-08-24 08:13:01,047 - INFO -   [Timing] FastAPI Request started processing at 352627.396
+2026-08-24 08:13:01,051 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:13:01,051 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 08:13:07,682 - INFO -   Adaptive filter: top_score=0.9190
+2026-08-24 08:13:07,683 - INFO -   Adaptive filter: cutoff=0.8190, kept=6/44
+2026-08-24 08:13:07,683 - INFO -   [Timing] Retrieval & Context Building: 6.624s
+2026-08-24 08:13:07,687 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 08:13:12,486 - INFO -   [Timing] Backend First Token Loop hit: 4.799s since LLM call
+2026-08-24 08:13:12,486 - INFO -   [Timing] Total TTFT (user → first token loop): 11.439s
+2026-08-24 08:13:14,317 - INFO -   [Timing] LLM Streaming Duration: 6.629s
+2026-08-24 08:13:14,317 - INFO -   [Timing] Total Response Time: 13.270s
+2026-08-24 08:13:28,935 - INFO - 
+================================================================================
+2026-08-24 08:13:28,935 - INFO - [2026-08-24T08:13:28.935898] CHAT REQUEST
+2026-08-24 08:13:28,935 - INFO -   Student ID : 3
+2026-08-24 08:13:28,936 - INFO -   Question   : what was my branch
+2026-08-24 08:13:28,936 - INFO -   Role       : student
+2026-08-24 08:13:28,936 - INFO - ================================================================================
+2026-08-24 08:13:28,941 - INFO -   [Timing] FastAPI Request started processing at 352655.290
+2026-08-24 08:13:28,944 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:13:28,944 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 08:13:32,885 - INFO -   Adaptive filter: top_score=1.4560
+2026-08-24 08:13:32,885 - INFO -   Adaptive filter: cutoff=1.3560, kept=3/43
+2026-08-24 08:13:32,885 - INFO -   [Timing] Retrieval & Context Building: 3.933s
+2026-08-24 08:13:32,888 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 08:13:37,280 - INFO -   [Timing] Backend First Token Loop hit: 4.391s since LLM call
+2026-08-24 08:13:37,280 - INFO -   [Timing] Total TTFT (user → first token loop): 8.339s
+2026-08-24 08:13:39,552 - INFO -   [Timing] LLM Streaming Duration: 6.664s
+2026-08-24 08:13:39,552 - INFO -   [Timing] Total Response Time: 10.611s
+2026-08-24 08:13:52,686 - INFO - 
+================================================================================
+2026-08-24 08:13:52,687 - INFO - [2026-08-24T08:13:52.687128] CHAT REQUEST
+2026-08-24 08:13:52,687 - INFO -   Student ID : 3
+2026-08-24 08:13:52,687 - INFO -   Question   : summarise my resume
+2026-08-24 08:13:52,687 - INFO -   Role       : student
+2026-08-24 08:13:52,687 - INFO - ================================================================================
+2026-08-24 08:13:52,690 - INFO -   [Timing] FastAPI Request started processing at 352679.039
+2026-08-24 08:13:52,694 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-08-24 08:13:52,694 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 08:14:05,195 - INFO -   Adaptive filter: top_score=0.6500
+2026-08-24 08:14:05,195 - INFO -   Adaptive filter: cutoff=0.5500, kept=6/6
+2026-08-24 08:14:05,195 - INFO -   [Timing] Retrieval & Context Building: 12.493s
+2026-08-24 08:14:05,199 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-24 08:14:07,543 - INFO -   [Timing] Backend First Token Loop hit: 2.344s since LLM call
+2026-08-24 08:14:07,544 - INFO -   [Timing] Total TTFT (user → first token loop): 14.854s
+2026-08-24 08:18:58,745 - INFO - 
+================================================================================
+2026-08-24 08:18:58,745 - INFO - [2026-08-24T08:18:58.745428] CHAT REQUEST
+2026-08-24 08:18:58,745 - INFO -   Student ID : 3
+2026-08-24 08:18:58,745 - INFO -   Question   : what is tokenisation
+2026-08-24 08:18:58,745 - INFO -   Role       : student
+2026-08-24 08:18:58,745 - INFO - ================================================================================
+2026-08-24 08:18:58,759 - INFO -   [Timing] FastAPI Request started processing at 352985.108
+2026-08-24 08:18:58,765 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:18:58,765 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-08-24 08:19:03,096 - INFO -   Adaptive filter: top_score=1.7340
+2026-08-24 08:19:03,097 - INFO -   Adaptive filter: cutoff=1.6340, kept=9/54
+2026-08-24 08:19:03,097 - INFO -   [Timing] Retrieval & Context Building: 4.318s
+2026-08-24 08:19:03,101 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 08:19:07,455 - INFO -   [Timing] Backend First Token Loop hit: 4.354s since LLM call
+2026-08-24 08:19:07,456 - INFO -   [Timing] Total TTFT (user → first token loop): 8.697s
+2026-08-24 08:19:34,811 - INFO -   [Timing] LLM Streaming Duration: 31.710s
+2026-08-24 08:19:34,811 - INFO -   [Timing] Total Response Time: 36.053s
+2026-08-24 08:22:57,173 - INFO -   Adaptive filter: top_score=0.6590
+2026-08-24 08:22:57,174 - INFO -   Adaptive filter: cutoff=0.5590, kept=5/6
+2026-08-24 08:22:58,107 - INFO -   Adaptive filter: top_score=0.5160
+2026-08-24 08:22:58,108 - INFO -   Adaptive filter: cutoff=0.4160, kept=6/6
+2026-08-24 08:23:00,958 - INFO -   Adaptive filter: top_score=1.1590
+2026-08-24 08:23:00,959 - INFO -   Adaptive filter: cutoff=1.0590, kept=3/6
+2026-08-24 08:24:04,677 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-24 08:24:04,677 - INFO -   Adaptive filter: cutoff=0.9000, kept=6/6
+2026-08-24 08:26:28,176 - INFO - 
+================================================================================
+2026-08-24 08:26:28,176 - INFO - [2026-08-24T08:26:28.176856] CHAT REQUEST
+2026-08-24 08:26:28,176 - INFO -   Student ID : 3
+2026-08-24 08:26:28,177 - INFO -   Question   : explain me this flowchart
+2026-08-24 08:26:28,177 - INFO -   Role       : student
+2026-08-24 08:26:28,177 - INFO - ================================================================================
+2026-08-24 08:26:28,212 - INFO -   [Timing] FastAPI Request started processing at 353434.561
+2026-08-24 08:26:28,222 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:26:28,222 - INFO -   [Timing] Docs + Mode Detection: 0.010s
+2026-08-24 08:26:28,224 - INFO -   Retrieval query enriched with previous conversation topic
+2026-08-24 08:26:28,321 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-24 08:26:28,321 - INFO -   Adaptive filter: cutoff=1.0000, kept=1/1
+2026-08-24 08:26:28,321 - INFO -   [Timing] Retrieval & Context Building: 0.071s
+2026-08-24 08:26:28,325 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 08:26:38,806 - INFO -   [Timing] Backend First Token Loop hit: 10.481s since LLM call
+2026-08-24 08:26:38,807 - INFO -   [Timing] Total TTFT (user → first token loop): 10.594s
+2026-08-24 08:27:05,002 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-24 08:27:15,127 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 08:27:15,264 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-24 08:28:01,543 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-24 08:28:01,544 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-24 08:28:06,165 - INFO -   [Timing] LLM Streaming Duration: 97.840s
+2026-08-24 08:28:06,165 - INFO -   [Timing] Total Response Time: 97.953s
+2026-08-24 08:38:01,496 - INFO - 
+================================================================================
+2026-08-24 08:38:01,496 - INFO - [2026-08-24T08:38:01.496535] CHAT REQUEST
+2026-08-24 08:38:01,496 - INFO -   Student ID : 3
+2026-08-24 08:38:01,496 - INFO -   Question   : tell me about my certifications in my resume
+2026-08-24 08:38:01,496 - INFO -   Role       : student
+2026-08-24 08:38:01,496 - INFO - ================================================================================
+2026-08-24 08:38:01,531 - INFO -   [Timing] FastAPI Request started processing at 354127.880
+2026-08-24 08:38:01,542 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-08-24 08:38:01,542 - INFO -   [Timing] Docs + Mode Detection: 0.011s
+2026-08-24 08:38:01,653 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-24 08:38:01,653 - INFO -   Adaptive filter: cutoff=0.9000, kept=6/6
+2026-08-24 08:38:01,653 - INFO -   [Timing] Retrieval & Context Building: 0.079s
+2026-08-24 08:38:01,657 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-24 08:38:18,919 - INFO -   [Timing] Backend First Token Loop hit: 17.261s since LLM call
+2026-08-24 08:38:18,919 - INFO -   [Timing] Total TTFT (user → first token loop): 17.388s
+2026-08-24 08:38:41,120 - INFO -   [Timing] LLM Streaming Duration: 39.463s
+2026-08-24 08:38:41,121 - INFO -   [Timing] Total Response Time: 39.590s
+2026-08-24 08:39:12,496 - INFO - 
+================================================================================
+2026-08-24 08:39:12,497 - INFO - [2026-08-24T08:39:12.497259] CHAT REQUEST
+2026-08-24 08:39:12,497 - INFO -   Student ID : 3
+2026-08-24 08:39:12,497 - INFO -   Question   : generate a roadmap for RAG
+2026-08-24 08:39:12,497 - INFO -   Role       : student
+2026-08-24 08:39:12,497 - INFO - ================================================================================
+2026-08-24 08:39:12,500 - INFO -   [Timing] FastAPI Request started processing at 354198.850
+2026-08-24 08:39:12,504 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-08-24 08:39:12,504 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 08:39:15,451 - INFO - 
+================================================================================
+2026-08-24 08:39:15,451 - INFO - [2026-08-24T08:39:15.451822] CHAT REQUEST
+2026-08-24 08:39:15,451 - INFO -   Student ID : 3
+2026-08-24 08:39:15,452 - INFO -   Question   : 1 Week
+2026-08-24 08:39:15,452 - INFO -   Role       : student
+2026-08-24 08:39:15,452 - INFO - ================================================================================
+2026-08-24 08:39:15,455 - INFO -   [Timing] FastAPI Request started processing at 354201.804
+2026-08-24 08:39:15,460 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:39:15,461 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-08-24 08:39:17,761 - INFO - 
+================================================================================
+2026-08-24 08:39:17,762 - INFO - [2026-08-24T08:39:17.761977] CHAT REQUEST
+2026-08-24 08:39:17,762 - INFO -   Student ID : 3
+2026-08-24 08:39:17,762 - INFO -   Question   : Basic
+2026-08-24 08:39:17,762 - INFO -   Role       : student
+2026-08-24 08:39:17,762 - INFO - ================================================================================
+2026-08-24 08:39:17,767 - INFO -   [Timing] FastAPI Request started processing at 354204.116
+2026-08-24 08:39:17,772 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:39:17,772 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-24 08:39:19,802 - INFO - 
+================================================================================
+2026-08-24 08:39:19,802 - INFO - [2026-08-24T08:39:19.802486] CHAT REQUEST
+2026-08-24 08:39:19,802 - INFO -   Student ID : 3
+2026-08-24 08:39:19,802 - INFO -   Question   : 2 hours
+2026-08-24 08:39:19,802 - INFO -   Role       : student
+2026-08-24 08:39:19,802 - INFO - ================================================================================
+2026-08-24 08:39:19,807 - INFO -   [Timing] FastAPI Request started processing at 354206.156
+2026-08-24 08:39:19,811 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:39:19,811 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 08:39:23,611 - INFO - 
+================================================================================
+2026-08-24 08:39:23,612 - INFO - [2026-08-24T08:39:23.612165] CHAT REQUEST
+2026-08-24 08:39:23,612 - INFO -   Student ID : 3
+2026-08-24 08:39:23,612 - INFO -   Question   : Mixed
+2026-08-24 08:39:23,612 - INFO -   Role       : student
+2026-08-24 08:39:23,612 - INFO - ================================================================================
+2026-08-24 08:39:23,616 - INFO -   [Timing] FastAPI Request started processing at 354209.965
+2026-08-24 08:39:23,619 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:39:23,619 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 08:39:27,470 - INFO - 
+================================================================================
+2026-08-24 08:39:27,470 - INFO - [2026-08-24T08:39:27.470646] CHAT REQUEST
+2026-08-24 08:39:27,470 - INFO -   Student ID : 3
+2026-08-24 08:39:27,470 - INFO -   Question   : Yes
+2026-08-24 08:39:27,470 - INFO -   Role       : student
+2026-08-24 08:39:27,470 - INFO - ================================================================================
+2026-08-24 08:39:27,475 - INFO -   [Timing] FastAPI Request started processing at 354213.824
+2026-08-24 08:39:27,480 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:39:27,480 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 08:39:29,721 - INFO - 
+================================================================================
+2026-08-24 08:39:29,722 - INFO - [2026-08-24T08:39:29.722156] CHAT REQUEST
+2026-08-24 08:39:29,722 - INFO -   Student ID : 3
+2026-08-24 08:39:29,722 - INFO -   Question   : Generate Roadmap
+2026-08-24 08:39:29,722 - INFO -   Role       : student
+2026-08-24 08:39:29,722 - INFO - ================================================================================
+2026-08-24 08:39:29,727 - INFO -   [Timing] FastAPI Request started processing at 354216.076
+2026-08-24 08:39:29,730 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-08-24 08:39:29,730 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 08:51:26,571 - INFO - 
+================================================================================
+2026-08-24 08:51:26,572 - INFO - [2026-08-24T08:51:26.572021] CHAT REQUEST
+2026-08-24 08:51:26,572 - INFO -   Student ID : 3
+2026-08-24 08:51:26,572 - INFO -   Question   : generate a roadmap for prompt engineering
+2026-08-24 08:51:26,572 - INFO -   Role       : student
+2026-08-24 08:51:26,572 - INFO - ================================================================================
+2026-08-24 08:51:26,574 - INFO -   [Timing] FastAPI Request started processing at 354932.924
+2026-08-24 08:51:26,579 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-08-24 08:51:26,579 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-24 08:51:30,261 - INFO - 
+================================================================================
+2026-08-24 08:51:30,261 - INFO - [2026-08-24T08:51:30.261255] CHAT REQUEST
+2026-08-24 08:51:30,261 - INFO -   Student ID : 3
+2026-08-24 08:51:30,261 - INFO -   Question   : 1 Month
+2026-08-24 08:51:30,261 - INFO -   Role       : student
+2026-08-24 08:51:30,261 - INFO - ================================================================================
+2026-08-24 08:51:30,264 - INFO -   [Timing] FastAPI Request started processing at 354936.613
+2026-08-24 08:51:30,268 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:51:30,268 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 08:51:33,178 - INFO - 
+================================================================================
+2026-08-24 08:51:33,178 - INFO - [2026-08-24T08:51:33.178347] CHAT REQUEST
+2026-08-24 08:51:33,178 - INFO -   Student ID : 3
+2026-08-24 08:51:33,178 - INFO -   Question   : Beginner
+2026-08-24 08:51:33,178 - INFO -   Role       : student
+2026-08-24 08:51:33,178 - INFO - ================================================================================
+2026-08-24 08:51:33,181 - INFO -   [Timing] FastAPI Request started processing at 354939.530
+2026-08-24 08:51:33,184 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:51:33,184 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 08:51:35,744 - INFO - 
+================================================================================
+2026-08-24 08:51:35,744 - INFO - [2026-08-24T08:51:35.744472] CHAT REQUEST
+2026-08-24 08:51:35,744 - INFO -   Student ID : 3
+2026-08-24 08:51:35,744 - INFO -   Question   : 1 hour
+2026-08-24 08:51:35,744 - INFO -   Role       : student
+2026-08-24 08:51:35,744 - INFO - ================================================================================
+2026-08-24 08:51:35,747 - INFO -   [Timing] FastAPI Request started processing at 354942.096
+2026-08-24 08:51:35,750 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:51:35,750 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 08:51:38,044 - INFO - 
+================================================================================
+2026-08-24 08:51:38,044 - INFO - [2026-08-24T08:51:38.044535] CHAT REQUEST
+2026-08-24 08:51:38,044 - INFO -   Student ID : 3
+2026-08-24 08:51:38,044 - INFO -   Question   : Mixed
+2026-08-24 08:51:38,044 - INFO -   Role       : student
+2026-08-24 08:51:38,044 - INFO - ================================================================================
+2026-08-24 08:51:38,050 - INFO -   [Timing] FastAPI Request started processing at 354944.399
+2026-08-24 08:51:38,053 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:51:38,053 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 08:51:40,025 - INFO - 
+================================================================================
+2026-08-24 08:51:40,026 - INFO - [2026-08-24T08:51:40.025993] CHAT REQUEST
+2026-08-24 08:51:40,026 - INFO -   Student ID : 3
+2026-08-24 08:51:40,026 - INFO -   Question   : Yes
+2026-08-24 08:51:40,026 - INFO -   Role       : student
+2026-08-24 08:51:40,026 - INFO - ================================================================================
+2026-08-24 08:51:40,028 - INFO -   [Timing] FastAPI Request started processing at 354946.377
+2026-08-24 08:51:40,031 - INFO -   Detected Mode: LEARNING
+2026-08-24 08:51:40,032 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 08:51:42,285 - INFO - 
+================================================================================
+2026-08-24 08:51:42,285 - INFO - [2026-08-24T08:51:42.285825] CHAT REQUEST
+2026-08-24 08:51:42,285 - INFO -   Student ID : 3
+2026-08-24 08:51:42,285 - INFO -   Question   : Generate Roadmap
+2026-08-24 08:51:42,286 - INFO -   Role       : student
+2026-08-24 08:51:42,286 - INFO - ================================================================================
+2026-08-24 08:51:42,288 - INFO -   [Timing] FastAPI Request started processing at 354948.637
+2026-08-24 08:51:42,290 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-08-24 08:51:42,291 - INFO -   [Timing] Docs + Mode Detection: 0.002s
+2026-08-24 09:10:07,113 - INFO - 
+================================================================================
+2026-08-24 09:10:07,113 - INFO - [2026-08-24T09:10:07.113559] CHAT REQUEST
+2026-08-24 09:10:07,113 - INFO -   Student ID : 3
+2026-08-24 09:10:07,113 - INFO -   Question   : Prompt engineering
+2026-08-24 09:10:07,113 - INFO -   Role       : student
+2026-08-24 09:10:07,113 - INFO - ================================================================================
+2026-08-24 09:10:07,150 - INFO -   [Timing] FastAPI Request started processing at 356053.499
+2026-08-24 09:10:07,163 - INFO -   Detected Mode: LEARNING
+2026-08-24 09:10:07,163 - INFO -   [Timing] Docs + Mode Detection: 0.013s
+2026-08-24 09:10:10,172 - INFO -   Adaptive filter: top_score=0.9460
+2026-08-24 09:10:10,172 - INFO -   Adaptive filter: cutoff=0.8460, kept=17/44
+2026-08-24 09:10:10,172 - INFO -   [Timing] Retrieval & Context Building: 2.978s
+2026-08-24 09:10:10,182 - INFO -   [Timing] Context + Prompt Building: 0.007s
+2026-08-24 09:10:10,772 - INFO -   [Timing] Backend First Token Loop hit: 0.590s since LLM call
+2026-08-24 09:10:10,772 - INFO -   [Timing] Total TTFT (user → first token loop): 3.622s
+2026-08-24 09:10:53,915 - INFO - 
+================================================================================
+2026-08-24 09:10:53,915 - INFO - [2026-08-24T09:10:53.915787] CHAT REQUEST
+2026-08-24 09:10:53,915 - INFO -   Student ID : 3
+2026-08-24 09:10:53,915 - INFO -   Question   : generate a roadmap for prompt engineering
+2026-08-24 09:10:53,915 - INFO -   Role       : student
+2026-08-24 09:10:53,916 - INFO - ================================================================================
+2026-08-24 09:10:53,929 - INFO -   [Timing] FastAPI Request started processing at 356100.279
+2026-08-24 09:10:53,938 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-08-24 09:10:53,939 - INFO -   [Timing] Docs + Mode Detection: 0.009s
+2026-08-24 09:10:56,227 - INFO - 
+================================================================================
+2026-08-24 09:10:56,227 - INFO - [2026-08-24T09:10:56.227320] CHAT REQUEST
+2026-08-24 09:10:56,227 - INFO -   Student ID : 3
+2026-08-24 09:10:56,227 - INFO -   Question   : 1 Month
+2026-08-24 09:10:56,227 - INFO -   Role       : student
+2026-08-24 09:10:56,227 - INFO - ================================================================================
+2026-08-24 09:10:56,233 - INFO -   [Timing] FastAPI Request started processing at 356102.582
+2026-08-24 09:10:56,238 - INFO -   Detected Mode: LEARNING
+2026-08-24 09:10:56,238 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-24 09:10:58,184 - INFO - 
+================================================================================
+2026-08-24 09:10:58,184 - INFO - [2026-08-24T09:10:58.184217] CHAT REQUEST
+2026-08-24 09:10:58,184 - INFO -   Student ID : 3
+2026-08-24 09:10:58,184 - INFO -   Question   : Beginner
+2026-08-24 09:10:58,184 - INFO -   Role       : student
+2026-08-24 09:10:58,184 - INFO - ================================================================================
+2026-08-24 09:10:58,186 - INFO -   [Timing] FastAPI Request started processing at 356104.536
+2026-08-24 09:10:58,190 - INFO -   Detected Mode: LEARNING
+2026-08-24 09:10:58,190 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 09:11:00,676 - INFO - 
+================================================================================
+2026-08-24 09:11:00,676 - INFO - [2026-08-24T09:11:00.676215] CHAT REQUEST
+2026-08-24 09:11:00,676 - INFO -   Student ID : 3
+2026-08-24 09:11:00,676 - INFO -   Question   : 1 hour
+2026-08-24 09:11:00,676 - INFO -   Role       : student
+2026-08-24 09:11:00,676 - INFO - ================================================================================
+2026-08-24 09:11:00,678 - INFO -   [Timing] FastAPI Request started processing at 356107.028
+2026-08-24 09:11:00,682 - INFO -   Detected Mode: LEARNING
+2026-08-24 09:11:00,682 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 09:11:02,913 - INFO - 
+================================================================================
+2026-08-24 09:11:02,913 - INFO - [2026-08-24T09:11:02.913870] CHAT REQUEST
+2026-08-24 09:11:02,913 - INFO -   Student ID : 3
+2026-08-24 09:11:02,913 - INFO -   Question   : Mixed
+2026-08-24 09:11:02,914 - INFO -   Role       : student
+2026-08-24 09:11:02,914 - INFO - ================================================================================
+2026-08-24 09:11:02,919 - INFO -   [Timing] FastAPI Request started processing at 356109.268
+2026-08-24 09:11:02,927 - INFO -   Detected Mode: LEARNING
+2026-08-24 09:11:02,927 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-08-24 09:11:04,795 - INFO - 
+================================================================================
+2026-08-24 09:11:04,795 - INFO - [2026-08-24T09:11:04.795804] CHAT REQUEST
+2026-08-24 09:11:04,795 - INFO -   Student ID : 3
+2026-08-24 09:11:04,796 - INFO -   Question   : Yes
+2026-08-24 09:11:04,796 - INFO -   Role       : student
+2026-08-24 09:11:04,796 - INFO - ================================================================================
+2026-08-24 09:11:04,799 - INFO -   [Timing] FastAPI Request started processing at 356111.149
+2026-08-24 09:11:04,803 - INFO -   Detected Mode: LEARNING
+2026-08-24 09:11:04,803 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 09:11:06,841 - INFO - 
+================================================================================
+2026-08-24 09:11:06,841 - INFO - [2026-08-24T09:11:06.841707] CHAT REQUEST
+2026-08-24 09:11:06,841 - INFO -   Student ID : 3
+2026-08-24 09:11:06,841 - INFO -   Question   : Generate Roadmap
+2026-08-24 09:11:06,841 - INFO -   Role       : student
+2026-08-24 09:11:06,841 - INFO - ================================================================================
+2026-08-24 09:11:06,847 - INFO -   [Timing] FastAPI Request started processing at 356113.196
+2026-08-24 09:11:06,851 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-08-24 09:11:06,851 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 09:11:42,555 - INFO - [get_learning_data] Requested roadmap_id=39, student_id=3
+2026-08-24 09:11:42,558 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-24 09:11:42,656 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:11:44,483 - INFO - [Context] Discarded irrelevant chunk for topic='LLM Architecture and Tokenization Basics'
+2026-08-24 09:11:44,483 - INFO - [Stream] Starting detailed streaming for LLM Architecture and Tokenization Basics
+2026-08-24 09:11:50,638 - INFO - [Stream] Starting detailed streaming for Core Prompt Components: Role, Task, Context
+2026-08-24 09:12:24,019 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='LLM Architecture and Tokenization Basics'
+2026-08-24 09:12:24,064 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='LLM Architecture and Tokenization Basics'
+2026-08-24 09:12:36,975 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='LLM Architecture and Tokenization Basics'
+2026-08-24 09:12:36,975 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='LLM Architecture and Tokenization Basics'
+2026-08-24 09:13:23,311 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-24 09:13:33,543 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-24 09:14:19,838 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-24 09:14:19,838 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-24 09:14:19,844 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='LLM Architecture and Tokenization Basics' (total=5 questions)
+2026-08-24 09:22:07,848 - INFO - [get_learning_data] Requested roadmap_id=39, student_id=3
+2026-08-24 09:22:07,850 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-24 09:22:07,884 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:32:28,849 - INFO - [Context] Discarded irrelevant chunk for topic='Prompt Chaining and Decomposition'
+2026-08-24 09:32:28,849 - INFO - [Stream] Starting detailed streaming for Prompt Chaining and Decomposition
+2026-08-24 09:32:36,406 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Core Prompt Components: Role, Task, Context'
+2026-08-24 09:32:36,449 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Core Prompt Components: Role, Task, Context'
+2026-08-24 09:32:38,827 - INFO - [Context] Discarded irrelevant chunk for topic='Clarity and Specificity in Instruction'
+2026-08-24 09:32:38,828 - INFO - [Stream] Starting detailed streaming for Clarity and Specificity in Instruction
+2026-08-24 09:32:55,267 - INFO - [get_learning_data] Requested roadmap_id=38, student_id=3
+2026-08-24 09:32:55,271 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-24 09:32:55,321 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:32:55,559 - INFO - [Stream] Starting detailed streaming for Machine Learning
+2026-08-24 09:33:00,277 - INFO - [Stream] Starting detailed streaming for Machine Learning
+2026-08-24 09:33:07,221 - INFO - [Context] Discarded irrelevant chunk for topic='Introduction to Organic Chemistry'
+2026-08-24 09:33:07,221 - INFO - [Stream] Starting detailed streaming for Introduction to Organic Chemistry
+2026-08-24 09:33:22,958 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-24 09:33:33,332 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-24 09:33:42,927 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 09:33:42,932 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-24 09:33:42,934 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-24 09:33:42,935 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-24 09:33:42,936 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-24 09:33:42,938 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-24 09:33:42,939 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-24 09:33:42,940 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-24 09:33:42,941 - INFO - [get_learning_data] Retrieved roadmap id=25, title='Supervised Learning Mastery in 12 Weeks'
+2026-08-24 09:33:42,942 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-24 09:33:42,952 - INFO - CACHE HIT (Fast Return): topic='Machine Learning', subject='None'
+2026-08-24 09:33:42,980 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:33:43,181 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Introduction to Organic Chemistry' to save resources.
+2026-08-24 09:34:19,780 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-24 09:34:19,780 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-24 09:34:19,781 - ERROR - [PracticeEngine] Failed to generate initial 5 questions, aborting incremental flow
+2026-08-24 09:41:10,210 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 09:41:10,217 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-24 09:41:10,220 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-24 09:41:10,222 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-24 09:41:10,223 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-24 09:41:10,224 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-24 09:41:10,226 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-24 09:41:10,227 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-24 09:41:10,228 - INFO - [get_learning_data] Retrieved roadmap id=25, title='Supervised Learning Mastery in 12 Weeks'
+2026-08-24 09:41:10,229 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-24 09:41:10,550 - INFO - CACHE HIT (Fast Return): topic='LLM Architecture and Tokenization Basics', subject='None'
+2026-08-24 09:41:10,596 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:41:35,508 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 09:41:35,511 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-24 09:41:35,512 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-24 09:41:35,513 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-24 09:41:35,514 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-24 09:41:35,516 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-24 09:41:35,517 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-24 09:41:35,518 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-24 09:41:35,519 - INFO - [get_learning_data] Retrieved roadmap id=25, title='Supervised Learning Mastery in 12 Weeks'
+2026-08-24 09:41:35,520 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-24 09:41:35,529 - INFO - CACHE HIT (Fast Return): topic='LLM Architecture and Tokenization Basics', subject='None'
+2026-08-24 09:41:35,550 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:41:35,731 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 09:41:35,734 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-24 09:41:35,735 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-24 09:41:35,737 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-24 09:41:35,740 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-24 09:41:35,742 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-24 09:41:35,745 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-24 09:41:35,746 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-24 09:41:35,747 - INFO - [get_learning_data] Retrieved roadmap id=25, title='Supervised Learning Mastery in 12 Weeks'
+2026-08-24 09:41:35,748 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-24 09:41:35,754 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Introduction to Organic Chemistry'
+2026-08-24 09:41:35,762 - INFO - CACHE HIT (Fast Return): topic='Introduction to Organic Chemistry', subject='Week 1'
+2026-08-24 09:41:35,797 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:41:36,186 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Introduction to Organic Chemistry'
+2026-08-24 09:41:39,639 - INFO - [get_learning_data] Requested roadmap_id=31, student_id=3
+2026-08-24 09:41:39,642 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-24 09:41:39,657 - INFO - CACHE HIT (Fast Return): topic='What is an Operating System?', subject='None'
+2026-08-24 09:41:39,673 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:41:40,221 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'What is an Operating System?' to save resources.
+2026-08-24 09:41:44,728 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'What is an Operating System?' to save resources.
+2026-08-24 09:41:44,729 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 09:41:44,732 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-24 09:41:44,734 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-24 09:41:44,735 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-24 09:41:44,736 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-24 09:41:44,737 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-24 09:41:44,739 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-24 09:41:44,740 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-24 09:41:44,741 - INFO - [get_learning_data] Retrieved roadmap id=25, title='Supervised Learning Mastery in 12 Weeks'
+2026-08-24 09:41:44,742 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-24 09:41:44,752 - INFO - CACHE HIT (Fast Return): topic='What is an Operating System?', subject='Week 1'
+2026-08-24 09:41:44,774 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:41:51,112 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Introduction to Organic Chemistry'
+2026-08-24 09:41:51,113 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Introduction to Organic Chemistry'
+2026-08-24 09:42:04,044 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'LLM Architecture and Tokenization Basics' to save resources.
+2026-08-24 09:42:37,489 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-24 09:42:47,645 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-24 09:43:33,960 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-24 09:43:33,960 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-24 09:43:33,966 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Introduction to Organic Chemistry' (total=5 questions)
+2026-08-24 09:45:28,410 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 09:45:28,425 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-24 09:45:28,445 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:46:01,993 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 09:46:01,994 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Core Prompt Components: Role, Task, Context'
+2026-08-24 09:46:01,999 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-24 09:46:02,001 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-24 09:46:02,002 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-24 09:46:02,004 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-24 09:46:02,005 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-24 09:46:02,007 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-24 09:46:02,010 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-24 09:46:02,014 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-24 09:46:02,048 - INFO - CACHE HIT (Fast Return): topic='Core Prompt Components: Role, Task, Context', subject='None'
+2026-08-24 09:46:02,142 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 09:46:02,616 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Core Prompt Components: Role, Task, Context'
+2026-08-24 09:46:20,762 - INFO - Cached explain action for topic='Core Prompt Components: Role, Task, Context'
+2026-08-24 09:46:49,097 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-24 09:46:59,547 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-24 09:47:45,926 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-24 09:47:45,926 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-24 09:47:45,926 - ERROR - [PracticeEngine] Failed to generate initial 5 questions, aborting incremental flow
+2026-08-24 12:22:44,811 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Data Preprocessing Basics, difficulty=mixed
+2026-08-24 12:22:44,821 - INFO - [Practice] Resuming existing active session 2568 for topic='Data Preprocessing Basics'
+2026-08-24 12:22:44,830 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:22:44,862 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:22:52,593 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 12:22:52,628 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:22:53,491 - INFO - [Stream] Starting detailed streaming for Data Preprocessing Basics
+2026-08-24 12:23:02,298 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:23:02,382 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:25:06,906 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 12:25:06,923 - INFO - CACHE HIT (Fast Return): topic='Peterson's Solution', subject='Operating Systems'
+2026-08-24 12:25:06,940 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:25:14,010 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:25:14,169 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:25:22,889 - INFO - [Practice] Starting/resuming session: mode=topic, topic=The Critical-Section Problem, difficulty=mixed
+2026-08-24 12:25:22,889 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:25:22,911 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:25:38,870 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:25:38,976 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:00,873 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-24 12:26:08,118 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 12:26:08,147 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:08,323 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 12:26:08,331 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-24 12:26:08,348 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:09,836 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:09,966 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:11,187 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-24 12:26:19,692 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:19,706 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:26,259 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:26,273 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:42,047 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:42,143 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 12:26:48,619 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-24 12:26:48,619 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-24 12:26:48,633 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='The Critical-Section Problem'
+2026-08-24 12:26:48,644 - INFO - [Practice] Background generation completed for session 2767 (5 questions)
+2026-08-24 12:26:49,042 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='The Critical-Section Problem'
+2026-08-24 12:26:57,510 - INFO - 
+================================================================================
+2026-08-24 12:26:57,510 - INFO - [2026-08-24T12:26:57.510443] CHAT REQUEST
+2026-08-24 12:26:57,510 - INFO -   Student ID : 3
+2026-08-24 12:26:57,510 - INFO -   Question   : hi
+2026-08-24 12:26:57,510 - INFO -   Role       : student
+2026-08-24 12:26:57,510 - INFO - ================================================================================
+2026-08-24 12:26:57,546 - INFO -   [Timing] FastAPI Request started processing at 367863.896
+2026-08-24 12:26:57,557 - INFO -   Detected Mode: LEARNING
+2026-08-24 12:26:57,557 - INFO -   [Timing] Docs + Mode Detection: 0.011s
+2026-08-24 12:27:35,485 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-24 12:27:45,808 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-24 12:28:32,209 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-24 12:28:32,209 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-24 12:28:32,209 - ERROR - [PracticeEngine] Failed to generate initial 5 questions, aborting incremental flow
+2026-08-24 12:28:41,026 - INFO - 
+================================================================================
+2026-08-24 12:28:41,026 - INFO - [2026-08-24T12:28:41.026860] CHAT REQUEST
+2026-08-24 12:28:41,027 - INFO -   Student ID : 3
+2026-08-24 12:28:41,027 - INFO -   Question   : tell me about tokenisations
+2026-08-24 12:28:41,027 - INFO -   Role       : student
+2026-08-24 12:28:41,027 - INFO - ================================================================================
+2026-08-24 12:28:41,030 - INFO -   [Timing] FastAPI Request started processing at 367967.379
+2026-08-24 12:28:41,034 - INFO -   Detected Mode: LEARNING
+2026-08-24 12:28:41,035 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-24 12:28:43,551 - INFO -   Adaptive filter: top_score=0.7760
+2026-08-24 12:28:43,551 - INFO -   Adaptive filter: cutoff=0.6760, kept=13/51
+2026-08-24 12:28:43,552 - INFO -   [Timing] Retrieval & Context Building: 2.508s
+2026-08-24 12:28:43,621 - INFO -   [Timing] Context + Prompt Building: 0.069s
+2026-08-24 12:28:44,095 - INFO -   [Timing] Backend First Token Loop hit: 0.474s since LLM call
+2026-08-24 12:28:44,095 - INFO -   [Timing] Total TTFT (user → first token loop): 3.065s
+2026-08-24 12:28:55,402 - INFO -   [Timing] LLM Streaming Duration: 11.781s
+2026-08-24 12:28:55,402 - INFO -   [Timing] Total Response Time: 14.372s
+2026-08-24 12:29:20,101 - INFO - 
+================================================================================
+2026-08-24 12:29:20,102 - INFO - [2026-08-24T12:29:20.102128] CHAT REQUEST
+2026-08-24 12:29:20,102 - INFO -   Student ID : 3
+2026-08-24 12:29:20,102 - INFO -   Question   : what are embeddings
+2026-08-24 12:29:20,102 - INFO -   Role       : student
+2026-08-24 12:29:20,102 - INFO - ================================================================================
+2026-08-24 12:29:20,105 - INFO -   [Timing] FastAPI Request started processing at 368006.454
+2026-08-24 12:29:20,108 - INFO -   Detected Mode: LEARNING
+2026-08-24 12:29:20,108 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 12:29:20,331 - INFO -   Adaptive filter: top_score=1.6790
+2026-08-24 12:29:20,332 - INFO -   Adaptive filter: cutoff=1.5790, kept=11/47
+2026-08-24 12:29:20,332 - INFO -   [Timing] Retrieval & Context Building: 0.215s
+2026-08-24 12:29:20,335 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 12:29:20,771 - INFO -   [Timing] Backend First Token Loop hit: 0.436s since LLM call
+2026-08-24 12:29:20,772 - INFO -   [Timing] Total TTFT (user → first token loop): 0.667s
+2026-08-24 12:29:26,552 - INFO -   [Timing] LLM Streaming Duration: 6.216s
+2026-08-24 12:29:26,552 - INFO -   [Timing] Total Response Time: 6.447s
+2026-08-24 12:29:47,687 - INFO - 
+================================================================================
+2026-08-24 12:29:47,687 - INFO - [2026-08-24T12:29:47.687686] CHAT REQUEST
+2026-08-24 12:29:47,687 - INFO -   Student ID : 3
+2026-08-24 12:29:47,688 - INFO -   Question   : summarise lec-1
+2026-08-24 12:29:47,688 - INFO -   Role       : student
+2026-08-24 12:29:47,688 - INFO - ================================================================================
+2026-08-24 12:29:47,691 - INFO -   [Timing] FastAPI Request started processing at 368034.040
+2026-08-24 12:29:47,694 - INFO -   Detected Mode: LEARNING
+2026-08-24 12:29:47,694 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 12:29:52,423 - INFO -   Adaptive filter: top_score=0.4820
+2026-08-24 12:29:52,424 - INFO -   Adaptive filter: cutoff=0.3820, kept=7/16
+2026-08-24 12:29:52,424 - INFO -   [Timing] Retrieval & Context Building: 4.722s
+2026-08-24 12:29:52,427 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 12:29:52,984 - INFO -   [Timing] Backend First Token Loop hit: 0.556s since LLM call
+2026-08-24 12:29:52,984 - INFO -   [Timing] Total TTFT (user → first token loop): 5.293s
+2026-08-24 12:30:00,879 - INFO -   [Timing] LLM Streaming Duration: 8.451s
+2026-08-24 12:30:00,879 - INFO -   [Timing] Total Response Time: 13.188s
+2026-08-24 12:30:57,296 - INFO - 
+================================================================================
+2026-08-24 12:30:57,296 - INFO - [2026-08-24T12:30:57.296775] CHAT REQUEST
+2026-08-24 12:30:57,296 - INFO -   Student ID : 3
+2026-08-24 12:30:57,296 - INFO -   Question   : summarize my resume
+2026-08-24 12:30:57,297 - INFO -   Role       : student
+2026-08-24 12:30:57,297 - INFO - ================================================================================
+2026-08-24 12:30:57,301 - INFO -   [Timing] FastAPI Request started processing at 368103.650
+2026-08-24 12:30:57,306 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-08-24 12:30:57,306 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 12:30:57,316 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-24 12:30:57,316 - INFO -   Adaptive filter: cutoff=0.9000, kept=6/6
+2026-08-24 12:30:57,316 - INFO -   [Timing] Retrieval & Context Building: 0.002s
+2026-08-24 12:30:57,319 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-24 12:30:57,840 - INFO -   [Timing] Backend First Token Loop hit: 0.521s since LLM call
+2026-08-24 12:30:57,840 - INFO -   [Timing] Total TTFT (user → first token loop): 0.539s
+2026-08-24 12:31:08,789 - INFO -   [Timing] LLM Streaming Duration: 11.469s
+2026-08-24 12:31:08,789 - INFO -   [Timing] Total Response Time: 11.488s
+2026-08-24 12:31:25,829 - INFO - 
+================================================================================
+2026-08-24 12:31:25,829 - INFO - [2026-08-24T12:31:25.829372] CHAT REQUEST
+2026-08-24 12:31:25,829 - INFO -   Student ID : 3
+2026-08-24 12:31:25,829 - INFO -   Question   : what are deadlocks
+2026-08-24 12:31:25,829 - INFO -   Role       : student
+2026-08-24 12:31:25,829 - INFO - ================================================================================
+2026-08-24 12:31:25,832 - INFO -   [Timing] FastAPI Request started processing at 368132.181
+2026-08-24 12:31:25,835 - INFO -   Detected Mode: LEARNING
+2026-08-24 12:31:25,835 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 12:31:26,036 - INFO -   Adaptive filter: top_score=1.8240
+2026-08-24 12:31:26,036 - INFO -   Adaptive filter: cutoff=1.7240, kept=12/16
+2026-08-24 12:31:26,036 - INFO -   [Timing] Retrieval & Context Building: 0.193s
+2026-08-24 12:31:26,040 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 12:31:26,564 - INFO -   [Timing] Backend First Token Loop hit: 0.524s since LLM call
+2026-08-24 12:31:26,565 - INFO -   [Timing] Total TTFT (user → first token loop): 0.733s
+2026-08-24 12:31:29,937 - INFO -   [Timing] LLM Streaming Duration: 3.896s
+2026-08-24 12:31:29,937 - INFO -   [Timing] Total Response Time: 4.105s
+2026-08-24 12:31:45,077 - INFO - 
+================================================================================
+2026-08-24 12:31:45,077 - INFO - [2026-08-24T12:31:45.077701] CHAT REQUEST
+2026-08-24 12:31:45,077 - INFO -   Student ID : 3
+2026-08-24 12:31:45,077 - INFO -   Question   : what is deadlocks
+2026-08-24 12:31:45,077 - INFO -   Role       : student
+2026-08-24 12:31:45,077 - INFO - ================================================================================
+2026-08-24 12:31:45,080 - INFO -   [Timing] FastAPI Request started processing at 368151.429
+2026-08-24 12:31:45,084 - INFO -   Detected Mode: LEARNING
+2026-08-24 12:31:45,084 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 12:31:50,835 - INFO -   Adaptive filter: top_score=1.8050
+2026-08-24 12:31:50,835 - INFO -   Adaptive filter: cutoff=1.7050, kept=12/16
+2026-08-24 12:31:50,835 - INFO -   [Timing] Retrieval & Context Building: 5.744s
+2026-08-24 12:31:50,839 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 12:31:52,028 - INFO -   [Timing] Backend First Token Loop hit: 1.188s since LLM call
+2026-08-24 12:31:52,028 - INFO -   [Timing] Total TTFT (user → first token loop): 6.947s
+2026-08-24 12:32:10,476 - INFO -   [Timing] LLM Streaming Duration: 19.637s
+2026-08-24 12:32:10,477 - INFO -   [Timing] Total Response Time: 25.396s
+2026-08-24 12:38:34,081 - INFO - DEBUG2 predefined_topics: ['Database Concepts', 'DBMS Architecture', 'Data Models', 'Database Users', 'Schema and Instances', 'Relational Algebra', 'SQL Basics', 'Joins and Subqueries', 'Views', 'Constraints', 'ER Model', 'ER Diagrams', 'Mapping ER to Relational Model', 'Functional Dependencies', 'Normalization', 'Transactions', 'ACID Properties', 'Concurrency Control', 'Deadlocks', 'Recovery Techniques', 'Indexing', 'Query Optimization', 'Distributed Databases', 'NoSQL Databases', 'Data Warehousing']
+2026-08-24 12:38:34,081 - INFO - DEBUG2 performances keys: []
+2026-08-24 12:38:34,081 - INFO - DEBUG2 matched perfs: []
+2026-08-24 12:38:34,258 - INFO - DEBUG2 predefined_topics: ['Database Concepts', 'DBMS Architecture', 'Data Models', 'Database Users', 'Schema and Instances', 'Relational Algebra', 'SQL Basics', 'Joins and Subqueries', 'Views', 'Constraints', 'ER Model', 'ER Diagrams', 'Mapping ER to Relational Model', 'Functional Dependencies', 'Normalization', 'Transactions', 'ACID Properties', 'Concurrency Control', 'Deadlocks', 'Recovery Techniques', 'Indexing', 'Query Optimization', 'Distributed Databases', 'NoSQL Databases', 'Data Warehousing']
+2026-08-24 12:38:34,259 - INFO - DEBUG2 performances keys: []
+2026-08-24 12:38:34,259 - INFO - DEBUG2 matched perfs: []
+2026-08-24 13:07:35,147 - INFO - 
+================================================================================
+2026-08-24 13:07:35,147 - INFO - [2026-08-24T13:07:35.147921] CHAT REQUEST
+2026-08-24 13:07:35,148 - INFO -   Student ID : 3
+2026-08-24 13:07:35,148 - INFO -   Question   : Summarize this document: "1 Rules And Regulations"
+2026-08-24 13:07:35,148 - INFO -   Role       : student
+2026-08-24 13:07:35,148 - INFO - ================================================================================
+2026-08-24 13:07:35,181 - INFO -   [Timing] FastAPI Request started processing at 370301.530
+2026-08-24 13:07:35,192 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-08-24 13:07:35,192 - INFO -   [Timing] Docs + Mode Detection: 0.011s
+2026-08-24 13:07:35,215 - INFO - [DocumentResolver] Explicit document target: 1_Rules_and_Regulations.pdf (48)
+2026-08-24 13:07:35,289 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-24 13:07:35,289 - INFO -   Adaptive filter: cutoff=0.9000, kept=10/10
+2026-08-24 13:07:35,289 - INFO -   [Timing] Retrieval & Context Building: 0.072s
+2026-08-24 13:07:35,292 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 13:07:35,893 - INFO -   [Timing] Backend First Token Loop hit: 0.600s since LLM call
+2026-08-24 13:07:35,893 - INFO -   [Timing] Total TTFT (user → first token loop): 0.712s
+2026-08-24 13:07:50,117 - INFO -   [Timing] LLM Streaming Duration: 14.824s
+2026-08-24 13:07:50,117 - INFO -   [Timing] Total Response Time: 14.936s
+2026-08-24 13:08:10,340 - INFO - 
+================================================================================
+2026-08-24 13:08:10,340 - INFO - [2026-08-24T13:08:10.340736] CHAT REQUEST
+2026-08-24 13:08:10,340 - INFO -   Student ID : 3
+2026-08-24 13:08:10,340 - INFO -   Question   : Summarize this document: "AI Study Material - Relational DB"
+2026-08-24 13:08:10,340 - INFO -   Role       : student
+2026-08-24 13:08:10,340 - INFO - ================================================================================
+2026-08-24 13:08:10,343 - INFO -   [Timing] FastAPI Request started processing at 370336.693
+2026-08-24 13:08:10,349 - INFO -   Detected Mode: STRICT_DOCUMENT
+2026-08-24 13:08:10,349 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-24 13:08:10,353 - INFO - [DocumentResolver] Explicit document target: AI Study Material - Relational DB.txt (88)
+2026-08-24 13:08:10,358 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-24 13:08:10,359 - INFO -   Adaptive filter: cutoff=0.9000, kept=21/21
+2026-08-24 13:08:10,359 - INFO -   [Timing] Retrieval & Context Building: 0.004s
+2026-08-24 13:08:10,361 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-24 13:08:10,795 - INFO -   [Timing] Backend First Token Loop hit: 0.434s since LLM call
+2026-08-24 13:08:10,795 - INFO -   [Timing] Total TTFT (user → first token loop): 0.452s
+2026-08-24 13:08:29,210 - INFO -   [Timing] LLM Streaming Duration: 18.849s
+2026-08-24 13:08:29,210 - INFO -   [Timing] Total Response Time: 18.867s
+2026-08-24 13:08:39,411 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:08:39,514 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:08:55,834 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Homework: Todo List app with hooks and localStorage, difficulty=mixed
+2026-08-24 13:08:55,837 - INFO - [Practice] Resuming existing active session 2757 for topic='Homework: Todo List app with hooks and localStorage'
+2026-08-24 13:09:37,074 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:09:37,101 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:09:57,103 - INFO - [Practice] Starting/resuming session: mode=topic, topic=K-Means Clustering, difficulty=hard
+2026-08-24 13:10:01,378 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='K-Means Clustering'
+2026-08-24 13:10:01,386 - INFO - [Practice] Background generation completed for session 2768 (5 questions)
+2026-08-24 13:10:01,981 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='K-Means Clustering'
+2026-08-24 13:10:48,468 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-24 13:10:58,888 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-24 13:11:45,343 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-24 13:11:45,343 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-24 13:11:45,344 - ERROR - [PracticeEngine] Failed to generate initial 5 questions, aborting incremental flow
+2026-08-24 13:11:57,205 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:11:57,238 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:12:05,432 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Arrays, difficulty=easy
+2026-08-24 13:12:05,447 - INFO - [PracticeEngine] Master cache HIT: Retrieved 5 cached questions, filtered down to 5 non-repeated questions, returning 5
+2026-08-24 13:12:05,448 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Arrays'
+2026-08-24 13:12:05,456 - INFO - [Practice] Background generation completed for session 2769 (5 questions)
+2026-08-24 13:12:06,463 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Arrays'
+2026-08-24 13:12:17,900 - INFO - PERFORMANCE UPDATED | Topic: Arrays | Accuracy: 0.0% | Sessions: 2 | Status: LEARNING
+2026-08-24 13:12:35,878 - INFO - PERFORMANCE UPDATED | Topic: Arrays | Accuracy: 33.33333333333333% | Sessions: 2 | Status: LEARNING
+2026-08-24 13:12:42,448 - INFO - PERFORMANCE UPDATED | Topic: Arrays | Accuracy: 50.0% | Sessions: 2 | Status: LEARNING
+2026-08-24 13:12:50,284 - INFO - PERFORMANCE UPDATED | Topic: Arrays | Accuracy: 60.0% | Sessions: 2 | Status: LEARNING
+2026-08-24 13:12:52,881 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-24 13:12:55,630 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:12:55,738 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:12:57,501 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 13:12:57,532 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:12:57,881 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 13:12:57,909 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:12:57,920 - INFO - [Stream] Starting detailed streaming for OS Components and Services
+2026-08-24 13:13:03,067 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-24 13:13:11,203 - INFO - [Context] Discarded irrelevant chunk for topic='Quick Sort'
+2026-08-24 13:13:11,203 - INFO - [Stream] Starting detailed streaming for Quick Sort
+2026-08-24 13:13:49,581 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-24 13:13:49,581 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-24 13:13:49,581 - ERROR - [PracticeEngine] Failed to generate initial 5 questions, aborting incremental flow
+2026-08-24 13:13:55,465 - INFO - Cached explain action for topic='Quick Sort'
+2026-08-24 13:14:00,783 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 13:14:00,786 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-24 13:14:00,787 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-24 13:14:00,789 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-24 13:14:00,791 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-24 13:14:00,792 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-24 13:14:00,793 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-24 13:14:00,794 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-24 13:14:00,796 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-24 13:14:00,807 - INFO - CACHE HIT (Fast Return): topic='LLM Architecture and Tokenization Basics', subject='None'
+2026-08-24 13:14:00,827 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:14:18,823 - INFO - [Context] Discarded irrelevant chunk for topic='Chain-of-Thought (CoT) Prompting'
+2026-08-24 13:14:18,823 - INFO - [Stream] Starting detailed streaming for Chain-of-Thought (CoT) Prompting
+2026-08-24 13:14:45,378 - INFO - DEBUG2 predefined_topics: ['Database Concepts', 'DBMS Architecture', 'Data Models', 'Database Users', 'Schema and Instances', 'Relational Algebra', 'SQL Basics', 'Joins and Subqueries', 'Views', 'Constraints', 'ER Model', 'ER Diagrams', 'Mapping ER to Relational Model', 'Functional Dependencies', 'Normalization', 'Transactions', 'ACID Properties', 'Concurrency Control', 'Deadlocks', 'Recovery Techniques', 'Indexing', 'Query Optimization', 'Distributed Databases', 'NoSQL Databases', 'Data Warehousing']
+2026-08-24 13:14:45,378 - INFO - DEBUG2 performances keys: []
+2026-08-24 13:14:45,378 - INFO - DEBUG2 matched perfs: []
+2026-08-24 13:14:45,424 - INFO - DEBUG2 predefined_topics: ['Database Concepts', 'DBMS Architecture', 'Data Models', 'Database Users', 'Schema and Instances', 'Relational Algebra', 'SQL Basics', 'Joins and Subqueries', 'Views', 'Constraints', 'ER Model', 'ER Diagrams', 'Mapping ER to Relational Model', 'Functional Dependencies', 'Normalization', 'Transactions', 'ACID Properties', 'Concurrency Control', 'Deadlocks', 'Recovery Techniques', 'Indexing', 'Query Optimization', 'Distributed Databases', 'NoSQL Databases', 'Data Warehousing']
+2026-08-24 13:14:45,425 - INFO - DEBUG2 performances keys: []
+2026-08-24 13:14:45,425 - INFO - DEBUG2 matched perfs: []
+2026-08-24 13:14:52,907 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Database Concepts'
+2026-08-24 13:14:52,929 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-24 13:14:52,947 - INFO - CACHE INVALIDATED (Old format): topic='Database Concepts', subject='DBMS'
+2026-08-24 13:14:52,971 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:14:53,335 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Database Concepts'
+2026-08-24 13:15:03,904 - INFO - 
+================================================================================
+2026-08-24 13:15:03,904 - INFO - [2026-08-24T13:15:03.904469] CHAT REQUEST
+2026-08-24 13:15:03,904 - INFO -   Student ID : 3
+2026-08-24 13:15:03,904 - INFO -   Question   : who is the pm of india
+2026-08-24 13:15:03,904 - INFO -   Role       : student
+2026-08-24 13:15:03,905 - INFO - ================================================================================
+2026-08-24 13:15:03,910 - INFO -   [Timing] FastAPI Request started processing at 370750.259
+2026-08-24 13:15:03,915 - INFO -   Detected Mode: LEARNING
+2026-08-24 13:15:03,915 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-24 13:15:08,654 - INFO -   Adaptive filter: top_score=0.9250
+2026-08-24 13:15:08,654 - INFO -   Adaptive filter: cutoff=0.8250, kept=5/43
+2026-08-24 13:15:08,654 - INFO -   [Timing] Retrieval & Context Building: 4.726s
+2026-08-24 13:15:08,657 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 13:15:09,171 - INFO -   [Timing] Backend First Token Loop hit: 0.513s since LLM call
+2026-08-24 13:15:09,171 - INFO -   [Timing] Total TTFT (user → first token loop): 5.261s
+2026-08-24 13:15:10,420 - INFO -   [Timing] LLM Streaming Duration: 1.762s
+2026-08-24 13:15:10,420 - INFO -   [Timing] Total Response Time: 6.510s
+2026-08-24 13:15:15,798 - INFO - 
+================================================================================
+2026-08-24 13:15:15,799 - INFO - [2026-08-24T13:15:15.799005] CHAT REQUEST
+2026-08-24 13:15:15,799 - INFO -   Student ID : 3
+2026-08-24 13:15:15,799 - INFO -   Question   : who is the pm of indira
+2026-08-24 13:15:15,799 - INFO -   Role       : student
+2026-08-24 13:15:15,799 - INFO - ================================================================================
+2026-08-24 13:15:15,802 - INFO -   [Timing] FastAPI Request started processing at 370762.151
+2026-08-24 13:15:15,808 - INFO -   Detected Mode: LEARNING
+2026-08-24 13:15:15,808 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-08-24 13:15:20,136 - INFO -   Adaptive filter: top_score=0.9660
+2026-08-24 13:15:20,136 - INFO -   Adaptive filter: cutoff=0.8660, kept=2/41
+2026-08-24 13:15:20,136 - INFO -   [Timing] Retrieval & Context Building: 4.316s
+2026-08-24 13:15:20,139 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 13:15:20,533 - INFO -   [Timing] Backend First Token Loop hit: 0.393s since LLM call
+2026-08-24 13:15:20,533 - INFO -   [Timing] Total TTFT (user → first token loop): 4.731s
+2026-08-24 13:15:22,918 - INFO -   [Timing] LLM Streaming Duration: 2.778s
+2026-08-24 13:15:22,918 - INFO -   [Timing] Total Response Time: 7.116s
+2026-08-24 13:15:37,809 - ERROR - [PracticeEngine] Failed to parse initial 5 questions JSON: Expecting ',' delimiter: line 23 column 7 (char 536)
+2026-08-24 13:15:37,809 - ERROR - [PracticeEngine] Failed to generate initial 5 questions, aborting incremental flow
+2026-08-24 13:15:40,173 - INFO - 
+================================================================================
+2026-08-24 13:15:40,174 - INFO - [2026-08-24T13:15:40.174006] CHAT REQUEST
+2026-08-24 13:15:40,174 - INFO -   Student ID : 3
+2026-08-24 13:15:40,174 - INFO -   Question   : what is 2 plus 2
+2026-08-24 13:15:40,174 - INFO -   Role       : student
+2026-08-24 13:15:40,174 - INFO - ================================================================================
+2026-08-24 13:15:40,176 - INFO -   [Timing] FastAPI Request started processing at 370786.526
+2026-08-24 13:15:40,180 - INFO -   Detected Mode: LEARNING
+2026-08-24 13:15:40,180 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 13:15:40,539 - INFO -   Adaptive filter: top_score=1.4550
+2026-08-24 13:15:40,539 - INFO -   Adaptive filter: cutoff=1.3550, kept=4/50
+2026-08-24 13:15:40,539 - INFO -   [Timing] Retrieval & Context Building: 0.351s
+2026-08-24 13:15:40,542 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-24 13:15:40,950 - INFO -   [Timing] Backend First Token Loop hit: 0.408s since LLM call
+2026-08-24 13:15:40,951 - INFO -   [Timing] Total TTFT (user → first token loop): 0.774s
+2026-08-24 13:15:41,010 - INFO -   [Timing] LLM Streaming Duration: 0.468s
+2026-08-24 13:15:41,010 - INFO -   [Timing] Total Response Time: 0.833s
+2026-08-24 13:15:55,564 - INFO - 
+================================================================================
+2026-08-24 13:15:55,564 - INFO - [2026-08-24T13:15:55.564448] CHAT REQUEST
+2026-08-24 13:15:55,564 - INFO -   Student ID : 3
+2026-08-24 13:15:55,564 - INFO -   Question   : what is a religion
+2026-08-24 13:15:55,564 - INFO -   Role       : student
+2026-08-24 13:15:55,564 - INFO - ================================================================================
+2026-08-24 13:15:55,568 - INFO -   [Timing] FastAPI Request started processing at 370801.917
+2026-08-24 13:15:55,571 - INFO -   Detected Mode: LEARNING
+2026-08-24 13:15:55,571 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 13:15:55,617 - INFO -   Adaptive filter: top_score=0.2640
+2026-08-24 13:15:55,618 - INFO -   Adaptive filter: top_score=0.2640 < minimum=0.48 → no evidence
+2026-08-24 13:15:55,618 - INFO -   [Timing] Retrieval & Context Building: 0.039s
+2026-08-24 13:15:55,620 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-24 13:15:55,900 - INFO -   [Timing] Backend First Token Loop hit: 0.279s since LLM call
+2026-08-24 13:15:55,900 - INFO -   [Timing] Total TTFT (user → first token loop): 0.332s
+2026-08-24 13:15:59,258 - INFO -   [Timing] LLM Streaming Duration: 3.637s
+2026-08-24 13:15:59,258 - INFO -   [Timing] Total Response Time: 3.690s
+2026-08-24 13:16:20,424 - INFO - 
+================================================================================
+2026-08-24 13:16:20,425 - INFO - [2026-08-24T13:16:20.425228] CHAT REQUEST
+2026-08-24 13:16:20,425 - INFO -   Student ID : 3
+2026-08-24 13:16:20,425 - INFO -   Question   : write me a song on birds
+2026-08-24 13:16:20,425 - INFO -   Role       : student
+2026-08-24 13:16:20,425 - INFO - ================================================================================
+2026-08-24 13:17:16,263 - INFO - 
+================================================================================
+2026-08-24 13:17:16,263 - INFO - [2026-08-24T13:17:16.263788] CHAT REQUEST
+2026-08-24 13:17:16,263 - INFO -   Student ID : 3
+2026-08-24 13:17:16,264 - INFO -   Question   : i want you to act as an russian guy and answer me where do you live
+2026-08-24 13:17:16,264 - INFO -   Role       : student
+2026-08-24 13:17:16,264 - INFO - ================================================================================
+2026-08-24 13:17:16,266 - INFO -   [Timing] FastAPI Request started processing at 370882.615
+2026-08-24 13:17:16,269 - INFO -   Detected Mode: LEARNING
+2026-08-24 13:17:16,270 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 13:17:20,530 - INFO -   Adaptive filter: top_score=0.9400
+2026-08-24 13:17:20,530 - INFO -   Adaptive filter: cutoff=0.8400, kept=8/47
+2026-08-24 13:17:20,531 - INFO -   [Timing] Retrieval & Context Building: 4.253s
+2026-08-24 13:17:20,534 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 13:17:21,035 - INFO -   [Timing] Backend First Token Loop hit: 0.501s since LLM call
+2026-08-24 13:17:21,035 - INFO -   [Timing] Total TTFT (user → first token loop): 4.769s
+2026-08-24 13:17:23,073 - INFO -   [Timing] LLM Streaming Duration: 2.539s
+2026-08-24 13:17:23,074 - INFO -   [Timing] Total Response Time: 6.807s
+2026-08-24 13:18:09,521 - INFO - 
+================================================================================
+2026-08-24 13:18:09,521 - INFO - [2026-08-24T13:18:09.521391] CHAT REQUEST
+2026-08-24 13:18:09,521 - INFO -   Student ID : 3
+2026-08-24 13:18:09,521 - INFO -   Question   : who created you?
+2026-08-24 13:18:09,521 - INFO -   Role       : student
+2026-08-24 13:18:09,521 - INFO - ================================================================================
+2026-08-24 13:18:09,524 - INFO -   [Timing] FastAPI Request started processing at 370935.873
+2026-08-24 13:18:09,527 - INFO -   Detected Mode: LEARNING
+2026-08-24 13:18:09,527 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 13:18:11,643 - INFO -   Adaptive filter: top_score=0.4610
+2026-08-24 13:18:11,643 - INFO -   Adaptive filter: top_score=0.4610 < minimum=0.48 → no evidence
+2026-08-24 13:18:11,643 - INFO -   [Timing] Retrieval & Context Building: 2.108s
+2026-08-24 13:18:11,646 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-24 13:18:12,028 - INFO -   [Timing] Backend First Token Loop hit: 0.382s since LLM call
+2026-08-24 13:18:12,028 - INFO -   [Timing] Total TTFT (user → first token loop): 2.504s
+2026-08-24 13:18:13,519 - INFO -   [Timing] LLM Streaming Duration: 1.872s
+2026-08-24 13:18:13,519 - INFO -   [Timing] Total Response Time: 3.995s
+2026-08-24 13:19:40,298 - INFO - 
+================================================================================
+2026-08-24 13:19:40,298 - INFO - [2026-08-24T13:19:40.298409] CHAT REQUEST
+2026-08-24 13:19:40,298 - INFO -   Student ID : 3
+2026-08-24 13:19:40,298 - INFO -   Question   : what is this mentor  ai and how can i get th ebackend codes of it?
+2026-08-24 13:19:40,298 - INFO -   Role       : student
+2026-08-24 13:19:40,298 - INFO - ================================================================================
+2026-08-24 13:19:40,301 - INFO -   [Timing] FastAPI Request started processing at 371026.650
+2026-08-24 13:19:40,304 - INFO -   Detected Mode: LEARNING
+2026-08-24 13:19:40,304 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-24 13:19:40,305 - INFO -   Retrieval query enriched with previous conversation topic
+2026-08-24 13:19:40,314 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-24 13:19:40,315 - INFO -   Adaptive filter: cutoff=0.9000, kept=6/6
+2026-08-24 13:19:40,315 - INFO -   [Timing] Retrieval & Context Building: 0.003s
+2026-08-24 13:19:40,317 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-24 13:19:40,801 - INFO -   [Timing] Backend First Token Loop hit: 0.485s since LLM call
+2026-08-24 13:19:40,802 - INFO -   [Timing] Total TTFT (user → first token loop): 0.501s
+2026-08-24 13:19:49,071 - INFO -   [Timing] LLM Streaming Duration: 8.754s
+2026-08-24 13:19:49,071 - INFO -   [Timing] Total Response Time: 8.770s
+2026-08-24 13:20:20,433 - INFO - 
+================================================================================
+2026-08-24 13:20:20,434 - INFO - [2026-08-24T13:20:20.434274] CHAT REQUEST
+2026-08-24 13:20:20,434 - INFO -   Student ID : 3
+2026-08-24 13:20:20,434 - INFO -   Question   : who gave you the name qwen?
+2026-08-24 13:20:20,434 - INFO -   Role       : student
+2026-08-24 13:20:20,434 - INFO - ================================================================================
+2026-08-24 13:20:20,437 - INFO -   [Timing] FastAPI Request started processing at 371066.786
+2026-08-24 13:20:20,441 - INFO -   Detected Mode: LEARNING
+2026-08-24 13:20:20,441 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-24 13:20:20,745 - INFO -   Adaptive filter: top_score=0.7280
+2026-08-24 13:20:20,745 - INFO -   Adaptive filter: cutoff=0.6280, kept=3/46
+2026-08-24 13:20:20,745 - INFO -   [Timing] Retrieval & Context Building: 0.296s
+2026-08-24 13:20:20,748 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-24 13:20:21,173 - INFO -   [Timing] Backend First Token Loop hit: 0.425s since LLM call
+2026-08-24 13:20:21,174 - INFO -   [Timing] Total TTFT (user → first token loop): 0.736s
+2026-08-24 13:20:22,488 - INFO -   [Timing] LLM Streaming Duration: 1.740s
+2026-08-24 13:20:22,488 - INFO -   [Timing] Total Response Time: 2.051s
+2026-08-24 13:34:09,526 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:34:09,546 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:34:16,224 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-24 13:34:16,240 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 05:21:53,226 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 05:21:53,254 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Quick Sort'
+2026-08-25 05:21:53,315 - INFO - CACHE HIT (Fast Return): topic='Quick Sort', subject='Data Structures and Algorithms'
+2026-08-25 05:21:53,487 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 05:21:54,680 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Quick Sort'
+2026-08-25 05:22:09,505 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Quick Sort'
+2026-08-25 05:22:09,505 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Quick Sort'
+2026-08-25 05:22:55,918 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-25 05:23:06,130 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-25 05:23:52,495 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-25 05:23:52,496 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-25 05:23:52,500 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Quick Sort' (total=5 questions)
+2026-08-25 05:24:30,807 - INFO - [ProfessorGen] Generating fresh material for topic='open source llms like llama', subject='AI', user_id=2, classroom_id=2, private_target=True
+2026-08-25 05:24:30,807 - INFO - [BgGen] Worker thread started for key: 2_2_ai_quiz_open_source_llms_like_llama_default
+2026-08-25 05:24:44,593 - INFO - [BgGen] Indexed 13 chunks into Chroma for doc_id=113
+2026-08-25 05:24:44,596 - INFO - [BgGen] Saved generated material as document & file: 'AI Quiz - open source llms like llama.txt' privately in Content Studio
+2026-08-25 05:24:44,597 - INFO - [BgGen] Worker thread finished for key: 2_2_ai_quiz_open_source_llms_like_llama_default
+2026-08-25 05:25:12,941 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-25 05:25:31,049 - INFO - [ProfessorGen] Generating fresh material for topic='RAG', subject='AI', user_id=2, classroom_id=2, private_target=True
+2026-08-25 05:25:31,050 - INFO - [BgGen] Worker thread started for key: 2_2_ai_lesson_rag_default
+2026-08-25 05:25:50,793 - INFO - [BgGen] Indexed 21 chunks into Chroma for doc_id=114
+2026-08-25 05:25:50,799 - INFO - [BgGen] Saved generated material as document & file: 'AI Lesson - RAG.txt' privately in Content Studio
+2026-08-25 05:25:50,800 - INFO - [BgGen] Worker thread finished for key: 2_2_ai_lesson_rag_default
+2026-08-25 05:26:01,888 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-25 05:26:05,102 - INFO - [ProfessorGen] Generating fresh material for topic='Airflow', subject='AI', user_id=2, classroom_id=2, private_target=True
+2026-08-25 05:26:05,103 - INFO - [BgGen] Worker thread started for key: 2_2_ai_revision_airflow_default
+2026-08-25 05:26:14,296 - INFO - [ProfessorGen] Generating fresh material for topic='Airflow', subject='AI', user_id=2, classroom_id=2, private_target=True
+2026-08-25 05:26:14,296 - INFO - [BgGen] Worker thread started for key: 2_2_ai_simplify_airflow_default
+2026-08-25 05:26:22,097 - INFO - [ProfessorGen] Generating fresh material for topic='DAGs', subject='AI', user_id=2, classroom_id=2, private_target=True
+2026-08-25 05:26:22,097 - INFO - [BgGen] Worker thread started for key: 2_2_ai_practice_dags_default
+2026-08-25 05:26:25,998 - INFO - [BgGen] Indexed 17 chunks into Chroma for doc_id=115
+2026-08-25 05:26:26,004 - INFO - [BgGen] Saved generated material as document & file: 'AI Revision Notes - Airflow.txt' privately in Content Studio
+2026-08-25 05:26:26,005 - INFO - [BgGen] Worker thread finished for key: 2_2_ai_revision_airflow_default
+2026-08-25 05:26:36,152 - INFO - [BgGen] Indexed 12 chunks into Chroma for doc_id=116
+2026-08-25 05:26:36,158 - INFO - [BgGen] Saved generated material as document & file: 'AI Explained Simpler - Airflow.txt' privately in Content Studio
+2026-08-25 05:26:36,159 - INFO - [BgGen] Worker thread finished for key: 2_2_ai_simplify_airflow_default
+2026-08-25 05:26:58,608 - INFO - [BgGen] Indexed 25 chunks into Chroma for doc_id=117
+2026-08-25 05:26:58,612 - INFO - [BgGen] Saved generated material as document & file: 'AI Practice Set - DAGs.txt' privately in Content Studio
+2026-08-25 05:26:58,612 - INFO - [BgGen] Worker thread finished for key: 2_2_ai_practice_dags_default
+2026-08-25 05:27:05,401 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-25 05:27:09,694 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-25 05:27:17,696 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-25 05:28:04,063 - INFO - [ProfessorGen] Generating fresh material for topic='DAGs', subject='Computer Science', user_id=2, classroom_id=2, private_target=True
+2026-08-25 05:28:04,063 - INFO - [BgGen] Worker thread started for key: 2_2_computer_science_notes_dags_default
+2026-08-25 05:28:37,233 - INFO - [BgGen] Indexed 34 chunks into Chroma for doc_id=118
+2026-08-25 05:28:37,237 - INFO - [BgGen] Saved generated material as document & file: 'AI Study Material - DAGs.txt' privately in Content Studio
+2026-08-25 05:28:37,237 - INFO - [BgGen] Worker thread finished for key: 2_2_computer_science_notes_dags_default
+2026-08-25 05:28:50,809 - INFO - [PracticeEngine] Synchronized document custom topics for student 2
+2026-08-25 05:29:45,544 - INFO - 
+================================================================================
+2026-08-25 05:29:45,598 - INFO - [2026-08-25T05:29:45.598608] CHAT REQUEST
+2026-08-25 05:29:45,599 - INFO -   Student ID : 2
+2026-08-25 05:29:45,600 - INFO -   Question   : i am sorry
+2026-08-25 05:29:45,601 - INFO -   Role       : professor
+2026-08-25 05:29:45,601 - INFO - ================================================================================
+2026-08-25 05:29:46,160 - INFO -   [Timing] FastAPI Request started processing at 429232.509
+2026-08-25 05:29:46,445 - INFO -   Detected Mode: LEARNING
+2026-08-25 05:29:46,446 - INFO -   [Timing] Docs + Mode Detection: 0.281s
+2026-08-25 05:29:49,583 - INFO -   Adaptive filter: top_score=1.0720
+2026-08-25 05:29:49,584 - INFO -   Adaptive filter: cutoff=0.9720, kept=9/52
+2026-08-25 05:29:49,584 - INFO -   [Timing] Retrieval & Context Building: 2.990s
+2026-08-25 05:29:49,599 - INFO -   [Timing] Context + Prompt Building: 0.014s
+2026-08-25 05:29:51,035 - INFO -   [Timing] Backend First Token Loop hit: 1.435s since LLM call
+2026-08-25 05:29:51,035 - INFO -   [Timing] Total TTFT (user → first token loop): 4.875s
+2026-08-25 05:29:53,075 - INFO -   [Timing] LLM Streaming Duration: 3.475s
+2026-08-25 05:29:53,075 - INFO -   [Timing] Total Response Time: 6.915s
+2026-08-25 05:30:01,873 - INFO - 
+================================================================================
+2026-08-25 05:30:01,873 - INFO - [2026-08-25T05:30:01.873490] CHAT REQUEST
+2026-08-25 05:30:01,873 - INFO -   Student ID : 2
+2026-08-25 05:30:01,873 - INFO -   Question   : who is the pm of india
+2026-08-25 05:30:01,873 - INFO -   Role       : professor
+2026-08-25 05:30:01,873 - INFO - ================================================================================
+2026-08-25 05:30:01,876 - INFO -   [Timing] FastAPI Request started processing at 429248.225
+2026-08-25 05:30:01,881 - INFO -   Detected Mode: LEARNING
+2026-08-25 05:30:01,882 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-08-25 05:30:06,343 - INFO -   Adaptive filter: top_score=0.9250
+2026-08-25 05:30:06,344 - INFO -   Adaptive filter: cutoff=0.8250, kept=5/31
+2026-08-25 05:30:06,344 - INFO -   [Timing] Retrieval & Context Building: 4.445s
+2026-08-25 05:30:06,349 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-25 05:30:06,879 - INFO -   [Timing] Backend First Token Loop hit: 0.530s since LLM call
+2026-08-25 05:30:06,879 - INFO -   [Timing] Total TTFT (user → first token loop): 5.003s
+2026-08-25 05:30:07,326 - INFO -   [Timing] LLM Streaming Duration: 0.977s
+2026-08-25 05:30:07,326 - INFO -   [Timing] Total Response Time: 5.450s
+2026-08-25 05:30:16,069 - INFO - 
+================================================================================
+2026-08-25 05:30:16,069 - INFO - [2026-08-25T05:30:16.069760] CHAT REQUEST
+2026-08-25 05:30:16,069 - INFO -   Student ID : 2
+2026-08-25 05:30:16,069 - INFO -   Question   : who is the pm of indira
+2026-08-25 05:30:16,069 - INFO -   Role       : professor
+2026-08-25 05:30:16,069 - INFO - ================================================================================
+2026-08-25 05:30:16,072 - INFO -   [Timing] FastAPI Request started processing at 429262.422
+2026-08-25 05:30:16,076 - INFO -   Detected Mode: LEARNING
+2026-08-25 05:30:16,076 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-25 05:30:20,355 - INFO -   Adaptive filter: top_score=0.9660
+2026-08-25 05:30:20,355 - INFO -   Adaptive filter: cutoff=0.8660, kept=2/33
+2026-08-25 05:30:20,355 - INFO -   [Timing] Retrieval & Context Building: 4.271s
+2026-08-25 05:30:20,360 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-25 05:30:20,821 - INFO -   [Timing] Backend First Token Loop hit: 0.462s since LLM call
+2026-08-25 05:30:20,821 - INFO -   [Timing] Total TTFT (user → first token loop): 4.749s
+2026-08-25 05:30:22,569 - INFO -   [Timing] LLM Streaming Duration: 2.210s
+2026-08-25 05:30:22,570 - INFO -   [Timing] Total Response Time: 6.497s
+2026-08-25 05:30:38,151 - INFO - 
+================================================================================
+2026-08-25 05:30:38,151 - INFO - [2026-08-25T05:30:38.151730] CHAT REQUEST
+2026-08-25 05:30:38,151 - INFO -   Student ID : 2
+2026-08-25 05:30:38,151 - INFO -   Question   : who are you
+2026-08-25 05:30:38,151 - INFO -   Role       : professor
+2026-08-25 05:30:38,151 - INFO - ================================================================================
+2026-08-25 05:30:38,154 - INFO -   [Timing] FastAPI Request started processing at 429284.503
+2026-08-25 05:30:38,158 - INFO -   Detected Mode: LEARNING
+2026-08-25 05:30:38,158 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-25 05:30:40,045 - INFO -   Adaptive filter: top_score=0.2850
+2026-08-25 05:30:40,045 - INFO -   Adaptive filter: top_score=0.2850 < minimum=0.48 → no evidence
+2026-08-25 05:30:40,045 - INFO -   [Timing] Retrieval & Context Building: 1.877s
+2026-08-25 05:30:40,049 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-25 05:30:40,434 - INFO -   [Timing] Backend First Token Loop hit: 0.385s since LLM call
+2026-08-25 05:30:40,434 - INFO -   [Timing] Total TTFT (user → first token loop): 2.280s
+2026-08-25 05:30:41,784 - INFO -   [Timing] LLM Streaming Duration: 1.735s
+2026-08-25 05:30:41,784 - INFO -   [Timing] Total Response Time: 3.630s
+2026-08-25 05:30:49,290 - INFO - 
+================================================================================
+2026-08-25 05:30:49,290 - INFO - [2026-08-25T05:30:49.290949] CHAT REQUEST
+2026-08-25 05:30:49,291 - INFO -   Student ID : 2
+2026-08-25 05:30:49,291 - INFO -   Question   : who created you
+2026-08-25 05:30:49,291 - INFO -   Role       : professor
+2026-08-25 05:30:49,291 - INFO - ================================================================================
+2026-08-25 05:30:49,296 - INFO -   [Timing] FastAPI Request started processing at 429295.645
+2026-08-25 05:30:49,301 - INFO -   Detected Mode: LEARNING
+2026-08-25 05:30:49,305 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-25 05:30:53,350 - INFO -   Adaptive filter: top_score=0.2650
+2026-08-25 05:30:53,350 - INFO -   Adaptive filter: top_score=0.2650 < minimum=0.48 → no evidence
+2026-08-25 05:30:53,350 - INFO -   [Timing] Retrieval & Context Building: 4.032s
+2026-08-25 05:30:53,353 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-25 05:30:53,769 - INFO -   [Timing] Backend First Token Loop hit: 0.416s since LLM call
+2026-08-25 05:30:53,769 - INFO -   [Timing] Total TTFT (user → first token loop): 4.473s
+2026-08-25 05:30:54,194 - INFO -   [Timing] LLM Streaming Duration: 0.841s
+2026-08-25 05:30:54,194 - INFO -   [Timing] Total Response Time: 4.899s
+2026-08-25 05:32:11,906 - INFO - 
+================================================================================
+2026-08-25 05:32:11,906 - INFO - [2026-08-25T05:32:11.906763] CHAT REQUEST
+2026-08-25 05:32:11,906 - INFO -   Student ID : 1
+2026-08-25 05:32:11,906 - INFO -   Question   : can you tell me how many professors there are?
+2026-08-25 05:32:11,906 - INFO -   Role       : admin
+2026-08-25 05:32:11,906 - INFO - ================================================================================
+2026-08-25 05:32:11,910 - INFO -   [Timing] FastAPI Request started processing at 429378.259
+2026-08-25 05:32:11,914 - INFO -   Detected Mode: LEARNING
+2026-08-25 05:32:11,914 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-25 05:32:18,935 - INFO -   Adaptive filter: top_score=1.1170
+2026-08-25 05:32:18,936 - INFO -   Adaptive filter: cutoff=1.1170, kept=18/18
+2026-08-25 05:32:18,936 - INFO -   [Timing] Retrieval & Context Building: 7.015s
+2026-08-25 05:32:18,940 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-25 05:32:37,045 - INFO -   [Timing] Backend First Token Loop hit: 18.105s since LLM call
+2026-08-25 05:32:37,045 - INFO -   [Timing] Total TTFT (user → first token loop): 25.135s
+2026-08-25 05:32:48,768 - INFO -   [Timing] LLM Streaming Duration: 29.828s
+2026-08-25 05:32:48,768 - INFO -   [Timing] Total Response Time: 36.859s
+2026-08-25 05:41:30,028 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 05:41:30,043 - INFO - CACHE HIT (Fast Return): topic='Quick Sort', subject='Data Structures and Algorithms'
+2026-08-25 05:41:30,061 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 05:41:41,963 - INFO - DEBUG2 predefined_topics: ['History and Applications of AI', 'Intelligent Agents', 'Types of Agents', 'Problem Solving in AI', 'AI Environment', 'State Space Search', 'Breadth First Search', 'Depth First Search', 'Uniform Cost Search', 'A* Search Algorithm', 'Heuristic Search', 'Propositional Logic', 'Predicate Logic', 'Semantic Networks', 'Frames', 'Production Rules', 'Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Decision Trees', 'Naive Bayes', 'Natural Language Processing', 'Computer Vision', 'Expert Systems', 'Robotics', 'Generative AI']
+2026-08-25 05:41:41,964 - INFO - DEBUG2 performances keys: []
+2026-08-25 05:41:41,964 - INFO - DEBUG2 matched perfs: []
+2026-08-25 05:41:42,017 - INFO - DEBUG2 predefined_topics: ['History and Applications of AI', 'Intelligent Agents', 'Types of Agents', 'Problem Solving in AI', 'AI Environment', 'State Space Search', 'Breadth First Search', 'Depth First Search', 'Uniform Cost Search', 'A* Search Algorithm', 'Heuristic Search', 'Propositional Logic', 'Predicate Logic', 'Semantic Networks', 'Frames', 'Production Rules', 'Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Decision Trees', 'Naive Bayes', 'Natural Language Processing', 'Computer Vision', 'Expert Systems', 'Robotics', 'Generative AI']
+2026-08-25 05:41:42,017 - INFO - DEBUG2 performances keys: []
+2026-08-25 05:41:42,017 - INFO - DEBUG2 matched perfs: []
+2026-08-25 05:41:59,639 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 05:41:59,650 - INFO - CACHE HIT (Fast Return): topic='Quick Sort', subject='Data Structures and Algorithms'
+2026-08-25 05:41:59,664 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 05:42:01,606 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 05:42:01,771 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 05:42:31,864 - INFO - DEBUG2 predefined_topics: ['History and Applications of AI', 'Intelligent Agents', 'Types of Agents', 'Problem Solving in AI', 'AI Environment', 'State Space Search', 'Breadth First Search', 'Depth First Search', 'Uniform Cost Search', 'A* Search Algorithm', 'Heuristic Search', 'Propositional Logic', 'Predicate Logic', 'Semantic Networks', 'Frames', 'Production Rules', 'Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Decision Trees', 'Naive Bayes', 'Natural Language Processing', 'Computer Vision', 'Expert Systems', 'Robotics', 'Generative AI']
+2026-08-25 05:42:31,864 - INFO - DEBUG2 performances keys: []
+2026-08-25 05:42:31,864 - INFO - DEBUG2 matched perfs: []
+2026-08-25 05:42:31,914 - INFO - DEBUG2 predefined_topics: ['History and Applications of AI', 'Intelligent Agents', 'Types of Agents', 'Problem Solving in AI', 'AI Environment', 'State Space Search', 'Breadth First Search', 'Depth First Search', 'Uniform Cost Search', 'A* Search Algorithm', 'Heuristic Search', 'Propositional Logic', 'Predicate Logic', 'Semantic Networks', 'Frames', 'Production Rules', 'Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Decision Trees', 'Naive Bayes', 'Natural Language Processing', 'Computer Vision', 'Expert Systems', 'Robotics', 'Generative AI']
+2026-08-25 05:42:31,914 - INFO - DEBUG2 performances keys: []
+2026-08-25 05:42:31,914 - INFO - DEBUG2 matched perfs: []
+2026-08-25 05:48:11,703 - INFO - DEBUG2 predefined_topics: ['History and Applications of AI', 'Intelligent Agents', 'Types of Agents', 'Problem Solving in AI', 'AI Environment', 'State Space Search', 'Breadth First Search', 'Depth First Search', 'Uniform Cost Search', 'A* Search Algorithm', 'Heuristic Search', 'Propositional Logic', 'Predicate Logic', 'Semantic Networks', 'Frames', 'Production Rules', 'Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Decision Trees', 'Naive Bayes', 'Natural Language Processing', 'Computer Vision', 'Expert Systems', 'Robotics', 'Generative AI']
+2026-08-25 05:48:11,703 - INFO - DEBUG2 performances keys: []
+2026-08-25 05:48:11,703 - INFO - DEBUG2 matched perfs: []
+2026-08-25 05:48:11,769 - INFO - DEBUG2 predefined_topics: ['History and Applications of AI', 'Intelligent Agents', 'Types of Agents', 'Problem Solving in AI', 'AI Environment', 'State Space Search', 'Breadth First Search', 'Depth First Search', 'Uniform Cost Search', 'A* Search Algorithm', 'Heuristic Search', 'Propositional Logic', 'Predicate Logic', 'Semantic Networks', 'Frames', 'Production Rules', 'Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Decision Trees', 'Naive Bayes', 'Natural Language Processing', 'Computer Vision', 'Expert Systems', 'Robotics', 'Generative AI']
+2026-08-25 05:48:11,769 - INFO - DEBUG2 performances keys: []
+2026-08-25 05:48:11,770 - INFO - DEBUG2 matched perfs: []
+2026-08-25 06:06:23,777 - INFO - DEBUG2 predefined_topics: ['History and Applications of AI', 'Intelligent Agents', 'Types of Agents', 'Problem Solving in AI', 'AI Environment', 'State Space Search', 'Breadth First Search', 'Depth First Search', 'Uniform Cost Search', 'A* Search Algorithm', 'Heuristic Search', 'Propositional Logic', 'Predicate Logic', 'Semantic Networks', 'Frames', 'Production Rules', 'Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Decision Trees', 'Naive Bayes', 'Natural Language Processing', 'Computer Vision', 'Expert Systems', 'Robotics', 'Generative AI']
+2026-08-25 06:06:23,777 - INFO - DEBUG2 performances keys: []
+2026-08-25 06:06:23,777 - INFO - DEBUG2 matched perfs: []
+2026-08-25 06:06:23,824 - INFO - DEBUG2 predefined_topics: ['History and Applications of AI', 'Intelligent Agents', 'Types of Agents', 'Problem Solving in AI', 'AI Environment', 'State Space Search', 'Breadth First Search', 'Depth First Search', 'Uniform Cost Search', 'A* Search Algorithm', 'Heuristic Search', 'Propositional Logic', 'Predicate Logic', 'Semantic Networks', 'Frames', 'Production Rules', 'Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Decision Trees', 'Naive Bayes', 'Natural Language Processing', 'Computer Vision', 'Expert Systems', 'Robotics', 'Generative AI']
+2026-08-25 06:06:23,825 - INFO - DEBUG2 performances keys: []
+2026-08-25 06:06:23,825 - INFO - DEBUG2 matched perfs: []
+2026-08-25 06:06:37,229 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:06:37,386 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:06:41,993 - INFO - DEBUG2 predefined_topics: ['History and Applications of AI', 'Intelligent Agents', 'Types of Agents', 'Problem Solving in AI', 'AI Environment', 'State Space Search', 'Breadth First Search', 'Depth First Search', 'Uniform Cost Search', 'A* Search Algorithm', 'Heuristic Search', 'Propositional Logic', 'Predicate Logic', 'Semantic Networks', 'Frames', 'Production Rules', 'Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Decision Trees', 'Naive Bayes', 'Natural Language Processing', 'Computer Vision', 'Expert Systems', 'Robotics', 'Generative AI']
+2026-08-25 06:06:41,993 - INFO - DEBUG2 performances keys: []
+2026-08-25 06:06:41,993 - INFO - DEBUG2 matched perfs: []
+2026-08-25 06:06:42,039 - INFO - DEBUG2 predefined_topics: ['History and Applications of AI', 'Intelligent Agents', 'Types of Agents', 'Problem Solving in AI', 'AI Environment', 'State Space Search', 'Breadth First Search', 'Depth First Search', 'Uniform Cost Search', 'A* Search Algorithm', 'Heuristic Search', 'Propositional Logic', 'Predicate Logic', 'Semantic Networks', 'Frames', 'Production Rules', 'Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Decision Trees', 'Naive Bayes', 'Natural Language Processing', 'Computer Vision', 'Expert Systems', 'Robotics', 'Generative AI']
+2026-08-25 06:06:42,039 - INFO - DEBUG2 performances keys: []
+2026-08-25 06:06:42,039 - INFO - DEBUG2 matched perfs: []
+2026-08-25 06:07:30,623 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 06:07:30,636 - INFO - CACHE HIT (Fast Return): topic='Quick Sort', subject='Data Structures and Algorithms'
+2026-08-25 06:07:30,652 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:07:35,842 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:07:35,857 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:18:43,668 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:18:43,796 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:19:14,703 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:19:14,839 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:19:45,845 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:19:45,891 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:20:27,159 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 06:20:27,162 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-08-25 06:20:27,163 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-25 06:20:27,164 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-25 06:20:27,166 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-25 06:20:27,167 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-25 06:20:27,169 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-25 06:20:27,170 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-25 06:20:27,172 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-25 06:20:27,173 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-25 06:20:27,209 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 06:20:28,287 - INFO - [Context] Discarded irrelevant chunk for topic='Niche Selection and Audience Analysis'
+2026-08-25 06:20:28,287 - INFO - [Stream] Starting detailed streaming for Niche Selection and Audience Analysis
+2026-08-25 06:20:54,752 - INFO - [Context] Discarded irrelevant chunk for topic='Niche Selection and Audience Analysis'
+2026-08-25 06:20:54,752 - INFO - [Stream] Starting detailed streaming for Niche Selection and Audience Analysis
+2026-08-25 07:12:50,005 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 07:12:50,008 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-08-25 07:12:50,010 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-25 07:12:50,011 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-25 07:12:50,012 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-25 07:12:50,013 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-25 07:12:50,014 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-25 07:12:50,015 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-25 07:12:50,016 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-25 07:12:50,017 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-25 07:12:50,034 - INFO - CACHE HIT (Fast Return): topic='Niche Selection and Audience Analysis', subject='Week 1'
+2026-08-25 07:12:50,060 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 07:13:18,759 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 07:13:18,789 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 07:13:18,980 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 07:13:18,994 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-25 07:13:19,004 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 07:13:20,667 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 07:13:20,670 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-08-25 07:13:20,673 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-25 07:13:20,673 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Core Prompt Components: Role, Task, Context'
+2026-08-25 07:13:20,674 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-25 07:13:20,678 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-25 07:13:20,680 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-25 07:13:20,683 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-25 07:13:20,686 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-25 07:13:20,687 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-25 07:13:20,690 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-25 07:13:20,708 - INFO - CACHE HIT (Fast Return): topic='Core Prompt Components: Role, Task, Context', subject='Week 1'
+2026-08-25 07:13:20,740 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 07:13:21,675 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Core Prompt Components: Role, Task, Context'
+2026-08-25 07:13:29,657 - INFO - [Context] Discarded irrelevant chunk for topic='Content Planning and Scripting'
+2026-08-25 07:13:29,658 - INFO - [Stream] Starting detailed streaming for Content Planning and Scripting
+2026-08-25 07:13:34,759 - INFO - [Stream] Starting detailed streaming for Video Editing and Visual Storytelling
+2026-08-25 07:13:58,143 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Niche Selection and Audience Analysis' to save resources.
+2026-08-25 07:14:05,888 - INFO - [Context] Discarded irrelevant chunk for topic='Mobile Videography and Lighting Basics'
+2026-08-25 07:14:05,888 - INFO - [Stream] Starting detailed streaming for Mobile Videography and Lighting Basics
+2026-08-25 07:14:08,093 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-25 07:14:18,056 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Niche Selection and Audience Analysis' to save resources.
+2026-08-25 07:14:18,555 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-25 07:14:19,277 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Content Planning and Scripting' to save resources.
+2026-08-25 07:14:31,864 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Core Prompt Components: Role, Task, Context'
+2026-08-25 07:14:31,864 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Core Prompt Components: Role, Task, Context'
+2026-08-25 07:14:33,440 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 07:14:33,442 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-08-25 07:14:33,443 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-25 07:14:33,444 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-25 07:14:33,445 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-25 07:14:33,446 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-25 07:14:33,447 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-25 07:14:33,451 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-25 07:14:33,451 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-25 07:14:33,453 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-25 07:14:33,463 - INFO - CACHE HIT (Fast Return): topic='Niche Selection and Audience Analysis', subject='Week 1'
+2026-08-25 07:14:33,487 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 07:15:18,175 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-25 07:15:28,456 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-25 07:16:14,943 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-25 07:16:14,943 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-25 07:16:14,948 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Core Prompt Components: Role, Task, Context' (total=5 questions)
+2026-08-25 07:34:05,146 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Content Planning and Scripting'
+2026-08-25 07:34:05,150 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 07:34:05,154 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-08-25 07:34:05,160 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-08-25 07:34:05,162 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-08-25 07:34:05,166 - INFO - [get_learning_data] Retrieved roadmap id=31, title='Mastering Kernel and User Mode in One Month'
+2026-08-25 07:34:05,167 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-08-25 07:34:05,442 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-08-25 07:34:05,450 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-08-25 07:34:05,452 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-08-25 07:34:05,454 - INFO - [get_learning_data] Retrieved roadmap id=13, title='Intensive 6‑Week DSA Mastery for Placement Success'
+2026-08-25 07:34:05,523 - INFO - CACHE HIT (Fast Return): topic='Content Planning and Scripting', subject='Week 1'
+2026-08-25 07:34:05,561 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 07:34:08,673 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Content Planning and Scripting'
+2026-08-25 07:34:13,287 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Chain-of-Thought (CoT) Prompting' to save resources.
+2026-08-25 07:34:18,639 - INFO - [Context] Discarded irrelevant chunk for topic='Handling Ambiguity and Edge Cases'
+2026-08-25 07:34:18,640 - INFO - [Stream] Starting detailed streaming for Handling Ambiguity and Edge Cases
+2026-08-25 07:34:55,229 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-25 07:35:05,438 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-25 07:35:13,657 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Content Planning and Scripting'
+2026-08-25 07:35:13,657 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Content Planning and Scripting'
+2026-08-25 07:35:20,237 - INFO - [Context] Discarded irrelevant chunk for topic='Zero-Shot vs. Few-Shot Prompting'
+2026-08-25 07:35:20,237 - INFO - [Stream] Starting detailed streaming for Zero-Shot vs. Few-Shot Prompting
+2026-08-25 07:35:27,813 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 07:35:27,836 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 07:36:00,247 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-25 07:36:10,718 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-25 07:36:57,044 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-25 07:36:57,044 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-25 07:36:57,051 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Content Planning and Scripting' (total=5 questions)
+2026-08-25 07:41:57,269 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 07:42:52,731 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 07:42:52,817 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 08:12:17,429 - INFO - 
+================================================================================
+2026-08-25 08:12:17,429 - INFO - [2026-08-25T08:12:17.429550] CHAT REQUEST
+2026-08-25 08:12:17,429 - INFO -   Student ID : 3
+2026-08-25 08:12:17,429 - INFO -   Question   : who created you?
+2026-08-25 08:12:17,429 - INFO -   Role       : student
+2026-08-25 08:12:17,429 - INFO - ================================================================================
+2026-08-25 08:12:42,122 - INFO - 
+================================================================================
+2026-08-25 08:12:42,122 - INFO - [2026-08-25T08:12:42.122669] CHAT REQUEST
+2026-08-25 08:12:42,122 - INFO -   Student ID : 3
+2026-08-25 08:12:42,122 - INFO -   Question   : who gave you qwen
+2026-08-25 08:12:42,123 - INFO -   Role       : student
+2026-08-25 08:12:42,123 - INFO - ================================================================================
+2026-08-25 08:12:42,127 - INFO -   [Timing] FastAPI Request started processing at 439008.476
+2026-08-25 08:12:42,139 - INFO -   Detected Mode: LEARNING
+2026-08-25 08:12:42,139 - INFO -   [Timing] Docs + Mode Detection: 0.012s
+2026-08-25 08:12:46,944 - INFO -   Adaptive filter: top_score=0.4530
+2026-08-25 08:12:46,944 - INFO -   Adaptive filter: top_score=0.4530 < minimum=0.48 → no evidence
+2026-08-25 08:12:46,944 - INFO -   [Timing] Retrieval & Context Building: 4.773s
+2026-08-25 08:12:46,950 - INFO -   [Timing] Context + Prompt Building: 0.005s
+2026-08-25 08:12:47,340 - INFO -   [Timing] Backend First Token Loop hit: 0.391s since LLM call
+2026-08-25 08:12:47,341 - INFO -   [Timing] Total TTFT (user → first token loop): 5.213s
+2026-08-25 08:12:48,141 - INFO -   [Timing] LLM Streaming Duration: 1.191s
+2026-08-25 08:12:48,141 - INFO -   [Timing] Total Response Time: 6.014s
+2026-08-25 08:15:42,066 - INFO - 
+================================================================================
+2026-08-25 08:15:42,066 - INFO - [2026-08-25T08:15:42.066320] CHAT REQUEST
+2026-08-25 08:15:42,066 - INFO -   Student ID : 3
+2026-08-25 08:15:42,066 - INFO -   Question   : hi
+2026-08-25 08:15:42,066 - INFO -   Role       : student
+2026-08-25 08:15:42,066 - INFO - ================================================================================
+2026-08-25 08:15:42,128 - INFO -   [Timing] FastAPI Request started processing at 439188.477
+2026-08-25 08:15:42,139 - INFO -   Detected Mode: LEARNING
+2026-08-25 08:15:42,139 - INFO -   [Timing] Docs + Mode Detection: 0.011s
+2026-08-25 08:15:52,272 - INFO - 
+================================================================================
+2026-08-25 08:15:52,272 - INFO - [2026-08-25T08:15:52.272493] CHAT REQUEST
+2026-08-25 08:15:52,272 - INFO -   Student ID : 3
+2026-08-25 08:15:52,272 - INFO -   Question   : who are you
+2026-08-25 08:15:52,272 - INFO -   Role       : student
+2026-08-25 08:15:52,272 - INFO - ================================================================================
+2026-08-25 08:15:52,280 - INFO -   [Timing] FastAPI Request started processing at 439198.629
+2026-08-25 08:15:52,284 - INFO -   Detected Mode: LEARNING
+2026-08-25 08:15:52,284 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-25 08:15:54,681 - INFO -   Adaptive filter: top_score=0.4140
+2026-08-25 08:15:54,681 - INFO -   Adaptive filter: top_score=0.4140 < minimum=0.48 → no evidence
+2026-08-25 08:15:54,682 - INFO -   [Timing] Retrieval & Context Building: 2.388s
+2026-08-25 08:15:54,686 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-25 08:15:56,803 - INFO -   [Timing] Backend First Token Loop hit: 2.117s since LLM call
+2026-08-25 08:15:56,803 - INFO -   [Timing] Total TTFT (user → first token loop): 4.523s
+2026-08-25 08:16:21,931 - INFO -   [Timing] LLM Streaming Duration: 27.245s
+2026-08-25 08:16:21,932 - INFO -   [Timing] Total Response Time: 29.652s
+2026-08-25 08:27:32,329 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 08:27:32,370 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 08:27:32,547 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 08:27:32,557 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-25 08:27:32,575 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 08:27:40,863 - INFO - [Context] Discarded irrelevant chunk for topic='Introduction to Web Development'
+2026-08-25 08:27:40,863 - INFO - [Stream] Starting detailed streaming for Introduction to Web Development
+2026-08-25 08:27:43,963 - INFO - [Context] Discarded irrelevant chunk for topic='Web Browsers and Developer Tools'
+2026-08-25 08:27:43,963 - INFO - [Stream] Starting detailed streaming for Web Browsers and Developer Tools
+2026-08-25 08:27:51,256 - INFO - [Context] Discarded irrelevant chunk for topic='Client-Side vs Server-Side'
+2026-08-25 08:27:51,256 - INFO - [Stream] Starting detailed streaming for Client-Side vs Server-Side
+2026-08-25 08:27:54,641 - INFO - [Context] Discarded irrelevant chunk for topic='Introduction to HTML, CSS, and JavaScript'
+2026-08-25 08:27:54,641 - INFO - [Stream] Starting detailed streaming for Introduction to HTML, CSS, and JavaScript
+2026-08-25 08:28:20,364 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='Introduction to Web Development'
+2026-08-25 08:28:21,080 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='Introduction to Web Development'
+2026-08-25 08:28:24,629 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'Web Browsers and Developer Tools' to save resources.
+2026-08-25 08:28:33,113 - INFO - [BGTask] Another background quiz generation is already active. Skipping pre-generation for 'OS Components and Services' to save resources.
+2026-08-25 08:28:34,374 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='Introduction to Web Development'
+2026-08-25 08:28:34,374 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='Introduction to Web Development'
+2026-08-25 08:28:35,601 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 08:28:35,755 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 08:28:45,447 - INFO - DEBUG2 predefined_topics: ['Introduction to Web Development', 'Role of Frontend Development', 'Client-Side vs Server-Side', 'Web Browsers and Developer Tools', 'Introduction to HTML, CSS, and JavaScript', 'HTML Document Structure', 'Semantic HTML', 'Forms and Input Elements', 'CSS Selectors and Properties', 'Flexbox and CSS Grid', 'Responsive Web Design', 'Variables and Data Types', 'Functions and Scope', 'Arrays and Objects', 'DOM Manipulation', 'Events and Event Handling', 'ES6 Features', 'Introduction to React', 'Components and Props', 'State Management', 'Hooks', 'Routing', 'API Integration', 'Responsive and Mobile-First Design', 'Authentication and Authorization', 'Performance Optimization', 'Testing and Debugging', 'Deployment of Frontend Applications']
+2026-08-25 08:28:45,447 - INFO - DEBUG2 performances keys: []
+2026-08-25 08:28:45,447 - INFO - DEBUG2 matched perfs: []
+2026-08-25 08:28:45,587 - INFO - DEBUG2 predefined_topics: ['Introduction to Web Development', 'Role of Frontend Development', 'Client-Side vs Server-Side', 'Web Browsers and Developer Tools', 'Introduction to HTML, CSS, and JavaScript', 'HTML Document Structure', 'Semantic HTML', 'Forms and Input Elements', 'CSS Selectors and Properties', 'Flexbox and CSS Grid', 'Responsive Web Design', 'Variables and Data Types', 'Functions and Scope', 'Arrays and Objects', 'DOM Manipulation', 'Events and Event Handling', 'ES6 Features', 'Introduction to React', 'Components and Props', 'State Management', 'Hooks', 'Routing', 'API Integration', 'Responsive and Mobile-First Design', 'Authentication and Authorization', 'Performance Optimization', 'Testing and Debugging', 'Deployment of Frontend Applications']
+2026-08-25 08:28:45,587 - INFO - DEBUG2 performances keys: []
+2026-08-25 08:28:45,587 - INFO - DEBUG2 matched perfs: []
+2026-08-25 08:29:20,838 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-25 08:29:31,280 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-25 08:30:17,698 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-25 08:30:17,698 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-25 08:30:17,706 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Introduction to Web Development' (total=5 questions)
+2026-08-25 08:38:15,179 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 08:38:15,209 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 08:38:15,414 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 08:38:15,422 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-25 08:38:15,438 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 08:45:48,177 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 08:45:48,191 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-25 08:45:48,471 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-25 08:56:28,423 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-25 08:56:28,438 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-25 08:56:28,724 - INFO - [PracticeEngine] Synchronized document custom topics for student 3

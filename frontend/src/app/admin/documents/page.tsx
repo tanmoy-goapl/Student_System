@@ -57,7 +57,8 @@ export default function AdminDocumentsPage() {
   const fetchDocs = async () => {
     try {
       const userId = localStorage.getItem("user_id");
-      const uid = userId ? parseInt(userId, 10) : 1;
+      if (!userId) return;
+      const uid = parseInt(userId, 10);
       const res = await getDocumentsData(uid);
       setDocuments(res.documents || []);
     } catch (err) {
@@ -113,7 +114,12 @@ export default function AdminDocumentsPage() {
     formData.append("category", "Studies");
     formData.append("subject", "Policy & Guidelines");
     
-    const userId = localStorage.getItem("user_id") || "1";
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      setUploadError("Authentication required. Please sign in again.");
+      setUploadLoading(false);
+      return;
+    }
     formData.append("student_id", userId);
     formData.append("user_id", userId);
     formData.append("owner_role", "admin");

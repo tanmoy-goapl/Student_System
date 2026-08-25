@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Users, AlertTriangle, ChevronDown, Search } from 'lucide-react';
 import { DashboardContentLoader } from '@/components/DashboardLoading';
+import { getAdminScopedEndpoint } from '@/lib/adminAuth';
 
 export default function StudentsPage() {
-  const { role } = useAuth();
+  const { role, userId } = useAuth();
   const [classes, setClasses] = useState<any[]>([]);
   const [activeClassId, setActiveClassId] = useState<number | null>(null);
   const [students, setStudents] = useState<any[]>([]);
@@ -19,8 +20,13 @@ export default function StudentsPage() {
     if (role === 'admin') {
       const fetchAdminStudents = async () => {
         setLoadingStudents(true);
+        if (!userId) {
+          setLoadingStudents(false);
+          setLoadingClasses(false);
+          return;
+        }
         try {
-          const res = await fetch('/api/admin/students');
+          const res = await fetch(getAdminScopedEndpoint('/api/admin/students'));
           if (res.ok) {
             const data = await res.json();
             setStudents(data);
@@ -37,7 +43,8 @@ export default function StudentsPage() {
       const fetchClasses = async () => {
         setLoadingClasses(true);
         try {
-          const professorId = localStorage.getItem('user_id') || '2';
+          const professorId = localStorage.getItem('user_id');
+          if (!professorId) throw new Error('Authentication required');
           const res = await fetch(`/api/professor/classes?professor_id=${professorId}`);
           if (res.ok) {
             const data = await res.json();
@@ -54,7 +61,7 @@ export default function StudentsPage() {
       };
       fetchClasses();
     }
-  }, [role]);
+  }, [role, userId]);
 
   // Fetch students for class if role is professor
   useEffect(() => {
@@ -62,7 +69,9 @@ export default function StudentsPage() {
     const fetchStudents = async () => {
       setLoadingStudents(true);
       try {
-        const res = await fetch(`/api/professor/class/${activeClassId}`);
+        const professorId = localStorage.getItem('user_id');
+        if (!professorId) throw new Error('Authentication required');
+        const res = await fetch(`/api/professor/class/${activeClassId}?professor_id=${encodeURIComponent(professorId)}`);
         if (res.ok) {
           const data = await res.json();
           setStudents(data.students || []);

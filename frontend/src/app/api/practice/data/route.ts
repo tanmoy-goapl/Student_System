@@ -11,6 +11,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const studentId = searchParams.get("student_id");
     const classId = searchParams.get("class_id");
+    if (!studentId) {
+      return NextResponse.json({ detail: "student_id is required" }, { status: 400 });
+    }
     
     let url = `${BACKEND_URL}/practice/data`;
     const backendParams = new URLSearchParams();

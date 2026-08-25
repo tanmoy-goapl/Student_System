@@ -34,13 +34,17 @@ export default function DocumentsPage() {
   const [readableBy, setReadableBy] = useState("owner");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const getStudentId = () => parseInt(localStorage.getItem("user_id") || "0", 10);
+  const getStudentId = (): number | null => {
+    const rawId = localStorage.getItem("user_id");
+    const parsed = rawId ? parseInt(rawId, 10) : NaN;
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  };
 
   useEffect(() => { fetchDocs(); }, []);
 
   const fetchDocs = async () => {
     const sid = getStudentId();
-    if (!sid || isNaN(sid)) { setLoading(false); return; }
+    if (sid === null) { setLoading(false); return; }
     try {
       const res = await fetch(`/api/documents?student_id=${sid}`);
       if (res.ok) {
@@ -56,8 +60,10 @@ export default function DocumentsPage() {
   const handleDelete = async (docId: number, filename: string) => {
     if (!confirm(`Delete "${filename}"?`)) return;
     setDeleting(docId); setError("");
+    const userId = getStudentId();
+    if (userId === null) { setError("Session expired. Please log in again."); return; }
     try {
-      const res = await fetch(`/api/documents?document_id=${docId}`, { method: "DELETE" });
+      const res = await fetch(`/api/documents?document_id=${docId}&user_id=${userId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
       setDocs((prev) => prev.filter((d) => d.id !== docId));
     } catch (err: any) { setError(err.message || "Delete failed"); }
@@ -67,7 +73,7 @@ export default function DocumentsPage() {
   const handleUpload = async () => {
     if (!file) { setError("Please select a file"); return; }
     const studentId = getStudentId();
-    if (!studentId || isNaN(studentId)) { setError("Session expired. Please log in again."); return; }
+    if (studentId === null) { setError("Session expired. Please log in again."); return; }
     setError(""); setUploadMessage(""); setUploading(true);
     try {
       const res = await uploadDocument(studentId, file, readableBy);

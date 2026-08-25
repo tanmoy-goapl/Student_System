@@ -86,7 +86,8 @@ export default function StudentsPage() {
         if (initialLoad) setLoading(true);
         else setRefreshing(true);
         const userId = localStorage.getItem("user_id");
-        const professorId = userId ? parseInt(userId, 10) : 1;
+        if (!userId) throw new Error("Authentication required. Please sign in again.");
+        const professorId = parseInt(userId, 10);
         
         // 1. Fetch classes
         const classesRes = await fetch(`/api/classroom/my_classes/${professorId}`);
@@ -107,7 +108,7 @@ export default function StudentsPage() {
         ];
 
         for (const cls of myClasses) {
-          const analyticsRes = await fetch(`/api/professor/class/${cls.id}`);
+          const analyticsRes = await fetch(`/api/professor/class/${cls.id}?professor_id=${encodeURIComponent(String(professorId))}`);
           if (!analyticsRes.ok) continue;
           const analyticsData: ClassAnalyticsResponse = await analyticsRes.json();
           const classStudents = analyticsData.students || [];

@@ -126,7 +126,12 @@ export default function AddGeneralTopicModal({
     setLoading(true);
     setError(null);
 
-    const userId = localStorage.getItem('user_id') || '1';
+    const userId = localStorage.getItem('user_id');
+    if (!userId) {
+      setError('Authentication required. Please sign in again.');
+      setLoading(false);
+      return;
+    }
 
     try {
       // Send API requests sequentially or via Promise.all

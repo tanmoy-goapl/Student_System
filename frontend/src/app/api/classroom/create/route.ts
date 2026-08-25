@@ -5,6 +5,9 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    if (!body?.professor_id) {
+      return NextResponse.json({ success: false, error: "Missing professor_id" }, { status: 400 });
+    }
     const response = await fetch(`${BACKEND_URL}/classroom/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

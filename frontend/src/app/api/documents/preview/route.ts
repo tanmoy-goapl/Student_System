@@ -7,12 +7,13 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     const documentId = req.nextUrl.searchParams.get("document_id");
-    if (!documentId) {
-      return NextResponse.json({ detail: "document_id is required" }, { status: 400 });
+    const userId = req.nextUrl.searchParams.get("user_id");
+    if (!documentId || !userId) {
+      return NextResponse.json({ detail: "document_id and user_id are required" }, { status: 400 });
     }
 
     const response = await fetch(
-      BACKEND_URL + "/documents/preview/" + encodeURIComponent(documentId),
+      BACKEND_URL + "/documents/preview/" + encodeURIComponent(documentId) + "?user_id=" + encodeURIComponent(userId),
       { method: "GET", cache: "no-store" }
     );
     const body = await response.text();

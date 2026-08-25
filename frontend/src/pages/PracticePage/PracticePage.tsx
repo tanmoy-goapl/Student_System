@@ -57,6 +57,8 @@ export default function PracticePage({
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [answered, setAnswered] = useState(false);
     const [answerResult, setAnswerResult] = useState<SubmitAnswerResponse | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [answerError, setAnswerError] = useState<string | null>(null);
 
     // Performance data for right sidebar
     const [performance, setPerformance] = useState<PracticePerformanceResponse | null>(null);
@@ -82,6 +84,7 @@ export default function PracticePage({
     const [showAIHelp, setShowAIHelp] = useState(false);
     const [totalQuestions, setTotalQuestions] = useState(5);
     const [loadingStep, setLoadingStep] = useState(0);
+    const [batchError, setBatchError] = useState<string | null>(null);
 
     useEffect(() => {
         if (isLoading) {
@@ -104,13 +107,9 @@ export default function PracticePage({
 
     // Get student ID from localStorage
     const getStudentId = (): number => {
-        if (typeof window !== "undefined") {
-            const id = localStorage.getItem("user_id");
-            const requestedId = searchParams?.get("student_id");
-            const parsedId = requestedId ? Number(requestedId) : (id ? Number(id) : 3);
-            return Number.isInteger(parsedId) && parsedId > 0 ? parsedId : 3;
-        }
-        return 3;
+        if (typeof window === "undefined") return 0;
+        const parsedId = Number(window.localStorage.getItem("user_id"));
+        return Number.isInteger(parsedId) && parsedId > 0 ? parsedId : 0;
     };
 
     // Keep the backend generation session resumable after navigation.
@@ -200,6 +199,9 @@ export default function PracticePage({
         setSelectedAnswer(null);
         setAnswered(false);
         setAnswerResult(null);
+        setIsSubmitting(false);
+        setAnswerError(null);
+        setBatchError(null);
         setSessionStarted(true);
         if (nextQuestions.length > 0) {
             startTimer();
@@ -214,7 +216,7 @@ export default function PracticePage({
             if (requestInFlight || !mountedRef.current) return;
             requestInFlight = true;
             try {
-                const status = await getSessionStatus(id);
+                const status = await getSessionStatus(id, getStudentId());
                 if (!mountedRef.current) return;
 
                 if (status.generation_status === "ready" && status.questions?.length) {
@@ -251,7 +253,7 @@ export default function PracticePage({
         setSessionDifficulty(pending.difficulty || "mixed"); setTotalQuestions(pending.questionCount || 5);
         setIsLoading(true); setIsGenerating(true);
         try {
-            const status = await getSessionStatus(pending.sessionId);
+            const status = await getSessionStatus(pending.sessionId, getStudentId());
             if (!mountedRef.current) return true;
             if (status.generation_status === "ready" && status.questions?.length) {
                 applySessionQuestions(status); clearPendingGeneration(); setIsLoading(false); setIsGenerating(false);
@@ -318,21 +320,24 @@ export default function PracticePage({
 
     // Submit answer
     const handleSubmitAnswer = async () => {
-        if (!selectedAnswer || !sessionId || !questions[currentQuestionIndex]) return;
+        const currentQuestion = questions[currentQuestionIndex];
+        if (!selectedAnswer || !sessionId || !currentQuestion || answered || isSubmitting) return;
 
+        setIsSubmitting(true);
+        setAnswerError(null);
         const timeSpent = stopTimer();
         try {
             const result = await submitPracticeAnswer(
                 sessionId,
-                questions[currentQuestionIndex].id,
+                currentQuestion.id,
                 selectedAnswer,
-                timeSpent
+                timeSpent,
+                getStudentId()
             );
 
             setAnswerResult(result);
             setAnswered(true);
 
-            // Update live stats
             const avgSeconds = result.stats.avg_time_seconds;
             const avgFormatted = avgSeconds >= 60
                 ? `${Math.floor(avgSeconds / 60)}m ${Math.round(avgSeconds % 60)}s`
@@ -348,19 +353,19 @@ export default function PracticePage({
             });
 
             void refreshPerformance();
-
-            onAnswerSubmit?.(
-                questions[currentQuestionIndex].id,
-                selectedAnswer,
-                result.is_correct
-            );
+            onAnswerSubmit?.(currentQuestion.id, selectedAnswer, result.is_correct);
         } catch (error) {
-            // Error handled silently
+            setAnswerError("We couldn't save this answer. Please try submitting it again.");
+            startTimer();
+        } finally {
+            if (mountedRef.current) setIsSubmitting(false);
         }
     };
 
     // Move to next question
     const handleNextQuestion = async () => {
+        if (isGenerating || isSubmitting) return;
+        setBatchError(null);
         const nextIndex = currentQuestionIndex + 1;
 
         if (nextIndex < questions.length) {
@@ -368,12 +373,13 @@ export default function PracticePage({
             setSelectedAnswer(null);
             setAnswered(false);
             setAnswerResult(null);
+            setAnswerError(null);
             setShowAIHelp(false);
             startTimer();
         } else if (sessionId) {
             setIsGenerating(true);
             try {
-                const batch = await getNextBatch(sessionId);
+                const batch = await getNextBatch(sessionId, getStudentId());
 
                 if (batch.session_complete || batch.questions.length === 0) {
                     clearPendingGeneration();
@@ -386,19 +392,21 @@ export default function PracticePage({
                     setSelectedAnswer(null);
                     setAnswered(false);
                     setAnswerResult(null);
+                    setAnswerError(null);
                     setShowAIHelp(false);
                     startTimer();
                 }
             } catch (error) {
-                setSessionComplete(true);
+                setBatchError("The next question could not be loaded. Your progress is safe; please try again.");
             } finally {
-                setIsGenerating(false);
+                if (mountedRef.current) setIsGenerating(false);
             }
         }
     };
 
     const handleAnswerSelect = (answerId: string) => {
-        if (!answered) {
+        if (!answered && !isSubmitting) {
+            setAnswerError(null);
             setSelectedAnswer(answerId);
         }
     };
@@ -408,12 +416,16 @@ export default function PracticePage({
     };
 
     const handleSkip = () => {
+        if (isGenerating || isSubmitting) return;
+        const skippedQuestionId = questions[currentQuestionIndex]?.id;
         stopTimer();
         setSelectedAnswer(null);
         setAnswered(false);
         setAnswerResult(null);
-        handleNextQuestion();
-        onSkip?.(questions[currentQuestionIndex]?.id);
+        setAnswerError(null);
+        setBatchError(null);
+        void handleNextQuestion();
+        if (skippedQuestionId) onSkip?.(skippedQuestionId);
     };
 
     const handleAIHelp = (query: string) => {
@@ -578,18 +590,35 @@ export default function PracticePage({
         }
 
         const currentQuestion = questions[currentQuestionIndex];
-        const isLastQuestion = currentQuestionIndex + 1 >= totalQuestions;
+        if (!currentQuestion) {
+            return (
+                <div className="flex-1 flex items-center justify-center bg-[#090D1F] px-6 py-8">
+                    <div className="max-w-md text-center space-y-3">
+                        <div className="text-3xl">🧩</div>
+                        <h3 className="text-lg font-semibold text-white">
+                            {isGenerating ? "Preparing the next question..." : "Question unavailable"}
+                        </h3>
+                        <p className="text-sm text-slate-400">
+                            {isGenerating ? "Your session is still being prepared." : "This question was not returned by the practice session. Try the next batch again."}
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+        const displayTotalQuestions = Math.max(totalQuestions, questions.length, currentQuestionIndex + 1);
+        const isLastQuestion = currentQuestionIndex + 1 >= displayTotalQuestions;
+        const safeOptions = Array.isArray(currentQuestion.options) ? currentQuestion.options : [];
         const questionForComponents = {
             id: currentQuestion.id,
             number: currentQuestionIndex + 1,
-            totalQuestions: totalQuestions,
+            totalQuestions: displayTotalQuestions,
             category: sessionTopic.split(",")[0]?.trim().toUpperCase() || "GENERAL",
-            topic: currentQuestion.topic,
-            difficulty: currentQuestion.difficulty.charAt(0).toUpperCase() + currentQuestion.difficulty.slice(1),
-            mode: "Topic-Based",
-            description: "Document-based question",
-            questionText: currentQuestion.question,
-            answers: currentQuestion.options.map((opt: { id: string; text: string }) => {
+            topic: currentQuestion.topic || sessionTopic || "General",
+            difficulty: (currentQuestion.difficulty || sessionDifficulty || "mixed").charAt(0).toUpperCase() + (currentQuestion.difficulty || sessionDifficulty || "mixed").slice(1),
+            mode: sessionMode === "topic" ? "Topic-Based" : sessionMode,
+            description: "Grounded in your course and study material",
+            questionText: currentQuestion.question || "Question text unavailable",
+            answers: safeOptions.map((opt: { id: string; text: string }) => {
                 const isCorrectOption = answerResult ? opt.id === answerResult.correct_answer : false;
                 return {
                     id: opt.id,
@@ -602,7 +631,7 @@ export default function PracticePage({
 
         return (
             <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto">
-                <div className="flex-1 space-y-4 px-6 py-4 max-w-3xl mx-auto w-full">
+                <div className="min-w-0 flex-1 space-y-4 px-4 sm:px-6 py-4 max-w-4xl mx-auto w-full">
                     <button 
                         onClick={() => {
                             const topicParam = searchParams?.get("topic");
@@ -622,8 +651,8 @@ export default function PracticePage({
                     <QuestionHeader question={questionForComponents} />
                     <QuestionContent question={questionForComponents} />
 
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-800/40 border border-slate-700/50 rounded-lg w-fit mx-4">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <div className="flex flex-wrap items-center gap-1.5 px-3 py-1 bg-slate-800/40 border border-slate-700/50 rounded-lg w-fit mx-4 max-w-full">
+                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                         <span className="text-xs font-mono text-slate-300">{formatTime(elapsedTime)}</span>
                         {isGenerating && (
                             <span className="text-xs text-violet-400 flex items-center gap-1">
@@ -632,6 +661,11 @@ export default function PracticePage({
                             </span>
                         )}
                     </div>
+                    {(answerError || batchError) && (
+                        <div className="mx-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200 break-words">
+                            {answerError || batchError}
+                        </div>
+                    )}
 
                     <AnswerOptions
                         question={questionForComponents}
@@ -651,7 +685,7 @@ export default function PracticePage({
                                 </span>
                             </div>
                             {answerResult.explanation && (
-                                <p className="text-sm text-slate-300 leading-relaxed">
+                                <p className="text-sm text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
                                     {answerResult.explanation}
                                 </p>
                             )}
@@ -665,8 +699,9 @@ export default function PracticePage({
                         onHint={handleHint}
                         onSkip={handleSkip}
                         onNext={answered ? handleNextQuestion : undefined}
-                        canProceed={true}
+                        canProceed={!isSubmitting}
                         isLastQuestion={isLastQuestion}
+                        isSubmitting={isSubmitting}
                     />
                 </div>
             </div>
@@ -674,22 +709,22 @@ export default function PracticePage({
     };
 
     return (
-        <div className="flex w-full h-[calc(100vh-4rem)] relative">
+        <div className="flex min-w-0 w-full h-[calc(100vh-4rem)] relative overflow-hidden">
             <OfflineState />
             
             {/* Left sidebar only visible before session starts */}
             {!sessionStarted && (
-                <div className="w-[20vw] shrink-0 h-full border-r border-white/10">
+                <div className="w-[clamp(15rem,20vw,20rem)] min-w-0 shrink-0 h-full border-r border-white/10">
                     <PracticeLeftSidebar onStartSession={handleStartSession} />
                 </div>
             )}
 
-            <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-hidden">
+            <div className="min-w-0 flex-1 flex flex-col h-full bg-[#090D1F] overflow-hidden">
                 {renderMainContent()}
             </div>
 
             {/* Right sidebar containing insights, weak topics, and adaptive suggestions */}
-            <div className="w-[20vw] shrink-0 h-full flex flex-col">
+            <div className="w-[clamp(15rem,20vw,20rem)] min-w-0 shrink-0 h-full flex flex-col">
                 <PracticeSidebar
                     weakTopics={performance?.weak_topics}
                     insights={performance?.insights}

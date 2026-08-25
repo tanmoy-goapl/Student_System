@@ -132,7 +132,11 @@ export default function GoalSetupModal({ isOpen, onClose, onSuccess }: GoalSetup
     setErrorMessage("");
 
     try {
-      const studentId = parseInt(localStorage.getItem("user_id") || "1", 10);
+      const rawStudentId = localStorage.getItem("user_id");
+      const studentId = rawStudentId ? parseInt(rawStudentId, 10) : NaN;
+      if (!Number.isInteger(studentId) || studentId <= 0) {
+        throw new Error("Authentication required. Please sign in again.");
+      }
 
       // Save the learner's exact topic, category, context, and target date.
       const goalRes = await fetch("/api/roadmap/goals", {

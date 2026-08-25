@@ -60,6 +60,7 @@ const ICON_MAP: Record<string, any> = {
 };
 
 import { useSearchParams, useRouter } from "next/navigation";
+import { parseRevisionPayload } from "@/lib/learningContent";
 
 export default function LearningPage() {
     const router = useRouter();
@@ -79,6 +80,7 @@ export default function LearningPage() {
     const [hasError, setHasError] = useState(false);
     const [isContentLoading, setIsContentLoading] = useState(false);
     const [isTypewriting, setIsTypewriting] = useState(false);
+    const [isSummaryReady, setIsSummaryReady] = useState(false);
     const [isAddingRevision, setIsAddingRevision] = useState(false);
     const [revisionError, setRevisionError] = useState<string | null>(null);
 
@@ -133,12 +135,13 @@ export default function LearningPage() {
         }
     }, [searchParams, router]);
 
-    const getStudentId = (): number => {
+    const getStudentId = (): number | null => {
         if (typeof window !== "undefined") {
             const id = localStorage.getItem("user_id");
-            return id ? parseInt(id, 10) : 1;
+            const parsed = id ? parseInt(id, 10) : NaN;
+            return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
         }
-        return 1;
+        return null;
     };
 
     const handleSelectTopic = (id: string, subjectId?: string) => {
@@ -153,7 +156,10 @@ export default function LearningPage() {
     const typewriterIntervalRef = useRef<any>(null);
     const hasSidebarRef = useRef(false);
     const cachedSidebarRef = useRef<any>(null);
-    const prevSourceRef = useRef<string>(activeSource);
+    const cachedSidebarContextRef = useRef<string | null>(null);
+    const summaryGenerationActiveRef = useRef(false);
+    const summaryReadyRef = useRef(false);
+    const streamCompletedRef = useRef(false);
 
     const fetchData = async (forceRegenerate: boolean = false) => {
         if (abortControllerRef.current) {
@@ -161,15 +167,25 @@ export default function LearningPage() {
         }
         if (typewriterIntervalRef.current) {
             clearInterval(typewriterIntervalRef.current);
+            typewriterIntervalRef.current = null;
         }
         targetTextRef.current = ""; // Reset immediately to prevent old text leakage
+        summaryGenerationActiveRef.current = true;
+        summaryReadyRef.current = false;
+        streamCompletedRef.current = false;
+        setIsSummaryReady(false);
 
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
 
-        const sourceChanged = prevSourceRef.current !== activeSource;
-        const canSkipSidebar = hasSidebarRef.current && !sourceChanged && !!activeTopic && !forceRegenerate;
-        prevSourceRef.current = activeSource;
+        // Sidebar contents depend on both the source and the selected roadmap.
+        // Reusing a sidebar from a specific roadmap after switching to "All Topics"
+        // would hide the other roadmaps until a full reload.
+        const sidebarContext = `${activeSource}:${roadmapIdParam ?? "all"}`;
+        const canSkipSidebar = hasSidebarRef.current &&
+            cachedSidebarContextRef.current === sidebarContext &&
+            !!activeTopic &&
+            !forceRegenerate;
 
         if (!canSkipSidebar) {
             setData(null);
@@ -182,11 +198,37 @@ export default function LearningPage() {
         }
 
         const studentId = getStudentId();
+        if (studentId === null) {
+            setHasError(true);
+            setIsContentLoading(false);
+            setIsTypewriting(false);
+            return;
+        }
         const roadmapId = searchParams?.get("roadmap_id") ? parseInt(searchParams.get("roadmap_id") as string) : undefined;
         setHasError(false);
 
         setIsTypewriting(true);
         let currentTypewriterLength = 0;
+        const finishSummaryWhenDisplayed = () => {
+            if (
+                abortControllerRef.current !== abortController ||
+                abortController.signal.aborted ||
+                !streamCompletedRef.current ||
+                !targetTextRef.current.trim() ||
+                currentTypewriterLength < targetTextRef.current.length
+            ) {
+                return;
+            }
+
+            setIsTypewriting(false);
+            summaryGenerationActiveRef.current = false;
+            summaryReadyRef.current = true;
+            setIsSummaryReady(true);
+            if (typewriterIntervalRef.current) {
+                clearInterval(typewriterIntervalRef.current);
+                typewriterIntervalRef.current = null;
+            }
+        };
         typewriterIntervalRef.current = setInterval(() => {
             if (currentTypewriterLength < targetTextRef.current.length) {
                 const diff = targetTextRef.current.length - currentTypewriterLength;
@@ -202,35 +244,21 @@ export default function LearningPage() {
                         notesResponse: { content: nextTextChunk }
                     };
                 });
-            } else if (targetTextRef.current.length > 0 && currentTypewriterLength >= targetTextRef.current.length) {
-                setIsTypewriting(false);
+            } else {
+                finishSummaryWhenDisplayed();
             }
         }, 20); // Faster interval for fluid rendering
 
-        const runStream = async (topicToStream: string) => {
+        const runStream = async (topicToStream: string): Promise<boolean> => {
             activeRequestTopicRef.current = topicToStream;
             
             try {
                 await streamLearningContent(topicToStream, studentId, activeSubject, (text) => {
                     if (abortController.signal.aborted) return;
                     if (activeRequestTopicRef.current !== topicToStream) return;
-                    let displayMarkdown = text;
-                    let revisionData = undefined;
-                    const revisionSeparatorIndex = text.lastIndexOf("---REVISION---");
-                    if (revisionSeparatorIndex >= 0) {
-                        displayMarkdown = text.slice(0, revisionSeparatorIndex).trim();
-                        let rawJson = text.slice(revisionSeparatorIndex + "---REVISION---".length).trim();
-                        if (rawJson.startsWith("```json")) {
-                            rawJson = rawJson.slice(7);
-                        } else if (rawJson.startsWith("```")) {
-                            rawJson = rawJson.slice(3);
-                        }
-                        if (rawJson.endsWith("```")) {
-                            rawJson = rawJson.slice(0, -3);
-                        }
-                        rawJson = rawJson.trim();
-                        try { revisionData = JSON.parse(rawJson); } catch (e) {}
-                    }
+                    const parsedContent = parseRevisionPayload(text);
+                    const displayMarkdown = parsedContent.content;
+                    const revisionData = parsedContent.revision;
                     
                     targetTextRef.current = displayMarkdown;
 
@@ -251,14 +279,27 @@ export default function LearningPage() {
                         });
                     }
                 }, abortController.signal, forceRegenerate);
+                if (
+                    abortController.signal.aborted ||
+                    abortControllerRef.current !== abortController
+                ) {
+                    return false;
+                }
+                streamCompletedRef.current = true;
+                finishSummaryWhenDisplayed();
+                return true;
             } catch (streamingError: any) {
-                if (streamingError.name !== "AbortError") {
+                if (
+                    streamingError.name !== "AbortError" &&
+                    abortControllerRef.current === abortController
+                ) {
                     setHasError(true);
                 }
+                return false;
             }
         };
 
-        let streamPromise: Promise<void> | null = null;
+        let streamPromise: Promise<boolean> | null = null;
         if (activeTopic) {
             streamPromise = runStream(activeTopic);
         }
@@ -270,36 +311,25 @@ export default function LearningPage() {
             if (!response) {
                 setHasError(true);
                 setIsContentLoading(false);
+                if (abortControllerRef.current === abortController) {
+                    summaryGenerationActiveRef.current = false;
+                }
                 return;
             }
 
             const selectedTopic = response.selectedTopic || activeTopic || "General Topic";
 
             if (response.notesResponse && typeof response.notesResponse.content === "string") {
-                const text = response.notesResponse.content;
-                const revisionSeparatorIndex = text.lastIndexOf("---REVISION---");
-                if (revisionSeparatorIndex >= 0) {
-                    response.notesResponse.content = text.slice(0, revisionSeparatorIndex).trim();
-                    let rawJson = text.slice(revisionSeparatorIndex + "---REVISION---".length).trim();
-                    if (rawJson.startsWith("```json")) {
-                        rawJson = rawJson.slice(7);
-                    } else if (rawJson.startsWith("```")) {
-                        rawJson = rawJson.slice(3);
+                const parsedContent = parseRevisionPayload(response.notesResponse.content);
+                response.notesResponse.content = parsedContent.content;
+                if (parsedContent.revision) {
+                    if (!response.learningAssistantResponse) {
+                        response.learningAssistantResponse = { data: {} };
                     }
-                    if (rawJson.endsWith("```")) {
-                        rawJson = rawJson.slice(0, -3);
+                    if (!response.learningAssistantResponse.data) {
+                        response.learningAssistantResponse.data = {};
                     }
-                    rawJson = rawJson.trim();
-                    try {
-                        const revisionData = JSON.parse(rawJson);
-                        if (!response.learningAssistantResponse) {
-                            response.learningAssistantResponse = { data: {} };
-                        }
-                        if (!response.learningAssistantResponse.data) {
-                            response.learningAssistantResponse.data = {};
-                        }
-                        response.learningAssistantResponse.data.revision = revisionData;
-                    } catch (e) {}
+                    response.learningAssistantResponse.data.revision = parsedContent.revision;
                 }
             }
 
@@ -315,6 +345,7 @@ export default function LearningPage() {
                 response.sidebarData = cachedSidebarRef.current;
             } else if (response.sidebarData) {
                 cachedSidebarRef.current = response.sidebarData;
+                cachedSidebarContextRef.current = sidebarContext;
                 hasSidebarRef.current = true;
             }
 
@@ -329,6 +360,10 @@ export default function LearningPage() {
                 setData(response);
                 setIsContentLoading(false);
                 setIsTypewriting(false);
+                streamCompletedRef.current = true;
+                summaryGenerationActiveRef.current = false;
+                summaryReadyRef.current = true;
+                setIsSummaryReady(true);
                 activeRequestTopicRef.current = selectedTopic;
                 return;
             }
@@ -347,16 +382,28 @@ export default function LearningPage() {
                 await streamPromise;
             }
             setIsContentLoading(false);
+            finishSummaryWhenDisplayed();
         } catch (e: any) {
-            if (e.name !== "AbortError") {
+            if (
+                e.name !== "AbortError" &&
+                abortControllerRef.current === abortController
+            ) {
                 setHasError(true);
                 setIsContentLoading(false);
+            }
+            if (abortControllerRef.current === abortController) {
+                summaryGenerationActiveRef.current = false;
+                summaryReadyRef.current = false;
+                setIsSummaryReady(false);
             }
         }
     };
 
     const debounceTimerRef = useRef<any>(null);
     useEffect(() => {
+        summaryGenerationActiveRef.current = true;
+        summaryReadyRef.current = false;
+        setIsSummaryReady(false);
         if (debounceTimerRef.current) {
             clearTimeout(debounceTimerRef.current);
         }
@@ -371,6 +418,10 @@ export default function LearningPage() {
             }
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
+            }
+            if (typewriterIntervalRef.current) {
+                clearInterval(typewriterIntervalRef.current);
+                typewriterIntervalRef.current = null;
             }
         };
     }, [activeTopic, activeSubject, activeSource, roadmapIdParam]);
@@ -418,11 +469,29 @@ export default function LearningPage() {
     };
 
     const handleMarkAsRead = async () => {
-        if (!data?.selectedTopic) return;
+        const hasSummaryContent =
+            typeof data?.notesResponse?.content === "string" &&
+            data.notesResponse.content.trim().length > 0;
+        const isCurrentTopic = !activeTopic || data?.selectedTopic === activeTopic;
+
+        // Completion is only valid after the current summary stream and
+        // typewriter have both finished. The ref guards the same click event
+        // that starts regeneration, before React can commit the next render.
+        if (
+            !data?.selectedTopic ||
+            !isCurrentTopic ||
+            isMarkingRead ||
+            summaryGenerationActiveRef.current ||
+            !summaryReadyRef.current ||
+            !hasSummaryContent
+        ) {
+            return;
+        }
         
         setIsMarkingRead(true);
         try {
             const studentId = getStudentId();
+            if (studentId === null) return;
             const res = await completeTopic(studentId, data.selectedTopic, "learning");
             if (res.success) {
                 console.log("Topic marked as complete");
@@ -487,6 +556,7 @@ export default function LearningPage() {
         if (id === 'mark_as_read') return;
         if (!data?.selectedTopic) return;
         const studentId = getStudentId();
+        if (studentId === null) return;
         
         setModalContent({
             title: id === 'simpler' ? "Simplifying Concept..." : id === 'example' ? "Generating Examples..." : "Generating Flashcards...",
@@ -536,6 +606,7 @@ export default function LearningPage() {
     const handleSaveNotes = async () => {
         if (!data?.selectedTopic) return;
         const studentId = getStudentId();
+        if (studentId === null) return;
         const generatedNotes = data.notesResponse?.content || "";
         try {
             const res = await saveNotes(studentId, data.selectedTopic, generatedNotes);
@@ -552,6 +623,7 @@ export default function LearningPage() {
         if (data.learningAssistantResponse?.data?.revisionStatus?.is_queued) return;
 
         const studentId = getStudentId();
+        if (studentId === null) return;
         setIsAddingRevision(true);
         setRevisionError(null);
         try {
@@ -637,6 +709,7 @@ export default function LearningPage() {
 
     const isBackendCompleted = data.headerResponse?.data?.is_completed;
     const isTopicCompleted = isBackendCompleted || isCompletedSession;
+    const isSummaryGenerating = !isSummaryReady || isContentLoading || isTypewriting;
 
     const actionDescriptions: Record<string, string> = {
         simpler: "Get a simplified summary of the topic",
@@ -696,20 +769,29 @@ export default function LearningPage() {
                         <NotesCard notesResponse={data.notesResponse} onRegenerate={() => fetchData(true)} isGenerating={isTypewriting} />
                     </div>
 
-                    {!isContentLoading && !isTypewriting && (
-                        <button
-                            onClick={isTopicCompleted ? undefined : handleMarkAsRead}
-                            disabled={isMarkingRead}
-                            className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                                isTopicCompleted 
-                                    ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default" 
-                                    : "bg-[#5B5FFF] hover:bg-[#4c4fdb] text-white border-[#7276ff]/20 hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-indigo-500/10"
-                            }`}
-                        >
-                            <CheckCircle className="h-4 w-4" />
-                            <span>{isTopicCompleted ? "Already Read" : isMarkingRead ? "Marking..." : "Mark as Read"}</span>
-                        </button>
-                    )}
+                    <button
+                        onClick={isTopicCompleted || isSummaryGenerating ? undefined : handleMarkAsRead}
+                        disabled={isMarkingRead || isSummaryGenerating}
+                        aria-busy={isSummaryGenerating}
+                        className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border text-sm font-semibold transition-all duration-200 ${
+                            isTopicCompleted
+                                ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default"
+                                : isSummaryGenerating
+                                    ? "bg-slate-800/70 text-zinc-400 border-white/10 cursor-not-allowed"
+                                    : "bg-[#5B5FFF] hover:bg-[#4c4fdb] text-white border-[#7276ff]/20 hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-indigo-500/10 cursor-pointer"
+                        }`}
+                    >
+                        <CheckCircle className="h-4 w-4" />
+                        <span>
+                            {isTopicCompleted
+                                ? "Already Read"
+                                : isMarkingRead
+                                    ? "Marking..."
+                                    : isSummaryGenerating
+                                        ? "Generating summary..."
+                                        : "Mark as Read"}
+                        </span>
+                    </button>
 
                     <QuickRevisionCard
                         points={cheatsheetPoints.length > 0 ? cheatsheetPoints : (data.learningAssistantResponse?.data?.revision?.points || [])}

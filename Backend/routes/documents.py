@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Document
 from services.extract import get_pdf_page_count
+from services.authorization import require_user, require_document_owner, require_professor_class
 import os
 import json
 from datetime import datetime
@@ -81,58 +82,13 @@ def to_ui_doc(doc: Document) -> dict:
     }
 
 @router.get("/data")
-async def get_documents_data(student_id: int = 1, db: Session = Depends(get_db)):
-    from models import User
-    user = db.query(User).filter(User.id == student_id).first()
+async def get_documents_data(student_id: int = Query(...), db: Session = Depends(get_db)):
+    from services.document_resolver import get_role_visible_docs
+    user = require_user(student_id, db)
+    db_docs = get_role_visible_docs(user.id, user.role, db)
 
-    if user and user.role == "admin":
-        db_docs = db.query(Document).filter(
-            (Document.visibility == "universal") |
-            (Document.visibility == "admin_shared") |
-            (
-                (Document.visibility == "private") &
-                ((Document.owner_id == student_id) | ((Document.owner_id == None) & (Document.student_id == student_id))) &
-                (Document.owner_role == "admin")
-            )
-        ).order_by(Document.uploaded_at.desc()).all()
-    elif user and user.role == "professor":
-        from classroom_models import Classroom
-        teaches = db.query(Classroom).filter(Classroom.professor_id == student_id).all()
-        teach_class_ids = [c.id for c in teaches]
-
-        db_docs = db.query(Document).filter(
-            (Document.visibility == "universal") |
-            (
-                (Document.visibility == "course_shared") &
-                (
-                    (Document.classroom_id.in_(teach_class_ids) if teach_class_ids else False) |
-                    ((Document.owner_id == student_id) | ((Document.owner_id == None) & (Document.student_id == student_id)))
-                )
-            ) |
-            (
-                (Document.visibility == "private") &
-                ((Document.owner_id == student_id) | ((Document.owner_id == None) & (Document.student_id == student_id))) &
-                (Document.owner_role == "professor")
-            )
-        ).order_by(Document.uploaded_at.desc()).all()
-    else:
-        # Fetch student's joined classrooms
-        from classroom_models import StudentClass
-        joined_classes = db.query(StudentClass).filter(StudentClass.student_id == student_id).all()
-        class_ids = [c.class_id for c in joined_classes]
-
-        db_docs = db.query(Document).filter(
-            (Document.visibility == "universal") |
-            (
-                (Document.visibility == "course_shared") &
-                (Document.classroom_id.in_(class_ids) if class_ids else False)
-            ) |
-            (
-                (Document.visibility == "private") &
-                ((Document.owner_id == student_id) | ((Document.owner_id == None) & (Document.student_id == student_id))) &
-                (Document.owner_role == "student")
-            )
-        ).order_by(Document.uploaded_at.desc()).all()
+    db_docs = sorted(db_docs, key=lambda document: document.uploaded_at or datetime.min, reverse=True)
+    
     
     combined_docs = [to_ui_doc(d) for d in db_docs]
     
@@ -194,11 +150,11 @@ async def get_documents_data(student_id: int = 1, db: Session = Depends(get_db))
 
 
 @router.delete("/{document_id}")
-def delete_document(document_id: int, db: Session = Depends(get_db)):
+def delete_document(document_id: int, user_id: int = Query(...), db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Document not found")
+    require_document_owner(doc, user_id, db)
     
     # 1. Delete from ChromaDB
     try:
@@ -231,15 +187,20 @@ def delete_document(document_id: int, db: Session = Depends(get_db)):
 
 @router.post("/publish")
 def publish_document(document_id: str, classroom_id: int, user_id: int, db: Session = Depends(get_db)):
-    doc_db_id = int(document_id.replace("db-", ""))
-    
+    try:
+        doc_db_id = int(document_id.replace("db-", ""))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid document id")
+
     doc = db.query(Document).filter(Document.id == doc_db_id).first()
     if not doc:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Document not found")
-        
+    require_document_owner(doc, user_id, db)
+    require_professor_class(user_id, classroom_id, db)
+
     doc.classroom_id = classroom_id
     doc.visibility = "course_shared"
+    doc.owner_role = "professor"
     
     # Check if ClassResource already exists
     from classroom_models import ClassResource

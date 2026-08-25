@@ -18,6 +18,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import AdminSidebar from "../components/AdminSidebar";
+import { getAdminScopedEndpoint } from "@/lib/adminAuth";
 
 type AlertSeverity = "critical" | "warning" | "info" | "success";
 
@@ -175,7 +176,7 @@ export default function AdminDashboardPage() {
 
     try {
       const fetchJson = async <T,>(url: string): Promise<T> => {
-        const response = await fetch(url, { cache: "no-store", signal });
+        const response = await fetch(getAdminScopedEndpoint(url), { cache: "no-store", signal });
         if (!response.ok) throw new Error("Admin request failed (" + response.status + ")");
         return response.json() as Promise<T>;
       };

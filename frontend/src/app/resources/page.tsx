@@ -15,7 +15,8 @@ export default function ResourcesPage() {
     const fetchClasses = async () => {
       setLoadingClasses(true);
       try {
-        const professorId = localStorage.getItem('user_id') || '2';
+        const professorId = localStorage.getItem('user_id');
+        if (!professorId) return;
         const res = await fetch(`/api/professor/classes?professor_id=${professorId}`);
         if (res.ok) {
           const data = await res.json();
@@ -70,7 +71,7 @@ export default function ResourcesPage() {
             <ResourcesTab 
               classId={activeClassId} 
               role="professor" 
-              userId={Number(localStorage.getItem('user_id') || '2')} 
+              userId={Number(localStorage.getItem('user_id'))} 
             />
           </div>
         )}

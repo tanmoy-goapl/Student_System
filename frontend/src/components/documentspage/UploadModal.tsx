@@ -69,7 +69,12 @@ export default function UploadModal({ isOpen, onClose, onUploadSuccess }: Upload
     // Determine subject value
     const finalSubject = category === 'Personal Learning' ? customSubject.trim() : subject.trim();
     formData.append('subject', finalSubject || 'General');
-    const userId = localStorage.getItem("user_id") || "1";
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      setError("Authentication required. Please sign in again.");
+      setLoading(false);
+      return;
+    }
     formData.append('student_id', userId);
 
     try {

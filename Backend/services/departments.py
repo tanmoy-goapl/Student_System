@@ -7,6 +7,8 @@ _ALIASES = {
     "ARTIFICIAL INTELLIGENCE": "AI",
     "AI DEPARTMENT": "AI",
     "AIML": "AI",
+    # Legacy code used for the Data Science department before it was named DS.
+    "303": "DS",
 }
 
 
@@ -17,6 +19,15 @@ def normalize_department_code(value: str | None) -> str:
     if raw in _ALIASES:
         return _ALIASES[raw]
     return re.sub(r"[^A-Z0-9]+", "_", raw).strip("_")
+
+
+def department_display_name(code: str | None, name: str | None) -> str:
+    """Return the user-facing department name without changing stored codes."""
+    normalized_code = normalize_department_code(code)
+    cleaned_name = str(name or "").strip()
+    if cleaned_name.casefold() == "ds":
+        return "DS Department"
+    return cleaned_name or f"{normalized_code} Department"
 
 
 def split_department_codes(value: str | None) -> set[str]:

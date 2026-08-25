@@ -15,7 +15,7 @@ export default function AnswerOptions({
   onSelectAnswer,
 }: AnswerOptionsProps) {
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2">
       {question.answers.map((answer: Answer) => (
         <AnswerOption
           key={answer.id}

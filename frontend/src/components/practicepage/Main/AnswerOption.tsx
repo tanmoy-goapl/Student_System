@@ -21,10 +21,11 @@ export default function AnswerOption({
 
   return (
     <button
+      type="button"
       onClick={onSelect}
       disabled={isAnswered}
       className={`
-        w-full p-4 rounded-xl border-2 transition-all duration-200
+        w-full min-w-0 p-4 rounded-xl border-2 transition-all duration-200
         flex items-center gap-4
         ${
           showCorrect
@@ -40,7 +41,7 @@ export default function AnswerOption({
       {/* Answer Label */}
       <div
         className={`
-          flex items-center justify-center w-10 h-10
+          flex items-center justify-center w-10 h-10 shrink-0
           rounded-lg font-bold text-sm
           ${
             showCorrect
@@ -59,7 +60,7 @@ export default function AnswerOption({
       {/* Answer Text */}
       <span
         className={`
-          text-left text-base font-medium
+          min-w-0 flex-1 text-left text-base font-medium break-words whitespace-pre-wrap
           ${
             showCorrect || showIncorrect
               ? isCorrect

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -15,7 +15,8 @@ from services.analytics_engine import (
     get_activity_snapshot,
     get_predefined_topics,
 )
-from services.departments import normalize_department_code, split_department_codes, valid_department_input
+from services.departments import department_display_name, normalize_department_code, split_department_codes, valid_department_input
+from services.authorization import require_admin
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -142,6 +143,7 @@ def _build_faculty_activity(db: Session) -> dict:
 
 def _build_admin_alerts(
     db: Session,
+    admin_id: int,
     metrics_by_student: dict[int, dict],
     total_students: int,
     weak_students: int,
@@ -174,7 +176,7 @@ def _build_admin_alerts(
 
     class_alerts = []
     if classroom_analytics is None:
-        classroom_analytics = get_classrooms_analytics(db)
+        classroom_analytics = get_classrooms_analytics(admin_id=admin_id, db=db)
     for classroom in classroom_analytics:
         high_risk_count = int(classroom.get("high_risk_students", 0) or 0)
         if classroom.get("student_count", 0) <= 0 or high_risk_count <= 0:
@@ -240,7 +242,7 @@ def _department_name_for_code(code: str) -> str:
         return "CS Department"
     if code == "AI":
         return "AI Department"
-    return code.replace("_", " ").title() + " Department"
+    return department_display_name(code, code.replace("_", " ").title())
 
 
 def _department_catalog(db: Session) -> list[dict]:
@@ -251,7 +253,7 @@ def _department_catalog(db: Session) -> list[dict]:
             catalog[code] = {
                 "id": department.id,
                 "code": code,
-                "name": department.name,
+                "name": department_display_name(code, department.name),
                 "is_active": department.is_active,
             }
 
@@ -456,8 +458,9 @@ def _build_department_summaries(
 
 
 @router.get("/dashboard")
-def get_admin_dashboard(db: Session = Depends(get_db)):
+def get_admin_dashboard(admin_id: int = Query(...), db: Session = Depends(get_db)):
     """Return platform KPIs from the same scoped student metrics used elsewhere."""
+    require_admin(admin_id, db)
     total_students = db.query(User).filter(User.role == "student").count()
     total_professors = db.query(User).filter(User.role == "professor").count()
     total_classes = db.query(Classroom).count()
@@ -497,9 +500,10 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
     inactive_students = len(set(student_ids) - recent_activity_student_ids)
     average_confidence = sum(confidences) / len(confidences) if confidences else 0.0
     average_readiness = sum(readinesses) / len(readinesses) if readinesses else 0.0
-    classroom_analytics = get_classrooms_analytics(db)
+    classroom_analytics = get_classrooms_analytics(admin_id=admin_id, db=db)
     alerts = _build_admin_alerts(
         db,
+        admin_id,
         metrics_by_student,
         total_students,
         students_needing_support,
@@ -538,10 +542,10 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
 
 
 def _require_admin(db: Session, admin_id: int) -> User:
-    admin = db.query(User).filter(User.id == admin_id).first()
-    if not admin or admin.role != "admin":
-        raise HTTPException(status_code=403, detail="Only admins can manage departments and assignments.")
-    return admin
+    try:
+        return require_admin(admin_id, db)
+    except HTTPException:
+        raise HTTPException(status_code=403, detail="Only active admins can manage departments and assignments.")
 
 
 @router.get("/departments")
@@ -565,7 +569,7 @@ def get_admin_departments(admin_id: int, db: Session = Depends(get_db)):
 def create_admin_department(req: DepartmentCreateRequest, db: Session = Depends(get_db)):
     _require_admin(db, req.admin_id)
     code = normalize_department_code(req.code)
-    name = req.name.strip()
+    name = department_display_name(code, req.name)
     if not valid_department_input(code) or not name:
         raise HTTPException(status_code=422, detail="Provide a valid department code and name.")
     existing = db.query(Department).filter(Department.code == code).first()
@@ -597,32 +601,43 @@ def update_user_department(
         raise HTTPException(status_code=404, detail="User not found.")
     if user.role == "admin":
         raise HTTPException(status_code=422, detail="Admin accounts do not use academic departments.")
-    if user.department:
-        raise HTTPException(status_code=409, detail="A department is already assigned to this user.")
 
     code = normalize_department_code(req.department)
     if not code:
         raise HTTPException(status_code=422, detail="Select a department to assign.")
-    department = None
-    if code:
-        department = db.query(Department).filter(
-            Department.code == code,
-            Department.is_active == True,
-        ).first()
-        if not department:
-            raise HTTPException(status_code=422, detail="Select an active department.")
+    department = db.query(Department).filter(
+        Department.code == code,
+        Department.is_active == True,
+    ).first()
+    if not department:
+        raise HTTPException(status_code=422, detail="Select an active department.")
 
-    user.department = code or None
+    assigned_codes = split_department_codes(user.department)
+    if user.role == "student":
+        assigned_codes = {code}
+    else:
+        if code in assigned_codes:
+            raise HTTPException(status_code=409, detail="This department is already assigned to this user.")
+        assigned_codes.add(code)
+    user.department = ",".join(sorted(assigned_codes))
     db.commit()
+    department_names = {
+        item["code"]: item["name"]
+        for item in _department_catalog(db)
+    }
     return {
         "id": user.id,
         "department": user.department,
-        "department_name": department.name if department else None,
+        "department_name": ", ".join(
+            department_names.get(item, _department_name_for_code(item))
+            for item in sorted(assigned_codes)
+        ),
     }
 
 
 @router.get("/students")
-def get_admin_students(db: Session = Depends(get_db)):
+def get_admin_students(admin_id: int = Query(...), db: Session = Depends(get_db)):
+    require_admin(admin_id, db)
     students = db.query(User).filter(User.role == "student").all()
     activity_snapshot = get_activity_snapshot([student.id for student in students], db)
     results = []
@@ -644,7 +659,8 @@ def get_admin_students(db: Session = Depends(get_db)):
     return results
 
 @router.get("/professors")
-def get_admin_professors(db: Session = Depends(get_db)):
+def get_admin_professors(admin_id: int = Query(...), db: Session = Depends(get_db)):
+    require_admin(admin_id, db)
     professors = db.query(User).filter(User.role == "professor").all()
     department_names = {
         department["code"]: department["name"]
@@ -667,7 +683,8 @@ def get_admin_professors(db: Session = Depends(get_db)):
     return results
 
 @router.get("/recent-activity")
-def get_admin_recent_activity(db: Session = Depends(get_db)):
+def get_admin_recent_activity(admin_id: int = Query(...), db: Session = Depends(get_db)):
+    require_admin(admin_id, db)
     recent_quizzes = db.query(QuizHistory).filter(
         QuizHistory.questions_attempted > 0,
     ).order_by(QuizHistory.created_at.desc()).limit(15).all()
@@ -709,7 +726,8 @@ def get_admin_recent_activity(db: Session = Depends(get_db)):
     ]
 
 @router.get("/system-status")
-def get_admin_system_status(db: Session = Depends(get_db)):
+def get_admin_system_status(admin_id: int = Query(...), db: Session = Depends(get_db)):
+    require_admin(admin_id, db)
     checked_at = datetime.utcnow()
     database_status = "connected"
     analytics_status = "healthy"
@@ -730,8 +748,9 @@ def get_admin_system_status(db: Session = Depends(get_db)):
 
 
 @router.get("/classrooms-analytics")
-def get_classrooms_analytics(db: Session = Depends(get_db)):
+def get_classrooms_analytics(admin_id: int = Query(...), db: Session = Depends(get_db)):
     """Return class-scoped performance stats using the shared metric definitions."""
+    require_admin(admin_id, db)
     classrooms = db.query(Classroom).all()
     result = []
 

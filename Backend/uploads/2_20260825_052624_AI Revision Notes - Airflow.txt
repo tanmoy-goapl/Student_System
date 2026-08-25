@@ -1,0 +1,52 @@
+# Airflow - Revision Sheet
+
+## Key definitions
+
+*   **Apache Airflow**: An open-source platform for developing, scheduling, and monitoring workflows as directed acyclic graphs (DAGs). It is primarily used in data engineering and AI pipelines to orchestrate complex data processing tasks.
+*   **DAG (Directed Acyclic Graph)**: A mathematical structure representing the workflow. Nodes represent tasks, and edges represent dependencies. The "acyclic" property ensures no circular dependencies exist, preventing infinite loops.
+*   **Operator**: A predefined task that Airflow knows how to execute. Common operators include BashOperator, PythonOperator, and SQLOperator. They define what happens in a single node of the DAG.
+*   **Task**: An instance of an Operator. When a DAG is parsed and scheduled, operators become tasks that are executed by the Airflow executor.
+*   **DAG Run**: A single execution of a DAG. If a DAG runs every day, each daily execution is a unique DAG Run with its own set of task instances.
+*   **XCom (Cross-Communication)**: A mechanism allowing tasks to communicate with each other by pushing small pieces of metadata (like file paths or model parameters) rather than large datasets.
+*   **Sensor**: A special type of operator that waits for an external condition to be met (e.g., a file arriving in S3) before proceeding. It keeps the task in a "waiting" state until the condition is true.
+*   **Airflow Webserver**: The user interface component that allows users to view DAG status, trigger runs, and monitor logs.
+*   **Scheduler**: The background process that reads DAG definitions, determines which tasks need to run based on schedules and dependencies, and pushes them to the queue.
+
+## Core facts
+
+*   **Python-First Design**: DAGs are defined using Python code. This allows for dynamic workflow generation, version control, and integration with other Python libraries essential for AI and data science.
+*   **Extensibility**: Airflow allows users to create custom operators, hooks, and sensors. This is critical for AI workflows that interact with specific cloud ML platforms, vector databases, or proprietary APIs.
+*   **Scalability**: Airflow supports various executors, including the LocalExecutor, CeleryExecutor, and KubernetesExecutor. For large-scale AI training pipelines, the KubernetesExecutor is preferred as it can spin up ephemeral pods for each task, isolating resources.
+*   **Idempotency**: Tasks should be designed to be idempotent. If a task fails and is retried, it should produce the same result without side effects. This is vital in AI pipelines where model training might be expensive and repeated runs must not corrupt data.
+*   **State Management**: Airflow maintains the state of every task and DAG run in a relational database (PostgreSQL or MySQL). This ensures that if the scheduler restarts, it knows exactly where it left off.
+*   **Backfilling**: Airflow allows users to backfill historical data. If a pipeline was missed for several days, Airflow can schedule and run those past DAG runs in order, respecting dependencies.
+*   **Airflow 2.x Improvements**: Modern versions emphasize better UI, improved security, and the introduction of the "Mapped" feature, which allows a single task definition to generate multiple task instances dynamically based on input data.
+
+## Comparisons or formulas
+
+*   **Airflow vs. Cron**: Cron is a simple time-based scheduler that runs commands sequentially. It lacks dependency management, error handling, and visibility. Airflow provides a full orchestration layer with dependency resolution, retry logic, and monitoring.
+*   **Airflow vs. Spark**: Spark is a distributed computing engine for processing large datasets. Airflow is an orchestrator. Airflow often triggers Spark jobs but does not perform the heavy data processing itself. Airflow manages the workflow; Spark executes the computation.
+*   **Airflow vs. Prefect**: Prefect is a newer workflow orchestrator that uses Python objects rather than DAGs for definition. It offers a more flexible, object-oriented approach compared to Airflow's strict DAG structure. However, Airflow has a larger ecosystem and community support.
+*   **Dependency Logic**: In a DAG, if Task A depends on Task B, the execution order is B -> A. This can be represented as:
+    task_b >> task_a
+    This syntax creates a directed edge from B to A.
+*   **Retry Logic**: A common formula for exponential backoff in retries is:
+    wait_time = base_delay * (2 ^ attempt_number)
+    Airflow allows configuring max_retries and retry_delay to handle transient failures in AI model serving or data ingestion.
+
+## Common mistakes
+
+*   **Circular Dependencies**: Defining a DAG where Task A depends on Task B, and Task B depends on Task A. Airflow will fail to parse the DAG. Always ensure the graph is acyclic.
+*   **Overusing XCom**: Pushing large datasets or model weights via XCom clogs the metadata database and slows down the system. Use XCom only for small metadata like file paths or configuration keys.
+*   **Hardcoding Paths**: Using absolute paths in operators makes DAGs non-portable. Use variables or environment configurations to define paths, allowing the same DAG to run in development and production environments.
+*   **Ignoring Idempotency**: Writing tasks that append to files without checking for existing content. If a task retries, it may duplicate data. Ensure tasks check for existence before writing.
+*   **Blocking the Scheduler**: Running long-running tasks or heavy computations directly in the DAG definition file (outside of operators). The scheduler parses the DAG file, so heavy logic there will delay scheduling.
+*   **Not Handling Failures**: Failing to configure error emails or slack notifications. In AI pipelines, silent failures can lead to stale models or missing data in dashboards.
+
+## Final takeaways
+
+*   Airflow is the industry standard for orchestrating complex, multi-step data and AI pipelines.
+*   Mastery of DAG syntax, operators, and dependencies is essential for building reliable workflows.
+*   Always design for idempotency and scalability, especially when integrating with cloud resources and large datasets.
+*   Use Airflow for orchestration, not computation. Offload heavy processing to specialized engines like Spark or TensorFlow.
+*   Leverage the Python-native nature of Airflow to integrate seamlessly with the broader AI and data science ecosystem.

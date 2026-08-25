@@ -10,6 +10,7 @@ from sqlalchemy import func
 
 from database import get_db
 from practice_models import TopicPerformance
+from services.authorization import require_student
 
 router = APIRouter(prefix="/courses", tags=["courses"])
 logger = logging.getLogger("chatbot")
@@ -81,6 +82,8 @@ def _extract_curriculum_topics(curriculum_json):
 
 @router.get("/data/{student_id}")
 def get_courses_data(student_id: int, db: Session = Depends(get_db)):
+    require_student(student_id, db)
+
     """Fetch all semesters and calculate subject progress based on completed topics."""
     try:
         default_curr = _load_curriculum()
@@ -175,6 +178,8 @@ def get_courses_data(student_id: int, db: Session = Depends(get_db)):
 
 @router.get("/subject/{subject_name}/{student_id}")
 def get_subject_data(subject_name: str, student_id: int, db: Session = Depends(get_db), class_id: Optional[int] = None):
+    require_student(student_id, db)
+
     """Fetch predefined topics for a subject and attach individual performance data."""
     # Normalize subject name
     original_subject_name = subject_name
@@ -296,6 +301,8 @@ def get_subject_data(subject_name: str, student_id: int, db: Session = Depends(g
 
 @router.get("/analytics/{student_id}")
 def get_analytics(student_id: int, db: Session = Depends(get_db)):
+    require_student(student_id, db)
+
     stats = calculate_student_metrics(student_id, db)
     subjects = get_student_subjects(student_id, db)
     
@@ -332,6 +339,8 @@ def get_subject_progress(subject_name: str, student_id: int, db: Session = Depen
 
 @router.get("/topic/{topic_name}/progress/{student_id}")
 def get_topic_progress(topic_name: str, student_id: int, db: Session = Depends(get_db)):
+    require_student(student_id, db)
+
     perf = db.query(TopicPerformance).filter(
         TopicPerformance.student_id == student_id,
         TopicPerformance.topic == topic_name

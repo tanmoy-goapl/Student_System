@@ -49,9 +49,12 @@ def _roadmap_llm_call(system_prompt: str, user_prompt: str, max_tokens: int = 40
             # connection failover quick, but allow the model enough time to
             # finish a compact long-roadmap response.
             try:
-                read_timeout = max(15.0, float(os.getenv("ROADMAP_LLM_TIMEOUT_SECONDS", "25")))
+                # Roadmaps are structured multi-week responses. The previous
+                # 25-second default frequently expired while the model was
+                # still producing valid JSON, especially for four-week plans.
+                read_timeout = max(30.0, float(os.getenv("ROADMAP_LLM_TIMEOUT_SECONDS", "90")))
             except (TypeError, ValueError):
-                read_timeout = 25.0
+                read_timeout = 90.0
             timeout = httpx.Timeout(read_timeout, connect=1.5)
             client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
 

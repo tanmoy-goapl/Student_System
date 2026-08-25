@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from database import get_db
 from roadmap_models import UserGoal, LearningRoadmap, DailyTask
+from practice_models import LearningContent
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
+from services.authorization import require_student
 
 router = APIRouter(prefix="/api/roadmap")
 
@@ -17,6 +19,7 @@ class GoalCreate(BaseModel):
 
 @router.post("/goals")
 def create_goal(goal_in: GoalCreate, db: Session = Depends(get_db)):
+    require_student(goal_in.student_id, db)
     goal = UserGoal(
         student_id=goal_in.student_id,
         goal_type=goal_in.goal_type,
@@ -31,6 +34,7 @@ def create_goal(goal_in: GoalCreate, db: Session = Depends(get_db)):
 
 @router.get("/goals/{student_id}")
 def get_goals(student_id: int, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     goals = db.query(UserGoal).filter(UserGoal.student_id == student_id).all()
     return {"success": True, "goals": goals}
 
@@ -46,8 +50,12 @@ from database import SessionLocal
 
 def background_generate_roadmap(student_id: int, goal_id: int):
     db = SessionLocal()
+    goal = None
     try:
-        goal = db.query(UserGoal).filter(UserGoal.id == goal_id).first()
+        goal = db.query(UserGoal).filter(
+            UserGoal.id == goal_id,
+            UserGoal.student_id == student_id,
+        ).first()
         if not goal:
             return
             
@@ -73,16 +81,23 @@ def background_generate_roadmap(student_id: int, goal_id: int):
         logging.error(f"Background roadmap generation failed: {e}")
         with open("/tmp/roadmap_error.log", "a") as f:
             f.write(f"Roadmap Gen Error at {datetime.utcnow()}: {e}\n{traceback.format_exc()}\n")
-        goal.status = "failed"
-        db.commit()
+        if goal:
+            goal.status = "failed"
+            db.commit()
     finally:
         db.close()
 
 @router.post("/generate")
 def generate_roadmap(req: GenerateRoadmapReq, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    goal = db.query(UserGoal).filter(UserGoal.id == req.goal_id).first()
+    require_student(req.student_id, db)
+    goal = db.query(UserGoal).filter(
+        UserGoal.id == req.goal_id,
+        UserGoal.student_id == req.student_id,
+    ).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
+    if goal.status == "generating":
+        return {"success": True, "message": "Roadmap is already being generated in the background."}
         
     goal.status = "generating"
     db.commit()
@@ -96,6 +111,7 @@ def generate_roadmap(req: GenerateRoadmapReq, background_tasks: BackgroundTasks,
 def get_current_roadmap(student_id: int, roadmap_id: Optional[int] = None, db: Session = Depends(get_db)):
     from sqlalchemy import desc
 
+    require_student(student_id, db)
     latest_goal = None
     if not roadmap_id:
         latest_goal = db.query(UserGoal).filter(
@@ -161,8 +177,16 @@ def get_current_roadmap(student_id: int, roadmap_id: Optional[int] = None, db: S
     return {"success": True, "roadmap": roadmap, "tasks": tasks, "active_week": active_week}
 
 @router.patch("/tasks/{task_id}/complete")
-def complete_task(task_id: int, db: Session = Depends(get_db)):
-    task = db.query(DailyTask).filter(DailyTask.id == task_id).first()
+def complete_task(
+    task_id: int,
+    student_id: int = Query(...),
+    db: Session = Depends(get_db),
+):
+    require_student(student_id, db)
+    task = db.query(DailyTask).join(LearningRoadmap).filter(
+        DailyTask.id == task_id,
+        LearningRoadmap.student_id == student_id,
+    ).first()
     if not task:
         return {"success": False, "message": "Task not found"}
         
@@ -189,7 +213,25 @@ class CompleteTopicRequest(BaseModel):
 @router.post("/complete_topic")
 def complete_topic(req: CompleteTopicRequest, db: Session = Depends(get_db)):
     from sqlalchemy import desc
+    require_student(req.student_id, db)
     activity_at = datetime.utcnow()
+
+    # A learning topic can only be marked read after its complete study guide
+    # has been persisted. The frontend also guards this state, but keeping the
+    # check here prevents a stale or premature client request from recording
+    # completion while the summary stream is still running.
+    if req.task_type == "learning":
+        generated_content = db.query(LearningContent).filter(
+            LearningContent.student_id == req.student_id,
+            LearningContent.topic == req.topic
+        ).order_by(desc(LearningContent.created_at)).first()
+        content = generated_content.content if generated_content else None
+        if not content or (isinstance(content, str) and not content.strip()):
+            return {
+                "success": False,
+                "not_ready": True,
+                "message": "The study summary is still generating. Finish reading it before marking the topic as read.",
+            }
     
     # 1. Always create or update TopicPerformance so the frontend knows the topic is read/started
     from practice_models import TopicPerformance
@@ -269,6 +311,7 @@ def complete_topic(req: CompleteTopicRequest, db: Session = Depends(get_db)):
 @router.get("/all/{student_id}")
 def get_all_roadmaps(student_id: int, db: Session = Depends(get_db)):
     from sqlalchemy import desc
+    require_student(student_id, db)
     roadmaps = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == student_id).order_by(desc(LearningRoadmap.created_at)).all()
     
     result = []
@@ -329,8 +372,16 @@ def get_all_roadmaps(student_id: int, db: Session = Depends(get_db)):
     return {"success": True, "roadmaps": result}
 
 @router.delete("/delete/{roadmap_id}")
-def delete_roadmap(roadmap_id: int, db: Session = Depends(get_db)):
-    roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.id == roadmap_id).first()
+def delete_roadmap(
+    roadmap_id: int,
+    student_id: int = Query(...),
+    db: Session = Depends(get_db),
+):
+    require_student(student_id, db)
+    roadmap = db.query(LearningRoadmap).filter(
+        LearningRoadmap.id == roadmap_id,
+        LearningRoadmap.student_id == student_id,
+    ).first()
     if not roadmap:
         return {"success": False, "message": "Roadmap not found"}
         

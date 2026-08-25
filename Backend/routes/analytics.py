@@ -10,6 +10,7 @@ from database import get_db
 from models import User
 from practice_models import UserPerformance, TopicPerformance, QuizHistory
 from roadmap_models import LearningRoadmap, DailyTask
+from services.authorization import require_student
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -22,6 +23,7 @@ from services.analytics_engine import (
 
 @router.get("/debug/{student_id}")
 def debug_analytics(student_id: int, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     all_topics = db.query(TopicPerformance).filter(TopicPerformance.student_id == student_id).all()
     result = []
     for t in all_topics:
@@ -39,6 +41,7 @@ def debug_analytics(student_id: int, db: Session = Depends(get_db)):
 
 @router.get("/data/{student_id}")
 async def get_analytics_data(student_id: int, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     # Verify user exists
     user = db.query(User).filter(User.id == student_id).first()
     if not user:

@@ -10,7 +10,8 @@ from sqlalchemy import desc
 from database import get_db
 from practice_models import RevisionItem, TopicPerformance, LearningContent
 from services.practice.topic_extractor import extract_topics_from_documents
-from services.practice.content_generator import has_valid_revision
+from services.practice.content_generator import has_valid_revision, split_revision_payload
+from services.authorization import require_student
 
 logger = logging.getLogger("chatbot")
 
@@ -80,7 +81,7 @@ def _get_revision_status(student_id: int, topic: Optional[str], db: Session) -> 
 
 @router.get("/data")
 def get_learning_data(
-    student_id: int = 1,
+    student_id: int,
     topic: Optional[str] = None,
     subject: Optional[str] = None,
     roadmap_id: Optional[int] = None,
@@ -89,6 +90,7 @@ def get_learning_data(
     skip_sidebar: Optional[bool] = False,
     db: Session = Depends(get_db)
 ):
+    require_student(student_id, db)
     subject = resolve_standard_subject(topic or "", subject)
 
     sidebar_data = []
@@ -210,10 +212,6 @@ def get_learning_data(
             LearningContent.subject == subject,
             LearningContent.topic == selected_topic
         ).first()
-        if not cached_content:
-            cached_content = db.query(LearningContent).filter(
-                LearningContent.topic == selected_topic
-            ).first()
         
         if cached_content and not has_valid_revision(cached_content.revision):
             logger.info(f"INVALIDATING incomplete revision cache: topic='{selected_topic}', subject='{subject}'")
@@ -227,14 +225,18 @@ def get_learning_data(
             is_old_format = isinstance(cached_content.content, list) or ("why is it important" not in cached_str.lower() and "how does it work" not in cached_str.lower())
             if subject and ("keshav" in cached_str.lower() or "placement policy" in cached_str.lower() or "deregistered" in cached_str.lower()):
                 is_old_format = True
+
+        cached_display_content, embedded_revision = split_revision_payload(
+            cached_content.content, selected_topic, subject
+        ) if cached_content else (None, None)
         
-        if cached_content and "could not be generated" not in str(cached_content.content) and not is_old_format:
+        if cached_content and "could not be generated" not in str(cached_display_content) and not is_old_format:
             notes_response = {
                 "success": True,
                 "generatedBy": "AI Assistant (Cached)",
                 "status": "Personal Study Guide",
                 "topic": selected_topic,
-                "content": cached_content.content
+                "content": cached_display_content
             }
         else:
             notes_response = {
@@ -245,12 +247,13 @@ def get_learning_data(
                 "content": []
             }
         
+        revision_source = cached_content.revision if cached_content and cached_content.revision else embedded_revision
         revision_points = []
-        if cached_content and cached_content.revision:
-            if isinstance(cached_content.revision, dict):
-                revision_points = cached_content.revision.get("points", [])
-            elif isinstance(cached_content.revision, list):
-                revision_points = cached_content.revision
+        if revision_source:
+            if isinstance(revision_source, dict):
+                revision_points = revision_source.get("points", [])
+            elif isinstance(revision_source, list):
+                revision_points = revision_source
         
         learning_assistant_response = {
             "success": True,
@@ -500,6 +503,15 @@ def get_learning_data(
         })
     
     selected_topic = topic
+    roadmap_categories = [
+        category for category in sidebar_data
+        if str(category.get("id", "")) == "roadmap"
+        or str(category.get("id", "")).startswith("roadmap-")
+    ]
+    personal_topic_categories = roadmap_categories + [
+        category for category in sidebar_data
+        if category.get("id") == "documents"
+    ]
     
     if source == "courses" and selected_topic:
         topic_found = False
@@ -515,15 +527,16 @@ def get_learning_data(
             
     elif source == "personal" and selected_topic:
         topic_found = False
-        roadmap_subjects = [c for c in sidebar_data if c["id"] == "roadmap"]
-        if roadmap_subjects:
-            for subj in roadmap_subjects[0].get("subjects", []):
+        for category in personal_topic_categories:
+            for subj in category.get("subjects", []):
                 for t in subj.get("topics", []):
                     if t["id"] == selected_topic or (t.get("subtopics") and selected_topic in t["subtopics"]):
                         topic_found = True
                         break
                 if topic_found:
                     break
+            if topic_found:
+                break
         if not topic_found:
             selected_topic = None
 
@@ -536,18 +549,22 @@ def get_learning_data(
                 else:
                     selected_topic = first_topic["id"]
         else:
-            roadmap_subjects = [c for c in sidebar_data if c["id"] == "roadmap"]
-            if roadmap_subjects and roadmap_subjects[0].get("subjects"):
-                unlocked_subjects = [s for s in roadmap_subjects[0]["subjects"] if not s.get("topics", []) or not s.get("topics", [])[0].get("locked", False)]
-                if unlocked_subjects and unlocked_subjects[0].get("topics"):
-                    first_topic = unlocked_subjects[0]["topics"][0]
+            for roadmap_category in roadmap_categories:
+                if not roadmap_category.get("subjects"):
+                    continue
+                unlocked_subjects = [
+                    s for s in roadmap_category["subjects"]
+                    if not s.get("topics", []) or not s.get("topics", [])[0].get("locked", False)
+                ]
+                candidate_subjects = unlocked_subjects or roadmap_category["subjects"]
+                if candidate_subjects and candidate_subjects[0].get("topics"):
+                    first_topic = candidate_subjects[0]["topics"][0]
                     if first_topic.get("subtopics"):
                         selected_topic = first_topic["subtopics"][0]
                     else:
                         selected_topic = first_topic["id"]
-                elif roadmap_subjects[0].get("subjects") and roadmap_subjects[0]["subjects"][0].get("topics"):
-                    selected_topic = roadmap_subjects[0]["subjects"][0]["topics"][0]["id"]
-                    
+                    break
+
             if not selected_topic:
                 if doc_subjects and doc_subjects[0].get("topics"):
                     selected_topic = doc_subjects[0]["topics"][0]["id"]
@@ -734,10 +751,6 @@ def get_learning_data(
         LearningContent.topic == selected_topic
     ).first()
     
-    if not cached_content:
-        cached_content = db.query(LearningContent).filter(
-            LearningContent.topic == selected_topic
-        ).first()
 
     if cached_content and not has_valid_revision(cached_content.revision):
         logger.info(f"INVALIDATING incomplete revision cache: topic='{selected_topic}', subject='{subject}'")
@@ -754,14 +767,18 @@ def get_learning_data(
             logger.warning(f"CACHE INVALIDATED (Resume/Policy Leak detected): topic='{selected_topic}', subject='{subject}'")
             is_old_format = True
 
-    if cached_content and "could not be generated" not in str(cached_content.content) and not is_old_format:
+    cached_display_content, embedded_revision = split_revision_payload(
+        cached_content.content, selected_topic, subject
+    ) if cached_content else (None, None)
+
+    if cached_content and "could not be generated" not in str(cached_display_content) and not is_old_format:
         logger.info(f"CACHE HIT (Fast Return): topic='{selected_topic}', subject='{subject}'")
         notes_response = {
             "success": True,
             "generatedBy": "AI Assistant (Cached)",
             "status": "Personal Study Guide",
             "topic": selected_topic,
-            "content": cached_content.content
+            "content": cached_display_content
         }
     else:
         if cached_content and is_old_format:
@@ -870,12 +887,13 @@ def get_learning_data(
             "relation": r["relation"]
         })
 
+    revision_source = cached_content.revision if cached_content and cached_content.revision else embedded_revision
     revision_points = []
-    if cached_content and cached_content.revision:
-        if isinstance(cached_content.revision, dict):
-            revision_points = cached_content.revision.get("points", [])
-        elif isinstance(cached_content.revision, list):
-            revision_points = cached_content.revision
+    if revision_source:
+        if isinstance(revision_source, dict):
+            revision_points = revision_source.get("points", [])
+        elif isinstance(revision_source, list):
+            revision_points = revision_source
 
     learning_assistant_response = {
         "success": True,

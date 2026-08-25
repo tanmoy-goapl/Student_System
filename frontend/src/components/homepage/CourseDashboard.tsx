@@ -41,7 +41,11 @@ export default function CourseDashboard() {
 
   const fetchCourses = async () => {
     try {
-      const studentId = localStorage.getItem("user_id") || "1";
+      const studentId = localStorage.getItem("user_id");
+      if (!studentId) {
+        setLoadingCourses(false);
+        return;
+      }
       const res = await fetch(`/api/courses/data/${studentId}`);
       const data = await res.json();
       if (data.success) {

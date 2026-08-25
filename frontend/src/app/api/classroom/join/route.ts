@@ -8,6 +8,9 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
+    if (!body?.student_id) {
+      return NextResponse.json({ success: false, error: "Missing student_id" }, { status: 400 });
+    }
     const response = await fetch(`${BACKEND_URL}/classroom/join`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

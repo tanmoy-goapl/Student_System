@@ -7,6 +7,9 @@ export async function GET(req: NextRequest) {
   try {
     const studentId = req.nextUrl.searchParams.get("student_id");
     const sessionId = req.nextUrl.searchParams.get("session_id");
+    if (!studentId) {
+      return NextResponse.json({ detail: "student_id is required" }, { status: 400 });
+    }
     const url = sessionId 
       ? `${BACKEND_URL}/chat/history/${studentId}?session_id=${sessionId}`
       : `${BACKEND_URL}/chat/history/${studentId}`;
@@ -23,6 +26,9 @@ export async function DELETE(req: NextRequest) {
   try {
     const studentId = req.nextUrl.searchParams.get("student_id");
     const sessionId = req.nextUrl.searchParams.get("session_id");
+    if (!studentId) {
+      return NextResponse.json({ detail: "student_id is required" }, { status: 400 });
+    }
     const url = sessionId 
       ? `${BACKEND_URL}/chat/history/${studentId}?session_id=${sessionId}`
       : `${BACKEND_URL}/chat/history/${studentId}`;

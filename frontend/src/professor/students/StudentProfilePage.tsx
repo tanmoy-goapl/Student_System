@@ -85,7 +85,8 @@ export default function StudentProfilePage() {
         if (initialLoad) setLoading(true);
         else setRefreshing(true);
         if (initialLoad) setError(null);
-        const professorId = localStorage.getItem("user_id") || "2";
+        const professorId = localStorage.getItem("user_id");
+        if (!professorId) throw new Error("Authentication required. Please sign in again.");
         const response = await fetch(
           `/api/professor/student/${encodeURIComponent(studentId)}?professor_id=${encodeURIComponent(professorId)}`,
           { cache: "no-store" }

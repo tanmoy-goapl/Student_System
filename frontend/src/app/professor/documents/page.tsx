@@ -185,7 +185,8 @@ export default function ProfessorDocumentsPage() {
   const fetchDocsAndClasses = async () => {
     try {
       const userId = localStorage.getItem("user_id");
-      const uid = userId ? parseInt(userId, 10) : 1;
+      if (!userId) return;
+      const uid = parseInt(userId, 10);
       
       const docsRes = await getDocumentsData(uid);
       setDocuments(docsRes.documents || []);
@@ -255,7 +256,12 @@ export default function ProfessorDocumentsPage() {
     const activeClassObj = classrooms.find(c => String(c.id) === selectedClassroomId);
     formData.append("subject", activeClassObj ? activeClassObj.name : "General");
     
-    const userId = localStorage.getItem("user_id") || "1";
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      setUploadError("Authentication required. Please sign in again.");
+      setUploadLoading(false);
+      return;
+    }
     formData.append("student_id", userId);
     formData.append("user_id", userId);
     formData.append("owner_role", "professor");
@@ -356,7 +362,13 @@ export default function ProfessorDocumentsPage() {
     setIsGenerating(true);
     setGenerateDone(false);
 
-    const userId = parseInt(localStorage.getItem("user_id") || "1", 10);
+    const rawUserId = localStorage.getItem("user_id");
+    if (!rawUserId) {
+      setGenerateText("Authentication required. Please sign in again.");
+      setIsGenerating(false);
+      return;
+    }
+    const userId = parseInt(rawUserId, 10);
     const topicClean = generateDoc.name.replace(/\.[^/.]+$/, "");
 
     try {

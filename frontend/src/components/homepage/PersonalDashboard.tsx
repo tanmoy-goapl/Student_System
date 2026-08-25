@@ -31,7 +31,11 @@ export default function PersonalDashboard() {
 
   const fetchRoadmaps = async () => {
     try {
-      const studentId = localStorage.getItem("user_id") || "1";
+      const studentId = localStorage.getItem("user_id");
+      if (!studentId) {
+        setLoadingRoadmaps(false);
+        return;
+      }
       const res = await fetch(`/api/roadmap/all/${studentId}`);
       const data = await res.json();
       if (data.success) {
@@ -68,7 +72,9 @@ export default function PersonalDashboard() {
     if (typeof id === 'string' && id.startsWith('gen_')) return; // Cannot delete while generating
     if (confirm("Are you sure you want to delete this roadmap?")) {
       try {
-        await fetch(`/api/roadmap/delete/${id}`, { method: 'DELETE' });
+        const studentId = localStorage.getItem("user_id");
+        if (!studentId) throw new Error("Authentication required");
+        await fetch(`/api/roadmap/delete/${id}?student_id=${encodeURIComponent(studentId)}`, { method: 'DELETE' });
         fetchRoadmaps();
       } catch (error) {
         console.error("Failed to delete roadmap:", error);

@@ -44,6 +44,9 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const studentId = searchParams.get("student_id");
+    if (!studentId) {
+      return NextResponse.json({ detail: "student_id is required" }, { status: 400 });
+    }
     const response = await fetch(`${BACKEND_URL}/chat/history/${studentId}`, {
       method: "DELETE",
     });

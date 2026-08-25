@@ -28,9 +28,24 @@ _PERSONAL_OR_INSTITUTIONAL_TERMS = (
 )
 
 
+def _normalize_common_query(question: str) -> str:
+    normalized = re.sub(r"\s+", " ", str(question or "")).strip().lower()
+    for misspelling, correction in {
+        "plicy": "policy",
+        "polcy": "policy",
+        "polic": "policy",
+    }.items():
+        normalized = re.sub(
+            rf"\b{re.escape(misspelling)}\b",
+            correction,
+            normalized,
+        )
+    return normalized
+
+
 def is_general_definition_question(question: str) -> bool:
     """Identify general explanations that should not require user documents."""
-    normalized = re.sub(r"\s+", " ", str(question or "")).strip()
+    normalized = _normalize_common_query(question)
     if not _GENERAL_DEFINITION_RE.match(normalized):
         return False
     return not any(term in normalized.lower() for term in _PERSONAL_OR_INSTITUTIONAL_TERMS)
@@ -63,10 +78,33 @@ def is_resume_analysis_question(question: str) -> bool:
     )
 
 
+_PERSONAL_PROFILE_REFERENCE_RE = re.compile(
+    r"\b(?:my|mine|me|i|myself)\b",
+    flags=re.IGNORECASE,
+)
+_PERSONAL_PROFILE_TERMS = (
+    "specializ", "branch", "major", "field", "degree", "qualif",
+    "educat", "academic", "skill", "project", "experienc", "intern",
+    "certificat", "profile", "background", "resume", "cv", "course",
+    "subject", "mark", "cgpa", "gpa", "grade", "score", "compan",
+    "job", "role",
+)
+
+
+def is_personal_profile_question(question: str) -> bool:
+    # First-person profile/fact questions should use private evidence.
+    normalized = re.sub(r"\s+", " ", str(question or "")).strip().lower()
+    if not _PERSONAL_PROFILE_REFERENCE_RE.search(normalized):
+        return False
+    if is_resume_analysis_question(question):
+        return False
+    return any(term in normalized for term in _PERSONAL_PROFILE_TERMS)
+
+
 def detect_retrieval_mode(
     question: str, db: Session = None, student_id: int = None
 ) -> RetrievalMode:
-    q_lower = question.lower()
+    q_lower = _normalize_common_query(question)
 
     # ── 1. ROADMAP CREATION (highest priority — explicit request) ─────────────
     roadmap_triggers = [
@@ -121,6 +159,10 @@ def detect_retrieval_mode(
     if is_resume_analysis_question(question):
         logger.info("Selected Mode: PERSONALIZED_ADVISOR (resume analysis)")
         return RetrievalMode.PERSONALIZED_ADVISOR
+
+    if is_personal_profile_question(question):
+        logger.info("Selected Mode: STRICT_DOCUMENT (personal profile evidence)")
+        return RetrievalMode.STRICT_DOCUMENT
 
     strict_keywords = [
         "this document", "according to this file", "from my resume",

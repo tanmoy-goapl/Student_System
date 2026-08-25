@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     const professorId = req.nextUrl.searchParams.get("professor_id");
-    const query = professorId ? "?professor_id=" + encodeURIComponent(professorId) : "";
+    if (!professorId) {
+      return NextResponse.json({ detail: "professor_id is required" }, { status: 400 });
+    }
+    const query = "?professor_id=" + encodeURIComponent(professorId);
     const response = await fetch(BACKEND_URL + "/classroom/departments" + query, {
       cache: "no-store",
     });

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { stripRevisionPayload } from "@/lib/learningContent";
 import { 
   Sparkles, 
   Lightbulb, 
@@ -99,7 +100,10 @@ function formatLatexToUnicode(text: string): string {
 }
 
 export default function NotesCard({ notesResponse, onRegenerate, isGenerating = false }: NotesCardProps) {
-  const isLoading = !notesResponse.content || notesResponse.content.length === 0;
+  const cleanContent = typeof notesResponse.content === "string"
+    ? stripRevisionPayload(notesResponse.content)
+    : notesResponse.content;
+  const isLoading = !cleanContent || cleanContent.length === 0;
 
   // Custom renderer for markdown paragraphs to detect callouts (💡, ⚠️, 🎯, 📌)
   const renderParagraph = ({ children }: any) => {
@@ -375,9 +379,9 @@ export default function NotesCard({ notesResponse, onRegenerate, isGenerating = 
           <div className="h-3 bg-white/5 rounded w-4/5"></div>
           <p className="text-xs text-zinc-500 pt-3 italic font-light">Synthesizing topic explanations...</p>
         </div>
-      ) : typeof notesResponse.content === "string" ? (
+      ) : typeof cleanContent === "string" ? (
         renderMarkdownContent(
-          formatLatexToUnicode(notesResponse.content + (isGenerating ? " ▋" : ""))
+          formatLatexToUnicode(cleanContent + (isGenerating ? " ▋" : ""))
             .replace(/💡 Example:\s*\n+/g, "💡 Example: ")
             .replace(/⚠️ Important:\s*\n+/g, "⚠️ Important: ")
             .replace(/🎯 Interview Tip:\s*\n+/g, "🎯 Interview Tip: ")

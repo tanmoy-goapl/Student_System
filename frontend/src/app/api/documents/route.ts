@@ -6,7 +6,10 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://10.10.90.95:8001"
 export async function GET(req: NextRequest) {
   try {
     const studentId = req.nextUrl.searchParams.get("student_id");
-    const response = await fetch(`${BACKEND_URL}/documents/${studentId}`);
+    if (!studentId) {
+      return NextResponse.json({ detail: "student_id is required" }, { status: 400 });
+    }
+    const response = await fetch(`${BACKEND_URL}/documents/${encodeURIComponent(studentId)}`);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
@@ -18,7 +21,11 @@ export async function GET(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const documentId = req.nextUrl.searchParams.get("document_id");
-    const response = await fetch(`${BACKEND_URL}/documents/${documentId}`, {
+    const userId = req.nextUrl.searchParams.get("user_id");
+    if (!documentId || !userId) {
+      return NextResponse.json({ detail: "document_id and user_id are required" }, { status: 400 });
+    }
+    const response = await fetch(`${BACKEND_URL}/documents/${encodeURIComponent(documentId)}?user_id=${encodeURIComponent(userId)}`, {
       method: "DELETE",
     });
     const data = await response.json();

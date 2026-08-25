@@ -58,6 +58,23 @@ def init_db():
             conn.execute(text("ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_id VARCHAR;"))
             conn.execute(text("ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS session_title VARCHAR;"))
             conn.execute(text("ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS source_documents TEXT;"))
+
+            # Normalize the legacy Data Science department code for existing databases.
+            conn.execute(text(
+                "UPDATE departments SET code = 'DS', name = 'DS Department' "
+                "WHERE code = '303' AND NOT EXISTS (SELECT 1 FROM departments WHERE code = 'DS');"
+            ))
+            conn.execute(text("UPDATE departments SET name = 'DS Department' WHERE code = 'DS';"))
+            conn.execute(text(
+                "UPDATE users SET department = regexp_replace(department, "
+                "'(^|[,;/|])303($|[,;/|])', '\\1DS\\2', 'g') "
+                "WHERE department ~ '(^|[,;/|])303($|[,;/|])';"
+            ))
+            conn.execute(text(
+                "UPDATE classrooms SET department = regexp_replace(department, "
+                "'(^|[,;/|])303($|[,;/|])', '\\1DS\\2', 'g') "
+                "WHERE department ~ '(^|[,;/|])303($|[,;/|])';"
+            ))
     except Exception as e:
         print("Database schema migration notice/error:", e)
 

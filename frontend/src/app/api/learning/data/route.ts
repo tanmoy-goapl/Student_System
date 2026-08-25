@@ -9,6 +9,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const topic = searchParams.get("topic");
     const studentId = searchParams.get("student_id");
+    if (!studentId) {
+      return NextResponse.json({ detail: "student_id is required" }, { status: 400 });
+    }
     const subject = searchParams.get("subject");
     const source = searchParams.get("source");
     const roadmapId = searchParams.get("roadmap_id");
@@ -17,7 +20,7 @@ export async function GET(request: Request) {
     let url = `${BACKEND_URL}/learning/data`;
     const backendParams = new URLSearchParams();
     if (topic) backendParams.append("topic", topic);
-    if (studentId) backendParams.append("student_id", studentId);
+    backendParams.append("student_id", studentId);
     if (subject) backendParams.append("subject", subject);
     if (source) backendParams.append("source", source);
     if (roadmapId) backendParams.append("roadmap_id", roadmapId);

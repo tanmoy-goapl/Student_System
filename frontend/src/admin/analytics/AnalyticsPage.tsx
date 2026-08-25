@@ -7,6 +7,7 @@ import {
   ShieldAlert, Sparkles, Target, TrendingUp, UserCheck, UserX, Users, X,
 } from "lucide-react";
 import AdminSidebar from "../components/AdminSidebar";
+import { getAdminScopedEndpoint } from "@/lib/adminAuth";
 type ClassroomStatus = "STRONG" | "STABLE" | "NEEDS ATTENTION" | "EMPTY";
 
 interface ClassroomStat {
@@ -84,7 +85,7 @@ interface ExecutiveInsight {
 }
 
 async function fetchAdminJson<T>(endpoint: string): Promise<T> {
-  const response = await fetch(endpoint, { cache: "no-store" });
+  const response = await fetch(getAdminScopedEndpoint(endpoint), { cache: "no-store" });
   if (!response.ok) throw new Error(`Unable to load ${endpoint} (${response.status})`);
   return response.json() as Promise<T>;
 }

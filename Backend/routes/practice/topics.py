@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from practice_models import TopicPerformance, CustomTopic
 from services.practice.topic_extractor import extract_topics_from_documents
+from services.authorization import require_student
 
 logger = logging.getLogger("chatbot")
 
@@ -23,6 +24,7 @@ class AddCustomTopicRequest(BaseModel):
 
 @router.get("/topics/{student_id}")
 def get_topics(student_id: int, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     """Extract topics from student's uploaded documents or curriculum."""
     logger.info(f"[Practice] Extracting topics for student_id={student_id}")
 
@@ -101,6 +103,7 @@ def get_topics(student_id: int, db: Session = Depends(get_db)):
 
 @router.post("/custom-topics")
 def add_custom_topic(req: AddCustomTopicRequest, db: Session = Depends(get_db)):
+    require_student(req.student_id, db)
     """Save a user-selected general/custom topic to the database."""
     existing = (
         db.query(CustomTopic)

@@ -27,7 +27,11 @@ export default function CoursesPage() {
     if (!focusTopic || isFocusInRevision || isAddingFocusRevision) return;
 
     const storedStudentId = Number(localStorage.getItem("user_id"));
-    const studentId = Number.isInteger(storedStudentId) && storedStudentId > 0 ? storedStudentId : 3;
+    if (!Number.isInteger(storedStudentId) || storedStudentId <= 0) {
+      setFocusRevisionError("Authentication required. Please sign in again.");
+      return;
+    }
+    const studentId = storedStudentId;
 
     setIsAddingFocusRevision(true);
     setFocusRevisionError(null);
@@ -46,10 +50,11 @@ export default function CoursesPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const studentId = localStorage.getItem("user_id") || undefined;
+        const studentId = localStorage.getItem("user_id");
+        if (!studentId) return;
         const response = await getHomepageData(studentId);
         setData(response);
-        const resolvedStudentId = Number(response.student_id || studentId || 3);
+        const resolvedStudentId = Number(response.student_id || studentId);
         try {
           const performance = await getStudentPerformance(resolvedStudentId);
           setPendingTasks(performance.pending_tasks || []);

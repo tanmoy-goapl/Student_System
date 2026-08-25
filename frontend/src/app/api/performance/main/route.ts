@@ -8,10 +8,10 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("student_id");
-    let url = `${BACKEND_URL}/performance/main`;
-    if (studentId) {
-      url += `?student_id=${studentId}`;
+    if (!studentId) {
+      return NextResponse.json({ detail: "student_id is required" }, { status: 400 });
     }
+    const url = `${BACKEND_URL}/performance/main?student_id=${encodeURIComponent(studentId)}`;
     const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },

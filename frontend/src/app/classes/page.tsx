@@ -29,7 +29,8 @@ export default function ClassesPage() {
     }, [authLoading, userId]);
 
     useEffect(() => {
-        listClassroomDepartments(userId ? parseInt(userId, 10) : undefined)
+        if (authLoading || !userId) return;
+        listClassroomDepartments(parseInt(userId, 10))
             .then((rows) => {
                 setDepartments(rows);
                 if (rows.length > 0) setNewDepartment((current) => rows.some((row) => row.code === current) ? current : rows[0].code);
@@ -38,7 +39,7 @@ export default function ClassesPage() {
                 { id: "cs", code: "CS", name: "CS Department" },
                 { id: "ai", code: "AI", name: "AI Department" },
             ]));
-    }, []);
+    }, [authLoading, userId]);
 
     const loadClasses = async () => {
         if (!userId) return;

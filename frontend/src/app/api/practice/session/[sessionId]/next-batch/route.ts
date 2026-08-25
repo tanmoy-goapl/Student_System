@@ -10,8 +10,12 @@ export async function POST(
 ) {
   try {
     const { sessionId } = await params;
+    const studentId = req.nextUrl.searchParams.get("student_id");
+    if (!studentId) {
+      return NextResponse.json({ detail: "student_id is required" }, { status: 400 });
+    }
     const response = await fetch(
-      `${BACKEND_URL}/practice/session/${sessionId}/next-batch`,
+      `${BACKEND_URL}/practice/session/${sessionId}/next-batch?student_id=${encodeURIComponent(studentId)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -34,14 +34,14 @@ export default function SubjectAccordion({
         onClick={onToggle}
         title={subject.title}
         className="
-          w-full flex items-center justify-between
+          w-full min-w-0 flex items-center justify-between
           px-3 py-2 rounded-lg
           hover:bg-white/[0.08]
           transition-all duration-200
           text-left
         "
       >
-        <div className="flex items-center gap-2.5">
+        <div className="min-w-0 flex items-center gap-2.5">
           <span
             className="text-xs"
             style={{
@@ -51,22 +51,18 @@ export default function SubjectAccordion({
             #
           </span>
 
-          <span className="text-xs font-medium text-white">
+          <span className="min-w-0 truncate text-xs font-medium text-white">
             {subject.title}
           </span>
         </div>
 
-        {isExpanded ? (
-          <ChevronDown
-            size={12}
-            className="text-white/40"
-          />
-        ) : (
-          <ChevronRight
-            size={12}
-            className="text-white/40"
-          />
-        )}
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+          {isExpanded ? (
+            <ChevronDown className="h-3.5 w-3.5 text-white/40" aria-hidden="true" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5 text-white/40" aria-hidden="true" />
+          )}
+        </span>
       </button>
 
       {/* Topics */}
@@ -92,7 +88,7 @@ export default function SubjectAccordion({
                 onClick={() => onSelectTopic(area)}
                 title={area}
                 className={`
-                  w-full flex items-center justify-between
+                  w-full min-w-0 flex items-center justify-between
                   px-3 py-2 rounded-lg
                   transition-all duration-200
                   border text-left
@@ -108,7 +104,7 @@ export default function SubjectAccordion({
                     className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                     style={{ background: subject.color }}
                   />
-                  <span className="text-[0.7rem] text-white truncate">
+                  <span className="min-w-0 truncate text-[0.7rem] text-white">
                     {area}
                   </span>
                 </div>

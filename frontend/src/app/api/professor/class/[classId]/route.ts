@@ -11,15 +11,16 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const classId = resolvedParams.classId;
+    const professorId = new URL(request.url).searchParams.get('professor_id');
 
-    if (!classId) {
+    if (!classId || !professorId) {
       return NextResponse.json(
-        { error: 'Class ID is required' },
+        { error: 'class_id and professor_id are required' },
         { status: 400 }
       );
     }
 
-    const response = await fetch(`${BACKEND_URL}/professor/class/${classId}/analytics`, {
+    const response = await fetch(`${BACKEND_URL}/professor/class/${encodeURIComponent(classId)}/analytics?professor_id=${encodeURIComponent(professorId)}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

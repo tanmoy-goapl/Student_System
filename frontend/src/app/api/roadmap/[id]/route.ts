@@ -8,7 +8,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const response = await fetch(`${BACKEND_URL}/api/roadmap/delete/${id}`, {
+    const studentId = new URL(request.url).searchParams.get("student_id");
+    if (!studentId) {
+      return NextResponse.json({ detail: "student_id is required" }, { status: 400 });
+    }
+
+    const response = await fetch(`${BACKEND_URL}/api/roadmap/delete/${id}?student_id=${encodeURIComponent(studentId)}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });

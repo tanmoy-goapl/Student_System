@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { OfflineState, ErrorState, CardSkeleton, TableSkeleton, ListSkeleton } from "@/components/UIStateSystem";
+import { getAdminScopedEndpoint } from "@/lib/adminAuth";
 
 interface DashboardData {
   total_students: number;
@@ -101,11 +102,11 @@ export default function AdminDashboardPage() {
       setLoading(true);
       setHasError(false);
       const [dashRes, studentsRes, profsRes, actRes, statusRes] = await Promise.all([
-        fetch("/api/admin/dashboard"),
-        fetch("/api/admin/students"),
-        fetch("/api/admin/professors"),
-        fetch("/api/admin/recent-activity"),
-        fetch("/api/admin/system-status"),
+        fetch(getAdminScopedEndpoint("/api/admin/dashboard")),
+        fetch(getAdminScopedEndpoint("/api/admin/students")),
+        fetch(getAdminScopedEndpoint("/api/admin/professors")),
+        fetch(getAdminScopedEndpoint("/api/admin/recent-activity")),
+        fetch(getAdminScopedEndpoint("/api/admin/system-status")),
       ]);
 
       if (dashRes.ok) setDashboardData(await dashRes.json());

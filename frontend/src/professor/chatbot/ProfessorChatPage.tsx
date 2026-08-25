@@ -9,7 +9,12 @@ import { useRouter } from "next/navigation";
 import { ChatThinking } from "@/components/UIStateSystem";
 import ReactMarkdown from "react-markdown";
 import ChatHistorySidebar from "@/components/ChatHistorySidebar";
-import { getDocumentsData, uploadDocument } from "@/lib/api";
+import {
+  CHAT_ATTACHMENT_ACCEPT,
+  getDocumentsData,
+  isChatAttachmentFile,
+  uploadChatAttachment,
+} from "@/lib/api";
 import { useChatSession } from "@/components/ChatSessionProvider";
 
 type Message = {
@@ -242,12 +247,17 @@ export default function ProfessorChatPage() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    const userId = Number(localStorage.getItem("user_id") || 0);
+    const userId = user?.role === "professor" ? user.id : null;
     if (!file || !userId) return;
+    if (!isChatAttachmentFile(file)) {
+      setError("Chatbot attachments support PDF and TXT files only.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     setError("");
     setFileUploading(true);
     try {
-      const res = await uploadDocument(userId, file, "owner");
+      const res = await uploadChatAttachment(userId, file);
       appendAssistantMessage(`📁 **Uploaded "${res.filename}"** (${res.chunks_created} chunks processed). I have parsed it and added it to my knowledge. You can now ask questions about it!`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to upload document");
@@ -342,7 +352,7 @@ export default function ProfessorChatPage() {
       <ProfessorSidebar />
 
       <ChatHistorySidebar
-        studentId={Number(localStorage.getItem("user_id") || 0)}
+        studentId={user?.role === "professor" ? user.id : null}
         open={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
         onSelectSession={handleSelectSession}
@@ -545,11 +555,12 @@ export default function ProfessorChatPage() {
               ref={fileInputRef}
               onChange={handleFileChange}
               className="hidden"
-              accept=".pdf,.txt,.docx,.png,.jpg,.jpeg"
+              accept={CHAT_ATTACHMENT_ACCEPT}
             />
             <button 
               onClick={() => fileInputRef.current?.click()}
               className="h-8 w-8 rounded-xl hover:bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition"
+              title="Attach a PDF or TXT document"
             >
               <Paperclip className="w-4.5 h-4.5" />
             </button>

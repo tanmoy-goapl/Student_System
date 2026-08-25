@@ -33,18 +33,9 @@ export default function TopicSelectorSection({
   );
   const roadmapSubjects = subjects.filter((s) => s.section === "roadmap");
 
+  // A semester is open by default when it first appears. Only explicit user
+  // toggles are stored, so loading new subjects does not trigger a render loop.
   const [expandedSemesters, setExpandedSemesters] = useState<Record<string, boolean>>({});
-
-  useState(() => {
-    // Hook to auto-expand semesters when component mounts
-    const initial: Record<string, boolean> = {};
-    subjects.forEach((s) => {
-      if (s.semester) {
-        initial[s.semester] = true;
-      }
-    });
-    setExpandedSemesters(initial);
-  });
 
   const toggleSemester = (sem: string) => {
     setExpandedSemesters((prev) => ({ ...prev, [sem]: !prev[sem] }));
@@ -128,13 +119,15 @@ export default function TopicSelectorSection({
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-blue-300/90">{semesterName}</span>
                     </div>
-                    {expandedSemesters[semesterName] ? (
-                      <ChevronDown size={14} className="text-white/40" />
-                    ) : (
-                      <ChevronRight size={14} className="text-white/40" />
-                    )}
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                      {(expandedSemesters[semesterName] ?? true) ? (
+                        <ChevronDown className="h-3.5 w-3.5 text-white/40" aria-hidden="true" />
+                      ) : (
+                        <ChevronRight className="h-3.5 w-3.5 text-white/40" aria-hidden="true" />
+                      )}
+                    </span>
                   </button>
-                  {expandedSemesters[semesterName] && (
+                  {(expandedSemesters[semesterName] ?? true) && (
                     <div className="p-1.5 space-y-1 bg-black/10">
                       {semSubjects.map((subject) => (
                         <SubjectAccordion

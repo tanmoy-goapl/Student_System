@@ -83,7 +83,11 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const studentId = localStorage.getItem("user_id") || "1";
+        const studentId = localStorage.getItem("user_id");
+        if (!studentId) {
+          setErrorMsg("Authentication required. Please sign in again.");
+          return;
+        }
         const res = await fetch(`/api/analytics/data/${studentId}`);
         const text = await res.text();
         try {

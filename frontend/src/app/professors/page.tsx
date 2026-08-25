@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Briefcase, Search } from 'lucide-react';
 import { DashboardContentLoader } from '@/components/DashboardLoading';
+import { getAdminScopedEndpoint } from '@/lib/adminAuth';
 
 interface ProfessorData {
   id: number;
@@ -15,15 +16,19 @@ interface ProfessorData {
 }
 
 export default function ProfessorsPage() {
-  const { role } = useAuth();
+  const { role, userId } = useAuth();
   const [professors, setProfessors] = useState<ProfessorData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     async function fetchProfessors() {
+      if (role !== 'admin' || !userId) {
+        setLoading(false);
+        return;
+      }
       try {
-        const res = await fetch('/api/admin/professors');
+        const res = await fetch(getAdminScopedEndpoint('/api/admin/professors'));
         if (res.ok) {
           const data = await res.json();
           setProfessors(data);
@@ -35,7 +40,7 @@ export default function ProfessorsPage() {
       }
     }
     fetchProfessors();
-  }, []);
+  }, [role, userId]);
 
   const filteredProfessors = professors.filter(p =>
     p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -4,7 +4,7 @@ import os
 import traceback
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -16,6 +16,7 @@ from services.practice.topic_extractor import extract_topics_from_documents
 from services.practice.analytics import (
     detect_behavioral_patterns
 )
+from services.authorization import require_student
 
 logger = logging.getLogger("chatbot")
 
@@ -24,6 +25,7 @@ router = APIRouter()
 
 @router.get("/performance/{student_id}")
 def get_performance(student_id: int, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     """Get per-topic performance, weak areas, and behavioral insights."""
     
     # Auto-repair: fix TopicPerformance records that lost their quiz data
@@ -278,8 +280,9 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/repair-performance")
-def repair_performance(student_id: int = 3, db: Session = Depends(get_db)):
+def repair_performance(student_id: int = Query(...), db: Session = Depends(get_db)):
     """One-time repair: recover lost quiz progress from PracticeQuestion history."""
+    require_student(student_id, db)
     from services.analytics_engine import get_topic_status
     
     broken_perfs = db.query(TopicPerformance).filter(
@@ -324,7 +327,8 @@ def repair_performance(student_id: int = 3, db: Session = Depends(get_db)):
 
 
 @router.get("/data")
-async def get_practice_data(student_id: Optional[int] = None, class_id: Optional[int] = None, db: Session = Depends(get_db)):
+async def get_practice_data(student_id: int = Query(...), class_id: Optional[int] = None, db: Session = Depends(get_db)):
+    require_student(student_id, db)
     try:
         return await _get_practice_data_impl(student_id, class_id, db)
     except Exception as e:
@@ -393,6 +397,7 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
 
     difficulties = [
         {"label": "Easy", "value": "easy"},
+        {"label": "Medium", "value": "medium"},
         {"label": "Mixed", "value": "mixed"},
         {"label": "Hard", "value": "hard"},
     ]
@@ -441,47 +446,56 @@ async def _get_practice_data_impl(student_id: Optional[int] = None, class_id: Op
                 })
 
     # Roadmaps
+    # Return every roadmap owned by this student. The previous implementation
+    # selected only the latest roadmap and exposed its weeks as separate
+    # subjects, which hid all older personal roadmaps in Practice Arena.
     from roadmap_models import LearningRoadmap, DailyTask
     from sqlalchemy import desc
     if student_id:
-        roadmap = db.query(LearningRoadmap).filter(LearningRoadmap.student_id == student_id).order_by(desc(LearningRoadmap.created_at)).first()
-        if roadmap:
-            all_tasks = db.query(DailyTask).filter(DailyTask.roadmap_id == roadmap.id).all()
-            weeks = {}
-            for t in all_tasks:
-                wn = t.week_number or 1
-                if wn not in weeks:
-                    weeks[wn] = []
-                weeks[wn].append(t)
-            
-            for wn in sorted(weeks.keys()):
-                topics_list = []
-                weeks[wn].sort(key=lambda x: x.day_number or 0)
-                weak_areas = []
-                practiced_topics = []
-                for t in weeks[wn]:
-                    t_name = t.topic
-                    if not t_name: continue
-                    topics_list.append(t_name)
-                    p = perf_map.get(t_name)
-                    if p:
-                        if p.status == "WEAK":
-                            weak_areas.append(t_name)
-                        if p.sessions > 0:
-                            practiced_topics.append(t_name)
-                        
-                if topics_list:
-                    subjects.append({
-                        "id": f"roadmap-week-{wn}",
-                        "title": f"Week {wn} Roadmap",
-                        "iconName": "Map",
-                        "color": colors[(wn + len(subjects)) % len(colors)],
-                        "weakAreas": weak_areas,
-                        "practicedTopics": practiced_topics,
-                        "topics": topics_list,
-                        "isExpanded": wn == 1 and not has_documents,
-                        "section": "roadmap",
-                    })
+        roadmaps = (
+            db.query(LearningRoadmap)
+            .filter(LearningRoadmap.student_id == student_id)
+            .order_by(desc(LearningRoadmap.created_at), desc(LearningRoadmap.id))
+            .all()
+        )
+
+        for roadmap_index, roadmap in enumerate(roadmaps):
+            all_tasks = (
+                db.query(DailyTask)
+                .filter(DailyTask.roadmap_id == roadmap.id)
+                .order_by(DailyTask.week_number, DailyTask.day_number, DailyTask.id)
+                .all()
+            )
+
+            topics_list = []
+            weak_areas = []
+            practiced_topics = []
+            for task in all_tasks:
+                topic_name = (task.topic or '').strip()
+                if not topic_name or topic_name in topics_list:
+                    continue
+                topics_list.append(topic_name)
+                performance = perf_map.get(topic_name)
+                if performance:
+                    if performance.status == 'WEAK':
+                        weak_areas.append(topic_name)
+                    if performance.sessions > 0:
+                        practiced_topics.append(topic_name)
+
+            # Keep an empty roadmap visible while it is being populated; it
+            # cannot be selected until it has topics, but it should not vanish
+            # from the student's roadmap list.
+            subjects.append({
+                'id': f'roadmap-{roadmap.id}',
+                'title': roadmap.title or f'Roadmap {roadmap_index + 1}',
+                'iconName': 'Map',
+                'color': colors[(roadmap_index + 1) % len(colors)],
+                'weakAreas': weak_areas,
+                'practicedTopics': practiced_topics,
+                'topics': topics_list,
+                'isExpanded': roadmap_index == 0,
+                'section': 'roadmap',
+            })
 
     # Curriculum
     if class_id:
