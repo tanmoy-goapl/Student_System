@@ -130,6 +130,7 @@ from services.analytics_engine import (
     calculate_readiness,
     calculate_topic_metrics,
     get_activity_snapshot,
+    calculate_study_streak_metrics,
     get_student_subjects,
 )
 from services.authorization import require_student
@@ -317,6 +318,7 @@ async def get_performance_main(student_id: int = Query(...), db: Session = Depen
     ).all()
     for bp in broken:
         hist = db.query(PracticeQuestion).join(PracticeSession).filter(
+            PracticeQuestion.student_answer.isnot(None),
             PracticeSession.student_id == bp.student_id,
             PracticeQuestion.topic == bp.topic,
             PracticeQuestion.is_correct.isnot(None)
@@ -328,6 +330,7 @@ async def get_performance_main(student_id: int = Query(...), db: Session = Depen
             ses = db.query(PracticeSession.id).join(PracticeQuestion).filter(
                 PracticeSession.student_id == bp.student_id,
                 PracticeQuestion.topic == bp.topic,
+                PracticeQuestion.student_answer.isnot(None),
                 PracticeQuestion.is_correct.isnot(None)
             ).distinct().count()
             bp.questions_attempted = att
@@ -340,6 +343,7 @@ async def get_performance_main(student_id: int = Query(...), db: Session = Depen
     from sqlalchemy import distinct as sql_distinct
     all_answered_topics = db.query(sql_distinct(PracticeQuestion.topic)).join(PracticeSession).filter(
         PracticeSession.student_id == student_id,
+        PracticeQuestion.student_answer.isnot(None),
         PracticeQuestion.is_correct.isnot(None)
     ).all()
     existing_tp_topics = set(
@@ -352,6 +356,7 @@ async def get_performance_main(student_id: int = Query(...), db: Session = Depen
             hist = db.query(PracticeQuestion).join(PracticeSession).filter(
                 PracticeSession.student_id == student_id,
                 PracticeQuestion.topic == topic_name,
+                PracticeQuestion.student_answer.isnot(None),
                 PracticeQuestion.is_correct.isnot(None)
             ).all()
             att = len(hist)
@@ -360,6 +365,7 @@ async def get_performance_main(student_id: int = Query(...), db: Session = Depen
             ses = db.query(PracticeSession.id).join(PracticeQuestion).filter(
                 PracticeSession.student_id == student_id,
                 PracticeQuestion.topic == topic_name,
+                PracticeQuestion.student_answer.isnot(None),
                 PracticeQuestion.is_correct.isnot(None)
             ).distinct().count()
             first_q = hist[0] if hist else None
@@ -427,8 +433,9 @@ async def get_performance_main(student_id: int = Query(...), db: Session = Depen
         if recent_accuracy is not None and previous_accuracy is not None
         else 0.0
     )
-    current_streak = user_performance.current_streak if user_performance else 0
-    longest_streak = user_performance.longest_streak if user_performance else 0
+    streak_metrics = calculate_study_streak_metrics(student_id, db)
+    current_streak = streak_metrics["current_streak"]
+    longest_streak = streak_metrics["longest_streak"]
     mastered_count = overall.get("mastered_topics", 0)
     total_count = overall.get("total_topics", 0)
 

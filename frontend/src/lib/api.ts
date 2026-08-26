@@ -311,7 +311,7 @@ export interface PerformanceSidebarResponse {
 }
 
 export async function getPerformanceSidebar(studentId: string | number): Promise<PerformanceSidebarResponse> {
-  const url = `/api/performance/sidebar?student_id=${encodeURIComponent(studentId)}`;
+  const url = `/api/performance/sidebar?student_id=${encodeURIComponent(studentId)}&_t=${Date.now()}`;
   return request<PerformanceSidebarResponse>(url, {
     method: "GET",
   });
@@ -345,7 +345,7 @@ export interface PerformanceMainResponse {
 }
 
 export async function getPerformanceMain(studentId: string | number): Promise<PerformanceMainResponse> {
-  const url = `/api/performance/main?student_id=${encodeURIComponent(studentId)}`;
+  const url = `/api/performance/main?student_id=${encodeURIComponent(studentId)}&_t=${Date.now()}`;
   return request<PerformanceMainResponse>(url, {
     method: "GET",
   });
@@ -450,10 +450,12 @@ export interface StartSessionResponse {
   mode: string;
   topic: string;
   difficulty: string;
-  status?: "generating" | "ready" | "failed" | "complete" | string;
-  generation_status?: "generating" | "ready" | "failed" | "complete" | string;
+  status?: "generating" | "partial" | "partial_failed" | "ready" | "failed" | "complete" | string;
+  generation_status?: "generating" | "partial" | "partial_failed" | "ready" | "failed" | "complete" | string;
   question_count?: number;
   total_questions: number;
+  available_questions?: number;
+  generation_complete?: boolean;
   questions: PracticeQuestion[];
 }
 
@@ -516,6 +518,11 @@ export interface NextBatchResponse {
   questions: PracticeQuestion[];
   session_complete: boolean;
   difficulty?: string;
+  status?: string;
+  generation_status?: "generating" | "partial" | "partial_failed" | "ready" | "failed" | "complete" | string;
+  total_questions?: number;
+  available_questions?: number;
+  generation_complete?: boolean;
   stats?: any;
 }
 
@@ -525,8 +532,12 @@ export interface PracticeSessionStatus {
   topic: string;
   difficulty: string;
   is_active: boolean;
-  generation_status?: "generating" | "ready" | "failed" | "complete" | string;
+  status?: string;
+  generation_status?: "generating" | "partial" | "partial_failed" | "ready" | "failed" | "complete" | string;
   total_questions: number;
+  question_count?: number;
+  available_questions?: number;
+  generation_complete?: boolean;
   questions: PracticeQuestion[];
   stats: any;
 }

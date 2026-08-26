@@ -106,12 +106,14 @@ def get_learning_data(
             hist_count = db.query(PracticeQuestion).join(PracticeSession).filter(
                 PracticeSession.student_id == student_id,
                 PracticeQuestion.topic == selected_topic,
+                PracticeQuestion.student_answer.isnot(None),
                 PracticeQuestion.is_correct.isnot(None)
             ).count()
             if hist_count > 0:
                 history_qs = db.query(PracticeQuestion).join(PracticeSession).filter(
                     PracticeSession.student_id == student_id,
                     PracticeQuestion.topic == selected_topic,
+                    PracticeQuestion.student_answer.isnot(None),
                     PracticeQuestion.is_correct.isnot(None)
                 ).all()
                 attempted = len(history_qs)
@@ -120,6 +122,7 @@ def get_learning_data(
                 sess = db.query(PracticeSession.id).join(PracticeQuestion).filter(
                     PracticeSession.student_id == student_id,
                     PracticeQuestion.topic == selected_topic,
+                    PracticeQuestion.student_answer.isnot(None),
                     PracticeQuestion.is_correct.isnot(None)
                 ).distinct().count()
                 from services.analytics_engine import get_topic_status
@@ -146,9 +149,9 @@ def get_learning_data(
         sessions = metrics["sessions"]
         status = metrics["status"]
         
-        is_completed = False
-        if perf:
-            is_completed = True
+        is_completed = bool(
+            perf and (sessions > 0 or questions_attempted > 0)
+        )
         
         header_response = {
             "success": True,
@@ -581,12 +584,14 @@ def get_learning_data(
         hist_count = db.query(PracticeQuestion).join(PracticeSession).filter(
             PracticeSession.student_id == student_id,
             PracticeQuestion.topic == selected_topic,
+            PracticeQuestion.student_answer.isnot(None),
             PracticeQuestion.is_correct.isnot(None)
         ).count()
         if hist_count > 0:
             history_qs = db.query(PracticeQuestion).join(PracticeSession).filter(
                 PracticeSession.student_id == student_id,
                 PracticeQuestion.topic == selected_topic,
+                PracticeQuestion.student_answer.isnot(None),
                 PracticeQuestion.is_correct.isnot(None)
             ).all()
             attempted = len(history_qs)
@@ -595,6 +600,7 @@ def get_learning_data(
             sess = db.query(PracticeSession.id).join(PracticeQuestion).filter(
                 PracticeSession.student_id == student_id,
                 PracticeQuestion.topic == selected_topic,
+                PracticeQuestion.student_answer.isnot(None),
                 PracticeQuestion.is_correct.isnot(None)
             ).distinct().count()
             from services.analytics_engine import get_topic_status
@@ -650,7 +656,7 @@ def get_learning_data(
         if task and task.status == "completed" and not is_subtopic:
             is_completed = True
 
-    if perf:
+    if perf and (sessions > 0 or questions_attempted > 0):
         is_completed = True
 
     if not perf and is_completed:

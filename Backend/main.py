@@ -442,7 +442,10 @@ def force_seed_db_endpoint():
                             student_id=student.id,
                             session_id=session.id,
                             topic=topic,
+                            questions_attempted=session.question_count,
+                            correct_answers=session.correct_answers,
                             score_percentage=session.accuracy,
+                            points_earned=session.correct_answers * 10,
                             created_at=session.created_at
                         )
                         db.add(quiz)

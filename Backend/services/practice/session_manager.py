@@ -1,12 +1,12 @@
 import json
 import os
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional
 from sqlalchemy.orm import Session
 
 from practice_models import PracticeSession, PracticeQuestion, TopicPerformance, RevisionItem, UserPerformance, QuizHistory
-from services.analytics_engine import get_topic_status
+from services.analytics_engine import get_topic_status, calculate_study_streak_metrics
 
 logger = logging.getLogger("chatbot")
 
@@ -77,6 +77,7 @@ def update_topic_performance(
         history_qs = db.query(PracticeQuestion).join(PracticeSession).filter(
             PracticeSession.student_id == student_id,
             PracticeQuestion.topic == topic,
+            PracticeQuestion.student_answer.isnot(None),
             PracticeQuestion.is_correct.isnot(None)
         ).all()
         
@@ -86,6 +87,7 @@ def update_topic_performance(
         hist_sessions = db.query(PracticeSession.id).join(PracticeQuestion).filter(
             PracticeSession.student_id == student_id,
             PracticeQuestion.topic == topic,
+            PracticeQuestion.student_answer.isnot(None),
             PracticeQuestion.is_correct.isnot(None)
         ).distinct().count()
 
@@ -140,6 +142,7 @@ def update_topic_performance(
         answered_in_session = db.query(PracticeQuestion).filter(
             PracticeQuestion.session_id == session_id,
             PracticeQuestion.topic == topic,
+            PracticeQuestion.student_answer.isnot(None),
             PracticeQuestion.is_correct.isnot(None)
         ).count()
         if answered_in_session == 1:
@@ -161,9 +164,19 @@ def finalize_session_history(session, db: Session):
     from practice_models import UserPerformance, QuizHistory, PracticeQuestion
     
     questions = db.query(PracticeQuestion).filter(PracticeQuestion.session_id == session.id).all()
-    attempted = sum(1 for q in questions if q.student_answer is not None)
-    correct = sum(1 for q in questions if q.is_correct)
-    time_spent = sum(q.time_spent_seconds or 0 for q in questions)
+    answered_questions = [
+        q for q in questions
+        if q.student_answer is not None
+        and q.is_correct is not None
+        and q.answered_at is not None
+    ]
+    attempted = len(answered_questions)
+    if attempted == 0:
+        logger.info("PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: %s", session.id)
+        return
+
+    correct = sum(1 for q in answered_questions if q.is_correct)
+    time_spent = sum(q.time_spent_seconds or 0 for q in answered_questions)
     
     score_percentage = (correct / attempted * 100) if attempted > 0 else 0.0
     points_earned = correct * 10
@@ -210,24 +223,19 @@ def finalize_session_history(session, db: Session):
     
     db.commit()
     
-    # Recalculate streak
-    histories = db.query(QuizHistory.created_at).filter(QuizHistory.student_id == session.student_id).order_by(QuizHistory.created_at.desc()).all()
-    days = sorted(list(set(h.created_at.date() for h in histories)), reverse=True)
-    
-    streak = 0
-    current_date = datetime.utcnow().date()
-    if days and (days[0] == current_date or days[0] == current_date - timedelta(days=1)):
-        for i, d in enumerate(days):
-            if d == current_date - timedelta(days=i) or (days[0] != current_date and d == current_date - timedelta(days=i+1)):
-                streak += 1
-            else:
-                break
-    
-    perf.current_streak = streak
-    if streak > perf.longest_streak:
-        perf.longest_streak = streak
-        
-    unique_topics = db.query(QuizHistory.topic).filter(QuizHistory.student_id == session.student_id).distinct().count()
+    # Recalculate from answered quiz/question activity so generated or empty
+    # sessions never inflate streaks or topic coverage.
+    streak_data = calculate_study_streak_metrics(session.student_id, db)
+    perf.current_streak = streak_data["current_streak"]
+    perf.longest_streak = max(
+        int(perf.longest_streak or 0),
+        streak_data["best_streak"],
+    )
+
+    unique_topics = db.query(QuizHistory.topic).filter(
+        QuizHistory.student_id == session.student_id,
+        QuizHistory.questions_attempted > 0,
+    ).distinct().count()
     perf.topics_covered = unique_topics
 
     # Completing a practice session marks explicitly queued topics as reviewed.
@@ -235,7 +243,7 @@ def finalize_session_history(session, db: Session):
     # performance, but the manual request itself is no longer pending.
     reviewed_topics = {
         question.topic
-        for question in questions
+        for question in answered_questions
         if question.student_answer is not None and question.topic
     }
     if reviewed_topics:
@@ -283,7 +291,12 @@ def get_session_stats(session: PracticeSession, db: Session) -> dict:
         .all()
     )
 
-    answered = [q for q in questions if q.student_answer is not None]
+    answered = [
+        q for q in questions
+        if q.student_answer is not None
+        and q.is_correct is not None
+        and q.answered_at is not None
+    ]
     correct = [q for q in answered if q.is_correct]
 
     streak = 0

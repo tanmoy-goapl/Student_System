@@ -16,6 +16,8 @@ interface OverviewData {
   avgScore: number;
   engagementRate: number;
   atRiskStudents: number;
+  needsSupportStudents?: number;
+  notStartedStudents?: number;
   topicMastery: number;
 }
 
@@ -30,12 +32,19 @@ interface TopicItem { name: string; score: number; status: "NOT_STARTED" | "WEAK
 interface ClassTopics { className: string; avgScore: number; topics: TopicItem[] }
 
 interface StudentRisk { name: string; score: number }
-interface RiskAnalysis { high: StudentRisk[]; medium: StudentRisk[]; improving: StudentRisk[] }
+interface RiskAnalysis {
+  high: StudentRisk[];
+  medium: StudentRisk[];
+  notStarted?: StudentRisk[];
+  onTrack?: StudentRisk[];
+  improving?: StudentRisk[];
+}
 
 interface EngagementData {
   attendance: number;
   quizParticipation: number;
   revisionConsistency: number;
+  curriculumProgress?: number;
   contentInteraction: number;
 }
 
@@ -113,10 +122,14 @@ export default function InsightsPage() {
   }, [selectedClassId]);
 
   // ── Derived overview cards ────────────────────────────────
+  const scopedClassCount = selectedClassId === 0 ? data?.classes.length || 0 : 1;
+  const notStartedCount = data?.overview.notStartedStudents
+    ?? data?.riskAnalysis.notStarted?.length
+    ?? 0;
   const overviewCards = data ? [
-    { label: "Avg Class Score", value: `${data.overview.avgScore}%`, subtitle: `Across ${data.classes.length} class${data.classes.length !== 1 ? "es" : ""}`, icon: TrendingUp, gradient: "from-blue-600 to-indigo-500" },
+    { label: "Avg Attempted Score", value: `${data.overview.avgScore}%`, subtitle: `Recorded attempts · ${scopedClassCount} selected class${scopedClassCount !== 1 ? "es" : ""}`, icon: TrendingUp, gradient: "from-blue-600 to-indigo-500" },
     { label: "Engagement Rate", value: `${data.overview.engagementRate}%`, subtitle: "Any quiz or practice activity in the last 7 days", icon: CheckCircle, gradient: "from-emerald-500 to-teal-500" },
-    { label: "At-Risk Students", value: `${data.overview.atRiskStudents}`, subtitle: "Accuracy below 50% or confidence below 40%", icon: AlertTriangle, gradient: "from-rose-500 to-red-500" },
+    { label: "At-Risk Students", value: `${data.overview.atRiskStudents}`, subtitle: `High risk only · ${data.overview.needsSupportStudents ?? data.riskAnalysis.medium.length} need support · ${notStartedCount} not started`, icon: AlertTriangle, gradient: "from-rose-500 to-red-500" },
     { label: "Topic Mastery", value: `${data.overview.topicMastery}%`, subtitle: "Question-weighted accuracy on attempted topics", icon: BookOpenIcon, gradient: "from-indigo-600 to-purple-600" },
   ] : [];
 
@@ -124,7 +137,7 @@ export default function InsightsPage() {
   const engagementMetrics = data ? [
     { label: "Active in 7 Days", value: `${data.engagement.attendance}%`, color: "text-blue-400", bg: "bg-blue-500" },
     { label: "Quiz Participation", value: `${data.engagement.quizParticipation}%`, color: "text-purple-400", bg: "bg-purple-500" },
-    { label: "Curriculum Progress", value: `${data.engagement.revisionConsistency}%`, color: "text-amber-400", bg: "bg-amber-500" },
+    { label: "Curriculum Progress", value: `${data.engagement.curriculumProgress ?? data.engagement.revisionConsistency}%`, color: "text-amber-400", bg: "bg-amber-500" },
     { label: "Topic Activity", value: `${data.engagement.contentInteraction}%`, color: "text-emerald-400", bg: "bg-emerald-500" },
   ] : [];
 
@@ -135,24 +148,29 @@ export default function InsightsPage() {
       count: `${data.riskAnalysis.high.length} student${data.riskAnalysis.high.length !== 1 ? "s" : ""}`,
       color: "text-rose-400",
       bg: "bg-rose-500/5 border-rose-500/10",
-      btnColor: "bg-rose-600 hover:bg-rose-700",
       students: data.riskAnalysis.high,
     },
     {
-      title: "Medium Risk",
+      title: "Needs Support",
       count: `${data.riskAnalysis.medium.length} student${data.riskAnalysis.medium.length !== 1 ? "s" : ""}`,
       color: "text-amber-400",
       bg: "bg-amber-500/5 border-amber-500/10",
-      btnColor: "bg-amber-600/30 border border-amber-500/20 text-amber-300 hover:bg-amber-500/20",
       students: data.riskAnalysis.medium,
     },
     {
-      title: "Improving",
-      count: `${data.riskAnalysis.improving.length} student${data.riskAnalysis.improving.length !== 1 ? "s" : ""}`,
+      title: "Not Started",
+      count: `${(data.riskAnalysis.notStarted || []).length} student${(data.riskAnalysis.notStarted || []).length !== 1 ? "s" : ""}`,
+      color: "text-sky-400",
+      bg: "bg-sky-500/5 border-sky-500/10",
+      scoreLabel: "No attempts",
+      students: data.riskAnalysis.notStarted || [],
+    },
+    {
+      title: "On Track",
+      count: `${(data.riskAnalysis.onTrack || data.riskAnalysis.improving || []).length} student${(data.riskAnalysis.onTrack || data.riskAnalysis.improving || []).length !== 1 ? "s" : ""}`,
       color: "text-emerald-400",
       bg: "bg-emerald-500/5 border-emerald-500/10",
-      btnColor: "bg-emerald-650/30 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20",
-      students: data.riskAnalysis.improving,
+      students: data.riskAnalysis.onTrack || data.riskAnalysis.improving || [],
     },
   ] : [];
 
@@ -307,7 +325,7 @@ export default function InsightsPage() {
                                 <div className="flex justify-between text-[10px] font-semibold text-slate-300">
                                   <span>{top.name}</span>
                                   <span className={top.status === "NOT_STARTED" ? "text-slate-600" : top.status === "WEAK" ? "text-rose-400" : top.status === "GOOD" ? "text-emerald-400" : "text-slate-400"}>
-                                    {top.score}% {top.status}
+                                    {top.status === "NOT_STARTED" ? "Not started" : `${top.score}% ${top.status}`}
                                   </span>
                                 </div>
                                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
@@ -333,13 +351,16 @@ export default function InsightsPage() {
               {/* Student Risk Analysis Columns */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Student Risk Analysis</h2>
-                  <span className="px-2 py-0.5 text-[8px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
-                    Rule-Based Categories
+                  <div>
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">Student Risk Analysis</h2>
+                    <p className="text-[10px] text-slate-500 mt-1">High Risk: &lt;50% accuracy or &lt;40% confidence · Needs Support: attempted but below support thresholds · Not Started: no scoped attempts · On Track: no current risk signal</p>
+                  </div>
+                  <span className="px-2 py-0.5 text-[8px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full shrink-0">
+                    Live categories
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                   {riskColumns.map((col, idx) => (
                     <div key={idx} className={`rounded-2xl border p-5 space-y-4 flex flex-col justify-between ${col.bg}`}>
                       <div className="space-y-3">
@@ -359,7 +380,7 @@ export default function InsightsPage() {
                                 </div>
                                 <span className="text-[10px] text-slate-200 font-semibold">{st.name}</span>
                               </div>
-                              <span className={`text-[10px] font-bold ${col.color}`}>{st.score}%</span>
+                              <span className={`text-[10px] font-bold ${col.color}`}>{"scoreLabel" in col && col.scoreLabel ? col.scoreLabel : `${st.score}%`}</span>
                             </div>
                           ))}
                         </div>

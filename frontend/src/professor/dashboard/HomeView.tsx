@@ -14,7 +14,18 @@ import { DashboardContentLoader } from "@/components/DashboardLoading";
 
 // ── Types ───────────────────────────────────────────────────
 interface ClassInfo { id: number; name: string; code: string; course_code: string }
-interface KPI { avgScore: number; engagement: number; atRiskCount: number; weakTopicCount: number; scoreDelta: number }
+interface KPI {
+  avgScore: number;
+  engagement: number;
+  atRiskCount: number;
+  weakTopicCount: number;
+  scoreDelta: number;
+  activeStudents?: number;
+  inactiveStudents?: number;
+  activeWindowDays?: number;
+  needsSupportCount?: number;
+  notStartedCount?: number;
+}
 interface WeekDay { day: string; score: number | null }
 interface WeakTopic { name: string; score: number }
 interface AlertItem { type: "critical" | "warning" | "info" | "success"; title: string; desc: string; students?: string[]; score?: number }
@@ -85,9 +96,12 @@ interface HomeRecommendation {
 const buildTeachingInsights = (dashboard: DashboardData): TeachingInsight[] => {
   const scoreDelta = Number(dashboard.kpi.scoreDelta || 0);
   const totalStudents = Math.max(0, dashboard.totalStudents || 0);
+  const activeWindowDays = Math.max(1, Number(dashboard.kpi.activeWindowDays || 7));
   const activeStudents = Math.min(
     totalStudents,
-    Math.max(0, Math.round(totalStudents * (Number(dashboard.kpi.engagement || 0) / 100)))
+    Math.max(0, typeof dashboard.kpi.activeStudents === "number"
+      ? dashboard.kpi.activeStudents
+      : Math.round(totalStudents * (Number(dashboard.kpi.engagement || 0) / 100)))
   );
   const focusTopic = dashboard.weakTopics[0];
 
@@ -123,7 +137,7 @@ const buildTeachingInsights = (dashboard: DashboardData): TeachingInsight[] => {
       title: totalStudents > 0 ? `${activeStudents} active students` : "No enrolled students",
       value: `${Number(dashboard.kpi.engagement || 0)}%`,
       description: totalStudents > 0
-        ? `${activeStudents} of ${totalStudents} students are active in the current analytics window.`
+        ? `${activeStudents} of ${totalStudents} students are active in the last ${activeWindowDays} days.`
         : "Enroll students to start receiving activity signals.",
       icon: Users,
       iconClass: dashboard.kpi.engagement < 50 ? "text-cyan-300" : "text-emerald-300",
@@ -154,6 +168,15 @@ const buildHomeRecommendation = (dashboard: DashboardData): HomeRecommendation =
       title: "Review students needing support",
       description: `${dashboard.kpi.atRiskCount} unique student${dashboard.kpi.atRiskCount === 1 ? " is" : "s are"} below the current risk threshold. Review the student-level analytics before assigning targeted practice.`,
       buttonLabel: "Review analytics",
+    };
+  }
+
+  if ((dashboard.kpi.notStartedCount || 0) > 0) {
+    return {
+      label: "RECOMMENDED NEXT STEP",
+      title: "Start uncovered students",
+      description: `${dashboard.kpi.notStartedCount} enrolled student${dashboard.kpi.notStartedCount === 1 ? " has" : "s have"} no recorded quiz or practice attempt yet. Review their coverage before judging performance.`,
+      buttonLabel: "View insights",
     };
   }
 
@@ -587,7 +610,7 @@ export default function HomeView() {
                       <div className="space-y-1">
                         <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Engagement</span>
                         <span className="text-3xl font-extrabold text-white tracking-tight">{data.kpi.engagement}%</span>
-                        <p className="text-[10px] text-slate-400 font-medium">Active students this month</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Active students in the last {data.kpi.activeWindowDays || 7} days</p>
                       </div>
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/10 shrink-0">
                         <Users className="h-5 w-5 text-white" />
@@ -602,7 +625,7 @@ export default function HomeView() {
                           strokeDashoffset={56.5 * (1 - data.kpi.engagement / 100)}
                         />
                       </svg>
-                      <span className="text-[10px] text-slate-400 font-semibold ml-2">{data.kpi.engagement}% active</span>
+                      <span className="text-[10px] text-slate-400 font-semibold ml-2">{data.kpi.activeStudents ?? "—"} active · {data.kpi.engagement}%</span>
                     </div>
                   </div>
 
@@ -613,7 +636,7 @@ export default function HomeView() {
                       <div className="space-y-1">
                         <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">At-Risk Students</span>
                         <span className="text-3xl font-extrabold text-white tracking-tight">{data.kpi.atRiskCount}</span>
-                        <p className="text-[10px] text-slate-400 font-medium">Accuracy under 50% or confidence under 40% in any class</p>
+                        <p className="text-[10px] text-slate-400 font-medium">High risk only: accuracy under 50% or confidence under 40%</p>
                       </div>
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-500 shadow-lg shadow-rose-500/10 shrink-0">
                         <AlertTriangle className="h-5 w-5 text-white" />
@@ -626,9 +649,13 @@ export default function HomeView() {
                       </div>
                     )}
                     {data.kpi.atRiskCount === 0 && (
-                      <div className="flex items-center gap-1.5 text-[10px] text-emerald-400/90 font-medium mt-3 relative z-10 w-full">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        <span>All students performing well</span>
+                      <div className={`flex items-center gap-1.5 text-[10px] font-medium mt-3 relative z-10 w-full ${(data.kpi.notStartedCount || 0) > 0 || (data.kpi.needsSupportCount || 0) > 0 ? "text-amber-400/90" : "text-emerald-400/90"}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${(data.kpi.notStartedCount || 0) > 0 || (data.kpi.needsSupportCount || 0) > 0 ? "bg-amber-500" : "bg-emerald-500"}`} />
+                        <span>{(data.kpi.notStartedCount || 0) > 0
+                          ? `${data.kpi.notStartedCount} not started`
+                          : (data.kpi.needsSupportCount || 0) > 0
+                            ? `${data.kpi.needsSupportCount} need support`
+                            : "No high-risk students"}</span>
                       </div>
                     )}
                   </div>

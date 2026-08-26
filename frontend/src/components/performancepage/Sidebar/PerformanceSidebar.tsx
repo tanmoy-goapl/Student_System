@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Timer, Activity, Network, Brain, AlertTriangle, Sparkles, Star, ShieldCheck, LucideIcon } from 'lucide-react';
 import InsightCard from './InsightCard';
 import WeaknessBar from './WeaknessBar';
@@ -39,23 +39,40 @@ export default function PerformanceSidebar({ studentId }: PerformanceSidebarProp
     const [data, setData] = useState<PerformanceSidebarResponse | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        async function fetchData() {
-            if (!studentId) {
-                setLoading(false);
-                return;
-            }
-            try {
-                const response = await getPerformanceSidebar(studentId);
-                setData(response);
-            } catch (error) {
-                console.error("Failed to load performance sidebar data", error);
-            } finally {
-                setLoading(false);
-            }
+    const fetchData = useCallback(async (showLoading = false) => {
+        if (!studentId) {
+            setData(null);
+            if (showLoading) setLoading(false);
+            return;
         }
-        fetchData();
+        if (showLoading) {
+            setLoading(true);
+            setData(null);
+        }
+        try {
+            const response = await getPerformanceSidebar(studentId);
+            setData(response);
+        } catch (error) {
+            console.error("Failed to load performance sidebar data", error);
+        } finally {
+            if (showLoading) setLoading(false);
+        }
     }, [studentId]);
+
+    useEffect(() => {
+        void fetchData(true);
+        const refresh = () => {
+            if (document.visibilityState === "visible") void fetchData(false);
+        };
+        window.addEventListener("focus", refresh);
+        window.addEventListener("mentorai:analytics-updated", refresh);
+        document.addEventListener("visibilitychange", refresh);
+        return () => {
+            window.removeEventListener("focus", refresh);
+            window.removeEventListener("mentorai:analytics-updated", refresh);
+            document.removeEventListener("visibilitychange", refresh);
+        };
+    }, [fetchData]);
 
     if (loading) {
         return <div className="space-y-6 animate-pulse">

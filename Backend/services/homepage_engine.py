@@ -6,7 +6,8 @@ import re
 
 from practice_models import TopicPerformance, RevisionItem, QuizHistory, PracticeSession, UserPerformance, BehavioralInsight, PracticeQuestion
 from services.analytics_engine import (
-    calculate_topic_metrics, get_student_subjects, get_predefined_topics, calculate_student_metrics
+    calculate_topic_metrics, get_student_subjects, get_predefined_topics,
+    calculate_student_metrics, calculate_study_streak_metrics
 )
 
 def calculate_priority_score(confidence: float, accuracy: float, days_since_practice: int) -> float:
@@ -117,57 +118,24 @@ def calculate_weak_topics(student_id: int, db: Session) -> dict:
     }
 
 def calculate_study_streak(student_id: int, db: Session) -> dict:
-    """
-    Analyzes QuizHistory and PracticeSession to determine current/best streaks and last active date.
-    """
-    quiz_dates = db.query(QuizHistory.created_at).filter(QuizHistory.student_id == student_id).all()
-    session_dates = db.query(PracticeSession.created_at).filter(PracticeSession.student_id == student_id).all()
-    
-    all_dates = sorted(list({d[0].date() for d in quiz_dates + session_dates if d[0]}))
-    
-    current_streak = 0
-    best_streak = 0
-    last_active = None
-    
-    if all_dates:
-        last_active = all_dates[-1]
-        today = datetime.utcnow().date()
-        
-        # Calculate current streak
-        if last_active == today or last_active == today - timedelta(days=1):
-            current_streak = 1
-            check_date = last_active
-            for i in range(len(all_dates) - 2, -1, -1):
-                if all_dates[i] == check_date - timedelta(days=1):
-                    current_streak += 1
-                    check_date = all_dates[i]
-                else:
-                    break
-        
-        # Calculate best streak
-        temp_streak = 1
-        best_streak = 1
-        for i in range(1, len(all_dates)):
-            if all_dates[i] == all_dates[i - 1] + timedelta(days=1):
-                temp_streak += 1
-            else:
-                best_streak = max(best_streak, temp_streak)
-                temp_streak = 1
-        best_streak = max(best_streak, temp_streak)
-    
-    # Save/update UserPerformance table so it stays synced
-    perf = db.query(UserPerformance).filter(UserPerformance.student_id == student_id).first()
+    """Persist the shared answered-activity streak calculation for home consumers."""
+    streak_data = calculate_study_streak_metrics(student_id, db)
+    perf = db.query(UserPerformance).filter(
+        UserPerformance.student_id == student_id
+    ).first()
     if perf:
-        perf.current_streak = current_streak
-        perf.longest_streak = max(perf.longest_streak, best_streak)
-        if last_active:
-            perf.last_practiced = datetime.combine(last_active, datetime.min.time())
+        perf.current_streak = streak_data["current_streak"]
+        perf.longest_streak = max(
+            int(perf.longest_streak or 0),
+            streak_data["best_streak"],
+        )
+        perf.last_practiced = streak_data.get("last_active_at")
         db.commit()
 
     return {
-        "current_streak": current_streak,
-        "best_streak": best_streak,
-        "last_active": last_active.isoformat() if last_active else None
+        "current_streak": streak_data["current_streak"],
+        "best_streak": streak_data["best_streak"],
+        "last_active": streak_data["last_active"],
     }
 
 def calculate_topics_covered(student_id: int, db: Session) -> dict:
@@ -633,10 +601,19 @@ def calculate_focus_score(student_id: int, db: Session) -> float:
     streak_data = calculate_study_streak(student_id, db)
     streak = streak_data["current_streak"]
     
-    recent_sessions = db.query(PracticeSession).filter(
-        PracticeSession.student_id == student_id,
-        PracticeSession.created_at >= datetime.utcnow() - timedelta(days=7)
-    ).count()
+    recent_sessions = (
+        db.query(PracticeSession.id)
+        .join(PracticeQuestion, PracticeQuestion.session_id == PracticeSession.id)
+        .filter(
+            PracticeSession.student_id == student_id,
+            PracticeQuestion.answered_at >= datetime.utcnow() - timedelta(days=7),
+            PracticeQuestion.student_answer.isnot(None),
+            PracticeQuestion.answered_at.isnot(None),
+            PracticeQuestion.is_correct.isnot(None),
+        )
+        .distinct()
+        .count()
+    )
     
     subjects = get_student_subjects(student_id, db)
     active_topics = 0
@@ -705,7 +682,8 @@ def calculate_due_quizzes(student_id: int, db: Session) -> list:
             if metrics["sessions"] > 0:
                 quiz_count = db.query(QuizHistory).filter(
                     QuizHistory.student_id == student_id,
-                    QuizHistory.topic == topic
+                    QuizHistory.topic == topic,
+                    QuizHistory.questions_attempted > 0,
                 ).count()
                 if quiz_count == 0:
                     due_quizzes.append({

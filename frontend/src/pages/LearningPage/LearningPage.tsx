@@ -90,6 +90,8 @@ export default function LearningPage() {
         data: any;
         loading?: boolean;
     } | null>(null);
+    const quickActionAbortRef = useRef<AbortController | null>(null);
+    const quickActionRequestRef = useRef(0);
 
 
     const [cheatsheetPoints, setCheatsheetPoints] = useState<any[]>([]);
@@ -552,12 +554,32 @@ export default function LearningPage() {
         }
     };
 
+    useEffect(() => {
+        return () => {
+            quickActionAbortRef.current?.abort();
+        };
+    }, []);
+
+    const closeQuickAction = () => {
+        quickActionAbortRef.current?.abort();
+        quickActionAbortRef.current = null;
+        quickActionRequestRef.current += 1;
+        setModalContent(null);
+    };
+
     const handleQuickActionClick = async (id: string) => {
         if (id === 'mark_as_read') return;
         if (!data?.selectedTopic) return;
         const studentId = getStudentId();
         if (studentId === null) return;
-        
+
+        quickActionAbortRef.current?.abort();
+        const controller = new AbortController();
+        const requestId = quickActionRequestRef.current + 1;
+        quickActionRequestRef.current = requestId;
+        quickActionAbortRef.current = controller;
+        const topic = data.selectedTopic;
+
         setModalContent({
             title: id === 'simpler' ? "Simplifying Concept..." : id === 'example' ? "Generating Examples..." : "Generating Flashcards...",
             type: id === 'simpler' ? 'explain' : id === 'example' ? 'example' : 'flashcard',
@@ -565,41 +587,51 @@ export default function LearningPage() {
             loading: true
         });
 
+        const isCurrentRequest = () => (
+            quickActionRequestRef.current === requestId && !controller.signal.aborted
+        );
+        const updateStream = (text: string) => {
+            if (!isCurrentRequest()) return;
+            // Keep the modal in its loading state while tagged output is incomplete.
+            // The renderer must never expose protocol markers such as [TITLE].
+            setModalContent(prev => prev ? {
+                ...prev,
+                data: text,
+                loading: true
+            } : null);
+        };
+        const completeStream = (title: string, text: string) => {
+            if (!isCurrentRequest()) return;
+            setModalContent(prev => prev ? {
+                ...prev,
+                title,
+                data: text,
+                loading: false
+            } : null);
+        };
 
-        
         try {
             if (id === 'simpler') {
-                await streamExplainSimpler(studentId, data.selectedTopic, (text) => {
-                    setModalContent(prev => prev ? {
-                        ...prev,
-                        title: `Explain Simpler: ${data.selectedTopic}`,
-                        data: text,
-                        loading: false
-                    } : null);
-                });
+                const text = await streamExplainSimpler(studentId, topic, updateStream, controller.signal);
+                completeStream(`Explain Simpler: ${topic}`, text);
             } else if (id === 'example') {
-                await streamGiveExamples(studentId, data.selectedTopic, (text) => {
-                    setModalContent(prev => prev ? {
-                        ...prev,
-                        title: `Real-world Examples: ${data.selectedTopic}`,
-                        data: text,
-                        loading: false
-                    } : null);
-                });
+                const text = await streamGiveExamples(studentId, topic, updateStream, controller.signal);
+                completeStream(`Real-world Examples: ${topic}`, text);
             } else if (id === 'flashcard') {
-                await streamFlashcards(studentId, data.selectedTopic, (text) => {
-                    setModalContent(prev => prev ? {
-                        ...prev,
-                        title: `Study Flashcards: ${data.selectedTopic}`,
-                        data: text,
-                        loading: false
-                    } : null);
-                });
+                const text = await streamFlashcards(studentId, topic, updateStream, controller.signal);
+                completeStream(`Study Flashcards: ${topic}`, text);
             }
 
         } catch (err) {
+            if (controller.signal.aborted || (err instanceof DOMException && err.name === 'AbortError')) {
+                return;
+            }
             console.error("Failed to execute quick action stream:", err);
-            setModalContent(null);
+            if (isCurrentRequest()) setModalContent(null);
+        } finally {
+            if (quickActionAbortRef.current === controller) {
+                quickActionAbortRef.current = null;
+            }
         }
     };
 
@@ -833,7 +865,7 @@ export default function LearningPage() {
                                 {modalContent.title}
                             </h3>
                             <button
-                                onClick={() => setModalContent(null)}
+                                onClick={closeQuickAction}
                                 className="text-white/40 hover:text-white transition-colors text-xs font-semibold px-2.5 py-1 rounded-lg hover:bg-white/5"
                             >
                                 Close
@@ -842,10 +874,10 @@ export default function LearningPage() {
                         
                         {/* Body */}
                         <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4 text-sm text-zinc-300 custom-scrollbar">
-                            {modalContent.loading && !modalContent.data ? (
+                            {modalContent.loading ? (
                                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
                                     <div className="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-                                    <p className="text-zinc-400 text-xs animate-pulse">AI is generating content, please wait...</p>
+                                    <p className="text-zinc-400 text-xs animate-pulse">AI is preparing a clean response, please wait...</p>
                                 </div>
                             ) : modalContent.type === 'explain' ? (() => {
                                 // Inline Parser for Explain

@@ -22,7 +22,7 @@ import {
 } from "@/lib/api";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Clock } from "lucide-react";
-import { OfflineState, ErrorState, ProcessingState } from "@/components/UIStateSystem";
+import { OfflineState, ErrorState } from "@/components/UIStateSystem";
 
 export interface PracticePageProps {
     onAnswerSubmit?: (
@@ -83,20 +83,11 @@ export default function PracticePage({
     const [aiQuery, setAiQuery] = useState("");
     const [showAIHelp, setShowAIHelp] = useState(false);
     const [totalQuestions, setTotalQuestions] = useState(5);
-    const [loadingStep, setLoadingStep] = useState(0);
     const [batchError, setBatchError] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (isLoading) {
-            setLoadingStep(0);
-            const interval = setInterval(() => {
-                setLoadingStep(prev => (prev < 2 ? prev + 1 : prev));
-            }, 800);
-            return () => clearInterval(interval);
-        }
-    }, [isLoading]);
+    const [waitingForQuestion, setWaitingForQuestion] = useState(false);
 
     const hasAutoStarted = useRef(false);
+    const hasReceivedQuestionsRef = useRef(false);
 
     // Timer
     const timerRef = useRef<number>(0);
@@ -113,16 +104,19 @@ export default function PracticePage({
     };
 
     // Keep the backend generation session resumable after navigation.
-    const pendingGenerationKey = (): string => `mentor_ai_practice_generation_${getStudentId()}`;
+    const pendingGenerationKey = useCallback(
+        (): string => `mentor_ai_practice_generation_${getStudentId()}`,
+        [],
+    );
     const clearPendingGeneration = useCallback(() => {
         if (typeof window !== "undefined") localStorage.removeItem(pendingGenerationKey());
-    }, []);
+    }, [pendingGenerationKey]);
     const savePendingGeneration = useCallback((response: StartSessionResponse) => {
         if (typeof window !== "undefined") localStorage.setItem(pendingGenerationKey(), JSON.stringify({
             sessionId: response.session_id, mode: response.mode, topic: response.topic,
             difficulty: response.difficulty, questionCount: response.total_questions || response.question_count || totalQuestions, startedAt: Date.now(),
         }));
-    }, [totalQuestions]);
+    }, [pendingGenerationKey, totalQuestions]);
     const readPendingGeneration = useCallback(() => {
         if (typeof window === "undefined") return null;
         try {
@@ -131,7 +125,7 @@ export default function PracticePage({
             const value = JSON.parse(raw);
             return Number.isInteger(Number(value?.sessionId)) && Number(value.sessionId) > 0 ? { ...value, sessionId: Number(value.sessionId) } : null;
         } catch { clearPendingGeneration(); return null; }
-    }, [clearPendingGeneration]);
+    }, [clearPendingGeneration, pendingGenerationKey]);
 
     const refreshPerformance = useCallback(async (showLoading = false) => {
         if (showLoading) setPerformanceLoading(true);
@@ -186,27 +180,54 @@ export default function PracticePage({
     }, []);
 
     const applySessionQuestions = useCallback((
-        response: StartSessionResponse | PracticeSessionStatus
+        response: StartSessionResponse | PracticeSessionStatus,
+        replace = false,
     ) => {
         const nextQuestions = response.questions || [];
         setSessionId(response.session_id);
         setSessionMode(response.mode);
-        setSessionTopic(response.topic);
-        setSessionDifficulty(response.difficulty);
-        setQuestions(nextQuestions);
-        setTotalQuestions(response.total_questions || nextQuestions.length || 5);
-        setCurrentQuestionIndex(0);
-        setSelectedAnswer(null);
-        setAnswered(false);
-        setAnswerResult(null);
-        setIsSubmitting(false);
-        setAnswerError(null);
-        setBatchError(null);
+        setSessionTopic(response.topic || "");
+        setSessionDifficulty(response.difficulty || "mixed");
+
+        if (replace) {
+            hasReceivedQuestionsRef.current = false;
+            setQuestions(nextQuestions);
+            setCurrentQuestionIndex(0);
+            setSelectedAnswer(null);
+            setAnswered(false);
+            setAnswerResult(null);
+            setIsSubmitting(false);
+            setAnswerError(null);
+            setBatchError(null);
+        } else if (nextQuestions.length > 0) {
+            setQuestions(previous => {
+                const knownIds = new Set(previous.map(question => question.id));
+                const additions = nextQuestions.filter(question => !knownIds.has(question.id));
+                return additions.length > 0 ? [...previous, ...additions] : previous;
+            });
+        }
+
+        setTotalQuestions(response.total_questions || response.question_count || nextQuestions.length || 5);
         setSessionStarted(true);
+
         if (nextQuestions.length > 0) {
-            startTimer();
+            setIsLoading(false);
+            setBatchError(null);
+            if (!hasReceivedQuestionsRef.current) {
+                hasReceivedQuestionsRef.current = true;
+                startTimer();
+            }
         }
     }, [startTimer]);
+
+    const appendQuestions = useCallback((nextQuestions: APIPracticeQuestion[]) => {
+        if (!nextQuestions.length) return;
+        setQuestions(previous => {
+            const knownIds = new Set(previous.map(question => question.id));
+            const additions = nextQuestions.filter(question => !knownIds.has(question.id));
+            return additions.length > 0 ? [...previous, ...additions] : previous;
+        });
+    }, []);
 
     const beginGenerationPolling = useCallback((id: number) => {
         stopGenerationPolling();
@@ -219,18 +240,40 @@ export default function PracticePage({
                 const status = await getSessionStatus(id, getStudentId());
                 if (!mountedRef.current) return;
 
-                if (status.generation_status === "ready" && status.questions?.length) {
+                const generationStatus = status.generation_status || status.status || "";
+                const hasQuestions = Boolean(status.questions?.length);
+                const complete = status.generation_complete === true
+                    || generationStatus === "ready"
+                    || generationStatus === "complete";
+
+                if (hasQuestions) {
                     applySessionQuestions(status);
-                    clearPendingGeneration();
-                    setIsLoading(false);
-                    setIsGenerating(false);
-                    stopGenerationPolling();
-                } else if (status.generation_status === "failed") {
+                }
+
+                if (generationStatus === "failed" && !hasQuestions) {
                     clearPendingGeneration();
                     setIsLoading(false);
                     setIsGenerating(false);
                     setHasError(true);
                     stopGenerationPolling();
+                } else if (
+                    generationStatus === "partial_failed"
+                    || (!status.is_active && !complete)
+                ) {
+                    setIsLoading(false);
+                    setIsGenerating(false);
+                    setBatchError(hasQuestions
+                        ? "Some practice questions are ready, but no more could be prepared."
+                        : "Practice questions could not be prepared. Please try again.");
+                    stopGenerationPolling();
+                } else if (complete) {
+                    clearPendingGeneration();
+                    setIsLoading(false);
+                    setIsGenerating(false);
+                    stopGenerationPolling();
+                } else {
+                    setIsGenerating(true);
+                    if (!hasQuestions) setIsLoading(true);
                 }
             } catch (error) {
                 // Keep polling through transient network errors. The job lives on
@@ -240,37 +283,71 @@ export default function PracticePage({
             }
         };
 
-        void poll();
         generationPollRef.current = setInterval(() => {
             void poll();
         }, 1000);
+        void poll();
     }, [applySessionQuestions, clearPendingGeneration, stopGenerationPolling]);
 
     const recoverPendingGeneration = useCallback(async () => {
         const pending = readPendingGeneration();
         if (!pending) return false;
-        setSessionId(pending.sessionId); setSessionMode(pending.mode || "topic"); setSessionTopic(pending.topic || "");
-        setSessionDifficulty(pending.difficulty || "mixed"); setTotalQuestions(pending.questionCount || 5);
-        setIsLoading(true); setIsGenerating(true);
+        setSessionId(pending.sessionId);
+        setSessionMode(pending.mode || "topic");
+        setSessionTopic(pending.topic || "");
+        setSessionDifficulty(pending.difficulty || "mixed");
+        setTotalQuestions(pending.questionCount || 5);
+        setWaitingForQuestion(false);
+        setIsLoading(true);
+        setIsGenerating(true);
         try {
             const status = await getSessionStatus(pending.sessionId, getStudentId());
             if (!mountedRef.current) return true;
-            if (status.generation_status === "ready" && status.questions?.length) {
-                applySessionQuestions(status); clearPendingGeneration(); setIsLoading(false); setIsGenerating(false);
-            } else if (status.generation_status === "failed") {
-                clearPendingGeneration(); setIsLoading(false); setIsGenerating(false); setHasError(true);
-            } else beginGenerationPolling(pending.sessionId);
+
+            const generationStatus = status.generation_status || status.status || "";
+            const hasQuestions = Boolean(status.questions?.length);
+            const complete = status.generation_complete === true
+                || generationStatus === "ready"
+                || generationStatus === "complete";
+
+            if (hasQuestions) {
+                applySessionQuestions(status, true);
+            }
+
+            if (generationStatus === "failed" && !hasQuestions) {
+                clearPendingGeneration();
+                setIsLoading(false);
+                setIsGenerating(false);
+                setHasError(true);
+            } else if (
+                generationStatus === "partial_failed"
+                || (!status.is_active && !complete)
+            ) {
+                setIsLoading(false);
+                setIsGenerating(false);
+            } else if (complete) {
+                clearPendingGeneration();
+                setIsLoading(false);
+                setIsGenerating(false);
+            } else {
+                beginGenerationPolling(pending.sessionId);
+            }
             return true;
-        } catch { beginGenerationPolling(pending.sessionId); return true; }
+        } catch {
+            beginGenerationPolling(pending.sessionId);
+            return true;
+        }
     }, [applySessionQuestions, beginGenerationPolling, clearPendingGeneration, readPendingGeneration]);
 
     // Start a new practice session
     const handleStartSession = async (mode: string, topic?: string, difficulty?: string, questionCount?: number) => {
         stopGenerationPolling();
+        stopTimer();
         clearPendingGeneration();
         setIsLoading(true);
         setIsGenerating(true);
         setSessionComplete(false);
+        setWaitingForQuestion(false);
         setAnswerResult(null);
         let waitingForGeneration = false;
 
@@ -285,16 +362,21 @@ export default function PracticePage({
                 count
             );
 
-            if (!response.questions?.length || response.generation_status === "generating" || response.status === "generating") savePendingGeneration(response);
             if (!mountedRef.current) return;
-            applySessionQuestions(response);
+            applySessionQuestions(response, true);
             setLiveStats({ accuracy: 0, streak: 0, points: 0, avgSpeed: "0s", answered: 0, correct: 0 });
 
-            waitingForGeneration = !response.questions?.length
-                || response.generation_status === "generating"
-                || response.status === "generating";
-            if (waitingForGeneration) beginGenerationPolling(response.session_id);
-            else clearPendingGeneration();
+            const generationStatus = response.generation_status || response.status || "";
+            const generationFinished = response.generation_complete === true
+                || generationStatus === "ready"
+                || generationStatus === "complete";
+            waitingForGeneration = !generationFinished;
+            if (waitingForGeneration) {
+                savePendingGeneration(response);
+                beginGenerationPolling(response.session_id);
+            } else {
+                clearPendingGeneration();
+            }
         } catch (error) {
             console.error("Failed to start session:", error);
             if (mountedRef.current) setHasError(true);
@@ -364,11 +446,12 @@ export default function PracticePage({
 
     // Move to next question
     const handleNextQuestion = async () => {
-        if (isGenerating || isSubmitting) return;
+        if (isSubmitting) return;
         setBatchError(null);
         const nextIndex = currentQuestionIndex + 1;
 
         if (nextIndex < questions.length) {
+            setWaitingForQuestion(false);
             setCurrentQuestionIndex(nextIndex);
             setSelectedAnswer(null);
             setAnswered(false);
@@ -377,29 +460,66 @@ export default function PracticePage({
             setShowAIHelp(false);
             startTimer();
         } else if (sessionId) {
+            const previousIndex = currentQuestionIndex;
+            const previousSelectedAnswer = selectedAnswer;
+            const previousAnswered = answered;
+            const previousAnswerResult = answerResult;
+            const previousAnswerError = answerError;
             setIsGenerating(true);
+            setWaitingForQuestion(true);
+            setCurrentQuestionIndex(nextIndex);
+            setSelectedAnswer(null);
+            setAnswered(false);
+            setAnswerResult(null);
+            setAnswerError(null);
+            setShowAIHelp(false);
+            stopTimer();
             try {
                 const batch = await getNextBatch(sessionId, getStudentId());
+                if (batch.questions?.length) appendQuestions(batch.questions);
 
-                if (batch.session_complete || batch.questions.length === 0) {
+                const generationStatus = batch.generation_status || batch.status || "";
+                const generationFinished = batch.generation_complete === true
+                    || generationStatus === "ready"
+                    || generationStatus === "complete";
+
+                if (batch.session_complete) {
                     clearPendingGeneration();
+                    stopGenerationPolling();
+                    setWaitingForQuestion(false);
+                    setIsGenerating(false);
                     setSessionComplete(true);
                     const perfData = await getStudentPerformance(getStudentId());
-                    setPerformance(perfData);
+                    if (mountedRef.current) setPerformance(perfData);
+                    if (typeof window !== "undefined") {
+                        window.dispatchEvent(new Event("mentorai:analytics-updated"));
+                    }
+                } else if (generationFinished) {
+                    clearPendingGeneration();
+                    stopGenerationPolling();
+                    setIsGenerating(false);
                 } else {
-                    setQuestions(prev => [...prev, ...batch.questions]);
-                    setCurrentQuestionIndex(nextIndex);
-                    setSelectedAnswer(null);
-                    setAnswered(false);
-                    setAnswerResult(null);
-                    setAnswerError(null);
-                    setShowAIHelp(false);
-                    startTimer();
+                    savePendingGeneration({
+                        session_id: sessionId,
+                        mode: sessionMode,
+                        topic: sessionTopic,
+                        difficulty: sessionDifficulty,
+                        total_questions: totalQuestions,
+                        questions: [],
+                    });
+                    beginGenerationPolling(sessionId);
                 }
             } catch (error) {
-                setBatchError("The next question could not be loaded. Your progress is safe; please try again.");
-            } finally {
-                if (mountedRef.current) setIsGenerating(false);
+                if (mountedRef.current) {
+                    setCurrentQuestionIndex(previousIndex);
+                    setSelectedAnswer(previousSelectedAnswer);
+                    setAnswered(previousAnswered);
+                    setAnswerResult(previousAnswerResult);
+                    setAnswerError(previousAnswerError);
+                    setWaitingForQuestion(false);
+                    setIsGenerating(false);
+                    setBatchError("The next question could not be loaded. Your progress is safe; please try again.");
+                }
             }
         }
     };
@@ -416,7 +536,7 @@ export default function PracticePage({
     };
 
     const handleSkip = () => {
-        if (isGenerating || isSubmitting) return;
+        if (isSubmitting) return;
         const skippedQuestionId = questions[currentQuestionIndex]?.id;
         stopTimer();
         setSelectedAnswer(null);
@@ -427,6 +547,18 @@ export default function PracticePage({
         void handleNextQuestion();
         if (skippedQuestionId) onSkip?.(skippedQuestionId);
     };
+
+    useEffect(() => {
+        if (!waitingForQuestion || currentQuestionIndex >= questions.length) return;
+        setWaitingForQuestion(false);
+        setIsGenerating(false);
+        setSelectedAnswer(null);
+        setAnswered(false);
+        setAnswerResult(null);
+        setAnswerError(null);
+        setShowAIHelp(false);
+        startTimer();
+    }, [currentQuestionIndex, questions.length, startTimer, waitingForQuestion]);
 
     const handleAIHelp = (query: string) => {
         onAIHelp?.(questions[currentQuestionIndex]?.id, query);
@@ -454,17 +586,11 @@ export default function PracticePage({
         if (isLoading) {
             return (
                 <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto p-8 justify-center animate-fade-in">
-                    <ProcessingState 
-                        title="Generating Practice Quiz"
-                        steps={[
-                            "📄 Reading study files...",
-                            "🧠 Parsing target topics...",
-                            "🎯 Generating quiz questions...",
-                            "✨ Finalizing quiz workspace..."
-                        ]}
-                        currentStepIndex={loadingStep}
-                        indeterminate
-                    />
+                    <div className="text-center space-y-4">
+                        <div className="w-12 h-12 mx-auto border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                        <h3 className="text-lg font-semibold text-white">Preparing your practice session...</h3>
+                        <p className="text-slate-400 text-sm">Your first question will appear shortly.</p>
+                    </div>
                 </div>
             );
         }
@@ -565,8 +691,8 @@ export default function PracticePage({
                     <div className="flex-1 flex items-center justify-center px-6 py-4">
                         <div className="text-center space-y-4">
                             <div className="w-12 h-12 mx-auto border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
-                            <h3 className="text-lg font-semibold text-white">Generating Questions...</h3>
-                            <p className="text-slate-400 text-sm">AI is analyzing your documents and crafting personalized questions</p>
+                            <h3 className="text-lg font-semibold text-white">Preparing your practice session...</h3>
+                            <p className="text-slate-400 text-sm">Your first question will appear shortly.</p>
                         </div>
                     </div>
                 </div>
@@ -596,10 +722,10 @@ export default function PracticePage({
                     <div className="max-w-md text-center space-y-3">
                         <div className="text-3xl">🧩</div>
                         <h3 className="text-lg font-semibold text-white">
-                            {isGenerating ? "Preparing the next question..." : "Question unavailable"}
+                            {waitingForQuestion ? "Preparing the next question..." : "Question unavailable"}
                         </h3>
                         <p className="text-sm text-slate-400">
-                            {isGenerating ? "Your session is still being prepared." : "This question was not returned by the practice session. Try the next batch again."}
+                            {waitingForQuestion ? "Your session is still being prepared." : "This question was not returned by the practice session. Try the next batch again."}
                         </p>
                     </div>
                 </div>
@@ -654,12 +780,6 @@ export default function PracticePage({
                     <div className="flex flex-wrap items-center gap-1.5 px-3 py-1 bg-slate-800/40 border border-slate-700/50 rounded-lg w-fit mx-4 max-w-full">
                         <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                         <span className="text-xs font-mono text-slate-300">{formatTime(elapsedTime)}</span>
-                        {isGenerating && (
-                            <span className="text-xs text-violet-400 flex items-center gap-1">
-                                <div className="w-3 h-3 border border-violet-400 border-t-transparent rounded-full animate-spin" />
-                                Loading next batch...
-                            </span>
-                        )}
                     </div>
                     {(answerError || batchError) && (
                         <div className="mx-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200 break-words">

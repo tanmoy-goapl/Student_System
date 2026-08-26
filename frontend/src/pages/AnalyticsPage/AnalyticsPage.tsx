@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, AreaChart, Area
@@ -80,35 +80,54 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        const studentId = localStorage.getItem("user_id");
-        if (!studentId) {
-          setErrorMsg("Authentication required. Please sign in again.");
-          return;
-        }
-        const res = await fetch(`/api/analytics/data/${studentId}`);
-        const text = await res.text();
-        try {
-          const result = JSON.parse(text);
-          if (result.success) {
-            setData(result.data);
-          } else {
-            setErrorMsg(result.message || "Result success was false");
-          }
-        } catch (e) {
-          setErrorMsg(`Failed to parse JSON: ${text.substring(0, 100)}`);
-        }
-      } catch (err: any) {
-        console.error("Failed to load analytics:", err);
-        setErrorMsg(err.message);
-      } finally {
-        setLoading(false);
+  const fetchAnalytics = useCallback(async (showLoading = false) => {
+    if (showLoading) {
+      setLoading(true);
+      setErrorMsg(null);
+    }
+    try {
+      const studentId = localStorage.getItem("user_id");
+      if (!studentId) {
+        if (showLoading) setErrorMsg("Authentication required. Please sign in again.");
+        return;
       }
-    };
-    fetchAnalytics();
+      const res = await fetch(`/api/analytics/data/${studentId}?_t=${Date.now()}`, {
+        cache: "no-store",
+      });
+      const text = await res.text();
+      try {
+        const result = JSON.parse(text);
+        if (result.success) {
+          setData(result.data);
+          setErrorMsg(null);
+        } else if (showLoading) {
+          setErrorMsg(result.message || "Result success was false");
+        }
+      } catch (e) {
+        if (showLoading) setErrorMsg(`Failed to parse JSON: ${text.substring(0, 100)}`);
+      }
+    } catch (err: any) {
+      console.error("Failed to load analytics:", err);
+      if (showLoading) setErrorMsg(err.message);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void fetchAnalytics(true);
+    const refresh = () => {
+      if (document.visibilityState === "visible") void fetchAnalytics(false);
+    };
+    window.addEventListener("focus", refresh);
+    window.addEventListener("mentorai:analytics-updated", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("mentorai:analytics-updated", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [fetchAnalytics]);
 
   if (loading) return <DashboardContentLoader text="Loading Analytics..." />;
   if (errorMsg) return <div className="text-red-400 text-center mt-20">Error: {errorMsg}</div>;

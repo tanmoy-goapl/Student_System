@@ -4,7 +4,13 @@ import re
 import logging
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from practice_models import TopicPerformance, PracticeSession, QuizHistory, UserPerformance
+from practice_models import (
+    TopicPerformance,
+    PracticeSession,
+    PracticeQuestion,
+    QuizHistory,
+    UserPerformance,
+)
 
 logger = logging.getLogger("chatbot")
 
@@ -39,7 +45,9 @@ def _load_subject_topics():
     return _subject_topics_cache
 
 def get_topic_status(sessions: int, questions_attempted: int, accuracy: float) -> str:
-    if sessions == 0:
+    # A session can be created while a quiz is being generated. It is not
+    # learning activity until at least one answer has been recorded.
+    if sessions == 0 or questions_attempted <= 0:
         return "NOT_STARTED"
     if sessions < 2:
         return "LEARNING"
@@ -66,6 +74,68 @@ def _as_naive_datetime(value):
         return value.replace(tzinfo=None)
     return value
 
+def calculate_study_streak_metrics(student_id: int, db: Session, now=None) -> dict:
+    """Calculate streaks from answered learning activity only.
+
+    A session created for background question generation is not activity. Quiz
+    history rows count only when they contain answered questions, while an
+    in-progress session is represented by answered practice questions. Keeping
+    this calculation here gives all dashboard consumers the same definition of
+    student activity.
+    """
+    now = _as_naive_datetime(now) or datetime.utcnow()
+
+    history_rows = db.query(QuizHistory.created_at).filter(
+        QuizHistory.student_id == student_id,
+        QuizHistory.questions_attempted > 0,
+    ).all()
+    answered_rows = (
+        db.query(PracticeQuestion.answered_at)
+        .join(PracticeSession, PracticeQuestion.session_id == PracticeSession.id)
+        .filter(
+            PracticeSession.student_id == student_id,
+            PracticeQuestion.student_answer.isnot(None),
+            PracticeQuestion.answered_at.isnot(None),
+            PracticeQuestion.is_correct.isnot(None),
+        )
+        .all()
+    )
+
+    activity_timestamps = []
+    for row in history_rows + answered_rows:
+        timestamp = _as_naive_datetime(row[0])
+        if timestamp:
+            activity_timestamps.append(timestamp)
+
+    activity_dates = sorted({timestamp.date() for timestamp in activity_timestamps})
+    last_active_at = max(activity_timestamps, default=None)
+    last_active = last_active_at.date() if last_active_at else None
+    date_set = set(activity_dates)
+
+    best_streak = 0
+    running_streak = 0
+    previous_date = None
+    for activity_date in activity_dates:
+        if previous_date and activity_date == previous_date + timedelta(days=1):
+            running_streak += 1
+        else:
+            running_streak = 1
+        best_streak = max(best_streak, running_streak)
+        previous_date = activity_date
+
+    current_streak = 0
+    if last_active and last_active >= now.date() - timedelta(days=1):
+        cursor = last_active
+        while cursor in date_set:
+            current_streak += 1
+            cursor -= timedelta(days=1)
+
+    return {
+        "current_streak": current_streak,
+        "best_streak": best_streak,
+        "last_active": last_active.isoformat() if last_active else None,
+        "last_active_at": last_active_at,
+    }
 
 def _aggregate_topic_metrics(perfs) -> dict:
     if not perfs:
@@ -265,7 +335,7 @@ def get_student_subjects(student_id: int, db: Session) -> list:
     return subjects
 
 def _subject_match_rank(perf, requested_subject: str):
-    """Prefer exact subject rows, then aliases, then legacy rows without a subject."""
+    """Prefer exact subject rows, then aliases, then unscoped legacy rows."""
     stored_subject = (getattr(perf, "subject", None) or "").strip()
     requested = (requested_subject or "").strip()
     if not stored_subject:
@@ -290,13 +360,30 @@ def calculate_subject_metrics(student_id: int, subject: str, db: Session, topics
         performances = db.query(TopicPerformance).filter(
             TopicPerformance.student_id == student_id,
             TopicPerformance.topic.in_(predefined_topics),
+            # Rows with no answered questions are generated/incomplete
+            # sessions, not measurable student performance.
+            TopicPerformance.questions_attempted > 0,
         ).all()
 
+    # Older practice records stored a concept label such as "Basic
+    # definition" in the subject column instead of the course name. Keep
+    # those records usable by topic, while still preventing a row explicitly
+    # belonging to another enrolled course from leaking into this subject.
+    enrolled_subjects = get_student_subjects(student_id, db)
     performances_by_topic = {}
     for perf in performances:
         rank = _subject_match_rank(perf, subject)
         if rank is None:
-            continue
+            belongs_to_enrolled_subject = any(
+                _subject_match_rank(perf, enrolled_subject) is not None
+                for enrolled_subject in enrolled_subjects
+            )
+            if belongs_to_enrolled_subject:
+                continue
+            # This is an unscoped/legacy label. The topic is already bounded
+            # by this subject's curriculum, so use it as a topic-level
+            # fallback after explicit subject matches.
+            rank = 3
         performances_by_topic.setdefault(perf.topic, []).append((rank, perf))
 
     mastered_topics = 0
@@ -327,7 +414,7 @@ def calculate_subject_metrics(student_id: int, subject: str, db: Session, topics
         else:
             not_started_topics += 1
 
-        if metrics["sessions"] > 0 or metrics["questions_attempted"] > 0:
+        if metrics["questions_attempted"] > 0:
             attempted_metrics.append(metrics)
             total_questions += metrics["questions_attempted"]
             total_correct_answers += metrics["correct_answers"]
@@ -454,9 +541,18 @@ def get_activity_snapshot(student_ids, db: Session, now=None, topics=None) -> di
         QuizHistory.questions_attempted > 0,
         QuizHistory.created_at >= window_start,
     )
-    session_query = db.query(PracticeSession.student_id, PracticeSession.created_at).filter(
-        PracticeSession.student_id.in_(ids),
-        PracticeSession.created_at >= window_start,
+    # A session is only student activity after an answer is recorded. Sessions
+    # are also created while questions are generated in the background.
+    session_query = (
+        db.query(PracticeSession.student_id, PracticeQuestion.answered_at)
+        .join(PracticeQuestion, PracticeQuestion.session_id == PracticeSession.id)
+        .filter(
+            PracticeSession.student_id.in_(ids),
+            PracticeQuestion.student_answer.isnot(None),
+            PracticeQuestion.answered_at >= window_start,
+            PracticeQuestion.answered_at.isnot(None),
+            PracticeQuestion.is_correct.isnot(None),
+        )
     )
     scoped_topics = {
         topic.strip()
@@ -465,7 +561,7 @@ def get_activity_snapshot(student_ids, db: Session, now=None, topics=None) -> di
     }
     if scoped_topics:
         quiz_query = quiz_query.filter(QuizHistory.topic.in_(scoped_topics))
-        session_query = session_query.filter(PracticeSession.topic.in_(scoped_topics))
+        session_query = session_query.filter(PracticeQuestion.topic.in_(scoped_topics))
     quiz_rows = quiz_query.all()
     session_rows = session_query.all()
 

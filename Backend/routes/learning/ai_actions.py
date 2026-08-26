@@ -19,6 +19,28 @@ from services.practice.base import _practice_llm_stream, normalize_generated_tex
 from practice_models import AICache
 from services.authorization import require_student, require_professor, require_document_access, require_professor_class
 
+
+def _has_complete_tagged_response(content: str, required_blocks: dict[str, int]) -> bool:
+    """Return True only when every expected tagged block has non-empty content."""
+    if not content or not content.strip():
+        return False
+
+    for tag, expected_count in required_blocks.items():
+        blocks = re.findall(
+            rf"{re.escape(tag)}\s*(.*?)(?=\s*(?:===|\[[A-Z_]+\])|$)",
+            content,
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+        if len(blocks) < expected_count or any(not block.strip() for block in blocks[:expected_count]):
+            return False
+
+    return True
+
+
+EXPLAIN_BLOCKS = {"[CONCEPT]": 1, "[ANALOGY]": 1, "[TAKEAWAY]": 1}
+EXAMPLE_BLOCKS = {"[TITLE]": 3, "[CONTENT]": 3}
+FLASHCARD_BLOCKS = {"[QUESTION]": 5, "[ANSWER]": 5}
+
 @router.get("/explain/stream")
 async def explain_topic_stream(request: Request, student_id: int, topic_name: str, db: Session = Depends(get_db)):
     require_student(student_id, db)
@@ -28,7 +50,7 @@ async def explain_topic_stream(request: Request, student_id: int, topic_name: st
         AICache.action_type == "explain"
     ).first()
 
-    if cached and "[CONCEPT]" not in cached.content:
+    if cached and not _has_complete_tagged_response(cached.content, EXPLAIN_BLOCKS):
         try:
             db.delete(cached)
             db.commit()
@@ -87,7 +109,7 @@ Provide a single-sentence key takeaway here."""
                 yield chunk
         finally:
             cancel_event.set()
-            if full_text.strip():
+            if _has_complete_tagged_response(full_text, EXPLAIN_BLOCKS):
                 try:
                     from database import SessionLocal
                     local_db = SessionLocal()
@@ -120,7 +142,7 @@ async def give_examples_stream(request: Request, student_id: int, topic_name: st
         AICache.action_type == "examples"
     ).first()
 
-    if cached and "[TITLE]" not in cached.content:
+    if cached and not _has_complete_tagged_response(cached.content, EXAMPLE_BLOCKS):
         try:
             db.delete(cached)
             db.commit()
@@ -189,7 +211,7 @@ Short paragraph explaining the third example."""
                 yield chunk
         finally:
             cancel_event.set()
-            if full_text.strip():
+            if _has_complete_tagged_response(full_text, EXAMPLE_BLOCKS):
                 try:
                     from database import SessionLocal
                     local_db = SessionLocal()
@@ -357,7 +379,10 @@ async def flashcard_topic_stream(request: Request, student_id: int, topic_name: 
         AICache.action_type == "flashcard"
     ).first()
 
-    if cached and ("[QUESTION]" not in cached.content or cached.content.count("[QUESTION]") < 5 or "\\" in cached.content):
+    if cached and (
+        not _has_complete_tagged_response(cached.content, FLASHCARD_BLOCKS)
+        or "\\" in cached.content
+    ):
         try:
             db.delete(cached)
             db.commit()
@@ -431,7 +456,7 @@ Answer 5 text here."""
                 full_text += chunk
                 yield chunk
         finally:
-            if not cancel_event.is_set() and full_text.strip():
+            if not cancel_event.is_set() and _has_complete_tagged_response(full_text, FLASHCARD_BLOCKS):
                 try:
                     from database import SessionLocal
                     local_db = SessionLocal()

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend 
 } from "recharts";
@@ -21,11 +21,12 @@ interface AnalyticsData {
     masteredTopicsList: string[];
     activeRoadmaps: number;
   };
-  weeklyActivity: { date: string; attempts: number; accuracy: number }[];
+  weeklyActivity: { date: string; quizAttempts: number; questionsAttempted: number; accuracy: number }[];
   subjectPerformance: {
     subject: string;
     progress: number;
     completedTopics: number;
+    attemptedTopics: number;
     remainingTopics: number;
     totalTopics: number;
     averageAccuracy: number;
@@ -45,6 +46,7 @@ interface AnalyticsData {
   learningVelocity: {
     topicsCompletedThisWeek: number;
     quizAttemptsThisWeek: number;
+    questionsAttemptedThisWeek: number;
     accuracyImprovement: number;
   };
   recommendations: string[];
@@ -56,29 +58,49 @@ export default function AnalyticsDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
+  const fetchData = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
+    try {
+      const studentId = localStorage.getItem("user_id");
+      if (!studentId) throw new Error("Please log in to view analytics");
+
+      const timestamp = new Date().getTime();
+      const res = await fetch(`/api/analytics/data?student_id=${studentId}&_t=${timestamp}`, {
+        cache: "no-store"
+      });
+      if (!res.ok) throw new Error("Failed to load analytics data");
+
+      const json = await res.json();
+      setData(json);
+      setError(null);
+    } catch (err: any) {
+      // Keep already-rendered analytics visible during a background refresh.
+      if (showLoading) setError(err.message);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     setMounted(true);
-    const fetchData = async () => {
-      try {
-        const studentId = localStorage.getItem("user_id");
-        if (!studentId) throw new Error("Please log in to view analytics");
-        
-        const timestamp = new Date().getTime();
-        const res = await fetch(`/api/analytics/data?student_id=${studentId}&_t=${timestamp}`, {
-          cache: "no-store"
-        });
-        if (!res.ok) throw new Error("Failed to load analytics data");
-        
-        const json = await res.json();
-        setData(json);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+    void fetchData(true);
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") {
+        void fetchData(false);
       }
     };
-    fetchData();
-  }, []);
+
+    window.addEventListener("focus", refreshWhenVisible);
+    window.addEventListener("mentorai:analytics-updated", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      window.removeEventListener("focus", refreshWhenVisible);
+      window.removeEventListener("mentorai:analytics-updated", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -143,7 +165,7 @@ export default function AnalyticsDashboard() {
         <StatCard icon={Activity} label="Current Streak" value={`${data.overview.currentStreak} Days`} color="text-orange-400" bg="bg-orange-500/10" />
         <StatCard icon={Target} label="Avg Accuracy" value={`${data.overview.averageAccuracy}%`} color="text-emerald-400" bg="bg-emerald-500/10" />
         <StatCard icon={TrendingUp} label="Quiz Attempts" value={data.overview.totalQuizAttempts} color="text-blue-400" bg="bg-blue-500/10" />
-        <StatCard icon={CheckCircle2} label="Topics Completed" value={data.overview.topicsCompleted} color="text-purple-400" bg="bg-purple-500/10" tooltipList={data.overview.topicsCompletedList} />
+        <StatCard icon={CheckCircle2} label="Topics Practiced" value={data.overview.topicsCompleted} color="text-purple-400" bg="bg-purple-500/10" tooltipList={data.overview.topicsCompletedList} />
         <StatCard icon={Award} label="Mastered Topics" value={data.overview.masteredTopics} color="text-yellow-400" bg="bg-yellow-500/10" tooltipList={data.overview.masteredTopicsList} />
         <StatCard icon={BookOpen} label="Active Roadmaps" value={data.overview.activeRoadmaps} color="text-cyan-400" bg="bg-cyan-500/10" />
       </div>
@@ -171,7 +193,7 @@ export default function AnalyticsDashboard() {
                       itemStyle={{ color: '#e2e8f0' }}
                     />
                     <Legend verticalAlign="top" height={36} />
-                    <Line yAxisId="left" type="monotone" dataKey="attempts" name="Quiz Attempts" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
+                    <Line yAxisId="left" type="monotone" dataKey="quizAttempts" name="Quiz Attempts" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
                     <Line yAxisId="right" type="monotone" dataKey="accuracy" name="Accuracy %" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} activeDot={{ r: 6 }} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -193,7 +215,7 @@ export default function AnalyticsDashboard() {
                       <div>
                         <p className="text-sm font-medium text-white">{subj.subject}</p>
                         <p className="text-xs text-slate-400">
-                          {subj.completedTopics} / {subj.totalTopics} Topics Completed • {subj.averageAccuracy}% Avg Accuracy
+                          {subj.attemptedTopics} / {subj.totalTopics} Topics Practiced • {subj.completedTopics} Mastered • {subj.averageAccuracy}% Avg Accuracy
                         </p>
                       </div>
                       <span className="text-sm font-bold text-blue-400">{subj.progress}%</span>
@@ -252,7 +274,7 @@ export default function AnalyticsDashboard() {
             </h2>
             <div className="space-y-4 relative z-10">
               <div className="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg">
-                <span className="text-sm text-slate-300">Topics Completed (This Week)</span>
+                <span className="text-sm text-slate-300">Topics Practiced (This Week)</span>
                 <span className="font-bold text-white text-lg">{data.learningVelocity.topicsCompletedThisWeek}</span>
               </div>
               <div className="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg">

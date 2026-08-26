@@ -4,7 +4,7 @@ import AIHelpSection from '@/components/practicepage/Main/AIHelpSection';
 import AccuracyTrend from '../../components/performancepage/Main/AccuracyTrend';
 import StatsGrid from '../../components/performancepage/Main/StatsGrid';
 import TopicMastery from '../../components/performancepage/Main/TopicMastery';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ActivityHeatmap from '@/components/performancepage/Main/ActivityHeatmap';
 import SpeedVsAccuracy from '@/components/performancepage/Main/SpeedVsAccuracy';
 import PracticeStats from '@/components/performancepage/Main/PracticeStats';
@@ -24,18 +24,37 @@ export default function PerformancePage() {
     };
     const studentId = getStudentId();
 
-    useEffect(() => {
-        async function fetchMainData() {
-            try {
-                if (!studentId) return;
-                const data = await getPerformanceMain(studentId);
-                setMainData(data);
-            } catch (error) {
-                console.error("Failed to load performance main data:", error);
-            }
+    const fetchMainData = useCallback(async (showLoading = false) => {
+        if (!studentId) {
+            if (showLoading) setMainData(null);
+            return;
         }
-        fetchMainData();
+        if (showLoading) setMainData(null);
+        try {
+            const data = await getPerformanceMain(studentId);
+            setMainData(data);
+        } catch (error) {
+            console.error("Failed to load performance main data:", error);
+        }
     }, [studentId]);
+
+    useEffect(() => {
+        const initialLoad = window.setTimeout(() => {
+            void fetchMainData(true);
+        }, 0);
+        const refresh = () => {
+            if (document.visibilityState === "visible") void fetchMainData(false);
+        };
+        window.addEventListener("focus", refresh);
+        window.addEventListener("mentorai:analytics-updated", refresh);
+        document.addEventListener("visibilitychange", refresh);
+        return () => {
+            window.clearTimeout(initialLoad);
+            window.removeEventListener("focus", refresh);
+            window.removeEventListener("mentorai:analytics-updated", refresh);
+            document.removeEventListener("visibilitychange", refresh);
+        };
+    }, [fetchMainData]);
 
     const handleAIHelp = (query: string) => {
         console.log(query)

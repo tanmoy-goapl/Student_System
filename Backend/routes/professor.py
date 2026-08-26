@@ -30,6 +30,27 @@ def _is_at_risk_metric(metrics: Dict[str, Any]) -> bool:
     return classify_risk(metrics) == "HIGH_RISK"
 
 
+def _aggregate_risk_tier(risk_tiers) -> str:
+    """Combine class-level tiers without treating missing activity as failure."""
+    tiers = {str(tier or "NOT_STARTED") for tier in risk_tiers}
+    if "HIGH_RISK" in tiers:
+        return "HIGH_RISK"
+    if "NEEDS_SUPPORT" in tiers:
+        return "NEEDS_SUPPORT"
+    if "NOT_STARTED" in tiers:
+        return "NOT_STARTED"
+    return "ON_TRACK"
+
+
+def _risk_status(risk_tier: str) -> str:
+    return {
+        "HIGH_RISK": "Red",
+        "NEEDS_SUPPORT": "Yellow",
+        "NOT_STARTED": "Blue",
+        "ON_TRACK": "Green",
+    }.get(risk_tier, "Blue")
+
+
 @router.get("/classes/{professor_id}")
 def get_professor_classes(professor_id: int, db: Session = Depends(get_db)):
     require_professor(professor_id, db)
@@ -59,8 +80,9 @@ def get_class_analytics(class_id: int, professor_id: int = Query(...), db: Sessi
     students = db.query(User).filter(User.id.in_(student_ids)).all()
     
     student_metrics = []
-    total_accuracy = 0
-    total_confidence = 0
+    total_accuracy = 0.0
+    total_accuracy_weight = 0.0
+    total_confidence = 0.0
     total_exposure = 0
     total_progress = 0
     total_questions_attempted = 0
@@ -72,17 +94,8 @@ def get_class_analytics(class_id: int, professor_id: int = Query(...), db: Sessi
     fourteen_days_ago = datetime.utcnow() - timedelta(days=14)
     topic_stats: Dict[str, Dict[str, Any]] = {}
     
-    # Calculate total topics from curriculum
-    total_class_topics = 20 # Fallback
     curriculum = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == class_id).first()
-    if curriculum and curriculum.curriculum_json and "semesters" in curriculum.curriculum_json:
-        curr_topics = 0
-        for sem in curriculum.curriculum_json.get("semesters", []):
-            for course in sem.get("courses", []):
-                curr_topics += len(course.get("topics", []))
-        if curr_topics > 0:
-            total_class_topics = curr_topics
-    
+
     subject_name = (
         curriculum.subject_name
         if curriculum and curriculum.subject_name
@@ -176,12 +189,7 @@ def get_class_analytics(class_id: int, professor_id: int = Query(...), db: Sessi
         # Risk and activity use the shared rules. A student with no attempts
         # is not high risk, but remains visible as not started/support-needed.
         risk_tier = metrics.get("risk_tier", "NOT_STARTED")
-        status = {
-            "HIGH_RISK": "Red",
-            "NEEDS_SUPPORT": "Yellow",
-            "NOT_STARTED": "Yellow",
-            "ON_TRACK": "Green",
-        }.get(risk_tier, "Yellow")
+        status = _risk_status(risk_tier)
 
         last_active = activity_snapshot["last_activity_by_student"].get(student.id)
         if not last_active and perf and perf.last_practiced:
@@ -198,7 +206,8 @@ def get_class_analytics(class_id: int, professor_id: int = Query(...), db: Sessi
         is_at_risk = risk_tier == "HIGH_RISK"
         
         recent_quiz = db.query(QuizHistory).filter(
-            QuizHistory.student_id == student.id
+            QuizHistory.student_id == student.id,
+            QuizHistory.questions_attempted > 0,
         ).order_by(QuizHistory.created_at.desc()).first()
             
         student_metrics.append({
@@ -218,7 +227,13 @@ def get_class_analytics(class_id: int, professor_id: int = Query(...), db: Sessi
             "recent_quiz": {"topic": recent_quiz.topic, "score": recent_quiz.score_percentage} if recent_quiz else None
         })
         
-        total_accuracy += student_accuracy
+        accuracy_weight = (
+            metrics.get("questions_attempted", 0)
+            or metrics.get("attempted_topics", 0)
+        )
+        if accuracy_weight > 0:
+            total_accuracy += student_accuracy * accuracy_weight
+            total_accuracy_weight += accuracy_weight
         total_confidence += student_confidence
         total_exposure += student_exposure
         total_progress += progress_pct
@@ -232,8 +247,8 @@ def get_class_analytics(class_id: int, professor_id: int = Query(...), db: Sessi
 
     student_count = len(student_metrics)
     average_accuracy = (
-        round((total_correct_answers / total_questions_attempted) * 100, 1)
-        if total_questions_attempted > 0
+        round(total_accuracy / total_accuracy_weight, 1)
+        if total_accuracy_weight > 0
         else 0
     )
     average_confidence = round(total_confidence / valid_students_for_accuracy, 1) if valid_students_for_accuracy > 0 else 0
@@ -278,44 +293,83 @@ def get_class_analytics(class_id: int, professor_id: int = Query(...), db: Sessi
     strong_topics.sort(key=lambda x: -x["score"])
     
     # 3. Unit Analytics
+    # Support both the current simple units schema and the older semester/course
+    # schema. Only topics with recorded activity contribute to unit health.
     unit_analytics = []
-    curriculum = db.query(ClassCurriculum).filter(ClassCurriculum.class_id == class_id).first()
-    if curriculum and curriculum.curriculum_json and "semesters" in curriculum.curriculum_json:
-        for sem in curriculum.curriculum_json["semesters"]:
-            for course in sem.get("courses", []):
-                unit_name = course.get("name", "Unknown Unit")
-                topics = course.get("topics", [])
-                
-                # Calculate avg unit accuracy and completion
-                unit_accuracy_sum = 0
-                unit_completion_sum = 0
-                valid_topics = 0
-                
-                for t in topics:
-                    # Find topic in topic_analytics
-                    ta = next((ta for ta in topic_analytics if ta["name"].lower() == t.lower()), None)
-                    if ta:
-                        unit_accuracy_sum += ta["accuracy"]
-                        unit_completion_sum += ta["completion"]
-                        valid_topics += 1
-                        
-                avg_unit_acc = round(unit_accuracy_sum / valid_topics, 1) if valid_topics > 0 else 0
-                avg_unit_comp = round(unit_completion_sum / valid_topics, 1) if valid_topics > 0 else 0
-                
-                health = "Red"
-                if avg_unit_acc >= 80: health = "Green"
-                elif avg_unit_acc >= 60: health = "Yellow"
-                
-                unit_analytics.append({
-                    "name": unit_name,
-                    "accuracy": avg_unit_acc,
-                    "completion": avg_unit_comp,
-                    "health": health
-                })
+    unit_definitions = []
+    curriculum_json = curriculum.curriculum_json if curriculum else None
+    if isinstance(curriculum_json, dict):
+        if isinstance(curriculum_json.get("units"), list):
+            unit_definitions.extend(
+                (
+                    unit.get("title") or unit.get("name") or unit.get("unit") or "Untitled Unit",
+                    unit.get("topics", []),
+                )
+                for unit in curriculum_json.get("units", [])
+                if isinstance(unit, dict)
+            )
+        elif isinstance(curriculum_json.get("semesters"), list):
+            for sem in curriculum_json.get("semesters", []):
+                for course in sem.get("courses", []):
+                    unit_definitions.append(
+                        (
+                            course.get("title") or course.get("name") or course.get("code") or "Untitled Unit",
+                            course.get("topics", []),
+                        )
+                    )
+
+    for unit_name, topics in unit_definitions:
+        unit_accuracy_sum = 0.0
+        unit_completion_sum = 0.0
+        valid_topics = 0
+        unit_has_activity = False
+
+        for topic in topics:
+            ta = next(
+                (item for item in topic_analytics
+                 if item["name"].casefold() == str(topic).casefold()),
+                None,
+            )
+            if not ta:
+                continue
+            unit_accuracy_sum += float(ta["accuracy_percentage"])
+            unit_completion_sum += float(ta["completion_percentage"])
+            valid_topics += 1
+            unit_has_activity = unit_has_activity or ta["completion_percentage"] > 0
+
+        avg_unit_acc = (
+            round(unit_accuracy_sum / valid_topics, 1)
+            if valid_topics > 0
+            else 0
+        )
+        avg_unit_comp = (
+            round(unit_completion_sum / valid_topics, 1)
+            if valid_topics > 0
+            else 0
+        )
+
+        if not unit_has_activity:
+            health = "NOT_STARTED"
+        elif avg_unit_acc >= 80:
+            health = "Green"
+        elif avg_unit_acc >= 60:
+            health = "Yellow"
+        else:
+            health = "Red"
+
+        unit_analytics.append({
+            "name": unit_name,
+            "accuracy": avg_unit_acc,
+            "completion": avg_unit_comp,
+            "health": health,
+        })
 
     # 4. Recent Activity Feed
     activity_feed = []
-    recent_quizzes = db.query(QuizHistory).filter(QuizHistory.student_id.in_(student_ids)).order_by(QuizHistory.created_at.desc()).limit(15).all()
+    recent_quizzes = db.query(QuizHistory).filter(
+        QuizHistory.student_id.in_(student_ids),
+        QuizHistory.questions_attempted > 0,
+    ).order_by(QuizHistory.created_at.desc()).limit(15).all()
     for q in recent_quizzes:
         s_name = next((s.name for s in students if s.id == q.student_id), f"Student {q.student_id}")
         if q.score_percentage >= 85:
@@ -379,7 +433,15 @@ def get_class_analytics(class_id: int, professor_id: int = Query(...), db: Sessi
             "atRiskStudents": sum(1 for student in student_metrics if student["risk_tier"] == "HIGH_RISK"),
             "studentsNeedingSupport": sum(
                 1 for student in student_metrics
-                if student["risk_tier"] in {"HIGH_RISK", "NEEDS_SUPPORT", "NOT_STARTED"}
+                if student["risk_tier"] in {"HIGH_RISK", "NEEDS_SUPPORT"}
+            ),
+            "needsSupportStudents": sum(
+                1 for student in student_metrics
+                if student["risk_tier"] == "NEEDS_SUPPORT"
+            ),
+            "notStartedStudents": sum(
+                1 for student in student_metrics
+                if student["risk_tier"] == "NOT_STARTED"
             ),
             "inactiveStudents": inactive_students_count,
             # Engagement = enrolled students with any completed quiz or
@@ -552,14 +614,21 @@ def get_student_profile(student_id: int, professor_id: int, db: Session = Depend
     lifetime = db.query(UserPerformance).filter(UserPerformance.student_id == student_id).first()
     quizzes = (
         db.query(QuizHistory)
-        .filter(QuizHistory.student_id == student_id)
+        .filter(
+            QuizHistory.student_id == student_id,
+            QuizHistory.questions_attempted > 0,
+        )
         .order_by(QuizHistory.created_at.desc())
         .limit(10)
         .all()
     )
-    total_quizzes = db.query(QuizHistory).filter(QuizHistory.student_id == student_id).count()
+    total_quizzes = db.query(QuizHistory).filter(
+        QuizHistory.student_id == student_id,
+        QuizHistory.questions_attempted > 0,
+    ).count()
     average_quiz_score = db.query(func.avg(QuizHistory.score_percentage)).filter(
-        QuizHistory.student_id == student_id
+        QuizHistory.student_id == student_id,
+        QuizHistory.questions_attempted > 0,
     ).scalar()
 
     last_practiced = activity_snapshot["last_activity_by_student"].get(student_id)
@@ -583,15 +652,7 @@ def get_student_profile(student_id: int, professor_id: int, db: Session = Depend
     )
     overall_progress = (mastered_topics / total_topics * 100) if total_topics else 0.0
     overall_exposure = (attempted_topics / total_topics * 100) if total_topics else 0.0
-    overall_risk_tier = (
-        "HIGH_RISK"
-        if "HIGH_RISK" in risk_tiers
-        else (
-            "NEEDS_SUPPORT"
-            if any(tier in {"NEEDS_SUPPORT", "NOT_STARTED"} for tier in risk_tiers)
-            else "ON_TRACK"
-        )
-    )
+    overall_risk_tier = _aggregate_risk_tier(risk_tiers)
 
     return {
         "student": {
@@ -637,6 +698,11 @@ def get_student_profile(student_id: int, professor_id: int, db: Session = Depend
 @router.get("/insights-legacy/{professor_id}")
 def get_professor_insights(professor_id: int, class_id: int = 0, db: Session = Depends(get_db)):
     require_professor(professor_id, db)
+    # Keep the old URL compatible while using the same live, data-backed
+    # implementation as the current dashboard. This prevents older clients
+    # from receiving the retired synthetic analytics values below.
+    return get_professor_insights_live(professor_id, class_id, db)
+
 
     """
     Aggregated insights dashboard for a professor.
@@ -702,6 +768,7 @@ def get_professor_insights(professor_id: int, class_id: int = 0, db: Session = D
     quiz_participants = set()
     recent_quiz_ids = db.query(QuizHistory.student_id).filter(
         QuizHistory.student_id.in_(student_ids),
+        QuizHistory.questions_attempted > 0,
         QuizHistory.created_at >= thirty_days_ago
     ).distinct().all()
     quiz_participants = {r[0] for r in recent_quiz_ids}
@@ -717,7 +784,10 @@ def get_professor_insights(professor_id: int, class_id: int = 0, db: Session = D
         class_name_for_student = next((c.name for c in classrooms if c.id == first_class_id), "Unknown")
 
         # Check actual quiz counts to distinguish students with no attempts
-        quizzes_count = db.query(QuizHistory).filter(QuizHistory.student_id == student.id).count()
+        quizzes_count = db.query(QuizHistory).filter(
+            QuizHistory.student_id == student.id,
+            QuizHistory.questions_attempted > 0,
+        ).count()
 
         if quizzes_count == 0:
             # 0% student - show in High Risk column!
@@ -899,10 +969,12 @@ def get_professor_insights(professor_id: int, class_id: int = 0, db: Session = D
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
     recent_7d = db.query(func.avg(QuizHistory.score_percentage)).filter(
         QuizHistory.student_id.in_(student_ids),
-        QuizHistory.created_at >= seven_days_ago
+        QuizHistory.questions_attempted > 0,
+        QuizHistory.created_at >= seven_days_ago,
     ).scalar() or 0
     older_7d = db.query(func.avg(QuizHistory.score_percentage)).filter(
         QuizHistory.student_id.in_(student_ids),
+        QuizHistory.questions_attempted > 0,
         QuizHistory.created_at >= thirty_days_ago,
         QuizHistory.created_at < seven_days_ago
     ).scalar() or 0
@@ -1027,15 +1099,18 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
                 "avgScore": 0,
                 "engagementRate": 0,
                 "atRiskStudents": 0,
+                "needsSupportStudents": 0,
+                "notStartedStudents": 0,
                 "topicMastery": 0,
             },
             "aiInsights": [],
             "topicMastery": [],
-            "riskAnalysis": {"high": [], "medium": [], "improving": []},
+            "riskAnalysis": {"high": [], "medium": [], "notStarted": [], "onTrack": [], "improving": []},
             "engagement": {
                 "attendance": 0,
                 "quizParticipation": 0,
                 "revisionConsistency": 0,
+                "curriculumProgress": 0,
                 "contentInteraction": 0,
             },
         }
@@ -1160,10 +1235,13 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
     all_student_data = []
     at_risk_count = 0
     total_accuracy = 0.0
+    total_accuracy_weight = 0.0
     total_progress = 0.0
     total_questions_attempted = 0
     total_correct_answers = 0
     valid_accuracy_count = 0
+    not_started_count = 0
+    needs_support_count = 0
 
     for student_id in student_ids:
         student_contexts = [
@@ -1216,24 +1294,25 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
         ]
         risk_accuracy = min(class_accuracies) if class_accuracies else student_accuracy
         risk_tiers = [metric.get("risk_tier", "NOT_STARTED") for metric in metric_values]
-        is_at_risk = "HIGH_RISK" in risk_tiers
-        needs_support = is_at_risk or any(
-            tier in {"NEEDS_SUPPORT", "NOT_STARTED"} for tier in risk_tiers
-        )
+        risk_tier = _aggregate_risk_tier(risk_tiers)
+        is_at_risk = risk_tier == "HIGH_RISK"
 
-        if is_at_risk:
-            status = "Red"
-        elif needs_support:
-            status = "Yellow"
-        else:
-            status = "Green"
+        status = _risk_status(risk_tier)
 
         if is_at_risk:
             at_risk_count += 1
-        total_accuracy += student_accuracy
+        elif risk_tier == "NEEDS_SUPPORT":
+            needs_support_count += 1
+        elif risk_tier == "NOT_STARTED":
+            not_started_count += 1
+
+        accuracy_weight = confidence_weight
+        if accuracy_weight > 0:
+            total_accuracy += student_accuracy * accuracy_weight
+            total_accuracy_weight += accuracy_weight
+            valid_accuracy_count += 1
         total_questions_attempted += questions_attempted
         total_correct_answers += correct_answers
-        valid_accuracy_count += 1
         total_progress += student_progress
         if len(student_contexts) == 1:
             class_name = student_contexts[0]["classroom"].name
@@ -1246,6 +1325,7 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
             "accuracy": round(student_accuracy, 1),
             "progress": round(student_progress, 1),
             "status": status,
+            "risk_tier": risk_tier,
             "is_at_risk": is_at_risk,
             "risk_accuracy": round(risk_accuracy, 1),
             "class_name": class_name,
@@ -1254,8 +1334,8 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
 
     student_count = len(all_student_data)
     avg_accuracy = (
-        round((total_correct_answers / total_questions_attempted) * 100, 1)
-        if total_questions_attempted
+        round(total_accuracy / total_accuracy_weight, 1)
+        if total_accuracy_weight
         else 0
     )
     avg_progress = (
@@ -1423,6 +1503,14 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
             "badgeType": "critical",
         })
 
+    if not_started_count > 0:
+        ai_insights.append({
+            "title": f"{not_started_count} Students Have Not Started",
+            "desc": "No scoped quiz or practice attempt is recorded yet; this is a coverage signal, not a low score.",
+            "badge": "COVERAGE GAP",
+            "badgeType": "info",
+        })
+
     quiz_rate = (
         round((len(recent_quiz_participants) / student_count) * 100)
         if student_count
@@ -1462,10 +1550,17 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
         [student for student in all_student_data if student["status"] == "Yellow"],
         key=lambda student: student["accuracy"],
     )
-    improving = sorted(
-        [student for student in all_student_data if student["status"] == "Green"],
+    not_started = sorted(
+        [student for student in all_student_data if student["risk_tier"] == "NOT_STARTED"],
+        key=lambda student: student["name"].casefold(),
+    )
+    on_track = sorted(
+        [student for student in all_student_data if student["risk_tier"] == "ON_TRACK"],
         key=lambda student: -student["accuracy"],
     )
+    # Keep the old key for older clients; it is now an alias for the explicit
+    # ON_TRACK category rather than an unsupported improvement trend.
+    improving = on_track
 
     active_rate = (
         round((len(activity_snapshot["active_7d"]) / student_count) * 100)
@@ -1487,6 +1582,8 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
             "avgScore": avg_accuracy,
             "engagementRate": engagement_rate,
             "atRiskStudents": at_risk_count,
+            "needsSupportStudents": needs_support_count,
+            "notStartedStudents": not_started_count,
             "topicMastery": (
                 round(
                     sum(score * (questions or 1) for score, questions in all_active_topic_scores)
@@ -1508,6 +1605,14 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
                 {"name": student["name"], "score": student["accuracy"]}
                 for student in medium_risk
             ],
+            "notStarted": [
+                {"name": student["name"], "score": student["accuracy"]}
+                for student in not_started
+            ],
+            "onTrack": [
+                {"name": student["name"], "score": student["accuracy"]}
+                for student in on_track
+            ],
             "improving": [
                 {"name": student["name"], "score": student["accuracy"]}
                 for student in improving
@@ -1517,6 +1622,7 @@ def get_professor_insights_live(professor_id: int, class_id: int = 0, db: Sessio
             "attendance": active_rate,
             "quizParticipation": quiz_rate,
             "revisionConsistency": int(round(avg_progress)),
+            "curriculumProgress": int(round(avg_progress)),
             "contentInteraction": topic_activity_rate,
         },
     }
@@ -1542,6 +1648,11 @@ def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
             "atRiskCount": 0,
             "weakTopicCount": 0,
             "scoreDelta": 0,
+            "activeStudents": 0,
+            "inactiveStudents": 0,
+            "activeWindowDays": 7,
+            "needsSupportCount": 0,
+            "notStartedCount": 0,
         },
         "weeklyTrend": [],
         "weakTopics": [],
@@ -1642,8 +1753,12 @@ def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
 
     total_questions = 0
     total_correct = 0
+    total_accuracy = 0.0
+    total_accuracy_weight = 0.0
     total_progress = 0.0
     at_risk_students = []
+    needs_support_count = 0
+    not_started_count = 0
     topic_totals = {}
 
     for student_id in student_ids:
@@ -1664,17 +1779,37 @@ def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
         student_progress = (
             student_mastered / student_topics * 100 if student_topics else 0.0
         )
+        accuracy_weights = [
+            metric.get("questions_attempted", 0)
+            or metric.get("attempted_topics", 0)
+            for metric in context_metrics
+        ]
+        accuracy_weight = sum(accuracy_weights)
+        if student_questions:
+            student_accuracy = student_correct / student_questions * 100
+        elif accuracy_weight:
+            student_accuracy = sum(
+                metric.get("average_accuracy", 0.0) * weight
+                for metric, weight in zip(context_metrics, accuracy_weights)
+            ) / accuracy_weight
+        else:
+            student_accuracy = 0.0
+
         risk_tiers = [metric.get("risk_tier", "NOT_STARTED") for metric in context_metrics]
-        is_high_risk = "HIGH_RISK" in risk_tiers
-        if is_high_risk:
+        risk_tier = _aggregate_risk_tier(risk_tiers)
+        if risk_tier == "HIGH_RISK":
             at_risk_students.append({
                 "name": student_map[student_id].name or f"Student {student_id}",
-                "accuracy": round(
-                    student_correct / student_questions * 100
-                    if student_questions else 0.0,
-                    1,
-                ),
+                "accuracy": round(student_accuracy, 1),
             })
+        elif risk_tier == "NEEDS_SUPPORT":
+            needs_support_count += 1
+        elif risk_tier == "NOT_STARTED":
+            not_started_count += 1
+
+        if accuracy_weight:
+            total_accuracy += student_accuracy * accuracy_weight
+            total_accuracy_weight += accuracy_weight
         total_questions += student_questions
         total_correct += student_correct
         total_progress += student_progress
@@ -1761,7 +1896,7 @@ def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
     score_delta = round(recent_avg - older_avg, 1) if recent_avg is not None and older_avg is not None else 0
 
     student_count = len(student_ids)
-    avg_accuracy = round(total_correct / total_questions * 100, 1) if total_questions else 0
+    avg_accuracy = round(total_accuracy / total_accuracy_weight, 1) if total_accuracy_weight else 0
     avg_progress = round(total_progress / student_count, 1) if student_count else 0
     engagement_rate = round(
         len(activity_snapshot["active_7d"]) / student_count * 100
@@ -1774,6 +1909,12 @@ def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
             "title": f"{len(at_risk_students)} Student{'s' if len(at_risk_students) != 1 else ''} at Risk",
             "desc": "Accuracy below 50% or confidence below 40% in at least one class.",
             "students": [student["name"] for student in at_risk_students[:5]],
+        })
+    if not_started_count:
+        alerts.append({
+            "type": "info",
+            "title": f"{not_started_count} Student{'s' if not_started_count != 1 else ''} Have Not Started",
+            "desc": "No scoped quiz or practice attempt is recorded yet; this is a coverage signal, not a low score.",
         })
     if weak_topics:
         weakest = weak_topics[0]
@@ -1812,6 +1953,11 @@ def get_professor_dashboard(professor_id: int, db: Session = Depends(get_db)):
             "atRiskCount": len(at_risk_students),
             "weakTopicCount": len(weak_topics),
             "scoreDelta": score_delta,
+            "activeStudents": len(activity_snapshot["active_7d"]),
+            "inactiveStudents": inactive_count,
+            "activeWindowDays": 7,
+            "needsSupportCount": needs_support_count,
+            "notStartedCount": not_started_count,
         },
         "weeklyTrend": weekly_trend,
         "weakTopics": weak_topics[:5],

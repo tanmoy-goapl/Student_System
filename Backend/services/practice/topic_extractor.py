@@ -165,6 +165,7 @@ def register_topics_in_db(student_id: int, data: dict, db: Session):
                     history_qs = db.query(PracticeQuestion).join(PracticeSession).filter(
                         PracticeSession.student_id == student_id,
                         PracticeQuestion.topic == topic_name,
+                        PracticeQuestion.student_answer.isnot(None),
                         PracticeQuestion.is_correct.isnot(None)
                     ).all()
                     
@@ -175,6 +176,7 @@ def register_topics_in_db(student_id: int, data: dict, db: Session):
                     sessions_count = db.query(PracticeSession.id).join(PracticeQuestion).filter(
                         PracticeSession.student_id == student_id,
                         PracticeQuestion.topic == topic_name,
+                        PracticeQuestion.student_answer.isnot(None),
                         PracticeQuestion.is_correct.isnot(None)
                     ).distinct().count()
                     

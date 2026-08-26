@@ -38,6 +38,7 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
         hist = db.query(PracticeQuestion).join(PracticeSession).filter(
             PracticeSession.student_id == bp.student_id,
             PracticeQuestion.topic == bp.topic,
+            PracticeQuestion.student_answer.isnot(None),
             PracticeQuestion.is_correct.isnot(None)
         ).all()
         if hist:
@@ -47,6 +48,7 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
             ses = db.query(PracticeSession.id).join(PracticeQuestion).filter(
                 PracticeSession.student_id == bp.student_id,
                 PracticeQuestion.topic == bp.topic,
+                PracticeQuestion.student_answer.isnot(None),
                 PracticeQuestion.is_correct.isnot(None)
             ).distinct().count()
             bp.questions_attempted = att
@@ -59,6 +61,7 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
     from sqlalchemy import distinct as sql_distinct
     all_answered_topics = db.query(sql_distinct(PracticeQuestion.topic)).join(PracticeSession).filter(
         PracticeSession.student_id == student_id,
+        PracticeQuestion.student_answer.isnot(None),
         PracticeQuestion.is_correct.isnot(None)
     ).all()
     existing_tp_topics = set(
@@ -71,6 +74,7 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
             hist = db.query(PracticeQuestion).join(PracticeSession).filter(
                 PracticeSession.student_id == student_id,
                 PracticeQuestion.topic == topic_name,
+                PracticeQuestion.student_answer.isnot(None),
                 PracticeQuestion.is_correct.isnot(None)
             ).all()
             att = len(hist)
@@ -79,6 +83,7 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
             ses = db.query(PracticeSession.id).join(PracticeQuestion).filter(
                 PracticeSession.student_id == student_id,
                 PracticeQuestion.topic == topic_name,
+                PracticeQuestion.student_answer.isnot(None),
                 PracticeQuestion.is_correct.isnot(None)
             ).distinct().count()
             # Resolve subject from subtopic field of first question
@@ -159,10 +164,21 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
     else:
         rec_diff = "Easy"
         
-    recent_sessions = db.query(PracticeSession).filter(
-        PracticeSession.student_id == student_id,
-        PracticeSession.ended_at != None
-    ).order_by(PracticeSession.created_at.desc()).limit(5).all()
+    recent_sessions = (
+        db.query(PracticeSession)
+        .join(PracticeQuestion, PracticeQuestion.session_id == PracticeSession.id)
+        .filter(
+            PracticeSession.student_id == student_id,
+            PracticeQuestion.student_answer.isnot(None),
+            PracticeQuestion.is_correct.isnot(None),
+            PracticeQuestion.answered_at.isnot(None),
+            PracticeSession.ended_at != None,
+        )
+        .distinct()
+        .order_by(PracticeSession.created_at.desc())
+        .limit(5)
+        .all()
+    )
     
     if recent_sessions:
         avg_mins = sum((s.ended_at - s.created_at).total_seconds() / 60.0 for s in recent_sessions) / len(recent_sessions)
@@ -178,9 +194,18 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
         
     focus_topic = weak_topics_list[0]["topic"] if weak_topics_list else "Core Syllabus"
     
-    last_session = db.query(PracticeSession).filter(
-        PracticeSession.student_id == student_id
-    ).order_by(PracticeSession.created_at.desc()).first()
+    last_question = (
+        db.query(PracticeQuestion)
+        .join(PracticeSession, PracticeQuestion.session_id == PracticeSession.id)
+        .filter(
+            PracticeSession.student_id == student_id,
+            PracticeQuestion.student_answer.isnot(None),
+            PracticeQuestion.is_correct.isnot(None),
+            PracticeQuestion.answered_at.isnot(None),
+        )
+        .order_by(PracticeQuestion.answered_at.desc())
+        .first()
+    )
     
     def get_relative_time(dt):
         if not dt:
@@ -192,7 +217,7 @@ def get_performance(student_id: int, db: Session = Depends(get_db)):
             return "Yesterday"
         return f"{diff.days} days ago"
         
-    last_active_str = get_relative_time(last_session.created_at if last_session else None)
+    last_active_str = get_relative_time(last_question.answered_at if last_question else None)
     
     adaptive_engine = {
         "recommended_difficulty": rec_diff,
@@ -295,6 +320,7 @@ def repair_performance(student_id: int = Query(...), db: Session = Depends(get_d
         history_qs = db.query(PracticeQuestion).join(PracticeSession).filter(
             PracticeSession.student_id == perf.student_id,
             PracticeQuestion.topic == perf.topic,
+            PracticeQuestion.student_answer.isnot(None),
             PracticeQuestion.is_correct.isnot(None)
         ).all()
         
@@ -305,6 +331,7 @@ def repair_performance(student_id: int = Query(...), db: Session = Depends(get_d
             sessions = db.query(PracticeSession.id).join(PracticeQuestion).filter(
                 PracticeSession.student_id == perf.student_id,
                 PracticeQuestion.topic == perf.topic,
+                PracticeQuestion.student_answer.isnot(None),
                 PracticeQuestion.is_correct.isnot(None)
             ).distinct().count()
             
