@@ -20061,3 +20061,1215 @@ UnboundLocalError: cannot access local variable 'threading' where it is not asso
 2026-08-26 14:51:55,234 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
 2026-08-26 14:51:55,235 - ERROR - [PracticeEngine] All LLM providers failed!
 2026-08-26 14:51:55,239 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='Time Complexity' (total=5 questions)
+2026-08-27 06:36:29,619 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 06:36:29,789 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:00:32,126 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:00:32,144 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-27 08:00:32,168 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:00:35,614 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-08-27 08:00:35,617 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:00:35,760 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:00:54,524 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:00:54,536 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-27 08:00:54,551 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:00:56,862 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:00:57,007 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:01:14,240 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 08:01:24,533 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-27 08:01:31,076 - INFO - [PracticeEngine] Starting background incremental generation of master question bank for topic='OS Components and Services'
+2026-08-27 08:01:31,082 - INFO - [Practice] Background generation added 1 questions to session 2771
+2026-08-27 08:01:31,152 - INFO - [PracticeEngine] [Stage 1] Generating 5 initial questions for topic='OS Components and Services'
+2026-08-27 08:02:08,459 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 08:02:17,462 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 08:02:18,824 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-27 08:02:25,313 - INFO - [Practice] Background generation added 1 questions to session 2771
+2026-08-27 08:02:26,213 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-27 08:02:34,856 - INFO - [PracticeEngine] [Stage 1] Cached initial 5-question bank for topic='OS Components and Services'
+2026-08-27 08:02:34,858 - INFO - [PracticeEngine] [Stage 2] Generating remaining 25 questions for topic='OS Components and Services'
+2026-08-27 08:03:02,876 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 08:03:13,254 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-27 08:03:18,309 - ERROR - [Practice] Background generation failed for session 2771: No valid practice questions were generated
+2026-08-27 08:03:18,314 - WARNING - [Practice] Continuing session 2771 with 2 available questions after partial generation failure
+2026-08-27 08:03:21,380 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 08:03:31,653 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-27 08:04:17,915 - ERROR - [PracticeEngine] LLM 'Backup-GPT' failed: Request timed out.
+2026-08-27 08:04:17,915 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-27 08:04:17,919 - INFO - [PracticeEngine] [Stage 2] Cached full merged question bank for topic='OS Components and Services' (total=5 questions)
+2026-08-27 08:09:51,965 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:09:51,981 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-27 08:09:52,001 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:09:52,185 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:09:52,235 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:09:53,074 - INFO - [Stream] Starting detailed streaming for OS Components and Services
+2026-08-27 08:09:58,268 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:09:58,296 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:10:05,840 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:10:05,886 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:10:05,886 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-08-27 08:10:05,894 - INFO - [Practice] Resuming existing active session 2771 for topic='OS Components and Services'
+2026-08-27 08:10:52,306 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 08:11:02,745 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-27 08:11:02,746 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-27 08:11:02,755 - INFO - [Practice] Background generation added 1 questions to session 2771
+2026-08-27 08:11:11,750 - INFO - [Practice] Background generation added 2 questions to session 2771
+2026-08-27 08:11:11,752 - INFO - [Practice] Background generation completed for session 2771 (5 questions)
+2026-08-27 08:12:01,991 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2771
+2026-08-27 08:12:05,236 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:12:05,246 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-27 08:12:05,268 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:12:11,281 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:12:11,354 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:12:16,816 - INFO - [Practice] Starting/resuming session: mode=topic, topic=History and Applications of AI, difficulty=easy
+2026-08-27 08:12:16,819 - INFO - [Practice] Resuming existing active session 2761 for topic='History and Applications of AI'
+2026-08-27 08:12:38,999 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2761
+2026-08-27 08:12:40,534 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:12:40,590 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:12:45,265 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Introduction to Web Development, difficulty=easy
+2026-08-27 08:12:53,727 - INFO - [Practice] Background generation added 5 questions to session 2772
+2026-08-27 08:12:53,729 - INFO - [Practice] Background generation completed for session 2772 (5 questions)
+2026-08-27 08:13:31,786 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2772
+2026-08-27 08:13:33,345 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:13:33,410 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:25:09,137 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:25:09,168 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:34:57,706 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:34:57,722 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-27 08:34:58,009 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:34:58,011 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:34:58,024 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-27 08:34:58,037 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:35:02,735 - INFO - [Practice] Starting/resuming session: mode=topic, topic=System Boot, difficulty=mixed
+2026-08-27 08:35:02,741 - INFO - [Practice] Resuming existing active session 2548 for topic='System Boot'
+2026-08-27 08:35:02,771 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:35:02,800 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:35:12,149 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2548
+2026-08-27 08:35:17,107 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:35:17,189 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:35:24,503 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=easy
+2026-08-27 08:35:24,521 - INFO - [PracticeEngine] Cache exhausted (only 0 unrepeated questions left). Falling through to fast generation.
+2026-08-27 08:36:11,127 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 08:36:21,267 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-27 08:36:21,267 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-27 08:36:21,282 - WARNING - [PracticeEngine] Fast quiz cache write failed: (psycopg2.errors.ForeignKeyViolation) insert or update on table "ai_caches" violates foreign key constraint "ai_caches_student_id_fkey"
+DETAIL:  Key (student_id)=(0) is not present in table "users".
+
+[SQL: INSERT INTO ai_caches (student_id, topic, action_type, content, created_at) VALUES (%(student_id)s, %(topic)s, %(action_type)s, %(content)s, %(created_at)s) RETURNING ai_caches.id]
+[parameters: {'student_id': 0, 'topic': 'Time Complexity', 'action_type': 'quiz_questions_v2_easy', 'content': '[{"topic": "Time Complexity", "subtopic": "Time Complexity", "difficulty": "easy", "question": "Which statement correctly characterizes Time Complexi ... (4405 characters truncated) ... e Complexity: \\u03a9 (Omega)** gives a lower bound \\u2013 the algorithm will be at least as fast as a constant multiple of *f(n)* for large *n*."}]', 'created_at': datetime.datetime(2026, 8, 27, 8, 36, 21, 280575)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-08-27 08:36:21,288 - INFO - [Practice] Background generation added 5 questions to session 2773
+2026-08-27 08:36:21,290 - INFO - [Practice] Background generation completed for session 2773 (5 questions)
+2026-08-27 08:36:43,887 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2773
+2026-08-27 08:36:48,487 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:36:48,538 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:36:49,256 - INFO - [Stream] Starting detailed streaming for System Boot
+2026-08-27 08:37:20,710 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:37:20,765 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:37:34,655 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Intelligent Agents, difficulty=easy
+2026-08-27 08:38:21,507 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 08:38:31,818 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-27 08:38:31,818 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-27 08:38:31,828 - WARNING - [PracticeEngine] Fast quiz cache write failed: (psycopg2.errors.ForeignKeyViolation) insert or update on table "ai_caches" violates foreign key constraint "ai_caches_student_id_fkey"
+DETAIL:  Key (student_id)=(0) is not present in table "users".
+
+[SQL: INSERT INTO ai_caches (student_id, topic, action_type, content, created_at) VALUES (%(student_id)s, %(topic)s, %(action_type)s, %(content)s, %(created_at)s) RETURNING ai_caches.id]
+[parameters: {'student_id': 0, 'topic': 'Intelligent Agents', 'action_type': 'quiz_questions_v2_easy', 'content': '[{"topic": "Intelligent Agents", "subtopic": "Intelligent Agents", "difficulty": "easy", "question": "Which statement correctly characterizes Intelli ... (4674 characters truncated) ... : "According to study principles for Intelligent Agents: \\uf0b7 Generates 384-dimensional vectors using SentenceTransformers `all-MiniLM-L6- v2`."}]', 'created_at': datetime.datetime(2026, 8, 27, 8, 38, 31, 826826)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-08-27 08:38:31,832 - INFO - [Practice] Background generation added 5 questions to session 2774
+2026-08-27 08:38:31,834 - INFO - [Practice] Background generation completed for session 2774 (5 questions)
+2026-08-27 08:39:32,272 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2774
+2026-08-27 08:39:35,685 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:39:35,764 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:39:38,120 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:39:38,129 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-27 08:39:38,150 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:39:38,321 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:39:38,329 - INFO - CACHE HIT (Fast Return): topic='System Boot', subject='Operating Systems'
+2026-08-27 08:39:38,357 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:46:05,224 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-08-27 08:46:05,268 - INFO - [PracticeEngine] Cache exhausted (only 1 unrepeated questions left). Falling through to fast generation.
+2026-08-27 08:46:05,353 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:46:05,372 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:46:51,801 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 08:47:02,126 - ERROR - [PracticeEngine] LLM 'Llama' failed: Connection error.
+2026-08-27 08:47:02,129 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-27 08:47:02,142 - WARNING - [PracticeEngine] Fast quiz cache write failed: (psycopg2.errors.ForeignKeyViolation) insert or update on table "ai_caches" violates foreign key constraint "ai_caches_student_id_fkey"
+DETAIL:  Key (student_id)=(0) is not present in table "users".
+
+[SQL: INSERT INTO ai_caches (student_id, topic, action_type, content, created_at) VALUES (%(student_id)s, %(topic)s, %(action_type)s, %(content)s, %(created_at)s) RETURNING ai_caches.id]
+[parameters: {'student_id': 0, 'topic': 'OS Components and Services', 'action_type': 'quiz_questions_v2_medium', 'content': '[{"topic": "OS Components and Services", "subtopic": "File Systems", "difficulty": "medium", "question": "Which of the following is a common function ... (4101 characters truncated) ... a collection of **components** (the parts) and **services** (the functions) that work together to manage computer hardware and software resources."}]', 'created_at': datetime.datetime(2026, 8, 27, 8, 47, 2, 140827)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-08-27 08:47:02,153 - INFO - [Practice] Background generation added 5 questions to session 2775
+2026-08-27 08:47:02,159 - INFO - [Practice] Background generation completed for session 2775 (5 questions)
+2026-08-27 08:47:35,114 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2775
+2026-08-27 08:47:38,299 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:47:38,370 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:51:47,254 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:51:47,264 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-27 08:51:47,281 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:51:47,452 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:51:47,466 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-27 08:51:47,483 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:51:50,887 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-08-27 08:51:50,932 - INFO - [PracticeEngine] Cache exhausted (only 0 unrepeated questions left). Falling through to fast generation.
+2026-08-27 08:51:51,011 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:51:51,041 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:52:04,954 - WARNING - [PracticeEngine] Fast quiz cache write failed: (psycopg2.errors.ForeignKeyViolation) insert or update on table "ai_caches" violates foreign key constraint "ai_caches_student_id_fkey"
+DETAIL:  Key (student_id)=(0) is not present in table "users".
+
+[SQL: INSERT INTO ai_caches (student_id, topic, action_type, content, created_at) VALUES (%(student_id)s, %(topic)s, %(action_type)s, %(content)s, %(created_at)s) RETURNING ai_caches.id]
+[parameters: {'student_id': 0, 'topic': 'OS Components and Services', 'action_type': 'quiz_questions_v2_medium', 'content': '[{"topic": "OS Components and Services", "subtopic": "OS Components and Services", "difficulty": "medium", "question": "What is a primary considerati ... (2788 characters truncated) ... ect_answer": "C", "explanation": "Asymptotic analysis and boundary evaluation provide a reliable measure of how OS Components and Services scales."}]', 'created_at': datetime.datetime(2026, 8, 27, 8, 52, 4, 953141)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-08-27 08:52:04,958 - INFO - [Practice] Background generation added 4 questions to session 2776
+2026-08-27 08:52:04,998 - INFO - [PracticeEngine] Cache exhausted (only 0 unrepeated questions left). Falling through to fast generation.
+2026-08-27 08:52:09,352 - WARNING - [PracticeEngine] Fast quiz cache write failed: (psycopg2.errors.ForeignKeyViolation) insert or update on table "ai_caches" violates foreign key constraint "ai_caches_student_id_fkey"
+DETAIL:  Key (student_id)=(0) is not present in table "users".
+
+[SQL: INSERT INTO ai_caches (student_id, topic, action_type, content, created_at) VALUES (%(student_id)s, %(topic)s, %(action_type)s, %(content)s, %(created_at)s) RETURNING ai_caches.id]
+[parameters: {'student_id': 0, 'topic': 'OS Components and Services', 'action_type': 'quiz_questions_v2_medium', 'content': '[{"topic": "OS Components and Services", "subtopic": "Application Scenarios", "difficulty": "medium", "question": "In which scenario is OS Components ... (435 characters truncated) ... e absent."}], "correct_answer": "B", "explanation": "OS Components and Services is engineered for robust problem-solving in scalable applications."}]', 'created_at': datetime.datetime(2026, 8, 27, 8, 52, 9, 351286)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-08-27 08:52:09,356 - INFO - [Practice] Background generation added 1 questions to session 2776
+2026-08-27 08:52:09,358 - INFO - [Practice] Background generation completed for session 2776 (5 questions)
+2026-08-27 08:52:21,802 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:52:21,809 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-27 08:52:21,827 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:52:24,877 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:52:24,916 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:52:26,924 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:52:26,933 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-27 08:52:26,956 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:52:27,112 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:52:27,122 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-27 08:52:27,143 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:54:36,894 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:54:36,931 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Virtual Machines, difficulty=mixed
+2026-08-27 08:54:36,933 - INFO - [Practice] Resuming existing active session 2571 for topic='Virtual Machines'
+2026-08-27 08:54:36,980 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:54:47,074 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2571
+2026-08-27 08:54:49,594 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 08:54:49,603 - INFO - CACHE HIT (Fast Return): topic='Virtual Machines', subject='Operating Systems'
+2026-08-27 08:54:49,619 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:54:52,307 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 08:54:52,385 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 09:01:14,425 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 09:01:14,467 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 09:01:19,278 - INFO - [Practice] Starting/resuming session: mode=topic, topic=History and Applications of AI, difficulty=easy
+2026-08-27 09:01:33,654 - WARNING - [PracticeEngine] Fast quiz cache write failed: (psycopg2.errors.ForeignKeyViolation) insert or update on table "ai_caches" violates foreign key constraint "ai_caches_student_id_fkey"
+DETAIL:  Key (student_id)=(0) is not present in table "users".
+
+[SQL: INSERT INTO ai_caches (student_id, topic, action_type, content, created_at) VALUES (%(student_id)s, %(topic)s, %(action_type)s, %(content)s, %(created_at)s) RETURNING ai_caches.id]
+[parameters: {'student_id': 0, 'topic': 'History and Applications of AI', 'action_type': 'quiz_questions_v2_easy', 'content': '[{"topic": "History and Applications of AI", "subtopic": "History and Applications of AI", "difficulty": "easy", "question": "Which statement correct ... (4443 characters truncated) ... on of information and rules for using the information), reasoning (using rules to reach approximate or definite conclusions), and self-correction."}]', 'created_at': datetime.datetime(2026, 8, 27, 9, 1, 33, 652962)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-08-27 09:01:33,658 - INFO - [Practice] Background generation added 5 questions to session 2777
+2026-08-27 09:01:33,660 - INFO - [Practice] Background generation completed for session 2777 (5 questions)
+2026-08-27 09:02:02,240 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2777
+2026-08-27 09:02:04,082 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 09:02:04,245 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 09:02:06,329 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 09:02:06,347 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-27 09:02:06,372 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 09:02:06,567 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 09:02:06,580 - INFO - CACHE HIT (Fast Return): topic='Virtual Machines', subject='Operating Systems'
+2026-08-27 09:02:06,605 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 10:40:22,298 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Database Concepts, difficulty=mixed
+2026-08-27 10:40:22,659 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 10:40:22,722 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 10:40:41,980 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 10:40:41,980 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-27 10:40:41,996 - INFO - [Practice] Background generation added 3 questions to session 2778
+2026-08-27 10:41:01,492 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-27 10:41:01,495 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-27 10:41:01,521 - INFO - [Practice] Background generation added 2 questions to session 2778
+2026-08-27 10:41:01,523 - INFO - [Practice] Background generation completed for session 2778 (5 questions)
+2026-08-27 10:41:07,482 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2778
+2026-08-27 10:41:09,963 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-27 10:41:09,981 - INFO - CACHE HIT (Fast Return): topic='Database Concepts', subject='Database Systems'
+2026-08-27 10:41:10,002 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-27 11:02:15,016 - INFO - 
+================================================================================
+2026-08-27 11:02:15,016 - INFO - [2026-08-27T11:02:15.016478] CHAT REQUEST
+2026-08-27 11:02:15,016 - INFO -   Student ID : 3
+2026-08-27 11:02:15,016 - INFO -   Question   : hello
+2026-08-27 11:02:15,016 - INFO -   Role       : student
+2026-08-27 11:02:15,016 - INFO - ================================================================================
+2026-08-27 11:02:15,052 - INFO -   [Timing] FastAPI Request started processing at 621981.401
+2026-08-27 11:02:15,064 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:02:15,064 - INFO -   [Timing] Docs + Mode Detection: 0.012s
+2026-08-27 11:02:18,765 - INFO - 
+================================================================================
+2026-08-27 11:02:18,765 - INFO - [2026-08-27T11:02:18.765539] CHAT REQUEST
+2026-08-27 11:02:18,765 - INFO -   Student ID : 3
+2026-08-27 11:02:18,765 - INFO -   Question   : hi
+2026-08-27 11:02:18,765 - INFO -   Role       : student
+2026-08-27 11:02:18,765 - INFO - ================================================================================
+2026-08-27 11:02:18,768 - INFO -   [Timing] FastAPI Request started processing at 621985.117
+2026-08-27 11:02:18,771 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:02:18,771 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-27 11:02:25,524 - INFO - 
+================================================================================
+2026-08-27 11:02:25,524 - INFO - [2026-08-27T11:02:25.524240] CHAT REQUEST
+2026-08-27 11:02:25,524 - INFO -   Student ID : 3
+2026-08-27 11:02:25,524 - INFO -   Question   : who are you
+2026-08-27 11:02:25,524 - INFO -   Role       : student
+2026-08-27 11:02:25,524 - INFO - ================================================================================
+2026-08-27 11:02:25,526 - INFO -   [Timing] FastAPI Request started processing at 621991.876
+2026-08-27 11:02:25,530 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:02:25,530 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-27 11:02:36,363 - INFO - 
+================================================================================
+2026-08-27 11:02:36,363 - INFO - [2026-08-27T11:02:36.363618] CHAT REQUEST
+2026-08-27 11:02:36,363 - INFO -   Student ID : 3
+2026-08-27 11:02:36,363 - INFO -   Question   : who are you
+2026-08-27 11:02:36,363 - INFO -   Role       : student
+2026-08-27 11:02:36,364 - INFO - ================================================================================
+2026-08-27 11:02:36,376 - INFO -   [Timing] FastAPI Request started processing at 622002.725
+2026-08-27 11:02:36,383 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:02:36,383 - INFO -   [Timing] Docs + Mode Detection: 0.007s
+2026-08-27 11:02:49,069 - INFO - 
+================================================================================
+2026-08-27 11:02:49,069 - INFO - [2026-08-27T11:02:49.069294] CHAT REQUEST
+2026-08-27 11:02:49,069 - INFO -   Student ID : 3
+2026-08-27 11:02:49,069 - INFO -   Question   : tell me about attendance policy?
+2026-08-27 11:02:49,069 - INFO -   Role       : student
+2026-08-27 11:02:49,069 - INFO - ================================================================================
+2026-08-27 11:02:49,080 - INFO -   [Timing] FastAPI Request started processing at 622015.429
+2026-08-27 11:02:49,087 - INFO -   Detected Mode: FACTUAL_RAG
+2026-08-27 11:02:49,087 - INFO -   [Timing] Docs + Mode Detection: 0.007s
+2026-08-27 11:02:49,099 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-27 11:02:49,100 - INFO -   Adaptive filter: cutoff=0.9000, kept=11/11
+2026-08-27 11:02:49,100 - INFO -   [Timing] Retrieval & Context Building: 0.004s
+2026-08-27 11:02:49,103 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-27 11:02:49,628 - INFO -   [Timing] Backend First Token Loop hit: 0.525s since LLM call
+2026-08-27 11:02:49,628 - INFO -   [Timing] Total TTFT (user → first token loop): 0.548s
+2026-08-27 11:02:52,073 - INFO -   [Timing] LLM Streaming Duration: 2.970s
+2026-08-27 11:02:52,073 - INFO -   [Timing] Total Response Time: 2.993s
+2026-08-27 11:03:04,244 - INFO - 
+================================================================================
+2026-08-27 11:03:04,244 - INFO - [2026-08-27T11:03:04.244482] CHAT REQUEST
+2026-08-27 11:03:04,244 - INFO -   Student ID : 3
+2026-08-27 11:03:04,244 - INFO -   Question   : what is tokenisation
+2026-08-27 11:03:04,244 - INFO -   Role       : student
+2026-08-27 11:03:04,244 - INFO - ================================================================================
+2026-08-27 11:03:04,247 - INFO -   [Timing] FastAPI Request started processing at 622030.596
+2026-08-27 11:03:04,252 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:03:04,252 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-27 11:04:48,474 - INFO - 
+================================================================================
+2026-08-27 11:04:48,474 - INFO - [2026-08-27T11:04:48.474949] CHAT REQUEST
+2026-08-27 11:04:48,475 - INFO -   Student ID : 3
+2026-08-27 11:04:48,475 - INFO -   Question   : Strengthen weak areas
+2026-08-27 11:04:48,475 - INFO -   Role       : student
+2026-08-27 11:04:48,475 - INFO - ================================================================================
+2026-08-27 11:04:48,477 - INFO -   [Timing] FastAPI Request started processing at 622134.827
+2026-08-27 11:04:48,481 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:04:48,482 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-27 11:40:38,047 - INFO - 
+================================================================================
+2026-08-27 11:40:38,049 - INFO - [2026-08-27T11:40:38.049281] CHAT REQUEST
+2026-08-27 11:40:38,049 - INFO -   Student ID : 3
+2026-08-27 11:40:38,049 - INFO -   Question   : what is tokenisation
+2026-08-27 11:40:38,050 - INFO -   Role       : student
+2026-08-27 11:40:38,050 - INFO - ================================================================================
+2026-08-27 11:40:38,084 - INFO -   [Timing] FastAPI Request started processing at 624284.434
+2026-08-27 11:40:38,095 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:40:38,096 - INFO -   [Timing] Docs + Mode Detection: 0.010s
+2026-08-27 11:40:38,278 - INFO -   Adaptive filter: top_score=2.1500
+2026-08-27 11:40:38,278 - INFO -   Adaptive filter: cutoff=2.0500, kept=6/24
+2026-08-27 11:40:38,279 - INFO -   [Timing] Retrieval & Context Building: 0.151s
+2026-08-27 11:40:38,283 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-27 11:40:38,842 - INFO -   [Timing] Backend First Token Loop hit: 0.559s since LLM call
+2026-08-27 11:40:38,844 - INFO -   [Timing] Total TTFT (user → first token loop): 0.758s
+2026-08-27 11:41:11,901 - INFO -   [Timing] LLM Streaming Duration: 33.618s
+2026-08-27 11:41:11,901 - INFO -   [Timing] Total Response Time: 33.817s
+2026-08-27 11:42:18,122 - INFO - 
+================================================================================
+2026-08-27 11:42:18,123 - INFO - [2026-08-27T11:42:18.123006] CHAT REQUEST
+2026-08-27 11:42:18,123 - INFO -   Student ID : 3
+2026-08-27 11:42:18,123 - INFO -   Question   : what is tokenisation
+2026-08-27 11:42:18,123 - INFO -   Role       : student
+2026-08-27 11:42:18,123 - INFO - ================================================================================
+2026-08-27 11:42:18,128 - INFO -   [Timing] FastAPI Request started processing at 624384.477
+2026-08-27 11:42:18,133 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:42:18,134 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-27 11:42:18,216 - INFO -   Adaptive filter: top_score=2.1500
+2026-08-27 11:42:18,217 - INFO -   Adaptive filter: cutoff=2.0500, kept=6/24
+2026-08-27 11:42:18,217 - INFO -   [Timing] Retrieval & Context Building: 0.074s
+2026-08-27 11:42:18,220 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-27 11:42:18,773 - INFO -   [Timing] Backend First Token Loop hit: 0.553s since LLM call
+2026-08-27 11:42:18,773 - INFO -   [Timing] Total TTFT (user → first token loop): 0.645s
+2026-08-27 11:42:47,176 - INFO -   [Timing] LLM Streaming Duration: 28.956s
+2026-08-27 11:42:47,176 - INFO -   [Timing] Total Response Time: 29.048s
+2026-08-27 11:45:14,286 - INFO - 
+================================================================================
+2026-08-27 11:45:14,286 - INFO - [2026-08-27T11:45:14.286251] CHAT REQUEST
+2026-08-27 11:45:14,286 - INFO -   Student ID : 3
+2026-08-27 11:45:14,286 - INFO -   Question   : 2+2
+2026-08-27 11:45:14,286 - INFO -   Role       : student
+2026-08-27 11:45:14,286 - INFO - ================================================================================
+2026-08-27 11:45:14,292 - INFO -   [Timing] FastAPI Request started processing at 624560.641
+2026-08-27 11:45:14,296 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:45:14,296 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-27 11:47:40,238 - INFO - 
+================================================================================
+2026-08-27 11:47:40,238 - INFO - [2026-08-27T11:47:40.238555] CHAT REQUEST
+2026-08-27 11:47:40,238 - INFO -   Student ID : 3
+2026-08-27 11:47:40,238 - INFO -   Question   : what is tokenization
+2026-08-27 11:47:40,238 - INFO -   Role       : student
+2026-08-27 11:47:40,238 - INFO - ================================================================================
+2026-08-27 11:47:40,243 - INFO -   [Timing] FastAPI Request started processing at 624706.592
+2026-08-27 11:47:40,246 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:47:40,247 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-27 11:47:40,338 - INFO -   Adaptive filter: top_score=2.1500
+2026-08-27 11:47:40,338 - INFO -   Adaptive filter: cutoff=2.0500, kept=3/24
+2026-08-27 11:47:40,338 - INFO -   [Timing] Retrieval & Context Building: 0.080s
+2026-08-27 11:47:40,342 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-27 11:47:41,294 - INFO -   [Timing] Backend First Token Loop hit: 0.953s since LLM call
+2026-08-27 11:47:41,295 - INFO -   [Timing] Total TTFT (user → first token loop): 1.051s
+2026-08-27 11:48:01,277 - INFO -   [Timing] LLM Streaming Duration: 20.935s
+2026-08-27 11:48:01,277 - INFO -   [Timing] Total Response Time: 21.033s
+2026-08-27 11:48:07,617 - INFO - 
+================================================================================
+2026-08-27 11:48:07,617 - INFO - [2026-08-27T11:48:07.617552] CHAT REQUEST
+2026-08-27 11:48:07,617 - INFO -   Student ID : 3
+2026-08-27 11:48:07,617 - INFO -   Question   : what are embeddings
+2026-08-27 11:48:07,617 - INFO -   Role       : student
+2026-08-27 11:48:07,617 - INFO - ================================================================================
+2026-08-27 11:48:07,621 - INFO -   [Timing] FastAPI Request started processing at 624733.970
+2026-08-27 11:48:07,626 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:48:07,626 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-08-27 11:48:07,745 - INFO -   Adaptive filter: top_score=2.3000
+2026-08-27 11:48:07,745 - INFO -   Adaptive filter: cutoff=2.2000, kept=3/44
+2026-08-27 11:48:07,745 - INFO -   [Timing] Retrieval & Context Building: 0.109s
+2026-08-27 11:48:07,748 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-27 11:48:08,273 - INFO -   [Timing] Backend First Token Loop hit: 0.525s since LLM call
+2026-08-27 11:48:08,273 - INFO -   [Timing] Total TTFT (user → first token loop): 0.652s
+2026-08-27 11:48:31,145 - INFO -   [Timing] LLM Streaming Duration: 23.397s
+2026-08-27 11:48:31,146 - INFO -   [Timing] Total Response Time: 23.525s
+2026-08-27 11:48:35,678 - INFO - 
+================================================================================
+2026-08-27 11:48:35,678 - INFO - [2026-08-27T11:48:35.678532] CHAT REQUEST
+2026-08-27 11:48:35,678 - INFO -   Student ID : 3
+2026-08-27 11:48:35,678 - INFO -   Question   : who are you
+2026-08-27 11:48:35,678 - INFO -   Role       : student
+2026-08-27 11:48:35,678 - INFO - ================================================================================
+2026-08-27 11:48:35,681 - INFO -   [Timing] FastAPI Request started processing at 624762.030
+2026-08-27 11:48:35,684 - INFO -   Detected Mode: LEARNING
+2026-08-27 11:48:35,684 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-27 11:48:35,701 - INFO -   [Timing] Retrieval & Context Building: 0.008s
+2026-08-27 11:48:35,703 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-27 11:48:36,263 - INFO -   [Timing] Backend First Token Loop hit: 0.560s since LLM call
+2026-08-27 11:48:36,264 - INFO -   [Timing] Total TTFT (user → first token loop): 0.582s
+2026-08-27 11:48:40,727 - INFO -   [Timing] LLM Streaming Duration: 5.024s
+2026-08-27 11:48:40,727 - INFO -   [Timing] Total Response Time: 5.046s
+2026-08-27 11:48:46,625 - INFO - 
+================================================================================
+2026-08-27 11:48:46,625 - INFO - [2026-08-27T11:48:46.625629] CHAT REQUEST
+2026-08-27 11:48:46,625 - INFO -   Student ID : 3
+2026-08-27 11:48:46,625 - INFO -   Question   : who created you
+2026-08-27 11:48:46,625 - INFO -   Role       : student
+2026-08-27 11:48:46,625 - INFO - ================================================================================
+2026-08-27 13:27:09,962 - INFO - 
+================================================================================
+2026-08-27 13:27:09,962 - INFO - [2026-08-27T13:27:09.962605] CHAT REQUEST
+2026-08-27 13:27:09,962 - INFO -   Student ID : 3
+2026-08-27 13:27:09,962 - INFO -   Question   : What are DAGs
+2026-08-27 13:27:09,962 - INFO -   Role       : student
+2026-08-27 13:27:09,962 - INFO - ================================================================================
+2026-08-27 13:27:09,974 - INFO -   [Timing] FastAPI Request started processing at 630676.323
+2026-08-27 13:27:09,981 - INFO -   Detected Mode: LEARNING
+2026-08-27 13:27:09,981 - INFO -   [Timing] Docs + Mode Detection: 0.006s
+2026-08-27 13:27:10,066 - INFO -   Adaptive filter: top_score=2.0000
+2026-08-27 13:27:10,066 - INFO -   Adaptive filter: cutoff=1.9000, kept=28/28
+2026-08-27 13:27:10,066 - INFO -   [Timing] Retrieval & Context Building: 0.075s
+2026-08-27 13:27:10,071 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-27 13:27:10,549 - INFO -   [Timing] Backend First Token Loop hit: 0.478s since LLM call
+2026-08-27 13:27:10,550 - INFO -   [Timing] Total TTFT (user → first token loop): 0.575s
+2026-08-27 13:27:15,766 - INFO -   [Timing] LLM Streaming Duration: 5.695s
+2026-08-27 13:27:15,767 - INFO -   [Timing] Total Response Time: 5.792s
+2026-08-31 05:36:55,750 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-31 05:36:55,763 - INFO - DEBUG2 performances keys: ['OS Components and Services', 'System Calls', 'Multithreading Models', 'The Critical-Section Problem', 'Process Concept & Scheduling', 'Monitors', 'Virtual Machines', 'System Boot', 'CPU Scheduling Algorithms', 'OS Design and Implementation', 'Interprocess Communication']
+2026-08-31 05:36:55,763 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7df60ba507d0>, <practice_models.TopicPerformance object at 0x7df60ba51cd0>, <practice_models.TopicPerformance object at 0x7df60ba527d0>, <practice_models.TopicPerformance object at 0x7df60ba51050>, <practice_models.TopicPerformance object at 0x7df60ba52f10>, <practice_models.TopicPerformance object at 0x7df60ba52810>, <practice_models.TopicPerformance object at 0x7df60ba53f50>, <practice_models.TopicPerformance object at 0x7df60ba53690>, <practice_models.TopicPerformance object at 0x7df60ba51b50>, <practice_models.TopicPerformance object at 0x7df60ba53590>, <practice_models.TopicPerformance object at 0x7df60ba52a90>]
+2026-08-31 05:36:55,873 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-08-31 05:36:55,873 - INFO - DEBUG2 performances keys: ['OS Components and Services', 'System Calls', 'Multithreading Models', 'The Critical-Section Problem', 'Process Concept & Scheduling', 'Monitors', 'Virtual Machines', 'System Boot', 'CPU Scheduling Algorithms', 'OS Design and Implementation', 'Interprocess Communication']
+2026-08-31 05:36:55,873 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7df60ba7ae10>, <practice_models.TopicPerformance object at 0x7df60ba7b650>, <practice_models.TopicPerformance object at 0x7df60ba7aa90>, <practice_models.TopicPerformance object at 0x7df60ba792d0>, <practice_models.TopicPerformance object at 0x7df60ba79d50>, <practice_models.TopicPerformance object at 0x7df60ba7a550>, <practice_models.TopicPerformance object at 0x7df60ba78b90>, <practice_models.TopicPerformance object at 0x7df60ba7a010>, <practice_models.TopicPerformance object at 0x7df60ba795d0>, <practice_models.TopicPerformance object at 0x7df60ba79c90>, <practice_models.TopicPerformance object at 0x7df60ba79550>]
+2026-08-31 05:37:22,754 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-31 05:37:22,754 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-31 05:37:22,754 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7df60ba986d0>, <practice_models.TopicPerformance object at 0x7df60ba9b650>, <practice_models.TopicPerformance object at 0x7df60ba992d0>]
+2026-08-31 05:37:22,844 - INFO - DEBUG2 predefined_topics: ['What is Machine Learning?', 'Supervised vs Unsupervised', 'Data Preprocessing Basics', 'Overfitting & Underfitting', 'Model Evaluation Metrics', 'Linear Regression', 'Logistic Regression', 'Decision Trees', 'Support Vector Machines', 'Ensemble Methods (Random Forest)', 'K-Means Clustering', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Association Rules', 'Artificial Neural Networks', 'Activation Functions', 'Backpropagation', 'Optimization Algorithms', 'Convolutional Neural Networks (CNN)', 'Recurrent Neural Networks (RNN)', 'Natural Language Processing Basics', 'Reinforcement Learning', 'Model Serialization', 'Deploying ML Models (APIs)']
+2026-08-31 05:37:22,845 - INFO - DEBUG2 performances keys: ['Supervised vs Unsupervised', 'What is Machine Learning?', 'Data Preprocessing Basics']
+2026-08-31 05:37:22,845 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x7df60ba9a3d0>, <practice_models.TopicPerformance object at 0x7df60ba9b650>, <practice_models.TopicPerformance object at 0x7df60ba9ac90>]
+2026-08-31 05:37:36,697 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 05:37:36,773 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-31 05:37:36,908 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:37:36,970 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 05:37:36,988 - INFO - CACHE HIT (Fast Return): topic='Database Concepts', subject='Database Systems'
+2026-08-31 05:37:37,009 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:38:33,008 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:38:33,285 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-08-31 05:38:33,297 - INFO - [Practice] Resuming existing active session 2776 for topic='OS Components and Services'
+2026-08-31 05:38:33,307 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:38:43,654 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 74.78260869565217% | Sessions: 24 | Status: LEARNING
+2026-08-31 05:38:51,664 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 75.0% | Sessions: 24 | Status: LEARNING
+2026-08-31 05:38:59,981 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 75.21367521367522% | Sessions: 24 | Status: LEARNING
+2026-08-31 05:39:06,968 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 74.57627118644068% | Sessions: 24 | Status: LEARNING
+2026-08-31 05:39:14,486 - INFO - PERFORMANCE UPDATED | Topic: OS Components and Services | Accuracy: 74.78991596638656% | Sessions: 24 | Status: LEARNING
+2026-08-31 05:39:20,054 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 05:39:20,064 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-31 05:39:20,083 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:39:54,616 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:39:54,692 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:40:42,265 - INFO - 
+================================================================================
+2026-08-31 05:40:42,267 - INFO - [2026-08-31T05:40:42.267828] CHAT REQUEST
+2026-08-31 05:40:42,267 - INFO -   Student ID : 3
+2026-08-31 05:40:42,268 - INFO -   Question   : what is tokenisation
+2026-08-31 05:40:42,268 - INFO -   Role       : student
+2026-08-31 05:40:42,268 - INFO - ================================================================================
+2026-08-31 05:40:42,320 - INFO -   [Timing] FastAPI Request started processing at 948288.669
+2026-08-31 05:40:42,330 - INFO -   Detected Mode: LEARNING
+2026-08-31 05:40:42,330 - INFO -   [Timing] Docs + Mode Detection: 0.010s
+2026-08-31 05:40:42,468 - INFO -   Adaptive filter: top_score=2.1500
+2026-08-31 05:40:42,468 - INFO -   Adaptive filter: cutoff=2.0500, kept=6/24
+2026-08-31 05:40:42,468 - INFO -   [Timing] Retrieval & Context Building: 0.121s
+2026-08-31 05:40:42,474 - INFO -   [Timing] Context + Prompt Building: 0.004s
+2026-08-31 05:40:42,989 - INFO -   [Timing] Backend First Token Loop hit: 0.514s since LLM call
+2026-08-31 05:40:42,989 - INFO -   [Timing] Total TTFT (user → first token loop): 0.668s
+2026-08-31 05:40:48,210 - INFO -   [Timing] LLM Streaming Duration: 5.736s
+2026-08-31 05:40:48,210 - INFO -   [Timing] Total Response Time: 5.890s
+2026-08-31 05:40:57,374 - INFO - 
+================================================================================
+2026-08-31 05:40:57,374 - INFO - [2026-08-31T05:40:57.374344] CHAT REQUEST
+2026-08-31 05:40:57,374 - INFO -   Student ID : 3
+2026-08-31 05:40:57,374 - INFO -   Question   : what is deadlock
+2026-08-31 05:40:57,374 - INFO -   Role       : student
+2026-08-31 05:40:57,374 - INFO - ================================================================================
+2026-08-31 05:40:57,378 - INFO -   [Timing] FastAPI Request started processing at 948303.728
+2026-08-31 05:40:57,382 - INFO -   Detected Mode: LEARNING
+2026-08-31 05:40:57,382 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-31 05:40:57,464 - INFO -   Adaptive filter: top_score=2.1500
+2026-08-31 05:40:57,464 - INFO -   Adaptive filter: cutoff=2.0500, kept=10/17
+2026-08-31 05:40:57,464 - INFO -   [Timing] Retrieval & Context Building: 0.073s
+2026-08-31 05:40:57,467 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-31 05:40:57,920 - INFO -   [Timing] Backend First Token Loop hit: 0.453s since LLM call
+2026-08-31 05:40:57,920 - INFO -   [Timing] Total TTFT (user → first token loop): 0.542s
+2026-08-31 05:41:03,801 - INFO -   [Timing] LLM Streaming Duration: 6.334s
+2026-08-31 05:41:03,801 - INFO -   [Timing] Total Response Time: 6.423s
+2026-08-31 05:41:21,095 - INFO - 
+================================================================================
+2026-08-31 05:41:21,096 - INFO - [2026-08-31T05:41:21.096186] CHAT REQUEST
+2026-08-31 05:41:21,096 - INFO -   Student ID : 3
+2026-08-31 05:41:21,096 - INFO -   Question   : what is linear regression
+2026-08-31 05:41:21,096 - INFO -   Role       : student
+2026-08-31 05:41:21,096 - INFO - ================================================================================
+2026-08-31 05:41:21,099 - INFO -   [Timing] FastAPI Request started processing at 948327.448
+2026-08-31 05:41:21,104 - INFO -   Detected Mode: LEARNING
+2026-08-31 05:41:21,104 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-31 05:41:21,189 - INFO -   Adaptive filter: top_score=2.0000
+2026-08-31 05:41:21,190 - INFO -   Adaptive filter: cutoff=1.9000, kept=22/52
+2026-08-31 05:41:21,190 - INFO -   [Timing] Retrieval & Context Building: 0.076s
+2026-08-31 05:41:21,194 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-31 05:41:21,688 - INFO -   [Timing] Backend First Token Loop hit: 0.494s since LLM call
+2026-08-31 05:41:21,688 - INFO -   [Timing] Total TTFT (user → first token loop): 0.589s
+2026-08-31 05:41:25,662 - INFO -   [Timing] LLM Streaming Duration: 4.468s
+2026-08-31 05:41:25,662 - INFO -   [Timing] Total Response Time: 4.563s
+2026-08-31 05:41:38,377 - INFO - 
+================================================================================
+2026-08-31 05:41:38,378 - INFO - [2026-08-31T05:41:38.378132] CHAT REQUEST
+2026-08-31 05:41:38,378 - INFO -   Student ID : 3
+2026-08-31 05:41:38,378 - INFO -   Question   : tell me about k-mean clusterning
+2026-08-31 05:41:38,378 - INFO -   Role       : student
+2026-08-31 05:41:38,378 - INFO - ================================================================================
+2026-08-31 05:41:38,381 - INFO -   [Timing] FastAPI Request started processing at 948344.730
+2026-08-31 05:41:38,384 - INFO -   Detected Mode: LEARNING
+2026-08-31 05:41:38,385 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-08-31 05:41:38,468 - INFO -   Adaptive filter: top_score=1.1670
+2026-08-31 05:41:38,469 - INFO -   Adaptive filter: cutoff=1.0670, kept=12/49
+2026-08-31 05:41:38,469 - INFO -   [Timing] Retrieval & Context Building: 0.075s
+2026-08-31 05:41:38,472 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-31 05:41:38,935 - INFO -   [Timing] Backend First Token Loop hit: 0.463s since LLM call
+2026-08-31 05:41:38,935 - INFO -   [Timing] Total TTFT (user → first token loop): 0.555s
+2026-08-31 05:41:46,021 - INFO -   [Timing] LLM Streaming Duration: 7.549s
+2026-08-31 05:41:46,021 - INFO -   [Timing] Total Response Time: 7.640s
+2026-08-31 05:42:00,098 - INFO - 
+================================================================================
+2026-08-31 05:42:00,098 - INFO - [2026-08-31T05:42:00.098318] CHAT REQUEST
+2026-08-31 05:42:00,098 - INFO -   Student ID : 3
+2026-08-31 05:42:00,098 - INFO -   Question   : what is speed of light
+2026-08-31 05:42:00,098 - INFO -   Role       : student
+2026-08-31 05:42:00,098 - INFO - ================================================================================
+2026-08-31 05:42:00,100 - INFO -   [Timing] FastAPI Request started processing at 948366.450
+2026-08-31 05:42:00,104 - INFO -   Detected Mode: LEARNING
+2026-08-31 05:42:00,104 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-31 05:42:00,182 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-31 05:42:00,183 - INFO -   Adaptive filter: cutoff=0.9000, kept=30/30
+2026-08-31 05:42:00,183 - INFO -   [Timing] Retrieval & Context Building: 0.069s
+2026-08-31 05:42:00,186 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-31 05:42:00,572 - INFO -   [Timing] Backend First Token Loop hit: 0.385s since LLM call
+2026-08-31 05:42:00,572 - INFO -   [Timing] Total TTFT (user → first token loop): 0.471s
+2026-08-31 05:42:01,361 - INFO -   [Timing] LLM Streaming Duration: 1.174s
+2026-08-31 05:42:01,361 - INFO -   [Timing] Total Response Time: 1.260s
+2026-08-31 05:43:08,128 - INFO - 
+================================================================================
+2026-08-31 05:43:08,128 - INFO - [2026-08-31T05:43:08.128388] CHAT REQUEST
+2026-08-31 05:43:08,128 - INFO -   Student ID : 2
+2026-08-31 05:43:08,128 - INFO -   Question   : tell me about keshav performance
+2026-08-31 05:43:08,128 - INFO -   Role       : professor
+2026-08-31 05:43:08,128 - INFO - ================================================================================
+2026-08-31 05:43:08,131 - INFO -   [Timing] FastAPI Request started processing at 948434.481
+2026-08-31 05:43:08,142 - INFO -   Detected Mode: LEARNING
+2026-08-31 05:43:08,142 - INFO -   [Timing] Docs + Mode Detection: 0.010s
+2026-08-31 05:43:08,263 - INFO -   Adaptive filter: top_score=1.8330
+2026-08-31 05:43:08,263 - INFO -   Adaptive filter: cutoff=1.7330, kept=2/47
+2026-08-31 05:43:08,263 - INFO -   [Timing] Retrieval & Context Building: 0.105s
+2026-08-31 05:43:08,266 - INFO -   [Timing] Context + Prompt Building: 0.002s
+2026-08-31 05:43:08,684 - INFO -   [Timing] Backend First Token Loop hit: 0.417s since LLM call
+2026-08-31 05:43:08,685 - INFO -   [Timing] Total TTFT (user → first token loop): 0.552s
+2026-08-31 05:43:14,758 - INFO -   [Timing] LLM Streaming Duration: 6.492s
+2026-08-31 05:43:14,759 - INFO -   [Timing] Total Response Time: 6.627s
+2026-08-31 05:52:42,544 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:52:42,681 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:58:51,300 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:58:51,364 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Data Preprocessing Basics, difficulty=mixed
+2026-08-31 05:58:51,367 - INFO - [Practice] Resuming existing active session 2568 for topic='Data Preprocessing Basics'
+2026-08-31 05:58:51,593 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 05:58:55,327 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 05:58:55,337 - INFO - CACHE HIT (Fast Return): topic='Data Preprocessing Basics', subject='None'
+2026-08-31 05:58:55,354 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:02:43,227 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:02:43,242 - INFO - [Practice] Starting/resuming session: mode=topic, topic=What is Machine Learning?, difficulty=mixed
+2026-08-31 09:02:43,247 - INFO - [Practice] Resuming existing active session 2591 for topic='What is Machine Learning?'
+2026-08-31 09:02:43,271 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:03:09,201 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2591
+2026-08-31 09:03:12,115 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:03:12,280 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:04:00,496 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-31 09:04:00,589 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:04:00,612 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:04:19,967 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-31 09:04:19,967 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-31 09:04:20,032 - INFO - [Practice] Background generation added 3 questions to session 2779
+2026-08-31 09:04:39,420 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-31 09:04:39,420 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-31 09:04:39,474 - INFO - [Practice] Background generation added 2 questions to session 2779
+2026-08-31 09:04:39,476 - INFO - [Practice] Background generation completed for session 2779 (5 questions)
+2026-08-31 09:04:46,980 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2779
+2026-08-31 09:04:49,752 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 09:04:49,781 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:04:50,032 - INFO - [Stream] Starting detailed streaming for Time Complexity
+2026-08-31 09:04:54,011 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 09:04:54,019 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-08-31 09:04:54,038 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:04:54,210 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 09:04:54,242 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:04:54,325 - INFO - [Context] Discarded irrelevant chunk for topic='Time Complexity'
+2026-08-31 09:04:54,325 - INFO - [Stream] Starting detailed streaming for Time Complexity
+2026-08-31 09:05:13,215 - INFO - [Practice] Starting/resuming session: mode=topic, topic=What is Machine Learning?, difficulty=mixed
+2026-08-31 09:05:13,296 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:05:13,335 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:05:32,670 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-31 09:05:32,670 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-31 09:05:32,701 - INFO - [Practice] Background generation added 3 questions to session 2780
+2026-08-31 09:05:51,782 - INFO - [Practice] Background generation added 2 questions to session 2780
+2026-08-31 09:05:51,785 - INFO - [Practice] Background generation completed for session 2780 (5 questions)
+2026-08-31 09:05:57,894 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2780
+2026-08-31 09:11:03,016 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:11:03,029 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-31 09:11:03,052 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:11:22,568 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-31 09:11:22,568 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-31 09:11:22,569 - ERROR - [Practice] Background generation failed for session 2781: No valid practice questions were generated
+2026-08-31 09:11:27,524 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=medium
+2026-08-31 09:11:47,155 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-31 09:11:47,155 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-31 09:11:47,156 - ERROR - [Practice] Background generation failed for session 2782: No valid practice questions were generated
+2026-08-31 09:11:58,759 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-31 09:11:58,768 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:11:58,814 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:12:15,315 - ERROR - [Practice] Background generation failed for session 2783: No valid practice questions were generated
+2026-08-31 09:14:12,788 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=medium
+2026-08-31 09:14:32,317 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-31 09:14:32,318 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-31 09:14:32,399 - INFO - [Practice] Background generation added 3 questions to session 2784
+2026-08-31 09:14:51,812 - ERROR - [PracticeEngine] LLM 'GPT-4o-mini' failed: Request timed out.
+2026-08-31 09:14:51,812 - ERROR - [PracticeEngine] All LLM providers failed!
+2026-08-31 09:14:51,869 - INFO - [Practice] Background generation added 2 questions to session 2784
+2026-08-31 09:14:51,871 - INFO - [Practice] Background generation completed for session 2784 (5 questions)
+2026-08-31 09:14:55,115 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2784
+2026-08-31 09:14:57,796 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 09:14:57,813 - INFO - CACHE HIT (Fast Return): topic='Time Complexity', subject='None'
+2026-08-31 09:14:57,842 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:16:02,963 - INFO - 
+================================================================================
+2026-08-31 09:16:02,964 - INFO - [2026-08-31T09:16:02.964135] CHAT REQUEST
+2026-08-31 09:16:02,964 - INFO -   Student ID : 3
+2026-08-31 09:16:02,964 - INFO -   Question   : hi
+2026-08-31 09:16:02,964 - INFO -   Role       : student
+2026-08-31 09:16:02,964 - INFO - ================================================================================
+2026-08-31 09:16:03,011 - INFO -   [Timing] FastAPI Request started processing at 961209.360
+2026-08-31 09:16:03,025 - INFO -   Detected Mode: LEARNING
+2026-08-31 09:16:03,025 - INFO -   [Timing] Docs + Mode Detection: 0.013s
+2026-08-31 09:16:17,310 - INFO - 
+================================================================================
+2026-08-31 09:16:17,310 - INFO - [2026-08-31T09:16:17.310216] CHAT REQUEST
+2026-08-31 09:16:17,310 - INFO -   Student ID : 3
+2026-08-31 09:16:17,310 - INFO -   Question   : what is RAG
+2026-08-31 09:16:17,310 - INFO -   Role       : student
+2026-08-31 09:16:17,310 - INFO - ================================================================================
+2026-08-31 09:16:17,314 - INFO -   [Timing] FastAPI Request started processing at 961223.663
+2026-08-31 09:16:17,317 - INFO -   Detected Mode: LEARNING
+2026-08-31 09:16:17,317 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-08-31 09:16:17,516 - INFO -   Adaptive filter: top_score=2.1500
+2026-08-31 09:16:17,516 - INFO -   Adaptive filter: cutoff=2.0500, kept=12/33
+2026-08-31 09:16:17,516 - INFO -   [Timing] Retrieval & Context Building: 0.188s
+2026-08-31 09:16:17,522 - INFO -   [Timing] Context + Prompt Building: 0.005s
+2026-08-31 09:16:18,066 - INFO -   [Timing] Backend First Token Loop hit: 0.544s since LLM call
+2026-08-31 09:16:18,066 - INFO -   [Timing] Total TTFT (user → first token loop): 0.752s
+2026-08-31 09:16:22,547 - INFO -   [Timing] LLM Streaming Duration: 5.025s
+2026-08-31 09:16:22,548 - INFO -   [Timing] Total Response Time: 5.234s
+2026-08-31 09:17:00,140 - INFO - 
+================================================================================
+2026-08-31 09:17:00,140 - INFO - [2026-08-31T09:17:00.140734] CHAT REQUEST
+2026-08-31 09:17:00,140 - INFO -   Student ID : 3
+2026-08-31 09:17:00,140 - INFO -   Question   : Why is the life possible on earth only
+2026-08-31 09:17:00,140 - INFO -   Role       : student
+2026-08-31 09:17:00,140 - INFO - ================================================================================
+2026-08-31 09:17:00,143 - INFO -   [Timing] FastAPI Request started processing at 961266.493
+2026-08-31 09:17:00,148 - INFO -   Detected Mode: LEARNING
+2026-08-31 09:17:00,149 - INFO -   [Timing] Docs + Mode Detection: 0.005s
+2026-08-31 09:17:00,150 - INFO -   Retrieval query enriched with previous conversation topic
+2026-08-31 09:17:00,162 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-31 09:17:00,162 - INFO -   Adaptive filter: cutoff=0.9000, kept=21/21
+2026-08-31 09:17:00,162 - INFO -   [Timing] Retrieval & Context Building: 0.004s
+2026-08-31 09:17:00,165 - INFO -   [Timing] Context + Prompt Building: 0.003s
+2026-08-31 09:17:00,556 - INFO -   [Timing] Backend First Token Loop hit: 0.390s since LLM call
+2026-08-31 09:17:00,556 - INFO -   [Timing] Total TTFT (user → first token loop): 0.413s
+2026-08-31 09:17:10,307 - INFO -   [Timing] LLM Streaming Duration: 10.141s
+2026-08-31 09:17:10,307 - INFO -   [Timing] Total Response Time: 10.164s
+2026-08-31 09:18:49,123 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-31 09:18:49,267 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:18:49,304 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:19:01,236 - INFO - [Practice] Background generation added 3 questions to session 2785
+2026-08-31 09:19:10,088 - INFO - [Practice] Background generation added 2 questions to session 2785
+2026-08-31 09:19:10,091 - INFO - [Practice] Background generation completed for session 2785 (5 questions)
+2026-08-31 09:19:25,719 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2785
+2026-08-31 09:23:04,093 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:23:04,115 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-31 09:23:04,250 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:23:11,158 - ERROR - [Practice] Background generation failed for session 2786: No valid practice questions were generated
+2026-08-31 09:23:36,319 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=medium
+2026-08-31 09:23:43,242 - ERROR - [Practice] Background generation failed for session 2787: No valid practice questions were generated
+2026-08-31 09:33:38,222 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:33:38,252 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-31 09:33:38,276 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:33:45,428 - ERROR - [Practice] Background generation failed for session 2788: No valid practice questions were generated
+2026-08-31 09:33:49,655 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=medium
+2026-08-31 09:33:56,853 - ERROR - [Practice] Background generation failed for session 2789: No valid practice questions were generated
+2026-08-31 09:34:17,351 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=medium
+2026-08-31 09:34:20,564 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:34:20,605 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:34:24,640 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:34:24,670 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:34:29,469 - ERROR - [Practice] Background generation failed for session 2790: No valid practice questions were generated
+2026-08-31 09:35:28,450 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=medium
+2026-08-31 09:35:43,776 - ERROR - [Practice] Background generation failed for session 2791: No valid practice questions were generated
+2026-08-31 09:40:52,319 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:40:52,355 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:41:01,712 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-31 09:41:01,722 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:41:01,929 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:41:09,203 - ERROR - [Practice] Background generation failed for session 2792: No valid practice questions were generated
+2026-08-31 09:43:20,014 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:43:20,035 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-31 09:43:20,071 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:43:23,387 - INFO - [PracticeEngine] Generated Content snippet: {
+  "topic": "Time Complexity",
+  "subtopic": "Algorithm Analysis and Big O Notation",
+  "difficulty": "MEDIUM",
+  "question": "Consider an algorithm that processes an input array of size n. The algorithm performs a single pass through the array to compute a sum, followed by a nested loop structure where the inner loop iterates exactly k times for each element of the outer loop, where k is a small constant independent of n. What is the overall time complexity of this algorithm?",
+  "options": [
+    {
+      "id": "A",
+      "text": "O(n)"
+    },
+    {
+      "id": "B",
+      "text": "O(n log n)"
+    },
+    {
+      "id": "C",
+      "text": "O(n^2)"
+    },
+    {
+      "id": "D",
+      "text": "O(k * n)"
+    }
+  ],
+  "correct_answer": "A",
+  "explanation": "The first pass is O(n). The nested loop runs n * k times, which simplifies to O(n) because k is a constant. Adding O(n) + O(n) results in O(n), as constant factors and lower-order terms are dropped in Big O notation."
+}
+2026-08-31 09:43:23,389 - ERROR - [Practice] Background generation failed for session 2793: No valid practice questions were generated
+2026-08-31 09:47:13,808 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:47:13,868 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:47:13,870 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-31 09:47:21,183 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "Time Complexity",
+    "subtopic": "Big O Notation and Growth Rates",
+    "difficulty": "MEDIUM",
+    "question": "Consider an algorithm with a time complexity of O(n log n). If the size of the input data (n) is doubled, approximately how does the total number of operations change compared to the original execution time?",
+    "options": [
+      {
+        "id": "A",
+        "text": "The number of operations doubles."
+      },
+      {
+        "id": "B",
+        "text": "The number of operations increases by a factor slightly greater than 2, specifically 2 * (log(2n) / log(n))."
+      },
+      {
+        "id": "C",
+        "text": "The number of operations increases by a factor of 4."
+      },
+      {
+        "id": "D",
+        "text": "The number of operations remains constant, as the logarithmic term stabilizes the growth."
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Doubling n in an O(n log n) function results in 2n * log(2n). Since log(2n) = log(2)
+2026-08-31 09:47:21,186 - ERROR - [Practice] Background generation failed for session 2794: No valid practice questions were generated
+2026-08-31 09:47:31,692 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:47:31,711 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=mixed
+2026-08-31 09:47:31,724 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:47:39,075 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "Time Complexity",
+    "subtopic": "Big O Notation and Growth Rates",
+    "difficulty": "MEDIUM",
+    "question": "An algorithm processes an input array of size n. The algorithm iterates through the array once to perform a constant-time operation on each element, and then performs a nested loop structure where the inner loop runs a constant number of times for each element in the outer loop. What is the overall time complexity of this algorithm?",
+    "options": [
+      {
+        "id": "A",
+        "text": "O(n)"
+      },
+      {
+        "id": "B",
+        "text": "O(n log n)"
+      },
+      {
+        "id": "C",
+        "text": "O(n^2)"
+      },
+      {
+        "id": "D",
+        "text": "O(1)"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "The first pass is O(n). The nested loop structure described (outer loop n times, inner loop constant k times) results in n * k operations, which is O(n). However, the prompt implies a standard nested loop where the 
+2026-08-31 09:47:39,076 - ERROR - [Practice] Background generation failed for session 2795: No valid practice questions were generated
+2026-08-31 09:49:48,016 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Time Complexity, difficulty=medium
+2026-08-31 09:49:58,975 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "Time Complexity",
+    "subtopic": "Big O Notation and Growth Rates",
+    "difficulty": "MEDIUM",
+    "question": "An algorithm processes an input array of size n by performing a single pass to compute a prefix sum, followed by a nested loop structure where the inner loop iterates from the current index i to the end of the array. What is the asymptotic time complexity of this algorithm?",
+    "options": [
+      {
+        "id": "A",
+        "text": "O(n)"
+      },
+      {
+        "id": "B",
+        "text": "O(n log n)"
+      },
+      {
+        "id": "C",
+        "text": "O(n^2)"
+      },
+      {
+        "id": "D",
+        "text": "O(n^3)"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "The prefix sum pass takes O(n) time. The nested loop structure performs approximately n + (n-1) + ... + 1 operations, which sums to n(n+1)/2, resulting in O(n^2) complexity. Since O(n^2) dominates O(n), the overall complexity is O(n^2)."
+  },
+  {
+    "topic": "Time Complex
+2026-08-31 09:49:59,193 - INFO - [Practice] Background generation added 3 questions to session 2796
+2026-08-31 09:50:04,556 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "Time Complexity",
+    "subtopic": "Big O Notation and Growth Rates",
+    "difficulty": "MEDIUM",
+    "question": "Consider an algorithm that processes an input array of size n. The algorithm performs a single linear pass to compute a prefix sum, followed by a nested loop structure where the inner loop iterates from the current index i to the end of the array. What is the asymptotic time complexity of this algorithm?",
+    "options": [
+      {
+        "id": "A",
+        "text": "O(n)"
+      },
+      {
+        "id": "B",
+        "text": "O(n log n)"
+      },
+      {
+        "id": "C",
+        "text": "O(n^2)"
+      },
+      {
+        "id": "D",
+        "text": "O(n^3)"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "The nested loop where the inner loop runs from i to n results in approximately n^2/2 operations, which dominates the linear prefix sum pass, leading to a quadratic time complexity of O(n^2)."
+  },
+  {
+    "topic": "Time Complexity",
+    "subt
+2026-08-31 09:50:04,595 - ERROR - [Practice] Background generation failed for session 2796: No valid practice questions were generated
+2026-08-31 09:50:04,600 - WARNING - [Practice] Continuing session 2796 with 3 available questions after partial generation failure
+2026-08-31 09:50:08,322 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2796
+2026-08-31 09:50:12,360 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:50:12,421 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:50:26,575 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:50:26,599 - INFO - [Practice] Starting/resuming session: mode=topic, topic=What is Machine Learning?, difficulty=mixed
+2026-08-31 09:50:26,620 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 09:50:34,493 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "What is Machine Learning?",
+    "subtopic": "Definition and Core Concept",
+    "difficulty": "EASY",
+    "question": "Which statement best describes the fundamental difference between traditional software programming and machine learning?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Traditional software relies on explicit rules written by developers, while machine learning systems learn patterns from data examples."
+      },
+      {
+        "id": "B",
+        "text": "Traditional software requires large datasets for training, whereas machine learning uses fixed logical instructions for every situation."
+      },
+      {
+        "id": "C",
+        "text": "Machine learning eliminates the need for any data input, relying solely on hardcoded algorithms to make decisions."
+      },
+      {
+        "id": "D",
+        "text": "Both traditional software and machine learning require the developer to manually write specific instructions for every possible i
+2026-08-31 09:50:34,531 - INFO - [Practice] Background generation added 2 questions to session 2797
+2026-08-31 09:50:41,866 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "Machine Learning",
+    "subtopic": "Core Definition",
+    "difficulty": "EASY",
+    "question": "Which statement best describes the fundamental difference between traditional software programming and machine learning?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Traditional software relies on explicit rules written by developers, while machine learning systems learn patterns from data."
+      },
+      {
+        "id": "B",
+        "text": "Traditional software uses neural networks, while machine learning uses decision trees."
+      },
+      {
+        "id": "C",
+        "text": "Traditional software is faster to develop, while machine learning is always more accurate."
+      },
+      {
+        "id": "D",
+        "text": "Traditional software requires large datasets, while machine learning works with small datasets."
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "The core distinction is that traditional programming follows explicit inst
+2026-08-31 09:50:41,888 - INFO - [Practice] Background generation added 2 questions to session 2797
+2026-08-31 09:50:44,847 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "What is Machine Learning?",
+    "subtopic": "Fundamental Concepts",
+    "difficulty": "EASY",
+    "question": "Which statement best describes the fundamental difference between traditional software programming and machine learning?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Traditional programming relies on explicit rules written by developers, while machine learning discovers patterns from data."
+      },
+      {
+        "id": "B",
+        "text": "Traditional programming requires large datasets for training, while machine learning uses fixed logical instructions."
+      },
+      {
+        "id": "C",
+        "text": "Machine learning eliminates the need for data, whereas traditional programming requires extensive data cleaning."
+      },
+      {
+        "id": "D",
+        "text": "Traditional programming adapts automatically to new inputs, while machine learning requires manual code updates for every change."
+      }
+    ],
+    "correct_answer":
+2026-08-31 09:50:44,852 - ERROR - [Practice] Background generation failed for session 2797: No valid practice questions were generated
+2026-08-31 09:50:44,856 - WARNING - [Practice] Continuing session 2797 with 4 available questions after partial generation failure
+2026-08-31 09:50:52,075 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2797
+2026-08-31 11:28:37,927 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 11:28:37,944 - INFO - [Practice] Starting/resuming session: mode=topic, topic=System Calls, difficulty=mixed
+2026-08-31 11:28:37,980 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 11:28:54,452 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "System Calls",
+    "subtopic": "Process Creation and Memory Management",
+    "difficulty": "HARD",
+    "question": "Consider a Unix-like system where a parent process invokes fork() followed immediately by execve(). Analyze the memory management implications of this sequence compared to a hypothetical implementation where fork() and execve() are merged into a single atomic system call (e.g., posix_spawn or vfork semantics). Which statement accurately describes the resource trade-off regarding Copy-On-Write (COW) page faults?",
+    "options": [
+      {
+        "id": "A",
+        "text": "The atomic call eliminates all page faults during the transition because the kernel pre-allocates physical pages for the new process image before context switching."
+      },
+      {
+        "id": "B",
+        "text": "The standard fork/exec sequence incurs significant overhead due to COW page faults when the child first writes to memory, whereas the atomic call avoids these faults b
+2026-08-31 11:28:54,614 - INFO - [Practice] Background generation added 3 questions to session 2798
+2026-08-31 11:29:06,662 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "System Calls",
+    "subtopic": "Process Creation and Resource Management",
+    "difficulty": "HARD",
+    "question": "Consider a Unix-like system where a parent process invokes fork() to create a child process. The child immediately calls execve() to replace its address space with a new program. Assuming the system uses Copy-on-Write (COW) for page table management and the new program requires loading a large shared library, which of the following statements accurately describes the memory management behavior and potential performance implications during this sequence?",
+    "options": [
+      {
+        "id": "A",
+        "text": "The execve() system call immediately performs a deep copy of the parent's page tables to ensure isolation, resulting in O(N) time complexity where N is the number of pages, regardless of COW mechanisms."
+      },
+      {
+        "id": "B",
+        "text": "While fork() sets up COW page tables in O(1) time by copying only the page table ent
+2026-08-31 11:29:06,664 - ERROR - [Practice] Background generation failed for session 2798: No valid practice questions were generated
+2026-08-31 11:29:06,670 - WARNING - [Practice] Continuing session 2798 with 3 available questions after partial generation failure
+2026-08-31 11:29:06,714 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2798
+2026-08-31 11:29:11,301 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 11:29:11,382 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 11:29:25,279 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 11:29:25,294 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-08-31 11:29:25,326 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 11:29:51,044 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 11:29:51,075 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Design and Implementation, difficulty=mixed
+2026-08-31 11:29:51,143 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 11:29:58,910 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "OS Design and Implementation",
+    "subtopic": "Process Management",
+    "difficulty": "EASY",
+    "question": "Which of the following best describes the primary function of the operating system's process scheduler?",
+    "options": [
+      {
+        "id": "A",
+        "text": "It allocates memory addresses to running programs."
+      },
+      {
+        "id": "B",
+        "text": "It determines which process receives CPU time and for how long."
+      },
+      {
+        "id": "C",
+        "text": "It manages the translation between virtual and physical memory addresses."
+      },
+      {
+        "id": "D",
+        "text": "It handles input and output requests from hardware devices."
+      }
+    ],
+    "correct_answer": "B",
+    "explaination": "The process scheduler is responsible for managing the CPU, deciding which ready process gets to execute next and for what duration, thereby ensuring efficient CPU utilization."
+  },
+  {
+    "topic": "OS Design and Implementati
+2026-08-31 11:29:58,911 - ERROR - [Practice] Background generation failed for session 2799: No valid practice questions were generated
+2026-08-31 11:30:02,663 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Design and Implementation, difficulty=easy
+2026-08-31 11:30:11,050 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "OS Design and Implementation",
+    "subtopic": "Process Management",
+    "difficulty": "EASY",
+    "question": "Which of the following best describes the primary function of the operating system's process scheduler?",
+    "options": [
+      {
+        "id": "A",
+        "text": "It allocates CPU time to various processes to ensure efficient multitasking."
+      },
+      {
+        "id": "B",
+        "text": "It manages the allocation and deallocation of physical memory addresses."
+      },
+      {
+        "id": "C",
+        "text": "It handles input and output requests from peripheral devices."
+      },
+      {
+        "id": "D",
+        "text": "It compiles high-level application code into machine language instructions."
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "The scheduler is responsible for deciding which process runs on the CPU at any given moment, thereby enabling multitasking and ensuring fair resource distribution."
+  },
+  {
+    "topic": "
+2026-08-31 11:30:11,096 - INFO - [Practice] Background generation added 2 questions to session 2800
+2026-08-31 11:30:20,416 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "OS Design and Implementation",
+    "subtopic": "Process Management",
+    "difficulty": "EASY",
+    "question": "Which of the following best describes the primary role of the operating system's scheduler?",
+    "options": [
+      {
+        "id": "A",
+        "text": "To allocate CPU time among competing processes to ensure efficient system utilization."
+      },
+      {
+        "id": "B",
+        "text": "To translate high-level programming code into machine language instructions."
+      },
+      {
+        "id": "C",
+        "text": "To manage the physical layout of data on secondary storage devices."
+      },
+      {
+        "id": "D",
+        "text": "To handle hardware interrupts generated by peripheral devices."
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "The scheduler is responsible for deciding which process runs on the CPU and for how long, thereby managing CPU allocation among various processes to maintain system stability and efficiency."
+ 
+2026-08-31 11:30:20,444 - INFO - [Practice] Background generation added 1 questions to session 2800
+2026-08-31 11:30:26,863 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "OS Design and Implementation",
+    "subtopic": "Process Management",
+    "difficulty": "EASY",
+    "question": "Which of the following best describes the primary responsibility of the operating system's process scheduler?",
+    "options": [
+      {
+        "id": "A",
+        "text": "It manages the allocation of CPU time among competing processes to ensure efficient multitasking."
+      },
+      {
+        "id": "B",
+        "text": "It translates high-level programming code into machine language instructions for execution."
+      },
+      {
+        "id": "C",
+        "text": "It handles the physical formatting of disk sectors to store file data permanently."
+      },
+      {
+        "id": "D",
+        "text": "It compiles source code into object files before linking them into an executable program."
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "The process scheduler is responsible for deciding which process runs on the CPU at any given moment, balanc
+2026-08-31 11:30:26,870 - ERROR - [Practice] Background generation failed for session 2800: No valid practice questions were generated
+2026-08-31 11:30:26,874 - WARNING - [Practice] Continuing session 2800 with 3 available questions after partial generation failure
+2026-08-31 11:31:21,247 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 11:31:21,274 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Design and Implementation, difficulty=mixed
+2026-08-31 11:31:21,277 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 11:31:21,283 - INFO - [Practice] Resuming existing active session 2800 for topic='OS Design and Implementation'
+2026-08-31 11:31:26,362 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "OS Design and Implementation",
+    "subtopic": "Process Management",
+    "difficulty": "EASY",
+    "question": "Which of the following best describes the primary function of the operating system's scheduler?",
+    "options": [
+      {
+        "id": "A",
+        "text": "It allocates CPU time to various processes to ensure efficient multitasking."
+      },
+      {
+        "id": "B",
+        "text": "It manages the physical layout of data on the hard disk."
+      },
+      {
+        "id": "C",
+        "text": "It translates high-level programming code into machine language."
+      },
+      {
+        "id": "D",
+        "text": "It handles the input and output signals from peripheral devices."
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "The scheduler is responsible for deciding which process runs on the CPU at any given moment, enabling the illusion of simultaneous execution for multiple programs."
+  },
+  {
+    "topic": "OS Design and Implementation",
+ 
+2026-08-31 11:31:26,373 - ERROR - [Practice] Background generation failed for session 2800: No valid practice questions were generated
+2026-08-31 11:31:26,379 - WARNING - [Practice] Continuing session 2800 with 3 available questions after partial generation failure
+2026-08-31 11:31:27,231 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2800
+2026-08-31 11:31:31,032 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 11:31:31,060 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 11:31:31,319 - INFO - [Stream] Starting detailed streaming for OS Design and Implementation
+2026-08-31 12:41:47,652 - INFO -   Adaptive filter: top_score=2.3500
+2026-08-31 12:41:47,653 - INFO -   Adaptive filter: cutoff=2.2500, kept=7/28
+2026-08-31 12:41:47,728 - INFO -   Adaptive filter: top_score=1.0000
+2026-08-31 12:41:47,728 - INFO -   Adaptive filter: cutoff=0.9000, kept=9/50
+2026-08-31 12:47:41,613 - INFO -   Adaptive filter: top_score=2.3500
+2026-08-31 12:47:41,613 - INFO -   Adaptive filter: cutoff=2.2500, kept=7/28
+2026-08-31 12:47:41,687 - INFO -   Adaptive filter: no reliable evidence after lexical-quality gate
+2026-08-31 13:02:25,998 - INFO -   Adaptive filter: no reliable evidence after lexical-quality gate
+2026-08-31 13:02:48,489 - INFO -   Adaptive filter: top_score=2.3500
+2026-08-31 13:02:48,489 - INFO -   Adaptive filter: cutoff=2.2500, kept=7/28
+2026-08-31 14:39:27,070 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 14:39:27,119 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 14:39:39,368 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 14:39:39,420 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Supervised vs Unsupervised, difficulty=mixed
+2026-08-31 14:39:39,478 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 14:39:55,447 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "Supervised vs Unsupervised",
+    "subtopic": "Complexity and Scalability of Clustering vs Classification",
+    "difficulty": "HARD",
+    "question": "Consider a dataset with n samples and d dimensions. You are comparing the asymptotic time complexity of training a k-means clustering algorithm (using Lloyd's algorithm with a fixed number of iterations K) versus training a Support Vector Machine (SVM) with a linear kernel using Stochastic Gradient Descent (SGD) for classification. Assuming n >> d and K << n, which of the following statements correctly describes the computational complexity and the primary bottleneck for each approach?",
+    "options": [
+      {
+        "id": "A",
+        "text": "k-means has complexity O(K * n * d) and is bottlenecked by the number of clusters; SVM with SGD has complexity O(T * n * d) where T is iterations, and is bottlenecked by the need to compute the full kernel matrix."
+      },
+      {
+        "id": "B",
+        "text": "k-means 
+2026-08-31 14:39:55,449 - ERROR - [Practice] Background generation failed for session 2801: No valid practice questions were generated
+2026-08-31 14:39:59,936 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Supervised vs Unsupervised, difficulty=hard
+2026-08-31 14:40:15,828 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "Supervised vs Unsupervised",
+    "subtopic": "Complexity and Scalability Analysis",
+    "difficulty": "HARD",
+    "question": "Consider a scenario where a data scientist must process a dataset of N = 10^8 high-dimensional vectors (d = 512). The task involves two distinct phases: first, performing clustering using K-Means with Lloyd's algorithm (K=100), and second, training a deep neural network classifier with cross-entropy loss. Assuming the number of training epochs E is fixed and independent of N for the classifier, which of the following statements correctly compares the asymptotic computational complexities and practical scalability of the two phases?",
+    "options": [
+      {
+        "id": "A",
+        "text": "The clustering phase has a complexity of O(N * K * d * E_kmeans), while the classification phase scales as O(N * P * E), where P is the number of parameters. For very large N, the clustering phase is generally more computationally intensive per iterati
+2026-08-31 14:40:15,829 - INFO - [PracticeEngine] Truncation repair salvaged 2 questions
+2026-08-31 14:40:15,911 - INFO - [Practice] Background generation added 2 questions to session 2802
+2026-08-31 14:40:30,722 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "Supervised vs Unsupervised",
+    "subtopic": "Complexity Analysis and Algorithmic Behavior",
+    "difficulty": "HARD",
+    "question": "Consider a high-dimensional dataset with N = 10^6 samples and d = 1000 features. You are comparing the computational complexity of two distinct learning pipelines: (1) K-Means clustering using Lloyd's algorithm with K = 100 clusters, and (2) training a linear Support Vector Machine (SVM) using a standard dual formulation solver. Assuming the number of iterations for K-Means is I_km and the number of support vectors for SVM is S, which of the following statements correctly describes the asymptotic time complexity per iteration/step and the primary bottleneck for each method as N grows large?",
+    "options": [
+      {
+        "id": "A",
+        "text": "K-Means has a complexity of O(N * d * I_km) per iteration, dominated by distance calculations; SVM dual optimization has a complexity of O(N^2 * S) per iteration, dominated by kernel 
+2026-08-31 14:40:30,723 - ERROR - [Practice] Background generation failed for session 2802: No valid practice questions were generated
+2026-08-31 14:40:30,728 - WARNING - [Practice] Continuing session 2802 with 2 available questions after partial generation failure
+2026-08-31 14:40:35,764 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2802
+2026-08-31 14:40:40,872 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-08-31 14:40:40,902 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-08-31 14:40:41,107 - INFO - [Stream] Starting detailed streaming for Supervised vs Unsupervised

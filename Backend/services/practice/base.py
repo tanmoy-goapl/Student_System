@@ -1,6 +1,8 @@
 import logging
 import os
 import re
+import time
+from typing import Optional
 from config import (
     GPT_API_KEY, GPT_BASE_URL, GPT_MODEL,
     LLAMA_BASE_URL, LLAMA_API_KEY, LLAMA_MODEL,
@@ -190,7 +192,7 @@ def normalize_generated_text(text: str) -> str:
     """Convert common LaTeX emitted by AI material into readable Unicode/plain text."""
     if not text:
         return text
-    markers = (r"\(", r"\[", r"\frac", r"\mathbf", r"\boldsymbol", r"\hat", r"\text{", r"\begin{", r"\displaystyle", "$$")
+    markers = (r"\(", r"\[", r"\frac", r"\mathbf", r"\boldsymbol", r"\hat", r"\text{", r"\begin{", r"\displaystyle", "$$", "$")
     if not any(marker in text for marker in markers) and "\\" not in text:
         return text
 
@@ -204,7 +206,7 @@ def normalize_generated_text(text: str) -> str:
         normalized = re.sub(r"(?<!\$)\$(?!\s)(.*?)(?<!\s)\$(?!\$)", replace_block, normalized, flags=re.DOTALL)
         normalized = _convert_math_expression(normalized)
         return normalized.replace(r"\[", "[").replace(r"\]", "]")
-    segments = re.split(r"(\x60\x60\x60[\s\S]*?\x60\x60\x60)", text)
+    segments = re.split(r"(\`\`\`[\s\S]*?\`\`\`)", text)
     return "".join(
         segment if index % 2 else normalize_segment(segment)
         for index, segment in enumerate(segments)
@@ -219,61 +221,27 @@ def _practice_llm_call(
     max_tokens: int = 2048,
     timeout_seconds: float = 15.0,
     allow_fallback_chain: bool = True,
+    total_timeout_seconds: Optional[float] = None,
 ) -> str:
     """Call the LLM with a system + user prompt. Returns raw text response."""
-    provider = get_provider()
-    configs = []
-
-    def add_gpt():
-        if GPT_API_KEY and GPT_BASE_URL:
-            configs.append(("GPT-4o-mini", GPT_API_KEY, GPT_BASE_URL, GPT_MODEL))
-
-    def add_llama():
-        if LLAMA_API_KEY and LLAMA_BASE_URL:
-            configs.append(("Llama", LLAMA_API_KEY or GPT_API_KEY, LLAMA_BASE_URL, LLAMA_MODEL))
-
-    def add_backup():
-        # Hardcoded active fallback to avoid timeouts when local gpt-oss is frozen
-        configs.append(("Backup-GPT", "4c8c56fede640bf281a7e36128fef8c18ad0b5f97a5a6bbb2e41e29d4f5a895d", "http://10.10.90.94:2026/v1", "gpt-4o-mini"))
-
-    if provider == "gpt4o":
-        add_gpt(); add_llama(); add_backup()
-    elif provider == "llama":
-        add_llama(); add_gpt(); add_backup()
-    else:
-        add_gpt(); add_llama(); add_backup()
-
-    if not allow_fallback_chain:
-        configs = configs[:1]
-
-    last_error = "No configurations available"
-    for name, api_key, base_url, model in configs:
-        try:
-            from openai import OpenAI
-            client = OpenAI(api_key=api_key, base_url=base_url)
-
-            resp = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                max_tokens=max_tokens,
-                temperature=0.3,
-                timeout=timeout_seconds,
-            )
-            content = resp.choices[0].message.content
-            if not content:
-                finish_reason = resp.choices[0].finish_reason if resp.choices else "unknown"
-                raise Exception(f"Provider returned empty content. Finish reason: {finish_reason}")
-            return content
-        except Exception as e:
-            logger.error(f"[PracticeEngine] LLM '{name}' failed: {e}")
-            last_error = str(e)
-            continue
-
-    logger.error("[PracticeEngine] All LLM providers failed!")
-    return f"ERROR: {last_error}"
+    try:
+        response_chunks = []
+        for chunk in _practice_llm_stream(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            max_tokens=max_tokens,
+            cancel_event=None,
+        ):
+            response_chunks.append(chunk)
+        
+        content = "".join(response_chunks)
+        logger.info(f"[PracticeEngine] Generated Content snippet: {content[:1000]}")
+        if content.startswith("ERROR:"):
+            logger.error(f"[PracticeEngine] Streaming failed: {content}")
+        return content
+    except Exception as e:
+        logger.error(f"[PracticeEngine] Streaming wrapper failed: {e}")
+        return f"ERROR: {e}"
 
 
 def _practice_llm_stream(system_prompt: str, user_prompt: str, max_tokens: int = 2048, cancel_event=None):
@@ -289,16 +257,12 @@ def _practice_llm_stream(system_prompt: str, user_prompt: str, max_tokens: int =
         if LLAMA_API_KEY and LLAMA_BASE_URL:
             configs.append(("Llama", LLAMA_API_KEY or GPT_API_KEY, LLAMA_BASE_URL, LLAMA_MODEL))
 
-    def add_backup():
-        # Hardcoded active fallback to avoid timeouts when local gpt-oss is frozen
-        configs.append(("Backup-GPT", "4c8c56fede640bf281a7e36128fef8c18ad0b5f97a5a6bbb2e41e29d4f5a895d", "http://10.10.90.94:2026/v1", "gpt-4o-mini"))
-
     if provider == "gpt4o":
-        add_gpt(); add_llama(); add_backup()
+        add_gpt(); add_llama()
     elif provider == "llama":
-        add_llama(); add_gpt(); add_backup()
+        add_llama(); add_gpt()
     else:
-        add_gpt(); add_llama(); add_backup()
+        add_gpt(); add_llama()
 
     last_error = "No configurations available"
     for name, api_key, base_url, model in configs:
@@ -315,7 +279,7 @@ def _practice_llm_stream(system_prompt: str, user_prompt: str, max_tokens: int =
                 ],
                 max_tokens=max_tokens,
                 temperature=0.3,
-                timeout=httpx.Timeout(15.0, connect=1.5),
+                timeout=httpx.Timeout(6.0, connect=1.0),
                 stream=True,
             )
             for chunk in resp:

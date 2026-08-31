@@ -51,15 +51,13 @@ def _extract_chunks(results, doc_id_to_name: dict[int, str]) -> list[dict]:
         
         chunk_idx = meta.get("chunk_index", 0)
         doc_name = doc_id_to_name.get(doc_id, f"Document #{doc_id}")
-        retrieval_method = results.get("_retrieval_method")
         
         extracted.append({
             "document": doc_name,
             "text": text,
             "document_id": doc_id,
             "chunk_index": chunk_idx,
-            "distance": dist,
-            "retrieval_method": retrieval_method,
+            "distance": dist
         })
     return extracted
 

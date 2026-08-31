@@ -6,6 +6,7 @@ import QuestionContent from "../../components/practicepage/Main/QuestionContent"
 import AnswerOptions from "../../components/practicepage/Main/AnswerOptions";
 import ActionButtons from "../../components/practicepage/Main/ActionButtons";
 import AIHelpSection from "../../components/practicepage/Main/AIHelpSection";
+import PracticeLoadingCard from "../../components/practicepage/Main/PracticeLoadingCard";
 import PracticeLeftSidebar from "@/components/practicepage/Left/PracticeSidebar";
 import PracticeSidebar from "@/components/practicepage/Right/Practicesidebar";
 import {
@@ -571,6 +572,34 @@ export default function PracticePage({
         return m > 0 ? `${m}m ${s}s` : `${s}s`;
     };
 
+    const renderFormattedText = (text: string): React.ReactNode => {
+        if (!text) return "";
+        let cleanText = text;
+        if (cleanText.endsWith("**") && (cleanText.match(/\*\*/g) || []).length === 1) {
+            cleanText = "**" + cleanText;
+        } else if (cleanText.startsWith("**") && (cleanText.match(/\*\*/g) || []).length === 1) {
+            cleanText = cleanText + "**";
+        }
+        const regex = /(\*\*.*?\*\*|\*.*?\*|\`.*?\`)/g;
+        const parts = cleanText.split(regex);
+        return (
+            <>
+                {parts.map((part, index) => {
+                    if (part.startsWith("**") && part.endsWith("**")) {
+                        return <strong key={index} className="font-bold text-white">{part.slice(2, -2)}</strong>;
+                    }
+                    if (part.startsWith("*") && part.endsWith("*")) {
+                        return <em key={index} className="italic text-slate-300">{part.slice(1, -1)}</em>;
+                    }
+                    if (part.startsWith("`") && part.endsWith("`")) {
+                        return <code key={index} className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700/80 font-mono text-sm text-pink-400">{part.slice(1, -1)}</code>;
+                    }
+                    return part;
+                })}
+            </>
+        );
+    };
+
     const renderMainContent = () => {
         if (hasError) {
             return (
@@ -585,12 +614,12 @@ export default function PracticePage({
 
         if (isLoading) {
             return (
-                <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto p-8 justify-center animate-fade-in">
-                    <div className="text-center space-y-4">
-                        <div className="w-12 h-12 mx-auto border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
-                        <h3 className="text-lg font-semibold text-white">Preparing your practice session...</h3>
-                        <p className="text-slate-400 text-sm">Your first question will appear shortly.</p>
-                    </div>
+                <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto animate-fade-in">
+                    <PracticeLoadingCard
+                        topic={sessionTopic || "General Topic"}
+                        difficulty={sessionDifficulty || "mixed"}
+                        isNextBatch={false}
+                    />
                 </div>
             );
         }
@@ -649,9 +678,11 @@ export default function PracticePage({
                                     onClick={() => {
                                         const topicParam = searchParams?.get("topic");
                                         const subjectParam = searchParams?.get("subject");
+                                        const roadmapIdParam = searchParams?.get("roadmap_id");
                                         if (topicParam) {
                                             let query = `?topic=${encodeURIComponent(topicParam)}&source=${source}`;
                                             if (subjectParam) query += `&subject=${encodeURIComponent(subjectParam)}`;
+                                            if (roadmapIdParam) query += `&roadmap_id=${encodeURIComponent(roadmapIdParam)}`;
                                             router.push(`/learning${query}`);
                                         } else {
                                             setSessionStarted(false);
@@ -688,13 +719,11 @@ export default function PracticePage({
         if (isGenerating && questions.length === 0) {
             return (
                 <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto">
-                    <div className="flex-1 flex items-center justify-center px-6 py-4">
-                        <div className="text-center space-y-4">
-                            <div className="w-12 h-12 mx-auto border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
-                            <h3 className="text-lg font-semibold text-white">Preparing your practice session...</h3>
-                            <p className="text-slate-400 text-sm">Your first question will appear shortly.</p>
-                        </div>
-                    </div>
+                    <PracticeLoadingCard
+                        topic={sessionTopic || "General Topic"}
+                        difficulty={sessionDifficulty || "Medium"}
+                        isNextBatch={false}
+                    />
                 </div>
             );
         }
@@ -717,15 +746,24 @@ export default function PracticePage({
 
         const currentQuestion = questions[currentQuestionIndex];
         if (!currentQuestion) {
+            if (waitingForQuestion) {
+                return (
+                    <div className="flex-1 flex flex-col h-full bg-[#090D1F] overflow-y-auto">
+                        <PracticeLoadingCard
+                            topic={sessionTopic || "General Topic"}
+                            difficulty={sessionDifficulty || "Medium"}
+                            isNextBatch={true}
+                        />
+                    </div>
+                );
+            }
             return (
                 <div className="flex-1 flex items-center justify-center bg-[#090D1F] px-6 py-8">
                     <div className="max-w-md text-center space-y-3">
                         <div className="text-3xl">🧩</div>
-                        <h3 className="text-lg font-semibold text-white">
-                            {waitingForQuestion ? "Preparing the next question..." : "Question unavailable"}
-                        </h3>
+                        <h3 className="text-lg font-semibold text-white">Question Unavailable</h3>
                         <p className="text-sm text-slate-400">
-                            {waitingForQuestion ? "Your session is still being prepared." : "This question was not returned by the practice session. Try the next batch again."}
+                            This question was not returned by the practice session. Try restarting the session.
                         </p>
                     </div>
                 </div>
@@ -762,9 +800,11 @@ export default function PracticePage({
                         onClick={() => {
                             const topicParam = searchParams?.get("topic");
                             const subjectParam = searchParams?.get("subject");
+                            const roadmapIdParam = searchParams?.get("roadmap_id");
                             if (topicParam) {
                                 let query = `?topic=${encodeURIComponent(topicParam)}&source=${source}`;
                                 if (subjectParam) query += `&subject=${encodeURIComponent(subjectParam)}`;
+                                if (roadmapIdParam) query += `&roadmap_id=${encodeURIComponent(roadmapIdParam)}`;
                                 router.push(`/learning${query}`);
                             } else {
                                 router.push(source === 'personal' ? '/personal' : '/courses');
@@ -806,7 +846,7 @@ export default function PracticePage({
                             </div>
                             {answerResult.explanation && (
                                 <p className="text-sm text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
-                                    {answerResult.explanation}
+                                    {renderFormattedText(answerResult.explanation)}
                                 </p>
                             )}
                         </div>

@@ -210,7 +210,6 @@ export default function LearningPage() {
         setHasError(false);
 
         setIsTypewriting(true);
-        let currentTypewriterLength = 0;
         const finishSummaryWhenDisplayed = () => {
             if (
                 abortControllerRef.current !== abortController ||
@@ -231,25 +230,31 @@ export default function LearningPage() {
                 typewriterIntervalRef.current = null;
             }
         };
-        typewriterIntervalRef.current = setInterval(() => {
-            if (currentTypewriterLength < targetTextRef.current.length) {
-                const diff = targetTextRef.current.length - currentTypewriterLength;
-                // Faster catch-up steps so text flows continuously and doesn't lag behind fast streaming
-                const step = diff > 400 ? 120 : diff > 150 ? 50 : diff > 50 ? 20 : diff > 15 ? 8 : 3;
-                currentTypewriterLength += step;
-                const nextTextChunk = targetTextRef.current.slice(0, currentTypewriterLength);
-                
-                setData(prev => {
-                    if (!prev) return prev;
-                    return {
-                        ...prev,
-                        notesResponse: { content: nextTextChunk }
-                    };
-                });
-            } else {
-                finishSummaryWhenDisplayed();
-            }
-        }, 20); // Faster interval for fluid rendering
+
+        let currentTypewriterLength = 0;
+        const startTypewriter = () => {
+            setIsTypewriting(true);
+            currentTypewriterLength = 0;
+            typewriterIntervalRef.current = setInterval(() => {
+                if (currentTypewriterLength < targetTextRef.current.length) {
+                    const diff = targetTextRef.current.length - currentTypewriterLength;
+                    // Faster catch-up steps so text flows continuously and doesn't lag behind fast streaming
+                    const step = diff > 400 ? 120 : diff > 150 ? 50 : diff > 50 ? 20 : diff > 15 ? 8 : 3;
+                    currentTypewriterLength += step;
+                    const nextTextChunk = targetTextRef.current.slice(0, currentTypewriterLength);
+                    
+                    setData(prev => {
+                        if (!prev) return prev;
+                        return {
+                            ...prev,
+                            notesResponse: { content: nextTextChunk }
+                        };
+                    });
+                } else {
+                    finishSummaryWhenDisplayed();
+                }
+            }, 20); // Faster interval for fluid rendering
+        };
 
         const runStream = async (topicToStream: string): Promise<boolean> => {
             activeRequestTopicRef.current = topicToStream;
@@ -301,11 +306,6 @@ export default function LearningPage() {
             }
         };
 
-        let streamPromise: Promise<boolean> | null = null;
-        if (activeTopic) {
-            streamPromise = runStream(activeTopic);
-        }
-
         try {
             const response = await getLearningData(activeTopic, studentId, activeSubject, roadmapId, activeSource, undefined, abortController.signal, canSkipSidebar);
             
@@ -356,9 +356,6 @@ export default function LearningPage() {
                                      response.notesResponse.content.length > 0;
 
             if (hasCachedContent && !forceRegenerate) {
-                if (streamPromise) {
-                    abortController.abort();
-                }
                 setData(response);
                 setIsContentLoading(false);
                 setIsTypewriting(false);
@@ -370,19 +367,12 @@ export default function LearningPage() {
                 return;
             }
 
-            if (streamPromise && targetTextRef.current) {
-                response.notesResponse.content = targetTextRef.current;
-            } else {
-                response.notesResponse.content = "";
-            }
-
+            // Cache miss / force regenerate: Start typewriter and request stream
+            startTypewriter();
+            response.notesResponse.content = "";
             setData(response);
 
-            if (!streamPromise) {
-                await runStream(selectedTopic);
-            } else {
-                await streamPromise;
-            }
+            await runStream(selectedTopic);
             setIsContentLoading(false);
             finishSummaryWhenDisplayed();
         } catch (e: any) {
@@ -456,12 +446,14 @@ export default function LearningPage() {
     const handleSuggestionClick = (id: string) => {
         setSelectedSuggestion(id);
         const targetTopic = data?.selectedTopic || activeTopic || "";
+        const subjectQuery = activeSubject ? `&subject=${encodeURIComponent(activeSubject)}` : "";
+        const roadmapQuery = roadmapIdParam ? `&roadmap_id=${encodeURIComponent(roadmapIdParam)}` : "";
         if (id === "s1") {
             // Standard Practice
-            router.push(`/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}&mode=topic`);
+            router.push(`/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}&mode=topic${subjectQuery}${roadmapQuery}`);
         } else if (id === "s2") {
             // Take short quiz
-            router.push(`/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}&mode=quiz`);
+            router.push(`/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}&mode=quiz${subjectQuery}${roadmapQuery}`);
         }
     };
  
@@ -699,10 +691,12 @@ export default function LearningPage() {
     const handleLearningActionClick = async (id: string) => {
         if (!data?.selectedTopic) return;
         
+        const subjectQuery = activeSubject ? `&subject=${encodeURIComponent(activeSubject)}` : "";
+        const roadmapQuery = roadmapIdParam ? `&roadmap_id=${encodeURIComponent(roadmapIdParam)}` : "";
         if (id === "practice_topic") {
-            router.push(`/practice?topic=${encodeURIComponent(data.selectedTopic)}&source=${activeSource}`);
+            router.push(`/practice?topic=${encodeURIComponent(data.selectedTopic)}&source=${activeSource}${subjectQuery}${roadmapQuery}`);
         } else if (id === "take_quiz") {
-            router.push(`/practice?topic=${encodeURIComponent(data.selectedTopic)}&mode=exam&source=${activeSource}`);
+            router.push(`/practice?topic=${encodeURIComponent(data.selectedTopic)}&mode=exam&source=${activeSource}${subjectQuery}${roadmapQuery}`);
         } else if (id === "add_revision") {
             await handleAddRevision();
         } else if (id === "view_notes") {
@@ -836,7 +830,9 @@ export default function LearningPage() {
                     <button
                         onClick={() => {
                             const targetTopic = data?.selectedTopic || activeTopic || "";
-                            router.push(`/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}`);
+                            const subjectQuery = activeSubject ? `&subject=${encodeURIComponent(activeSubject)}` : "";
+                            const roadmapQuery = roadmapIdParam ? `&roadmap_id=${encodeURIComponent(roadmapIdParam)}` : "";
+                            router.push(`/practice?topic=${encodeURIComponent(targetTopic)}&source=${activeSource}${subjectQuery}${roadmapQuery}`);
                         }}
                         className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-sm py-3.5 rounded-xl transition-all shadow-[0_4px_15px_rgba(99,102,241,0.2)] flex items-center justify-center gap-2 cursor-pointer border border-indigo-500/20 active:scale-[0.98] mt-6"
                     >

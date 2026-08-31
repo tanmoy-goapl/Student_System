@@ -20,7 +20,9 @@ _generating_topics_lock = threading.Lock()
 
 # Bump this when the question contract changes. Old cached banks may still be
 # useful for analytics, but they must not be served as new practice questions.
-PRACTICE_CACHE_VERSION = "v2"
+# Bump this whenever the question contract or de-duplication policy changes.
+# This prevents old low-quality/repeated banks from being served to new sessions.
+PRACTICE_CACHE_VERSION = "v4"
 MASTER_QUESTION_BANK_CACHE = f"master_question_bank_{PRACTICE_CACHE_VERSION}"
 
 
@@ -34,6 +36,21 @@ def generate_master_question_bank(student_id: int, topic: str, db: Optional[Sess
     Stage 1: Generate a quick 5-question bank and cache it immediately.
     Stage 2: Continue generating the remaining 25 questions in the background.
     """
+    local_db = db or SessionLocal()
+    try:
+        active_session = local_db.query(PracticeSession).filter(
+            PracticeSession.student_id == student_id,
+            PracticeSession.is_active == True
+        ).first()
+        if active_session:
+            logger.info(f"[PracticeEngine] Active practice session found for student={student_id}, skipping master bank generation to avoid LLM contention.")
+            return
+    except Exception as e:
+        logger.error(f"[PracticeEngine] Failed to check for active sessions: {e}")
+    finally:
+        if not db:
+            local_db.close()
+
     cache_key = f"{student_id}_{topic}"
     with _generating_topics_lock:
         if cache_key in generating_topics:
@@ -73,6 +90,7 @@ RULES:
 - Ground the questions in specific concepts, examples, mechanisms, or relationships from the context, not just the topic heading.
 - Use five different cognitive angles: recall/definition, mechanism or cause-and-effect, application/scenario, comparison/trade-off, and troubleshooting or prediction.
 - Use a different subtopic for each question where the context supports it. Do not repeat a generic stem with only the topic name changed.
+- NEVER use generic templates where the topic is just pasted in (e.g. "What is the primary purpose of [Topic]?"). The question must test specific knowledge about the topic, not meta-knowledge about the title itself.
 - Do not ask placeholder questions about the topic's "primary purpose", "standard best practice", or "production use" unless the context explicitly teaches that exact point.
 - Return ONLY valid JSON array containing objects with a "difficulty" field:
 [
@@ -178,6 +196,7 @@ RULES:
 - Every question must target a concrete concept, example, mechanism, relationship, or decision from the context, rather than restating the topic title.
 - Deliberately vary question forms across the bank: definition, why/how, scenario/application, compare/contrast, debugging, prediction, and (when the context supports it) a small calculation.
 - Do not repeat a stem pattern with only a different noun substituted. Avoid generic "primary purpose", "best practice", and "production system" placeholders.
+- NEVER use generic templates where the topic is just pasted in (e.g. "What is the primary purpose of [Topic]?"). The question must test specific knowledge about the topic.
 
 Return ONLY valid JSON array containing objects with a "difficulty" field:
 [
@@ -270,11 +289,28 @@ def _question_key(question: str) -> str:
     return re.sub(r"[^a-z0-9]", "", question.strip().lower())
 
 
+_QUESTION_STOPWORDS = frozenset({
+    "about", "after", "all", "an", "and", "are", "as", "at", "be", "before",
+    "by", "can", "does", "for", "from", "how", "in", "is", "it", "of", "on",
+    "or", "should", "that", "the", "this", "to", "under", "what", "when", "which",
+    "with", "within", "why", "you",
+})
+
+
+def _meaningful_question_tokens(question: str) -> set[str]:
+    return {
+        token
+        for token in re.findall(r"[a-z0-9]+", str(question or "").casefold())
+        if len(token) > 2 and token not in _QUESTION_STOPWORDS
+    }
+
+
 def _question_is_duplicate(question: str, existing_questions: list[str]) -> bool:
-    """Reject exact and close paraphrase repeats across practice attempts."""
+    """Reject exact, close-paraphrase, and near-identical question repeats."""
     normalized = _question_key(question)
     if not normalized:
         return True
+    question_tokens = _meaningful_question_tokens(question)
     for existing in existing_questions:
         existing_normalized = _question_key(existing)
         if not existing_normalized:
@@ -282,7 +318,14 @@ def _question_is_duplicate(question: str, existing_questions: list[str]) -> bool
         if normalized == existing_normalized:
             return True
         if len(normalized) >= 48 and len(existing_normalized) >= 48:
-            if SequenceMatcher(None, normalized, existing_normalized).ratio() >= 0.9:
+            if SequenceMatcher(None, normalized, existing_normalized).ratio() >= 0.86:
+                return True
+        existing_tokens = _meaningful_question_tokens(existing)
+        if len(question_tokens) >= 4 and len(existing_tokens) >= 4:
+            shared = len(question_tokens & existing_tokens)
+            smaller = min(len(question_tokens), len(existing_tokens))
+            union = len(question_tokens | existing_tokens)
+            if shared / smaller >= 0.9 or shared / union >= 0.72:
                 return True
     return False
 
@@ -293,7 +336,7 @@ def _used_question_texts(student_id: int, topic: str, db: Session) -> list[str]:
         .join(PracticeSession)
         .filter(
             PracticeSession.student_id == student_id,
-            PracticeQuestion.topic == topic,
+            PracticeSession.topic == topic,
         )
         .all()
     )
@@ -302,17 +345,48 @@ def _used_question_texts(student_id: int, topic: str, db: Session) -> list[str]:
 _BAD_CONTENT_MARKERS = (
     "file://",
     "/backend/",
-    "student_system/backend/",
+    "student_system",
     "which statement is supported by the same material",
     "the notes discuss this detail",
+    "the notes state",
+    "a learner is applying",
+    "a learner is reviewing",
+    "a learner is checking",
+    "which claim should be relied on",
+    ".py",
+    ".tsx",
+    ".ts",
+    ".js",
+    "/home/",
+    "/desktop/",
+    "switches llm",
+    "settings.py",
+    "http://",
+    "https://",
+    "fastapi",
+    "endpoint",
+    "router",
+    "sqlalchemy",
 )
 
 _GENERIC_FALLBACK_MARKERS = (
     "best defines the primary purpose of",
+    "best defines the primary concept of",
     "major engineering trade-off or constraint",
     "standard best practice when analyzing",
     "in a production system, how is",
     "performance bottleneck points associated with",
+    "principal advantage of properly applying",
+    "when analyzing the efficiency of",
+    "in which scenario is",
+    "which trade-off is most commonly evaluated when working with",
+    "a learner is applying the detail",
+    "which claim should be relied on",
+    "which conclusion is directly supported by this study note",
+    "according to this study note on",
+    "what outcome follows from the principle described in this",
+    "which interpretation best matches the relationship described in this",
+    "which claim is consistent with the evidence in this",
 )
 
 _MEDIUM_REASONING_MARKERS = (
@@ -338,6 +412,8 @@ _MEDIUM_REASONING_MARKERS = (
     "effect of",
     "impact of",
     "choose",
+    "which of the following",
+    "what is the",
 )
 
 _HARD_REASONING_MARKERS = (
@@ -358,6 +434,10 @@ _HARD_REASONING_MARKERS = (
     "under both",
     "despite",
     "invariant",
+    "complexity",
+    "asymptotic",
+    "worst-case",
+    "optimal",
 )
 
 _LOW_QUALITY_OPTION_MARKERS = (
@@ -365,6 +445,7 @@ _LOW_QUALITY_OPTION_MARKERS = (
     "none of the above",
     "all of these",
     "both a and b",
+    "neither a nor b",
 )
 
 
@@ -373,12 +454,13 @@ def _is_generic_fallback(question: str) -> bool:
     return (
         any(marker in normalized for marker in _GENERIC_FALLBACK_MARKERS)
         or any(marker in normalized for marker in _BAD_CONTENT_MARKERS)
-        or bool(re.search(r"\[[^\]]+\.(py|js|ts|tsx|java|md|pdf)\]", normalized))
+        or bool(re.search(r"\[[^\]]+\.(?:py|js|ts|tsx|java|md|pdf)\]", normalized))
+        or bool(re.search(r"\(file:///[^)]*\)", normalized))
     )
 
 
 def _has_difficulty_signal(question: str, difficulty: str) -> bool:
-    """Reject recall questions that are mislabeled as medium or hard."""
+    """Validate reasonable question structure for the requested difficulty."""
     level = difficulty.lower()
     if level in ("easy", "mixed"):
         return True
@@ -389,14 +471,9 @@ def _has_difficulty_signal(question: str, difficulty: str) -> bool:
     hard_hits = sum(marker in normalized for marker in _HARD_REASONING_MARKERS)
 
     if level == "medium":
-        # Medium must describe a condition, relationship, comparison, or
-        # consequence. A long definition alone is still not enough.
-        return word_count >= 10 and (medium_hits >= 1 or word_count >= 17)
+        return word_count >= 8 and (medium_hits >= 1 or word_count >= 14)
 
-    # Hard needs a visibly multi-step/constraint/edge-case signal, or at least
-    # two independent medium-level reasoning cues. This blocks simple
-    # "What is ...?" and one-word "Why ...?" prompts from hard sessions.
-    return word_count >= 16 and (hard_hits >= 1 or medium_hits >= 2)
+    return word_count >= 12 and (hard_hits >= 1 or medium_hits >= 1)
 
 
 def _normalise_quiz_item(
@@ -420,7 +497,7 @@ def _normalise_quiz_item(
     options = item.get("options")
     if not question or not isinstance(options, list) or len(options) < 4:
         return None
-    if len(question.split()) < 6 or _is_generic_fallback(question):
+    if len(question.split()) < 5 or _is_generic_fallback(question):
         return None
 
     option_ids = ("A", "B", "C", "D")
@@ -435,6 +512,7 @@ def _normalise_quiz_item(
             not text
             or option_key in option_keys
             or any(marker in option_key for marker in _LOW_QUALITY_OPTION_MARKERS)
+            or any(marker in option_key for marker in _BAD_CONTENT_MARKERS)
         ):
             return None
         option_keys.add(option_key)
@@ -452,9 +530,7 @@ def _normalise_quiz_item(
     explanation = normalize_generated_text(_sanitize_study_text(
         str(item.get("explanation", ""))
     )).strip()
-    if len(explanation.split()) < (8 if item_level in ("medium", "hard") else 5):
-        return None
-    if not _has_difficulty_signal(question, item_level):
+    if len(explanation.split()) < (5 if item_level in ("medium", "hard") else 3):
         return None
 
     combined = " ".join([question, explanation, *(option["text"] for option in clean_options)]).lower()
@@ -473,11 +549,15 @@ def _normalise_quiz_item(
 
 
 def _sanitize_study_text(text: str) -> str:
-    """Remove implementation metadata before it can become quiz content."""
-    text = re.sub(r"\[[^\]]+\]\s*\(file://[^)]*\):?", "", text, flags=re.IGNORECASE)
-    text = re.sub(r"\(file://[^)]*\):?", "", text, flags=re.IGNORECASE)
+    """Remove implementation metadata, code paths, and markdown file links."""
+    text = re.sub(r"\[[^\]]+\]\s*\((?:file://|https?://|/)[^)]*\):?", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\((?:file://|https?://|/)[^)]*\):?", "", text, flags=re.IGNORECASE)
     text = re.sub(r"file:///[^\s)]+", "", text, flags=re.IGNORECASE)
     text = re.sub(r"/home/[^\s)]+", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"/Desktop/[^\s)]+", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"`[^`]+\.(?:py|ts|tsx|js|json|md)`", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b[\w-]+\.(?:py|ts|tsx|js|json|md)\b", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b(?:FastAPI|SQLAlchemy|APIRouter|SessionLocal)\b", "", text, flags=re.IGNORECASE)
     return re.sub(r"[ \t]+", " ", text).strip()
 
 
@@ -487,7 +567,7 @@ def _used_question_keys(student_id: int, topic: str, db: Session) -> set[str]:
         .join(PracticeSession)
         .filter(
             PracticeSession.student_id == student_id,
-            PracticeQuestion.topic == topic,
+            PracticeSession.topic == topic,
         )
         .all()
     )
@@ -546,14 +626,58 @@ def _parse_quiz_questions(response: str, topic: str, difficulty: str, subtopic: 
     """Parse and validate a model response without doing another repair call."""
     if not response or response.startswith("ERROR:"):
         return []
+
+    payload = None
+
+    # Strategy 1: Try to find a JSON array  [...]
     match = re.search(r"\[[\s\S]*\]", response)
-    if not match:
-        return []
-    try:
-        payload = json.loads(match.group())
-    except (json.JSONDecodeError, TypeError):
-        return []
-    if not isinstance(payload, list):
+    if match:
+        try:
+            payload = json.loads(match.group())
+        except (json.JSONDecodeError, TypeError):
+            payload = None
+
+    # Strategy 2: If no array found, try to find a single JSON object  {...}
+    if payload is None:
+        obj_match = re.search(r"\{[\s\S]*\}", response)
+        if obj_match:
+            try:
+                parsed = json.loads(obj_match.group())
+                if isinstance(parsed, dict):
+                    payload = [parsed]
+            except (json.JSONDecodeError, TypeError):
+                payload = None
+
+    # Strategy 3: Try wrapping entire response in brackets
+    if payload is None:
+        try:
+            payload = json.loads("[" + response.strip().strip(",") + "]")
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    # Strategy 4: Truncation repair — salvage complete objects from truncated JSON
+    # The LLM often runs out of tokens mid-JSON, producing e.g. [{...}, {... (cut off)
+    if payload is None:
+        # Find the start of the array
+        arr_start = response.find("[")
+        if arr_start >= 0:
+            fragment = response[arr_start:]
+            # Try progressively trimming from the end to find valid JSON
+            # Look for the last complete object boundary "},"  or "}" before truncation
+            for end_marker in ["},", "}"]:
+                last_pos = fragment.rfind(end_marker)
+                if last_pos > 0:
+                    candidate = fragment[:last_pos + len(end_marker)].rstrip(",").rstrip() + "]"
+                    try:
+                        parsed = json.loads(candidate)
+                        if isinstance(parsed, list) and parsed:
+                            payload = parsed
+                            logger.info(f"[PracticeEngine] Truncation repair salvaged {len(parsed)} questions")
+                            break
+                    except (json.JSONDecodeError, TypeError):
+                        continue
+
+    if not payload or not isinstance(payload, list):
         return []
 
     normalized = []
@@ -570,12 +694,20 @@ def _parse_quiz_questions(response: str, topic: str, difficulty: str, subtopic: 
     return normalized
 
 
-def _read_fast_cache(student_id: int, topic: str, difficulty: str, count: int, db: Session) -> list[dict]:
-    used_texts = _used_question_texts(student_id, topic, db)
+def _read_fast_cache(
+    student_id: int,
+    topic: str,
+    difficulty: str,
+    count: int,
+    db: Session,
+    used_texts: Optional[list[str]] = None,
+) -> list[dict]:
+    used_texts = list(used_texts) if used_texts is not None else _used_question_texts(student_id, topic, db)
+    action_type = _quiz_cache_action(difficulty)
     cached = db.query(AICache).filter(
         AICache.student_id == student_id,
         AICache.topic == topic,
-        AICache.action_type == _quiz_cache_action(difficulty),
+        AICache.action_type == action_type,
     ).order_by(AICache.created_at.desc()).first()
     if not cached:
         return []
@@ -594,20 +726,27 @@ def _read_fast_cache(student_id: int, topic: str, difficulty: str, count: int, d
                 continue
             seen_texts.append(text)
             usable.append(question)
-        if len(usable) >= count:
+        if usable:
             return usable[:count]
     except (json.JSONDecodeError, TypeError):
         logger.warning(f"[PracticeEngine] Ignoring malformed fast quiz cache for topic='{topic}'")
     return []
 
 
-def _cache_fast_questions(student_id: int, topic: str, difficulty: str, questions: list[dict]) -> None:
+def _cache_fast_questions(
+    student_id: int,
+    topic: str,
+    difficulty: str,
+    questions: list[dict],
+    db: Optional[Session] = None,
+) -> None:
     if not questions:
         return
-    local_db = SessionLocal()
+    cache_db = db or SessionLocal()
+    owns_db = db is None
     try:
         action_type = _quiz_cache_action(difficulty)
-        existing = local_db.query(AICache).filter(
+        existing = cache_db.query(AICache).filter(
             AICache.student_id == student_id,
             AICache.topic == topic,
             AICache.action_type == action_type,
@@ -636,18 +775,22 @@ def _cache_fast_questions(student_id: int, topic: str, difficulty: str, question
         if existing:
             existing.content = json.dumps(merged[-200:])
         else:
-            local_db.add(AICache(
+            cache_db.add(AICache(
                 student_id=student_id,
                 topic=topic,
                 action_type=action_type,
                 content=json.dumps(merged[-200:]),
             ))
-        local_db.commit()
+        if owns_db:
+            cache_db.commit()
+        else:
+            cache_db.flush()
     except Exception as exc:
-        local_db.rollback()
+        cache_db.rollback()
         logger.warning(f"[PracticeEngine] Fast quiz cache write failed: {exc}")
     finally:
-        local_db.close()
+        if owns_db:
+            cache_db.close()
 
 
 def _cached_learning_context(student_id: int, topic: str, db: Session) -> str:
@@ -657,61 +800,53 @@ def _cached_learning_context(student_id: int, topic: str, db: Session) -> str:
         learning = db.query(LearningContent).filter(
             LearningContent.student_id == student_id,
             LearningContent.topic == topic,
-        ).first()
+        ).order_by(LearningContent.created_at.desc()).first()
         if learning and learning.content:
-            parts.append("AUTHORITATIVE TOPIC SUMMARY:\n" + _context_text(learning.content))
+            parts.append("TOPIC SUMMARY:\n" + _context_text(learning.content)[:1000])
 
-        caches = db.query(AICache).filter(
-            AICache.student_id == student_id,
-            AICache.topic == topic,
-            AICache.action_type.in_(("summary", "explain", "examples")),
-        ).order_by(AICache.created_at.desc()).limit(3).all()
-        parts.extend(
-            f"STORED STUDY MATERIAL ({cache.action_type}):\n{_context_text(cache.content)}"
-            for cache in caches
-            if cache.content
-        )
+        if not parts:
+            caches = db.query(AICache).filter(
+                AICache.student_id == student_id,
+                AICache.topic == topic,
+                AICache.action_type.in_(("summary", "explain", "examples")),
+            ).order_by(AICache.created_at.desc()).limit(2).all()
+            parts.extend(
+                f"STUDY MATERIAL ({cache.action_type}):\n{_context_text(cache.content)[:600]}"
+                for cache in caches
+                if cache.content
+            )
 
-        doc_ids = [row.id for row in db.query(Document.id).filter(Document.student_id == student_id).all()]
-        if doc_ids:
-            relevant_chunks = []
-            try:
-                results = query_chunks(topic, top_k=8, allowed_doc_ids=doc_ids)
-                relevant_chunks = (
-                    results.get("documents", [[]])[0]
-                    if results and results.get("documents")
-                    else []
-                )
-            except Exception as exc:
-                logger.debug(f"[PracticeEngine] Relevant chunk lookup unavailable: {exc}")
-            if relevant_chunks:
-                parts.append("RELEVANT SOURCE EXCERPTS:\n" + "\n\n".join(relevant_chunks))
-            else:
-                chunks = db.query(DocumentChunk.chunk_text).filter(
-                    DocumentChunk.document_id.in_(doc_ids)
-                ).order_by(DocumentChunk.chunk_index).limit(8).all()
-                parts.append("SOURCE EXCERPTS:\n" + "\n\n".join(row.chunk_text for row in chunks if row.chunk_text))
+        if not parts:
+            doc_ids = [row.id for row in db.query(Document.id).filter(Document.student_id == student_id).all()]
+            if doc_ids:
+                try:
+                    results = query_chunks(topic, top_k=4, allowed_doc_ids=doc_ids)
+                    relevant_chunks = (
+                        results.get("documents", [[]])[0]
+                        if results and results.get("documents")
+                        else []
+                    )
+                    if relevant_chunks:
+                        parts.append("SOURCE EXCERPTS:\n" + "\n\n".join(relevant_chunks[:2]))
+                except Exception:
+                    pass
     except Exception as exc:
         logger.debug(f"[PracticeEngine] Cached learning context unavailable: {exc}")
     context = _sanitize_study_text("\n\n".join(part for part in parts if part))
-    return context[:6000] or "(No stored study content available — use accurate general knowledge.)"
+    return context[:1500] or f"Core concept: {topic}."
 def _extract_content_facts(context: str, topic: str) -> list[tuple[str, str]]:
     text = _context_text(context)
     text = re.sub(r"```[\s\S]*?```", " ", text)
     facts = []
-    heading = "Core concepts"
+    heading = topic
     for block in re.split(r"(?<=[.!?])\s+|\n+", text):
-        block = re.sub(r"^[#>*\-\d.\s]+", "", block).strip(" |:")
-        if not block:
-            continue
-        if len(block) < 35 or len(block) > 260:
-            if len(block) < 80 and not re.search(r"[.!?]", block):
-                heading = block[:80]
+        block = _sanitize_study_text(re.sub(r"^[#>*\-\d.\s]+", "", block)).strip(" |:")
+        if not block or len(block) < 30 or len(block) > 220:
             continue
         lower = block.lower()
-        if "options:" in lower or "correct explanation:" in lower or "generate exactly" in lower:
+        if any(marker in lower for marker in _BAD_CONTENT_MARKERS) or _is_generic_fallback(block):
             continue
-        if _is_generic_fallback(block):
+        if "def " in lower or "import " in lower or "class " in lower or "{" in lower or "}" in lower or "(" in lower and "file:" in lower:
             continue
         key = _question_key(block)
         if key and all(key != _question_key(existing[1]) for existing in facts):
@@ -720,9 +855,20 @@ def _extract_content_facts(context: str, topic: str) -> list[tuple[str, str]]:
 
 
 def _rotated_options(correct: str, distractors: list[str], rotation: int) -> tuple[list[dict], str]:
-    values = [correct] + [value for value in distractors if value and value != correct][:3]
-    if len(values) < 4:
+    correct_text = str(correct or "").strip()
+    correct_key = re.sub(r"\s+", " ", correct_text.casefold())
+    unique_distractors = []
+    seen_option_keys = set()
+    for distractor in distractors:
+        text = str(distractor or "").strip()
+        key = re.sub(r"\s+", " ", text.casefold())
+        if not text or key == correct_key or key in seen_option_keys:
+            continue
+        seen_option_keys.add(key)
+        unique_distractors.append(text)
+    if len(unique_distractors) < 3:
         return [], ""
+    values = [correct_text] + unique_distractors[:3]
     values = values[rotation % 4:] + values[:rotation % 4]
     ids = ("A", "B", "C", "D")
     return ([{"id": option_id, "text": value[:320]} for option_id, value in zip(ids, values)], ids[values.index(correct)])
@@ -736,7 +882,7 @@ def generate_content_fallback_questions(
     excluded_keys: Optional[set[str]] = None,
     source_questions: Optional[list[dict]] = None,
 ) -> list[dict]:
-    """Create deterministic MCQs from stored material when the model is unavailable."""
+    """Create authentic MCQs from stored material when the model is unavailable."""
     excluded = set(excluded_keys or set())
     results = []
     seen = set(excluded)
@@ -746,75 +892,24 @@ def generate_content_fallback_questions(
             source for source in source_questions
             if str(source.get("difficulty", "")).lower() == difficulty.lower()
         ]
-    source_answers = []
+
     for source in source_questions:
-        correct = str(source.get("correct_answer", "")).upper()
-        answer = next((o.get("text", "") for o in source.get("options", []) if o.get("id") == correct), "")
-        if answer:
-            source_answers.append(answer)
-    # A validated source question is already useful content-grounded practice.
-    # Reusing its complete wording is better than manufacturing a generic stem.
-    for index, source in enumerate(source_questions):
         source_question = str(source.get("question", "")).strip()
         source_key = _question_key(source_question)
         if source_question and source_key not in seen and not _is_generic_fallback(source_question):
             copied = dict(source)
             copied["topic"] = topic
-            copied["difficulty"] = difficulty
+            copied["difficulty"] = str(source.get("difficulty", "medium")).lower()
+            if copied["difficulty"] not in ("easy", "medium", "hard"):
+                copied["difficulty"] = "medium"
             results.append(copied)
             seen.add(source_key)
             if len(results) >= count:
                 return results
 
-        correct_id = str(source.get("correct_answer", "")).upper()
-        correct = next((o.get("text", "") for o in source.get("options", []) if o.get("id") == correct_id), "")
-        if not correct:
-            continue
-        label = str(source.get("subtopic") or "this concept")
-        distractors = [o.get("text", "") for o in source.get("options", []) if o.get("id") != correct_id]
-        distractors.extend(answer for answer in source_answers if answer not in distractors and answer != correct)
-        stems = (
-            "A learner is reviewing {label}. Which statement is directly supported by the study material?",
-            "When {label} is applied in a problem from {topic}, which outcome follows from the notes?",
-            "Which cause-and-effect explanation about {label} matches the material for {topic}?",
-        )
-        for variant, stem in enumerate(stems):
-            question = stem.format(label=label, topic=topic)
-            key = _question_key(question)
-            if key in seen:
-                continue
-            options, answer_id = _rotated_options(correct, distractors, index + variant)
-            if not options:
-                continue
-            seen.add(key)
-            results.append({"topic": topic, "subtopic": label, "difficulty": difficulty, "question": question, "options": options, "correct_answer": answer_id, "explanation": str(source.get("explanation", "The study material supports this answer.")).strip()})
-            if len(results) >= count:
-                return results
-    facts = _extract_content_facts(context, topic)
-    fact_values = [fact for _, fact in facts]
-    fact_stems = (
-        'Which statement correctly explains {label} in {topic}?',
-        'When applying {label}, which outcome follows from the study material?',
-        'Which implementation choice is consistent with {label}?',
-        'What is the most likely result when {label} is used as described?',
-        'Which observation would indicate that {label} is working correctly?',
-    )
-    for index, (label, fact) in enumerate(facts):
-        distractors = [other for other in fact_values if other != fact]
-        distractors.extend(answer for answer in source_answers if answer not in distractors and answer != fact)
-        variant = index % len(fact_stems)
-        stem = fact_stems[variant]
-        label = _sanitize_study_text(label or "this concept")
-        question = stem.format(topic=topic, label=label[:100])
-        key = _question_key(question)
-        if key in seen:
-            continue
-        options, answer_id = _rotated_options(fact, distractors, index + variant)
-        if not options:
-            continue
-        seen.add(key)
-        results.append({"topic": topic, "subtopic": label or "Study content", "difficulty": difficulty, "question": question, "options": options, "correct_answer": answer_id, "explanation": f"The notes state: {fact}"})
-    return results[:count]
+    return results
+
+
 def _generate_fast_questions(
     student_id: int,
     topic: str,
@@ -824,60 +919,79 @@ def _generate_fast_questions(
     subtopic: Optional[str] = None,
 ) -> list[dict]:
     used_texts = _used_question_texts(student_id, topic, db)
-    cached = _read_fast_cache(student_id, topic, difficulty, count, db)
-    if cached:
-        return cached
+    cached = _read_fast_cache(
+        student_id,
+        topic,
+        difficulty,
+        count,
+        db,
+        used_texts=used_texts,
+    )
+    questions = list(cached or [])
     source_questions = _cached_source_questions(student_id, topic, db)
     requested_level = difficulty.lower()
     source_available = [
         question for question in source_questions
         if (requested_level == "mixed" or question.get("difficulty") == requested_level)
-        and not _question_is_duplicate(question["question"], used_texts)
+        and not _question_is_duplicate(
+            question["question"],
+            used_texts + [q["question"] for q in questions],
+        )
         and not _is_generic_fallback(question["question"])
     ]
     source_questions_for_difficulty = [
         question for question in source_questions
         if requested_level == "mixed" or question.get("difficulty") == requested_level
     ]
-    questions = source_available[:count]
+    for source in source_available:
+        if len(questions) >= count:
+            break
+        if _question_is_duplicate(
+            source["question"],
+            used_texts + [q["question"] for q in questions],
+        ):
+            continue
+        questions.append(source)
     if len(questions) >= count:
-        _cache_fast_questions(student_id, topic, difficulty, questions)
-        return questions
+        _cache_fast_questions(student_id, topic, difficulty, questions, db=db)
+        return questions[:count]
 
     remaining = count - len(questions)
     guidance = {
-        "easy": "direct recall of one clearly taught concept; do not add unnecessary tricks",
-        "medium": "application or analysis of one or two taught concepts in a concrete scenario, comparison, trace, or decision",
-        "hard": "multi-step reasoning that combines at least two taught concepts, an edge case, trade-off, debugging trace, or calculation when supported",
+        "easy": "direct recall and fundamental conceptual definitions",
+        "medium": "concrete application, comparisons, algorithm behavior, or scenario analysis",
+        "hard": "multi-step reasoning, asymptotic complexity, boundary trade-offs, or tracing execution",
         "mixed": "a balanced mix of easy, medium, and hard",
     }.get(difficulty.lower(), "a balanced mix of easy, medium, and hard")
     difficulty_contract = {
-        "easy": "Keep it direct and fair: one concept, no obscure detail.",
-        "medium": "Require at least one reasoning step beyond recall. Include the relevant condition, scenario, data, or relationship in the stem.",
-        "hard": "Require a defensible multi-step inference. Combine concepts from the material and make every necessary assumption explicit; do not use obscure trivia or ambiguity.",
-        "mixed": "Label each item with its actual level and keep a balanced spread.",
-    }.get(difficulty.lower(), "Label each item with its actual level and keep a balanced spread.")
+        "easy": "Keep the question stem direct and clear. Focus on core principles without obscure trivia.",
+        "medium": "Include the relevant scenario or algorithmic condition in the question stem.",
+        "hard": "Test multi-step analytical reasoning, exact complexity analysis, or subtle edge-case behavior.",
+        "mixed": "Label each item with its actual difficulty level and keep a balanced distribution.",
+    }.get(difficulty.lower(), "Label each item with its actual difficulty level and keep a balanced distribution.")
     context = _cached_learning_context(student_id, topic, db)
-    avoid = (used_texts + [q["question"] for q in questions])[-20:]
+    avoid = (used_texts + [q["question"] for q in questions])[-15:]
     system_prompt = (
-        f"Create exactly {remaining} valid MCQs about '{topic}' using only the study content below. "
-        f"Target {guidance}\n{difficulty_contract}\n"
-        f"Every item must use difficulty exactly '{difficulty.lower()}' when a single level was requested. "
-        "Every question must test a specific fact, concept, relationship, or example from the content; "
-        "do not write questions about the topic heading itself. "
-        "Vary question forms across mechanism, application, comparison, debugging, prediction, and calculation when supported. "
-        "Use concrete subtopics, plausible misconception-based distractors, and an explanation that states the reasoning and evidence. "
-        "Never repeat a stem with only the topic name changed. Reject any question that depends on missing information. "
-        "Return ONLY a JSON array with question, four A/B/C/D options, correct_answer, difficulty, and explanation.\n\n"
-        f"STUDY CONTENT:\n{context}\n\nAVOID THESE USED QUESTION TEXTS:\n{avoid}"
+        f"You are an expert university professor creating an exam quiz on '{topic}'.\n"
+        f"Create exactly {remaining} authentic, realistic multiple-choice questions.\n"
+        f"Difficulty: {difficulty.upper()} ({guidance})\n{difficulty_contract}\n\n"
+        "QUALITY RULES:\n"
+        "- Write natural, academic questions (e.g., 'What is the time complexity of...?', 'Which property holds true for...?').\n"
+        "- NEVER use robotic templates like 'A learner is applying the detail...' or mention code files/paths.\n"
+        "- NEVER use generic templates where the topic is just pasted in (e.g. 'What is the primary purpose of [Topic]?'). The question must test specific knowledge about the topic, not meta-knowledge about the title.\n"
+        "- All 4 options (A, B, C, D) must be plausible, realistic subject-matter answers.\n"
+        "- Use clean mathematical notation (e.g. O(n), O(n²), O(log n)) without raw LaTeX dollar signs ($).\n"
+        "- Provide a clear, educational 1-2 sentence explanation.\n"
+        "- Return ONLY a JSON array (e.g. [{...}, {...}]) of objects with keys: topic, subtopic, difficulty, question, options (array of 4 {id, text}), correct_answer (A/B/C/D), explanation. ALWAYS wrap in square brackets [], even if there is only 1 question.\n\n"
+        f"TOPIC STUDY CONTEXT:\n{context}\n\n"
+        f"AVOID REPEATING THESE QUESTIONS:\n{avoid}"
     )
     response = _practice_llm_call(
         system_prompt,
-        f"Generate {remaining} new content-grounded questions for {topic}.",
-        max_tokens=min(4800, max(1600, remaining * (400 if difficulty.lower() in ("medium", "hard") else 300))),
-        # Session creation is a backend job, so quality gets priority over a
-        # short request timeout. The browser is not held open while this runs.
-        timeout_seconds=12.0,
+        f"Generate {remaining} realistic academic MCQ questions for '{topic}' at {difficulty} level.",
+        max_tokens=min(4000, max(800, remaining * 450)),
+        timeout_seconds=30.0,
+        total_timeout_seconds=45.0,
         allow_fallback_chain=True,
     )
     generated = _parse_quiz_questions(response, topic, difficulty, subtopic)
@@ -917,26 +1031,15 @@ def _generate_fast_questions(
         normalized = _normalise_quiz_item(item, topic, difficulty, subtopic)
         if not normalized:
             continue
-        if _question_is_duplicate(normalized["question"], validated_texts):
+        if _question_is_duplicate(normalized["question"], used_texts + validated_texts):
             continue
         validated_result.append(normalized)
         validated_texts.append(normalized["question"])
     result = validated_result[:count]
-    _cache_fast_questions(student_id, topic, difficulty, result)
+    _cache_fast_questions(student_id, topic, difficulty, result, db=db)
     return result
-def _start_master_generation(student_id: int, topic: str) -> None:
-    """Start document-grounded bank creation only after the fast response is ready."""
-    cache_key = f"{student_id}_{topic}"
-    with _generating_topics_lock:
-        if cache_key in generating_topics:
-            return
-    def run_in_background():
-        bg_db = SessionLocal()
-        try:
-            generate_master_question_bank(student_id, topic, bg_db)
-        finally:
-            bg_db.close()
-    threading.Thread(target=run_in_background, daemon=True, name="practice-bank-generator").start()
+
+
 def generate_questions(
     student_id: int,
     topic: str,
@@ -948,35 +1051,19 @@ def generate_questions(
 ) -> list[dict]:
     """
     Return a cached bank immediately or generate a bounded first batch.
-    The full document-grounded bank is built asynchronously after the response.
     """
-    # 1. Check for master question bank cache
     from practice_models import AICache
     
-    # Full document-grounded generation is deferred until the fast batch returns.
-
-    # Check for an already available Stage 1/full bank without adding request latency.
-    master_cached = None
-    for _ in range(1):
-        db.expire_all()
-        # 1. Try student-specific cache
-        master_cached = db.query(AICache).filter(
-            AICache.student_id == student_id,
-            AICache.topic == topic,
-            AICache.action_type == MASTER_QUESTION_BANK_CACHE
-        ).order_by(AICache.created_at.desc()).first()
-        
-        if master_cached:
-            break
-    
+    # 1. Reuse only the student's own master cache
+    master_cached = db.query(AICache).filter(
+        AICache.student_id == student_id,
+        AICache.topic == topic,
+        AICache.action_type == MASTER_QUESTION_BANK_CACHE
+    ).order_by(AICache.created_at.desc()).first()
     if master_cached:
-
         try:
             bank = json.loads(master_cached.content)
             diff_key = difficulty.lower()
-            # Pool questions based strictly on requested difficulty. Falling
-            # through to dynamic generation is safer than filling a hard session
-            # with easy cached questions.
             all_pool = bank.get("easy", []) + bank.get("medium", []) + bank.get("hard", [])
             preferred_pool = bank.get(diff_key, []) if diff_key in ("easy", "medium", "hard") else all_pool
             raw_pool = preferred_pool
@@ -991,22 +1078,13 @@ def generate_questions(
                 if normalized:
                     pool.append(normalized)
                 
-            # Exclude every question already shown, including unfinished sessions.
-            shown_question_rows = (
-                db.query(PracticeQuestion.question_text)
-                .join(PracticeSession)
-                .filter(PracticeSession.student_id == student_id)
-                .filter(PracticeQuestion.topic == topic)
-                .all()
-            )
-            shown_question_texts = [row.question_text for row in shown_question_rows if row.question_text]
+            shown_question_texts = _used_question_texts(student_id, topic, db)
 
             if pool:
                 import random
                 shuffled_pool = list(pool)
                 random.shuffle(shuffled_pool)
                 
-                # Filter out questions already answered by the student using the normalized text
                 filtered_pool = []
                 seen_questions = []
                 
@@ -1019,11 +1097,9 @@ def generate_questions(
                 
                 if len(filtered_pool) >= count:
                     logger.info(f"[PracticeEngine] Master cache HIT: Retrieved {len(pool)} cached questions, filtered down to {len(filtered_pool)} non-repeated questions, returning {count}")
-                    if len(filtered_pool) < max(count * 2, 10):
-                        _start_master_generation(student_id, topic)
                     return filtered_pool[:count]
                 
-                logger.info(f"[PracticeEngine] Cache exhausted (only {len(filtered_pool)} unrepeated questions left). Falling through to dynamic generation.")
+                logger.info(f"[PracticeEngine] Cache exhausted (only {len(filtered_pool)} unrepeated questions left). Falling through to fast generation.")
         except Exception as e:
             logger.error(f"[PracticeEngine] Failed to parse master question bank cache: {e}")
 
@@ -1035,144 +1111,8 @@ def generate_questions(
         db,
         subtopic,
     )
-    _start_master_generation(student_id, topic)
     return fast_questions
-    search_query = f"{topic} {subtopic or ''}"
-    docs = db.query(Document).filter(Document.student_id == student_id).all()
-    if not docs:
-        context = "(No documents uploaded — use general knowledge)"
-        doc_ids = []
-    else:
-        doc_ids = [d.id for d in docs]
-        try:
-            results = query_chunks(search_query, top_k=8, allowed_doc_ids=doc_ids)
-            if results and results.get("documents") and results["documents"][0]:
-                context = "\n\n".join(results["documents"][0])
-            else:
-                context = "(No relevant content found in documents — use general knowledge)"
-        except Exception as e:
-            logger.warning(f"[PracticeEngine] Failed to query documents from ChromaDB: {e}")
-            context = "(Document search failed due to database error — use general knowledge)"
 
-    recent_questions = (
-        db.query(PracticeQuestion.question_text)
-        .join(PracticeSession)
-        .filter(PracticeSession.student_id == student_id)
-        .filter(PracticeQuestion.topic == topic)
-        .order_by(PracticeQuestion.created_at.desc())
-        .limit(20)
-        .all()
-    )
-    avoid_list = [q.question_text[:80] for q in recent_questions] if recent_questions else []
-    avoid_text = ""
-    if avoid_list:
-        avoid_text = f"\n\nAVOID repeating these recently asked questions:\n" + "\n".join(f"- {q}" for q in avoid_list[:10])
-
-    difficulty_guidance = {
-        "easy": "Generate EASY questions focusing on basic definitions, recall, and simple concepts. Suitable for beginners.",
-        "medium": "Generate MEDIUM difficulty questions that test understanding, application, and analysis.",
-        "hard": "Generate HARD questions that test deep understanding, multi-step problem solving, and advanced application.",
-        "mixed": "Generate a MIX of easy, medium, and hard questions.",
-    }
-
-    system_prompt = f"""You are an expert quiz generator for educational content.
-Generate exactly {count} multiple-choice questions on the topic: "{topic}"{f' / subtopic: "{subtopic}"' if subtopic else ''}.
-
-DIFFICULTY: {difficulty_guidance.get(difficulty, difficulty_guidance['mixed'])}
-
-CONTEXT FROM STUDENT'S DOCUMENTS:
-{context[:4000]}
-
-RULES:
-- Each question MUST have exactly 4 options (A, B, C, D)
-- Exactly ONE correct answer per question
-- Include a clear, educational explanation for the correct answer
-- Questions should be factually accurate
-- Base questions on the document content when possible
-- Use general knowledge to supplement when documents lack sufficient detail
-- Mix question types: conceptual, numerical, application-based, analytical
-- Set appropriate difficulty per question{avoid_text}
-
-Return ONLY valid JSON array, no markdown fencing:
-[
-  {{
-    "topic": "{topic}",
-    "subtopic": "specific subtopic",
-    "difficulty": "easy|medium|hard",
-    "question": "Question text here?",
-    "options": [
-      {{"id": "A", "text": "Option A text"}},
-      {{"id": "B", "text": "Option B text"}},
-      {{"id": "C", "text": "Option C text"}},
-      {{"id": "D", "text": "Option D text"}}
-    ],
-    "correct_answer": "B",
-    "explanation": "Clear explanation of why B is correct."
-  }}
-]"""
-
-    user_prompt = f"Generate {count} MCQ questions on '{topic}' at {difficulty} difficulty level."
-
-    response = _practice_llm_call(system_prompt, user_prompt, max_tokens=3000)
-
-    if not response:
-        logger.error("[PracticeEngine] LLM returned empty response for question generation")
-        return generate_local_fallback_questions(topic, count)
-
-    try:
-        json_match = re.search(r'\[[\s\S]*\]', response)
-        if json_match:
-            questions = json.loads(json_match.group())
-            validated = []
-            seen_questions = set()
-            for q in questions:
-                if all(k in q for k in ("question", "options", "correct_answer")):
-                    norm_q = re.sub(r'[^a-z0-9]', '', q["question"].strip().lower())
-                    if norm_q not in seen_questions:
-                        seen_questions.add(norm_q)
-                        validated.append({
-                            "topic": q.get("topic", topic),
-                            "subtopic": q.get("subtopic", subtopic or "General"),
-                            "difficulty": q.get("difficulty", difficulty),
-                            "question": q["question"],
-                            "options": q["options"][:4],  # ensure max 4 options
-                            "correct_answer": q["correct_answer"],
-                            "explanation": q.get("explanation", ""),
-                        })
-            if validated:
-                try:
-                    from database import SessionLocal
-                    local_db = SessionLocal()
-                    try:
-                        # Clean existing cache for this difficulty
-                        existing = local_db.query(AICache).filter(
-                            AICache.student_id == student_id,
-                            AICache.topic == topic,
-                            AICache.action_type == _quiz_cache_action(difficulty)
-                        ).first()
-                        if existing:
-                            local_db.delete(existing)
-                            local_db.commit()
-                        
-                        local_db.add(AICache(
-                            student_id=student_id,
-                            topic=topic,
-                            action_type=_quiz_cache_action(difficulty),
-                            content=json.dumps(validated)
-                        ))
-                        local_db.commit()
-                        logger.info(f"Cached generated quiz questions for topic='{topic}', difficulty='{difficulty}'")
-                    finally:
-                        local_db.close()
-                except Exception as cache_error:
-                    logger.error(f"Failed to cache generated quiz questions: {cache_error}")
-
-            return validated[:count]
-    except (json.JSONDecodeError, AttributeError) as e:
-        logger.error(f"[PracticeEngine] Failed to parse questions: {e}")
-        logger.error(f"[PracticeEngine] Raw response: {response[:500]}")
-
-    return generate_local_fallback_questions(topic, count)
 
 def generate_local_fallback_questions(
     topic: str,
@@ -1182,13 +1122,7 @@ def generate_local_fallback_questions(
     excluded_keys: Optional[set[str]] = None,
     source_questions: Optional[list[dict]] = None,
 ) -> list[dict]:
-    """Build deterministic questions without the old title-only template.
-
-    Stored notes and validated source questions are preferred. If no material is
-    available, the final safety net tests transferable reasoning and never
-    invents a topic-specific fact.
-    """
-    logger.warning(f"[PracticeEngine] Generating grounded local fallback questions for topic='{topic}'")
+    """Build genuine, authentic subject-matter questions."""
     grounded = generate_content_fallback_questions(
         topic,
         count,
@@ -1197,81 +1131,4 @@ def generate_local_fallback_questions(
         excluded_keys=excluded_keys,
         source_questions=source_questions,
     )
-    if len(grounded) >= count:
-        return grounded[:count]
-    if difficulty.lower() in ("medium", "hard"):
-        return grounded[:count]
-
-    seen = set(excluded_keys or set()) | {_question_key(q["question"]) for q in grounded}
-    blueprints = (
-        (
-            "Requirements and validation",
-            f"A learner is checking an implementation of {topic}. Which evidence is strongest that it satisfies the stated requirements?",
-            "Its observed inputs, outputs, and boundary behavior match the defined requirements.",
-            [
-                "It uses the most popular library regardless of the requirements.",
-                "It produces a result once on a small example, without checking constraints.",
-                "It has the longest source code among the available implementations.",
-            ],
-        ),
-        (
-            "Evaluation",
-            f"When comparing two approaches to {topic}, which evidence should guide the decision first?",
-            "Measurements from representative workloads together with the constraints that matter for the system.",
-            [
-                "The approach with the most configuration switches, without measurements.",
-                "A single best-case run that ignores memory, latency, and failure behavior.",
-                "The approach selected only because its name sounds more advanced.",
-            ],
-        ),
-        (
-            "Debugging",
-            f"A problem appears only when the workload grows in a system using {topic}. What is the most useful first step?",
-            "Reproduce the issue with representative inputs and measure the resource or algorithmic constraint that changes with scale.",
-            [
-                "Change several unrelated components at once so the cause cannot be isolated.",
-                "Assume the latest code change is responsible without collecting evidence.",
-                "Disable validation so the symptom is hidden from the user.",
-            ],
-        ),
-        (
-            "Edge cases",
-            f"Which practice gives the most reliable understanding of how {topic} behaves?",
-            "Trace a concrete example through normal and boundary cases, then compare the result with the expected behavior.",
-            [
-                "Study only the successful path and ignore empty or extreme inputs.",
-                "Replace the example with an unrelated feature before reasoning about it.",
-                "Judge correctness from the interface name alone.",
-            ],
-        ),
-        (
-            "Trade-offs",
-            f"A design for {topic} meets its functional goal but violates a system constraint. What should the learner do next?",
-            "Identify the violated constraint, measure the trade-off, and choose the change that preserves correctness within the stated limits.",
-            [
-                "Remove the constraint from the requirements without discussing its impact.",
-                "Optimize an unrelated part of the system before measuring the violation.",
-                "Treat functional correctness as proof that every non-functional requirement is met.",
-            ],
-        ),
-    )
-    for index, (subtopic, question, correct, distractors) in enumerate(blueprints):
-        key = _question_key(question)
-        if key in seen:
-            continue
-        options, answer_id = _rotated_options(correct, distractors, index)
-        if not options:
-            continue
-        grounded.append({
-            "topic": topic,
-            "subtopic": subtopic,
-            "difficulty": difficulty,
-            "question": question,
-            "options": options,
-            "correct_answer": answer_id,
-            "explanation": "This answer uses evidence, constraints, and observable behavior instead of relying on the topic label alone.",
-        })
-        seen.add(key)
-        if len(grounded) >= count:
-            break
     return grounded[:count]

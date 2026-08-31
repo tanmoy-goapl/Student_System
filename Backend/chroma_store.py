@@ -1,6 +1,10 @@
 import chromadb
+import logging
 import os
+import re
 from services.embedding import get_embeddings
+
+logger = logging.getLogger(__name__)
 
 # ── Monkey-patch ChromaDB 0.5.0 bug ──────────────────────────────
 # _decode_seq_id expects bytes but SQLite sometimes returns an int directly.
@@ -24,7 +28,92 @@ CHROMA_DIR = os.path.abspath("./chroma_db")
 COLLECTION_NAME = "document_chunks"
 
 _client = None
+_embedding_failure_logged = False
 _collection = None
+_LEXICAL_STOP_WORDS = {
+    "a", "an", "and", "are", "as", "at", "be", "by", "can", "do", "for",
+    "from", "how", "i", "in", "is", "it", "me", "my", "of", "on", "or",
+    "please", "tell", "that", "the", "their", "this", "to", "was", "what",
+    "when", "where", "which", "who", "why", "with", "you", "your",
+}
+
+
+def _lexical_forms(token: str) -> set[str]:
+    """Return a small set of safe word forms for offline document search."""
+    forms = {token}
+    if token.endswith("isation"):
+        forms.add(token[:-7] + "ization")
+    elif token.endswith("ization"):
+        forms.add(token[:-7] + "isation")
+    if len(token) > 4 and token.endswith("s"):
+        forms.add(token[:-1])
+    if len(token) > 5 and token.endswith("ies"):
+        forms.add(token[:-3] + "y")
+    return forms
+
+
+def _lexical_tokens(text: str) -> set[str]:
+    tokens = re.findall(r"[a-z0-9]+", (text or "").lower())
+    return {
+        form
+        for token in tokens
+        if token not in _LEXICAL_STOP_WORDS
+        for form in _lexical_forms(token)
+    }
+
+
+def _empty_query_result() -> dict:
+    return {"documents": [[]], "metadatas": [[]], "distances": [[]]}
+
+
+def _lexical_query_chunks(collection, query: str, top_k: int, where_filter=None) -> dict:
+    """Search stored chunk text without downloading an embedding model.
+
+    This is intentionally a fallback only. Normal semantic search remains the
+    first choice whenever the local SentenceTransformer model is available.
+    """
+    get_kwargs = {}
+    if where_filter is not None:
+        get_kwargs["where"] = where_filter
+    stored = collection.get(**get_kwargs)
+    documents = stored.get("documents") or []
+    metadatas = stored.get("metadatas") or []
+    if not documents:
+        return _empty_query_result()
+
+    query_terms = _lexical_tokens(query)
+    if not query_terms:
+        return _empty_query_result()
+
+    query_text = " ".join(re.findall(r"[a-z0-9]+", (query or "").lower()))
+    ranked = []
+    for index, document_text in enumerate(documents):
+        text = document_text or ""
+        text_terms = _lexical_tokens(text)
+        matched_terms = query_terms.intersection(text_terms)
+        if not matched_terms:
+            continue
+
+        score = len(matched_terms) / len(query_terms)
+        normalized_text = " ".join(re.findall(r"[a-z0-9]+", text.lower()))
+        if query_text and query_text in normalized_text:
+            score = min(1.0, score + 0.20)
+        score = min(1.0, score)
+        ranked.append((score, index))
+
+    ranked.sort(key=lambda item: (-item[0], item[1]))
+    selected = ranked[: max(1, top_k)]
+    result_documents = [documents[index] for _, index in selected]
+    result_metadatas = [metadatas[index] if index < len(metadatas) else {} for _, index in selected]
+    # Chroma distances are lower for better matches. Convert the lexical score
+    # to the same 0..2 range consumed by the existing reranker.
+    distances = [round(2.0 * (1.0 - score), 6) for score, _ in selected]
+    return {
+        "documents": [result_documents],
+        "metadatas": [result_metadatas],
+        "distances": [distances],
+        "_retrieval_method": "lexical",
+    }
 
 
 def get_collection():
@@ -73,21 +162,31 @@ def query_chunks(query: str, top_k: int = 5, allowed_doc_ids: list[int] = None):
     collection = get_collection()
     count = collection.count()
     if count == 0:
-        return {"documents": [[]], "metadatas": [[]]}
-
-    embeddings = get_embeddings([query])
-    print(f"[DEBUG] raw embeddings returned: {str(embeddings)[:200]}")
-
-    n = min(top_k, count)
+        return _empty_query_result()
 
     where_filter = None
     if allowed_doc_ids is not None:
         if len(allowed_doc_ids) == 0:
-            return {"documents": [[]], "metadatas": [[]]}
+            return _empty_query_result()
         elif len(allowed_doc_ids) == 1:
             where_filter = {"document_id": allowed_doc_ids[0]}
         else:
             where_filter = {"document_id": {"$in": allowed_doc_ids}}
+
+    n = min(top_k, count)
+    global _embedding_failure_logged
+    try:
+        embeddings = get_embeddings([query])
+    except Exception as exc:
+        if not _embedding_failure_logged:
+            logger.warning(
+                "Embedding model unavailable; using offline lexical document search (%s)",
+                type(exc).__name__,
+            )
+            _embedding_failure_logged = True
+        return _lexical_query_chunks(collection, query, n, where_filter)
+
+    print(f"[DEBUG] raw embeddings returned: {str(embeddings)[:200]}")
 
     query_kwargs = {
         "n_results": n,

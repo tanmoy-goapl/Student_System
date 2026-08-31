@@ -101,7 +101,7 @@ class ChatMessage(Base):
 
     session_id    = Column(String, nullable=True, index=True)
     session_title = Column(String, nullable=True)
-    # Versioned JSON metadata for document filenames used by the final context.
+    # JSON array of document filenames used to ground an assistant response.
     # Nullable so existing chat rows remain compatible.
     source_documents = Column(Text, nullable=True)
 

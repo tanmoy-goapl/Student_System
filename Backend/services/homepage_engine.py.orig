@@ -235,7 +235,8 @@ def generate_study_plan(
     ]
     sorted_plan = sorted(
         active_learning_topics or non_revision_topics,
-        key=lambda x: (-x["priority_score"], _daily_topic_tiebreaker(student_id, x)),
+        key=lambda x: x["priority_score"],
+        reverse=True,
     )
 
     study_plan_items = []
@@ -919,7 +920,8 @@ def calculate_todays_focus(student_id: int, db: Session) -> dict:
     ]
     ranked_topics = sorted(
         active_topics or non_revision_topics or all_topics,
-        key=lambda x: (-x["priority_score"], _daily_topic_tiebreaker(student_id, x)),
+        key=lambda x: x["priority_score"],
+        reverse=True,
     )
     top = ranked_topics[0]
     

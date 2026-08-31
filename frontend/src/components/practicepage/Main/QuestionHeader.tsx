@@ -10,44 +10,50 @@ export default function QuestionHeader({
   question,
 }: QuestionHeaderProps) {
   return (
-    <div className="bg-gradient-to-r from-slate-900/50 to-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
-      {/* Top Row: Number and Badges */}
-      <div className="min-w-0 flex flex-wrap items-end justify-between gap-3 mb-2">
-        <div className="space-y-2">
-          {/* Question Number */}
+    <div className="bg-[#0e1330]/60 border border-white/10 rounded-2xl p-6 shadow-xl backdrop-blur-md relative overflow-hidden">
+      {/* Subtle top glowing line */}
+      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-violet-500/40 to-transparent" />
+      
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* Left Side: Circular Progress Indicator */}
+        <div className="flex-shrink-0">
           <ProgressIndicator
             currentQuestion={question.number}
             totalQuestions={question.totalQuestions}
           />
+        </div>
 
-          {/* Badge Group */}
-          <div className="flex flex-wrap items-center gap-2 min-w-0">
+        {/* Center: Main Topic Header & Description */}
+        <div className="flex-1 text-center md:text-left min-w-0 space-y-1.5">
+          <h2 className="text-xl md:text-2xl font-black text-white tracking-tight break-words leading-tight">
+            {question.topic}
+          </h2>
+          
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 text-xs text-slate-400">
             {question.category && question.category.toLowerCase().replace(/[^a-z0-9]/g, '') !== question.topic.toLowerCase().replace(/[^a-z0-9]/g, '') && (
-              <span className="px-2 py-1 bg-[#5B5FFF]/10 border border-[#5B5FFF]/30 rounded-lg text-[0.65rem] font-semibold text-[#8F93FF]">
+              <span className="px-2 py-0.5 bg-[#5B5FFF]/15 border border-[#5B5FFF]/35 rounded-md text-[0.6rem] font-bold text-[#8F93FF] uppercase tracking-wider">
                 {question.category}
               </span>
             )}
-            <span className="max-w-full break-words px-2 py-1 bg-slate-700/40 border border-slate-600/40 rounded-lg text-[0.65rem] font-medium text-slate-300">
-              {question.topic}
-            </span>
-            <span className="shrink-0 px-2 py-1 bg-red-500/20 border border-red-500/40 rounded-lg text-[0.65rem] font-semibold text-red-300">
+            <span className="px-2 py-0.5 bg-red-500/15 border border-red-500/35 rounded-md text-[0.6rem] font-bold text-red-300 uppercase tracking-wider">
               {question.difficulty}
             </span>
+            <span className="hidden md:inline text-slate-600">•</span>
+            <span>{question.mode}</span>
+            <span className="hidden md:inline text-slate-600">•</span>
+            <span className="text-slate-400">{question.description}</span>
           </div>
         </div>
 
-        {/* Session Progress Dots */}
-        <SessionProgress
-          currentQuestion={question.number}
-          totalQuestions={question.totalQuestions}
-          progressColor={question.progressColor}
-        />
+        {/* Right Side: Session Progress Dots */}
+        <div className="flex-shrink-0">
+          <SessionProgress
+            currentQuestion={question.number}
+            totalQuestions={question.totalQuestions}
+            progressColor={question.progressColor}
+          />
+        </div>
       </div>
-
-      {/* Meta Info */}
-      <p className="text-[0.65rem] text-slate-400 break-words">
-        {question.mode} • {question.description}
-      </p>
     </div>
   );
 }

@@ -68,7 +68,7 @@ MAX_CONTEXT_LEN = 6000
 
 
 def _message_sources(message: ChatMessage) -> list[str]:
-    """Read persisted source metadata without breaking older/corrupt rows."""
+    """Read only versioned source metadata from final context chunks."""
     raw_sources = getattr(message, "source_documents", None)
     if not raw_sources:
         return []
@@ -76,7 +76,13 @@ def _message_sources(message: ChatMessage) -> list[str]:
         parsed = json.loads(raw_sources)
     except (TypeError, ValueError):
         return []
-    return [str(source) for source in parsed if source] if isinstance(parsed, list) else []
+    # Older rows stored candidate filenames as a bare array. Those candidates
+    # were not guaranteed to be part of the final context, so do not display
+    # them as authoritative sources after a history refresh.
+    if not isinstance(parsed, dict) or parsed.get("version") != 2:
+        return []
+    sources = parsed.get("documents")
+    return [str(source) for source in sources if source] if isinstance(sources, list) else []
 
 
 _ARITHMETIC_OPERATORS = {
@@ -144,23 +150,46 @@ def _basic_chat_answer(question: str, user_name: str) -> str | None:
 
 def _needs_conversation_context(question: str) -> bool:
     """Return whether a query likely refers to the immediately prior topic."""
-    normalized = re.sub(r"\s+", " ", question.lower()).strip()
+    normalized = re.sub(r"\s+", " ", str(question or "").lower()).strip()
     if not normalized:
         return False
 
-    follow_up_terms = {
+    # Pronouns and explicit references are strong evidence that the user is
+    # referring to the previous turn.
+    reference_terms = {
         "it", "this", "that", "they", "them", "those", "these",
         "same", "above", "previous", "more",
-        "definition", "meaning", "explain", "elaborate", "example",
-        "simplify", "why", "how does", "how do",
     }
-    return any(
+    if any(
         re.search(rf"\b{re.escape(term)}\b", normalized)
-        for term in follow_up_terms
+        for term in reference_terms
+    ):
+        return True
+
+    # Generic prompts need the previous topic only when they do not name a
+    # new subject. For example, "why?" is a follow-up, but "why is life
+    # possible on Earth?" and "explain RAG" must retrieve independently.
+    generic_words = {
+        "a", "about", "an", "are", "can", "definition", "do", "does",
+        "elaborate", "example", "explain", "give", "help", "how", "i",
+        "is", "me", "meaning", "please", "show", "tell", "the", "what",
+        "were", "was", "why", "you",
+    }
+    meaningful_words = [
+        word for word in re.findall(r"\b\w+\b", normalized)
+        if word not in generic_words
+    ]
+    generic_follow_up = (
+        r"^why\b", r"^how\b", r"\bexplain\b", r"\bmeaning\b",
+        r"\bdefinition\b", r"\bexample\b", r"\belaborate\b",
+        r"^what about\b",
+    )
+    return not meaningful_words and any(
+        re.search(pattern, normalized) for pattern in generic_follow_up
     )
 
 def _build_retrieval_question(question: str, previous_messages: list[ChatMessage]) -> str:
-    """Add the prior topic to an anaphoric follow-up without changing the user query."""
+    """Add the prior user topic to an anaphoric follow-up without adding answer noise."""
     if not previous_messages or not _needs_conversation_context(question):
         return question
 
@@ -168,18 +197,14 @@ def _build_retrieval_question(question: str, previous_messages: list[ChatMessage
         (message.content.strip() for message in reversed(previous_messages) if message.role == "user"),
         "",
     )
-    previous_assistant = next(
-        (message.content.strip() for message in reversed(previous_messages) if message.role == "assistant"),
-        "",
-    )
-    if not previous_user and not previous_assistant:
+    if not previous_user:
         return question
 
     parts = [f"Current follow-up: {question}"]
-    if previous_user:
-        parts.append(f"Previous topic: {previous_user[:500]}")
-    if previous_assistant:
-        parts.append(f"Previous answer excerpt: {previous_assistant[:800]}")
+    # Never feed the previous assistant answer back into retrieval. It can
+    # contain filenames and unrelated terms from an earlier answer, causing a
+    # new question to inherit the previous answer's sources.
+    parts.append(f"Previous topic: {previous_user[:500]}")
     return "\n".join(parts)
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -223,6 +248,29 @@ def _adaptive_filter(
 
     # Sort by the same document-aware relevance score used to build context.
     scored = sorted(chunks, key=_relevance, reverse=True)
+    # Offline lexical retrieval must not turn a weak one-word overlap into
+    # document evidence. Keep strong lexical matches, or an explicit filename
+    # topic match, but let the model answer from general knowledge otherwise.
+    if (
+        not allow_broad_context
+        and mode != RetrievalMode.STRICT_DOCUMENT
+        and not (
+            mode == RetrievalMode.PERSONALIZED_ADVISOR
+            and allow_low_confidence_target
+        )
+    ):
+        scored = [
+            c for c in scored
+            if c.get("retrieval_method") != "lexical"
+            or float(c.get("filename_boost") or 0.0) > 0.0
+            or (
+                float(c.get("similarity") or 0.0) >= 0.70
+                and float(c.get("keyword_score") or 0.0) >= 0.50
+            )
+        ]
+    if not scored:
+        logger.info("  Adaptive filter: no reliable evidence after lexical-quality gate")
+        return []
     top_score = _relevance(scored[0])
 
     logger.info(f"  Adaptive filter: top_score={top_score:.4f}")
@@ -579,13 +627,26 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
 
         # ── STAGE 4: Context Building & Quota Ranking ────────────────────────
         t_retrieval_start = time.perf_counter()
-        chunks, searched_doc_names, retrieved_doc_names, context = build_context(
-            strategy=strategy,
-            question=retrieval_question,
-            target_docs=target_docs,
-            searched_docs=searched_docs,
-            db=db
-        )
+        try:
+            chunks, searched_doc_names, retrieved_doc_names, context = build_context(
+                strategy=strategy,
+                question=retrieval_question,
+                target_docs=target_docs,
+                searched_docs=searched_docs,
+                db=db
+            )
+        except Exception as exc:
+            logger.exception(
+                "Document retrieval failed; continuing with a non-grounded answer: %s",
+                type(exc).__name__,
+            )
+            chunks = []
+            searched_doc_names = [doc.filename for doc in searched_docs]
+            retrieved_doc_names = []
+            context = ""
+            yield json.dumps({
+                "status": "Document search unavailable; continuing with a general academic answer..."
+            }) + "\n"
 
         # The context builder returns ranked chunks, including neighboring
         # chunks for continuity. Apply the relevance gate before prompting the
@@ -686,7 +747,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
                 db.add(ChatMessage(
                     student_id=request.student_id, role="assistant", content=full_answer,
                     session_id=session_id, session_title=session_title,
-                    source_documents=json.dumps(source_docs)
+                    source_documents=json.dumps({"version": 2, "documents": source_docs})
                 ))
                 db.commit()
                 assistant_persisted = True

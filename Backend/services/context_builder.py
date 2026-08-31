@@ -140,6 +140,15 @@ def build_context(
     q_keywords = {w for w in q_words if w not in STOP_WORDS}
     personal_terms = {"i", "me", "my", "mine", "we", "our", "ours"}
     is_personal_question = bool(q_words.intersection(personal_terms))
+    numeric_query_terms = (
+        "how many", "number of", "count", "total", "percentage", "percent",
+        "average", "highest", "lowest", "maximum", "minimum", "package",
+        "salary", "marks", "cgpa", "sgpa", "grade",
+    )
+    is_numeric_question = any(
+        re.search(rf"\b{re.escape(term)}\b", ranking_text.lower())
+        for term in numeric_query_terms
+    )
 
     for c in chunks:
         # 1. Semantic Similarity
@@ -153,12 +162,15 @@ def build_context(
         overlap_count = len(q_keywords.intersection(c_words))
         keyword_score = round(overlap_count / len(q_keywords), 3) if q_keywords else 0.0
 
-        # 3. Numeric Keyword Boost
+        # 3. Numeric Keyword Boost. This must depend on the user's question;
+        # otherwise a document that merely mentions numeric terms can outrank
+        # the document that actually defines the requested topic.
         num_boost = 0.0
-        boost_terms = ['how many', 'total', 'count', 'percentage', 'highest', 'lowest', 'average', 'cgpa', 'marks', 'eligible', 'placed']
-        for term in boost_terms:
-            if term in c_text:
-                num_boost += 0.15
+        if is_numeric_question:
+            boost_terms = ['how many', 'number of', 'total', 'count', 'percentage', 'percent', 'highest', 'lowest', 'maximum', 'minimum', 'average', 'cgpa', 'sgpa', 'marks', 'grade', 'eligible', 'placed', 'package', 'salary']
+            for term in boost_terms:
+                if term in c_text:
+                    num_boost += 0.15
         num_boost = round(num_boost, 3)
 
         # Personal questions should prefer the user's own private material
@@ -169,14 +181,24 @@ def build_context(
         if is_personal_question and getattr(doc, "visibility", None) == "private":
             personal_doc_boost = 0.40
 
+        # A document whose filename explicitly names the requested topic is a
+        # generic tie-breaker for short terms and acronyms. It only helps the
+        # topic's own material win over unrelated documents using that token.
+        filename_boost = 0.0
+        if doc is not None:
+            filename_tokens = set(re.findall(r'\b\w+\b', (doc.filename or '').lower()))
+            filename_matches = q_keywords.intersection(filename_tokens)
+            filename_boost = min(0.50, round(0.35 * len(filename_matches), 3))
+
         # Final score
         final_score = round(
-            c["similarity"] + keyword_score + num_boost + personal_doc_boost,
+            c["similarity"] + keyword_score + num_boost + personal_doc_boost + filename_boost,
             3,
         )
         c["keyword_score"] = keyword_score
         c["numeric_boost"] = num_boost
         c["personal_doc_boost"] = personal_doc_boost
+        c["filename_boost"] = filename_boost
         c["rerank_score"] = final_score
         if strategy != RetrievalStrategy.DOCUMENT_RECONSTRUCTION:
             c["retrieval_score"] = final_score
@@ -316,6 +338,8 @@ def build_context(
                     "keyword_score": c.get("keyword_score", 0.0),
                     "numeric_boost": c.get("numeric_boost", 0.0),
                     "personal_doc_boost": c.get("personal_doc_boost", 0.0),
+                    "filename_boost": c.get("filename_boost", 0.0),
+                    "retrieval_method": c.get("retrieval_method"),
                     "rerank_score": c.get("rerank_score", similarity),
                     "retrieval_score": c.get("retrieval_score"),
                     "group_id": group_idx

@@ -1,3 +1,4 @@
+import React from "react";
 import { Answer } from "@/constants/practicepage-data";
 
 interface AnswerOptionProps {
@@ -5,6 +6,34 @@ interface AnswerOptionProps {
   isSelected: boolean;
   isAnswered: boolean;
   onSelect: () => void;
+}
+
+function renderFormattedText(text: string): React.ReactNode {
+  if (!text) return "";
+  let cleanText = text;
+  if (cleanText.endsWith("**") && (cleanText.match(/\*\*/g) || []).length === 1) {
+    cleanText = "**" + cleanText;
+  } else if (cleanText.startsWith("**") && (cleanText.match(/\*\*/g) || []).length === 1) {
+    cleanText = cleanText + "**";
+  }
+  const regex = /(\*\*.*?\*\*|\*.*?\*|\`.*?\`)/g;
+  const parts = cleanText.split(regex);
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return <strong key={index} className="font-bold">{part.slice(2, -2)}</strong>;
+        }
+        if (part.startsWith("*") && part.endsWith("*")) {
+          return <em key={index} className="italic text-slate-300">{part.slice(1, -1)}</em>;
+        }
+        if (part.startsWith("`") && part.endsWith("`")) {
+          return <code key={index} className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700/80 font-mono text-sm text-pink-400">{part.slice(1, -1)}</code>;
+        }
+        return part;
+      })}
+    </>
+  );
 }
 
 export default function AnswerOption({
@@ -70,7 +99,7 @@ export default function AnswerOption({
           }
         `}
       >
-        {answer.text}
+        {renderFormattedText(answer.text)}
       </span>
 
       {/* Feedback Icons */}

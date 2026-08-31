@@ -98,21 +98,6 @@ export default function HomePage() {
     fetchData();
     fetchRoadmap();
   }, []);
-  // Refresh only dashboard data when the student returns from another
-  // screen/tab, without reloading the complete page.
-  useEffect(() => {
-    const refreshOnReturn = () => {
-      if (document.visibilityState === "visible") {
-        void fetchData();
-      }
-    };
-    window.addEventListener("focus", refreshOnReturn);
-    document.addEventListener("visibilitychange", refreshOnReturn);
-    return () => {
-      window.removeEventListener("focus", refreshOnReturn);
-      document.removeEventListener("visibilitychange", refreshOnReturn);
-    };
-  }, []);
   useEffect(() => {
     if (!isRoadmapGenerating) return;
     const interval = setInterval(fetchRoadmap, 5000);
