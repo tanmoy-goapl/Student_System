@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { stripRevisionPayload } from "@/lib/learningContent";
+import { removeEmbeddedTakeaways, stripRevisionPayload } from "@/lib/learningContent";
+import { normalizeReadableMath } from "@/lib/readableMath";
 import { 
   Sparkles, 
   Lightbulb, 
@@ -40,7 +41,7 @@ function CollapsibleSection({ title, children }: { title: string; children: Reac
           }`}
         />
       </button>
-      {isOpen && <div className="p-5 text-sm text-zinc-300 leading-relaxed space-y-4">{children}</div>}
+      {isOpen && <div className="p-5 sm:p-6 text-sm text-zinc-300 leading-relaxed space-y-4">{children}</div>}
     </div>
   );
 }
@@ -101,7 +102,7 @@ function formatLatexToUnicode(text: string): string {
 
 export default function NotesCard({ notesResponse, onRegenerate, isGenerating = false }: NotesCardProps) {
   const cleanContent = typeof notesResponse.content === "string"
-    ? stripRevisionPayload(notesResponse.content)
+    ? removeEmbeddedTakeaways(stripRevisionPayload(notesResponse.content))
     : notesResponse.content;
   const isLoading = !cleanContent || cleanContent.length === 0;
 
@@ -173,6 +174,25 @@ export default function NotesCard({ notesResponse, onRegenerate, isGenerating = 
     }
 
     return <p className="text-zinc-300 text-sm leading-relaxed mb-4">{children}</p>;
+  };
+
+  const addGuideSpacing = (markdown: string) => {
+    // Markdown treats a single newline as a space. Separate labelled points so
+    // dense generated paragraphs remain scannable without changing code blocks.
+    return markdown
+      .split(/(\x60\x60\x60[\s\S]*?\x60\x60\x60)/g)
+      .map((segment, index) => {
+        if (index % 2 === 1) return segment;
+        return segment
+          // Keep numbered component labels together with their label instead
+          // of allowing Markdown to append "2." to the previous sentence.
+          .replace(/(^|\n)(\d+[.)])[\t ]*(?:\r?\n[\t ]*){1,2}(?=\*\*)/g, "$1$2 ")
+          .replace(/([^\n])[\t ]+(\d+[.)])[\t ]*(?:\r?\n[\t ]*){1,2}(?=\*\*)/g, "$1\n\n$2 ")
+          .replace(/([^\n])\r?\n(?=\d+[.)][\t ]+\*\*)/g, "$1\n\n")
+          .replace(/\n(?=\s*\*\*[^*\n]+(?:\*\*:\s|:\*\*\s))/g, "\n\n")
+          .replace(/([.!?])\s+(?=\*\*[^*\n]+(?:\*\*:\s|:\*\*\s))/g, "$1\n\n");
+      })
+      .join("");
   };
 
   // Custom Markdown Table parser/renderer
@@ -381,7 +401,7 @@ export default function NotesCard({ notesResponse, onRegenerate, isGenerating = 
         </div>
       ) : typeof cleanContent === "string" ? (
         renderMarkdownContent(
-          formatLatexToUnicode(cleanContent + (isGenerating ? " ▋" : ""))
+          addGuideSpacing(normalizeReadableMath(cleanContent + (isGenerating ? " ▋" : "")))
             .replace(/💡 Example:\s*\n+/g, "💡 Example: ")
             .replace(/⚠️ Important:\s*\n+/g, "⚠️ Important: ")
             .replace(/🎯 Interview Tip:\s*\n+/g, "🎯 Interview Tip: ")

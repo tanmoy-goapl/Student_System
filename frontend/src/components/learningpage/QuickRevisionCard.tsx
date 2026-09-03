@@ -1,5 +1,6 @@
 import { RevisionPoint } from "@/constants/learningpage-data";
 import { BookmarkPlus, Check, LoaderCircle, Sparkles } from "lucide-react";
+import { normalizeReadableMath } from "@/lib/readableMath";
 
 interface QuickRevisionCardProps {
   title?: string;
@@ -67,7 +68,7 @@ export function QuickRevisionCard({
         {displayPoints.map((point) => (
           <li key={point.id} className="flex gap-2.5 items-start">
             <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
-            <span className="text-xs leading-relaxed text-zinc-300">{point.text}</span>
+            <span className="text-xs leading-relaxed text-zinc-300">{normalizeReadableMath(point.text)}</span>
           </li>
         ))}
       </ul>

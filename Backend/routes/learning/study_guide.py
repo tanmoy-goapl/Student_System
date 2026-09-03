@@ -7,7 +7,15 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from practice_models import LearningContent
-from services.practice.content_generator import generate_learning_content, stream_learning_content, has_valid_revision, split_revision_payload
+from services.practice.content_generator import (
+    STREAM_CACHE_MARKER,
+    generate_learning_content,
+    stream_learning_content,
+    has_valid_revision,
+    has_valid_structured_notes,
+    has_valid_stream_notes,
+    split_revision_payload,
+)
 from services.authorization import require_student
 
 logger = logging.getLogger("chatbot")
@@ -171,6 +179,24 @@ def resolve_standard_subject(topic: str, current_subject: Optional[str] = None) 
         return None
     return current_subject
 
+def _resolve_cached_subject(student_id: int, topic: Optional[str], subject: Optional[str], db: Session) -> Optional[str]:
+    """Recover the original summary scope when an older link omitted subject."""
+    if subject or not topic:
+        return subject
+
+    cached_subject = (
+        db.query(LearningContent.subject)
+        .filter(
+            LearningContent.student_id == student_id,
+            LearningContent.topic == topic,
+            LearningContent.subject.isnot(None),
+            LearningContent.subject != "",
+        )
+        .order_by(LearningContent.id.desc())
+        .first()
+    )
+    return cached_subject[0] if cached_subject and cached_subject[0] else subject
+
 @router.get("/content")
 def get_learning_content_endpoint(
     student_id: int,
@@ -186,6 +212,7 @@ def get_learning_content_endpoint(
         return {"notesResponse": [], "revision": {}}
         
     subject = resolve_standard_subject(topic, subject)
+    subject = _resolve_cached_subject(student_id, topic, subject, db)
         
     cached = db.query(LearningContent).filter(
         LearningContent.student_id == student_id,
@@ -220,7 +247,10 @@ def get_learning_content_endpoint(
     if cached:
         cached_str = str(cached.content)
         # Check case-insensitively to prevent minor casing differences from invalidating valid caches
-        is_old_format = isinstance(cached.content, list) or ("why is it important" not in cached_str.lower() and "how does it work" not in cached_str.lower())
+        is_old_format = not (
+            has_valid_structured_notes(cached.content)
+            or has_valid_stream_notes(cached.content)
+        )
         if subject and ("keshav" in cached_str.lower() or "placement policy" in cached_str.lower() or "deregistered" in cached_str.lower()):
             logger.warning(f"CACHE INVALIDATED (Resume/Policy Leak detected): topic='{topic}', subject='{subject}'")
             is_old_format = True
@@ -296,6 +326,7 @@ async def stream_content(
         return {"error": "Topic is required"}
         
     subject = resolve_standard_subject(topic or "", subject)
+    subject = _resolve_cached_subject(student_id, topic, subject, db)
         
     cached = None
     # Ensure bypass_cache is treated as true if it's the boolean True or the string "true"
@@ -309,6 +340,14 @@ async def stream_content(
         
     if cached and not has_valid_revision(cached.revision):
         logger.info(f"INVALIDATING incomplete revision stream cache: topic='{topic}', subject='{subject}'")
+        db.delete(cached)
+        db.commit()
+        cached = None
+
+    # Structured legacy notes and completed streamed text are both valid. Only
+    # empty/error text should be removed before deciding whether to regenerate.
+    if cached and isinstance(cached.content, str) and not has_valid_stream_notes(cached.content):
+        logger.info(f"INVALIDATING unusable summary cache: topic='{topic}', subject='{subject}'")
         db.delete(cached)
         db.commit()
         cached = None
@@ -335,7 +374,10 @@ async def stream_content(
                     else:
                         md_content += f"{block.get('text')}\n\n"
             else:
-                md_content, embedded_revision = split_revision_payload(str(content), topic, subject)
+                cached_text = str(content)
+                if cached_text.lstrip().startswith(STREAM_CACHE_MARKER):
+                    cached_text = cached_text.lstrip()[len(STREAM_CACHE_MARKER):].lstrip()
+                md_content, embedded_revision = split_revision_payload(cached_text, topic, subject)
 
             yield md_content
             yield "\n\n---REVISION---\n"

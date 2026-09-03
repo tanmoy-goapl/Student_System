@@ -11,7 +11,6 @@ import { useState, useEffect, useRef } from "react";
 import { OfflineState, ErrorState, EmptyState, LearningSkeleton } from "@/components/UIStateSystem";
 import {
   getLearningData,
-  getLearningContent,
   streamLearningContent,
   completeTopic,
   explainSimpler,
@@ -60,7 +59,8 @@ const ICON_MAP: Record<string, any> = {
 };
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { parseRevisionPayload } from "@/lib/learningContent";
+import { notesBlocksToMarkdown, parseRevisionPayload } from "@/lib/learningContent";
+import { normalizeReadableMath } from "@/lib/readableMath";
 
 export default function LearningPage() {
     const router = useRouter();
@@ -264,12 +264,9 @@ export default function LearningPage() {
                     if (abortController.signal.aborted) return;
                     if (activeRequestTopicRef.current !== topicToStream) return;
                     const parsedContent = parseRevisionPayload(text);
-                    const displayMarkdown = parsedContent.content;
-                    const revisionData = parsedContent.revision;
-                    
-                    targetTextRef.current = displayMarkdown;
+                    targetTextRef.current = parsedContent.content;
 
-                    if (revisionData) {
+                    if (parsedContent.revision) {
                         setData(prev => {
                             if (!prev) return prev;
                             if (activeRequestTopicRef.current !== topicToStream) return prev;
@@ -279,7 +276,7 @@ export default function LearningPage() {
                                     ...prev.learningAssistantResponse,
                                     data: {
                                         ...prev.learningAssistantResponse?.data,
-                                        revision: revisionData
+                                        revision: parsedContent.revision
                                     }
                                 }
                             };
@@ -320,6 +317,13 @@ export default function LearningPage() {
             }
 
             const selectedTopic = response.selectedTopic || activeTopic || "General Topic";
+
+            if (response.notesResponse && Array.isArray(response.notesResponse.content)) {
+                response.notesResponse.content = notesBlocksToMarkdown(
+                    response.notesResponse.content,
+                    response.selectedTopic || activeTopic || "Topic"
+                );
+            }
 
             if (response.notesResponse && typeof response.notesResponse.content === "string") {
                 const parsedContent = parseRevisionPayload(response.notesResponse.content);
@@ -877,7 +881,7 @@ export default function LearningPage() {
                                 </div>
                             ) : modalContent.type === 'explain' ? (() => {
                                 // Inline Parser for Explain
-                                const text = modalContent.data || "";
+                                const text = normalizeReadableMath(modalContent.data || "");
                                 const conceptMatch = text.match(/\[CONCEPT\]([\s\S]*?)(?=\[ANALOGY\]|\[TAKEAWAY\]|$)/i);
                                 const analogyMatch = text.match(/\[ANALOGY\]([\s\S]*?)(?=\[TAKEAWAY\]|$)/i);
                                 const takeawayMatch = text.match(/\[TAKEAWAY\]([\s\S]*?)$/i);
@@ -925,7 +929,7 @@ export default function LearningPage() {
                                 );
                             })() : modalContent.type === 'example' ? (() => {
                                 // Inline Parser for Examples
-                                const text = modalContent.data || "";
+                                const text = normalizeReadableMath(modalContent.data || "");
                                 const items = text.split("===");
                                 const parsed = items.map((item: string, idx: number) => {
                                     const titleMatch = item.match(/\[TITLE\]([\s\S]*?)(?=\[CONTENT\]|$)/i);
@@ -965,7 +969,7 @@ export default function LearningPage() {
                                 );
                             })() : (() => {
                                 // Inline Parser for Flashcards
-                                const text = modalContent.data || "";
+                                const text = normalizeReadableMath(modalContent.data || "");
                                 const items = text.split("===");
                                 const parsed = items.map((item: string, idx: number) => {
                                     const qMatch = item.match(/\[QUESTION\]([\s\S]*?)(?=\[ANSWER\]|$)/i);

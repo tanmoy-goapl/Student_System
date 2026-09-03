@@ -21273,3 +21273,1462 @@ DETAIL:  Key (student_id)=(0) is not present in table "users".
 2026-08-31 14:40:40,872 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
 2026-08-31 14:40:40,902 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
 2026-08-31 14:40:41,107 - INFO - [Stream] Starting detailed streaming for Supervised vs Unsupervised
+2026-09-01 05:37:29,639 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 05:37:29,655 - INFO - CACHE HIT (Fast Return): topic='What is Machine Learning?', subject='Machine Learning'
+2026-09-01 05:37:29,689 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 05:52:48,840 - INFO - Recovered cached learning subject for topic='Data Preprocessing Basics': 'Machine Learning'
+2026-09-01 05:53:14,008 - INFO - Recovered cached learning subject for topic='Data Preprocessing Basics': 'Machine Learning'
+2026-09-01 05:53:14,008 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 05:53:14,027 - INFO - CACHE HIT (Fast Return): topic='Data Preprocessing Basics', subject='Machine Learning'
+2026-09-01 05:53:58,801 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 05:53:58,812 - INFO - [Practice] Starting/resuming session: mode=topic, topic=Interprocess Communication, difficulty=mixed
+2026-09-01 05:53:58,848 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 05:54:06,334 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "Interprocess Communication",
+    "subtopic": "Process Isolation and Memory",
+    "difficulty": "EASY",
+    "question": "What is the primary reason that two independent processes cannot directly read or write each other's memory space?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Operating systems enforce memory protection to ensure stability and security."
+      },
+      {
+        "id": "B",
+        "text": "Processes share a single global address space by default."
+      },
+      {
+        "id": "C",
+        "text": "Memory addresses are randomized and cannot be calculated."
+      },
+      {
+        "id": "D",
+        "text": "Processes are executed sequentially rather than concurrently."
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "Each process has its own isolated virtual address space. This isolation prevents one process from accidentally or maliciously corrupting the memory of another, ensuring system stability."
+  },
+  {
+    
+2026-09-01 05:54:06,357 - INFO - [Practice] Background generation added 2 questions to session 2803
+2026-09-01 05:54:14,297 - INFO - [PracticeEngine] Generated Content snippet: ```json
+[
+  {
+    "topic": "Interprocess Communication",
+    "subtopic": "IPC Mechanisms - Pipes",
+    "difficulty": "EASY",
+    "question": "Which Interprocess Communication mechanism is primarily designed for unidirectional data flow between a parent process and its child process?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Anonymous pipes"
+      },
+      {
+        "id": "B",
+        "text": "Message queues"
+      },
+      {
+        "id": "C",
+        "text": "Shared memory segments"
+      },
+      {
+        "id": "D",
+        "text": "Sockets"
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "Anonymous pipes are typically used for simple, unidirectional communication between related processes, such as a parent and its child, often in command-line pipelines."
+  },
+  {
+    "topic": "Interprocess Communication",
+    "subtopic": "IPC Mechanisms - Shared Memory",
+    "difficulty": "EASY",
+    "question": "What is the primary performance advantage of using s
+2026-09-01 05:54:14,317 - INFO - [Practice] Background generation added 3 questions to session 2803
+2026-09-01 05:54:14,319 - INFO - [Practice] Background generation completed for session 2803 (5 questions)
+2026-09-01 05:54:26,247 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2803
+2026-09-01 05:54:28,543 - INFO - Recovered cached learning subject for topic='Interprocess Communication': 'Operating Systems'
+2026-09-01 05:54:28,544 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 05:54:28,560 - INFO - CACHE HIT (Fast Return): topic='Interprocess Communication', subject='Operating Systems'
+2026-09-01 05:54:28,584 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 06:27:30,374 - INFO - 
+================================================================================
+2026-09-01 06:27:30,374 - INFO - [2026-09-01T06:27:30.374793] CHAT REQUEST
+2026-09-01 06:27:30,374 - INFO -   Student ID : 3
+2026-09-01 06:27:30,374 - INFO -   Question   : Generate a roadmap for our solar system
+2026-09-01 06:27:30,375 - INFO -   Role       : student
+2026-09-01 06:27:30,375 - INFO - ================================================================================
+2026-09-01 06:27:30,411 - INFO -   [Timing] FastAPI Request started processing at 1037496.760
+2026-09-01 06:27:30,419 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-09-01 06:27:30,419 - INFO -   [Timing] Docs + Mode Detection: 0.008s
+2026-09-01 06:27:32,894 - INFO - 
+================================================================================
+2026-09-01 06:27:32,894 - INFO - [2026-09-01T06:27:32.894550] CHAT REQUEST
+2026-09-01 06:27:32,894 - INFO -   Student ID : 3
+2026-09-01 06:27:32,894 - INFO -   Question   : 2 Months
+2026-09-01 06:27:32,894 - INFO -   Role       : student
+2026-09-01 06:27:32,894 - INFO - ================================================================================
+2026-09-01 06:27:32,897 - INFO -   [Timing] FastAPI Request started processing at 1037499.247
+2026-09-01 06:27:32,901 - INFO -   Detected Mode: LEARNING
+2026-09-01 06:27:32,901 - INFO -   [Timing] Docs + Mode Detection: 0.004s
+2026-09-01 06:27:42,052 - INFO - 
+================================================================================
+2026-09-01 06:27:42,052 - INFO - [2026-09-01T06:27:42.052250] CHAT REQUEST
+2026-09-01 06:27:42,052 - INFO -   Student ID : 3
+2026-09-01 06:27:42,052 - INFO -   Question   : Beginner
+2026-09-01 06:27:42,052 - INFO -   Role       : student
+2026-09-01 06:27:42,052 - INFO - ================================================================================
+2026-09-01 06:27:42,055 - INFO -   [Timing] FastAPI Request started processing at 1037508.404
+2026-09-01 06:27:42,058 - INFO -   Detected Mode: LEARNING
+2026-09-01 06:27:42,058 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-09-01 06:27:44,020 - INFO - 
+================================================================================
+2026-09-01 06:27:44,020 - INFO - [2026-09-01T06:27:44.020673] CHAT REQUEST
+2026-09-01 06:27:44,020 - INFO -   Student ID : 3
+2026-09-01 06:27:44,020 - INFO -   Question   : 1 hour
+2026-09-01 06:27:44,020 - INFO -   Role       : student
+2026-09-01 06:27:44,020 - INFO - ================================================================================
+2026-09-01 06:27:44,023 - INFO -   [Timing] FastAPI Request started processing at 1037510.372
+2026-09-01 06:27:44,027 - INFO -   Detected Mode: LEARNING
+2026-09-01 06:27:44,027 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-09-01 06:27:46,739 - INFO - 
+================================================================================
+2026-09-01 06:27:46,739 - INFO - [2026-09-01T06:27:46.739965] CHAT REQUEST
+2026-09-01 06:27:46,740 - INFO -   Student ID : 3
+2026-09-01 06:27:46,740 - INFO -   Question   : Mixed
+2026-09-01 06:27:46,740 - INFO -   Role       : student
+2026-09-01 06:27:46,740 - INFO - ================================================================================
+2026-09-01 06:27:46,742 - INFO -   [Timing] FastAPI Request started processing at 1037513.091
+2026-09-01 06:27:46,745 - INFO -   Detected Mode: LEARNING
+2026-09-01 06:27:46,745 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-09-01 06:27:51,923 - INFO - 
+================================================================================
+2026-09-01 06:27:51,923 - INFO - [2026-09-01T06:27:51.923436] CHAT REQUEST
+2026-09-01 06:27:51,923 - INFO -   Student ID : 3
+2026-09-01 06:27:51,923 - INFO -   Question   : No
+2026-09-01 06:27:51,923 - INFO -   Role       : student
+2026-09-01 06:27:51,923 - INFO - ================================================================================
+2026-09-01 06:27:51,926 - INFO -   [Timing] FastAPI Request started processing at 1037518.275
+2026-09-01 06:27:51,929 - INFO -   Detected Mode: LEARNING
+2026-09-01 06:27:51,929 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-09-01 06:27:54,730 - INFO - 
+================================================================================
+2026-09-01 06:27:54,731 - INFO - [2026-09-01T06:27:54.731269] CHAT REQUEST
+2026-09-01 06:27:54,731 - INFO -   Student ID : 3
+2026-09-01 06:27:54,731 - INFO -   Question   : Generate Roadmap
+2026-09-01 06:27:54,731 - INFO -   Role       : student
+2026-09-01 06:27:54,731 - INFO - ================================================================================
+2026-09-01 06:27:54,734 - INFO -   [Timing] FastAPI Request started processing at 1037521.083
+2026-09-01 06:27:54,736 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-09-01 06:27:54,737 - INFO -   [Timing] Docs + Mode Detection: 0.002s
+2026-09-01 06:57:26,576 - INFO - [RoadmapEngine] Using compact concept-first generation for 12 weeks
+2026-09-01 06:58:05,683 - ERROR - [RoadmapEngine] Failed to parse or validate LLM JSON: Expecting ',' delimiter: line 35 column 7 (char 1504)
+RAW CONTENT:
+{
+"focus_topic": "AI",
+"title": "Applied AI Engineering: From Foundations to Production Systems",
+"summary": "Master the end-to-end lifecycle of AI applications, covering machine learning fundamentals, deep learning architectures, prompt engineering, model evaluation, and deployment strategies to build a production-ready AI system.",
+"weeks": [
+  {
+    "week_number": 1,
+    "focus_area": "Mathematical Foundations & Data Representation",
+    "outcome": "Implement linear algebra operations and data preprocessing pipelines for AI tasks.",
+    "days": [
+      {
+        "day_number": 1,
+        "topic": "Linear Algebra for AI",
+        "subtopics": ["Vectors and Matrices", "Dot Products and Projections", "Matrix Multiplication"]
+      },
+      {
+        "day_number": 2,
+        "topic": "Probability and Statistics",
+        "subtopics": ["Distributions (Normal, Bernoulli)", "Bayes' Theorem", "Expectation and Variance"]
+      },
+      {
+        "day_number": 3,
+        "topic": "Calculus for Optimization",
+        "subtopics": ["Derivatives and Gradients", "Partial Derivatives", "Chain Rule"]
+      },
+      {
+        "day_number": 4,
+        "topic": "Data Preprocessing",
+        "subtopics": ["Normalization and Standardization", "Handling Missing Values", "Encoding Categorical Variables"]
+      },
+      {
+        "day_number": 5,
+        "topic": "Exploratory Data Analysis (EDA)",
+        "subtopics": ["Statistical Summaries", "Correlation Matrices", "Visualization Techniques"]
+      ]
+    }
+  },
+  {
+    "week_number": 2,
+    "focus_area": "Classical Machine Learning Algorithms",
+    "outcome": "Build and evaluate supervised learning models using scikit-learn.",
+    "days": [
+      {
+        "day_number": 1,
+        "topic": "Linear Regression",
+        "subtopics": ["Least Squares", "Bias-Variance Tradeoff", "Regularization (Ridge/Lasso)"]
+      },
+      {
+        "day_number": 2,
+        "topic": "Logistic Regression",
+        "subtopics": ["Sigmoid Function", "Log Loss", "Decision Boundaries"]
+      },
+      {
+        "day_number": 3,
+        "topic": "Decision Trees and Random Forests",
+        "subtopics": ["Gini Impurity", "Entropy", "Ensemble Methods"]
+      },
+      {
+        "day_number": 4,
+        "topic": "Support Vector Machines (SVM)",
+        "subtopics": ["Hyperplanes", "Kernel Trick", "Margin Maximization"]
+      },
+      {
+        "day_number": 5,
+        "topic": "Model Evaluation Metrics",
+        "subtopics": ["Confusion Matrix", "ROC-AUC", "Cross-Validation"]
+      ]
+    ]
+  },
+  {
+    "week_number": 3,
+    "focus_area": "Deep Learning Fundamentals",
+    "outcome": "Construct neural networks from scratch and understand backpropagation.",
+    "days": [
+      {
+        "day_number": 1,
+        "topic": "Perceptrons and Multi-Layer Perceptrons",
+        "subtopics": ["Activation Functions (ReLU, Sigmoid)", "Forward Propagation", "Loss Functions"]
+      },
+      {
+        "day_number": 2,
+        "topic": "Backpropagation Algorithm",
+        "subtopics": ["Gradient Descent", "Partial Derivatives of Loss", "Weight Updates"]
+      },
+      {
+        "day_number": 3,
+        "topic": "Optimization Techniques",
+        "subtopics": ["Stochastic Gradient Descent (SGD)", "Adam Optimizer", "Learning Rate Scheduling"]
+      },
+      {
+        "day_number": 4,
+        "topic": "Regularization in Deep Learning",
+        "subtopics": ["Dropout", "Batch Normalization", "Early Stopping"]
+      },
+      {
+        "day_number": 5,
+        "topic": "Implementing a Neural Network",
+        "subtopics": ["PyTorch/TensorFlow Basics", "Tensor Operations", "Custom Layers"]
+      ]
+    ]
+  },
+  {
+    "week_number": 4,
+    "focus_area": "Computer Vision with CNNs",
+    "outcome": "Train Convolutional Neural Networks for image classification tasks.",
+    "days": [
+      {
+        "day_number": 1,
+        "topic": "Convolutional Operations",
+        "subtopics": ["Filters/Kernels", "Stride and Padding", "Pooling Layers"]
+      },
+      {
+        "day_number": 2,
+        "topic": "CNN Architectures",
+        "subtopics": ["LeNet-5", "AlexNet", "VGGNet"]
+      },
+      {
+        "day_number": 3,
+        "topic": "Transfer Learning",
+        "subtopics": ["Feature Extraction", "Fine-Tuning", "Pre-trained Models"]
+      },
+      {
+        "day_number": 4,
+        "topic": "Data Augmentation",
+        "subtopics": ["Geometric Transformations", "Color Jittering", "Mixup"]
+      },
+      {
+        "day_number": 5,
+        "topic": "Object Detection Basics",
+        "subtopics": ["Bounding Boxes", "IoU (Intersection over Union)", "YOLO Overview"]
+      ]
+    ]
+  },
+  {
+    "week_number": 5,
+    "focus_area": "Natural Language Processing (NLP) Foundations",
+    "outcome": "Process text data and build sequence models for classification.",
+    "days": [
+      {
+        "day_number": 1,
+        "topic": "Text Representation",
+        "subtopics": ["Bag of Words", "TF-IDF", "Word Embeddings (Word2Vec)"]
+      },
+      {
+        "day_number": 2,
+        "topic": "Recurrent Neural Networks (RNNs)",
+        "subtopics": ["Sequence Modeling", "Vanishing Gradient Problem", "LSTM Cells"]
+      },
+      {
+        "day_number": 3,
+        "topic": "Attention Mechanisms",
+        "subtopics": ["Self-Attention", "Query-Key-Value", "Multi-Head Attention"]
+      },
+      {
+        "day_number": 4,
+        "topic": "Transformer Architecture",
+        "subtopics": ["Encoder-Decoder Structure", "Positional Encoding", "Layer Normalization"]
+      },
+      {
+        "day_number": 5,
+        "topic": "Hugging Face Transformers",
+        "subtopics": ["Pipeline API", "Tokenizer Usage", "Pre-trained Models"]
+      ]
+    ]
+  },
+  {
+    "week_number": 6,
+    "focus_area": "Large Language Models (LLMs) and Prompt Engineering",
+    "outcome": "Design effective prompts and evaluate LLM outputs for specific tasks.",
+    "days": [
+      {
+        "day_number": 1,
+        "topic": "LLM Fundamentals",
+        "subtopics": ["Next Token Prediction", "Training Data Scale", "Parameter Efficiency"]
+      },
+      {
+        "day_number": 2,
+        "topic": "Prompt Engineering Techniques",
+        "subtopics": ["Zero-shot Prompting", "Few-shot Prompting", "Chain-of-Thought"]
+      },
+      {
+        "day_number": 3,
+        "topic": "Retrieval-Augmented Generation (RAG)",
+        "subtopics": ["Vector Databases", "Embedding Models", "Context Window Management"]
+      },
+      {
+        "day_number": 4,
+        "topic": "LLM Evaluation",
+        "subtopics": ["Perplexity", "BLEU/ROUGE Scores", "Human Evaluation"]
+      },
+      {
+        "day_number": 5,
+        "topic": "Hallucination and Bias",
+        "subtopics": ["Sources of Hallucination", "Mitigation Strategies", "Safety Filters"]
+      ]
+    ]
+  },
+  {
+    "week_number": 7,
+    "focus_area": "Generative AI Models",
+    "outcome": "Understand and implement generative architectures like GANs and Diffusion models.",
+    "days": [
+      {
+        "day_number": 1,
+        "topic": "Generative Adversarial Networks (GANs)",
+        "subtopics": ["Generator vs Discriminator", "Minimax Game", "Mode Collapse"]
+      },
+      {
+        "day_number": 2,
+        "topic": "Variational Autoencoders (VAEs)",
+        "subtopics": ["Latent Space", "Reconstruction Loss", "KL Divergence"]
+      },
+      {
+        "day_number": 3,
+        "topic": "Diffusion Models",
+        "subtopics": ["Forward Process", "Reverse Process", "Noise Prediction"]
+      },
+      {
+        "day_number": 4,
+        "topic": "Stable Diffusion Architecture",
+        "subtopics": ["U-Net", "Text Encoder (CLIP)", "Latent Diffusion"]
+      },
+      {
+        "day_number": 5,
+        "topic": "Image Generation Pipelines",
+        "subtopics": ["Prompt-to-Image", "ControlNet", "Inpainting"]
+      ]
+    ]
+  },
+  {
+    "week_number": 8,
+    "focus_area": "AI Ethics and Responsible AI",
+    "outcome": "Identify biases in models and implement fairness constraints.",
+    "days": [
+      {
+        "day_number": 1,
+        "topic": "Bias in AI",
+        "subtopics": ["Data Bias", "Algorithmic Bias", "Representation Bias"]
+      },
+      {
+        "day_number": 2,
+        "topic": "Fairness Metrics",
+        "subtopics": ["Demographic Parity", "Equal Opportunity", "Individual Fairness"]
+      },
+      {
+        "day_number": 3,
+        "topic": "Explainability (XAI)",
+        "subtopics": ["SHAP Values", "LIME", "Feature Importance"]
+      },
+      {
+        "day_number": 4,
+        "topic": "Privacy in AI",
+        "subtopics": ["Differential Privacy", "Federated Learning", "Data Anonymization"]
+      },
+      {
+        "day_number": 5,
+        "topic": "Regulatory Landscape",
+        "subtopics": ["EU AI Act", "GDPR", "Industry Standards"]
+      ]
+    ]
+  },
+  {
+    "week_number": 9,
+    "focus_area": "MLOps and Model Deployment",
+    "outcome": "Containerize models and create REST APIs for inference.",
+    "days": [
+      {
+        "day_number": 1,
+        "topic": "Model Serialization",
+2026-09-01 07:16:08,390 - INFO - 
+================================================================================
+2026-09-01 07:16:08,390 - INFO - [2026-09-01T07:16:08.390823] CHAT REQUEST
+2026-09-01 07:16:08,390 - INFO -   Student ID : 3
+2026-09-01 07:16:08,391 - INFO -   Question   : generate a roadmap for solar system
+2026-09-01 07:16:08,391 - INFO -   Role       : student
+2026-09-01 07:16:08,391 - INFO - ================================================================================
+2026-09-01 07:16:08,427 - INFO -   [Timing] FastAPI Request started processing at 1040414.776
+2026-09-01 07:16:08,436 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-09-01 07:16:08,436 - INFO -   [Timing] Docs + Mode Detection: 0.008s
+2026-09-01 07:16:11,270 - INFO - 
+================================================================================
+2026-09-01 07:16:11,270 - INFO - [2026-09-01T07:16:11.270886] CHAT REQUEST
+2026-09-01 07:16:11,272 - INFO -   Student ID : 3
+2026-09-01 07:16:11,272 - INFO -   Question   : 2 Months
+2026-09-01 07:16:11,272 - INFO -   Role       : student
+2026-09-01 07:16:11,272 - INFO - ================================================================================
+2026-09-01 07:16:11,276 - INFO -   [Timing] FastAPI Request started processing at 1040417.625
+2026-09-01 07:16:11,285 - INFO -   Detected Mode: LEARNING
+2026-09-01 07:16:11,286 - INFO -   [Timing] Docs + Mode Detection: 0.009s
+2026-09-01 07:16:13,770 - INFO - 
+================================================================================
+2026-09-01 07:16:13,771 - INFO - [2026-09-01T07:16:13.771127] CHAT REQUEST
+2026-09-01 07:16:13,771 - INFO -   Student ID : 3
+2026-09-01 07:16:13,771 - INFO -   Question   : Beginner
+2026-09-01 07:16:13,771 - INFO -   Role       : student
+2026-09-01 07:16:13,771 - INFO - ================================================================================
+2026-09-01 07:16:13,778 - INFO -   [Timing] FastAPI Request started processing at 1040420.127
+2026-09-01 07:16:13,785 - INFO -   Detected Mode: LEARNING
+2026-09-01 07:16:13,786 - INFO -   [Timing] Docs + Mode Detection: 0.007s
+2026-09-01 07:16:16,020 - INFO - 
+================================================================================
+2026-09-01 07:16:16,021 - INFO - [2026-09-01T07:16:16.021184] CHAT REQUEST
+2026-09-01 07:16:16,021 - INFO -   Student ID : 3
+2026-09-01 07:16:16,021 - INFO -   Question   : 1 hour
+2026-09-01 07:16:16,021 - INFO -   Role       : student
+2026-09-01 07:16:16,021 - INFO - ================================================================================
+2026-09-01 07:16:16,024 - INFO -   [Timing] FastAPI Request started processing at 1040422.373
+2026-09-01 07:16:16,027 - INFO -   Detected Mode: LEARNING
+2026-09-01 07:16:16,028 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-09-01 07:16:18,509 - INFO - 
+================================================================================
+2026-09-01 07:16:18,510 - INFO - [2026-09-01T07:16:18.510249] CHAT REQUEST
+2026-09-01 07:16:18,510 - INFO -   Student ID : 3
+2026-09-01 07:16:18,510 - INFO -   Question   : Mixed
+2026-09-01 07:16:18,510 - INFO -   Role       : student
+2026-09-01 07:16:18,510 - INFO - ================================================================================
+2026-09-01 07:16:18,513 - INFO -   [Timing] FastAPI Request started processing at 1040424.862
+2026-09-01 07:16:18,516 - INFO -   Detected Mode: LEARNING
+2026-09-01 07:16:18,516 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-09-01 07:16:21,015 - INFO - 
+================================================================================
+2026-09-01 07:16:21,015 - INFO - [2026-09-01T07:16:21.015785] CHAT REQUEST
+2026-09-01 07:16:21,016 - INFO -   Student ID : 3
+2026-09-01 07:16:21,016 - INFO -   Question   : No
+2026-09-01 07:16:21,016 - INFO -   Role       : student
+2026-09-01 07:16:21,016 - INFO - ================================================================================
+2026-09-01 07:16:21,019 - INFO -   [Timing] FastAPI Request started processing at 1040427.368
+2026-09-01 07:16:21,022 - INFO -   Detected Mode: LEARNING
+2026-09-01 07:16:21,022 - INFO -   [Timing] Docs + Mode Detection: 0.003s
+2026-09-01 07:16:23,364 - INFO - 
+================================================================================
+2026-09-01 07:16:23,368 - INFO - [2026-09-01T07:16:23.368493] CHAT REQUEST
+2026-09-01 07:16:23,368 - INFO -   Student ID : 3
+2026-09-01 07:16:23,368 - INFO -   Question   : Generate Roadmap
+2026-09-01 07:16:23,368 - INFO -   Role       : student
+2026-09-01 07:16:23,368 - INFO - ================================================================================
+2026-09-01 07:16:23,372 - INFO -   [Timing] FastAPI Request started processing at 1040429.722
+2026-09-01 07:16:23,375 - INFO -   Detected Mode: ROADMAP_CREATION
+2026-09-01 07:16:23,375 - INFO -   [Timing] Docs + Mode Detection: 0.002s
+2026-09-01 07:17:05,433 - INFO - [get_learning_data] Requested roadmap_id=42, student_id=3
+2026-09-01 07:17:05,446 - INFO - [get_learning_data] Retrieved roadmap id=42, title='Solar System Architecture and Orbital Mechanics Roadmap'
+2026-09-01 07:17:05,546 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 07:17:06,883 - INFO - [Stream] Starting detailed streaming for Final System Review and Demo
+2026-09-01 07:17:12,452 - INFO - [Stream] Starting detailed streaming for User Interface and Documentation
+2026-09-01 07:17:20,119 - INFO - [Stream] Starting detailed streaming for Optimization Techniques
+2026-09-01 07:17:30,733 - INFO - [Context] Discarded irrelevant chunk for topic='Newtonian Gravity and Universal Constants'
+2026-09-01 07:17:30,733 - INFO - [Stream] Starting detailed streaming for Newtonian Gravity and Universal Constants
+2026-09-01 07:17:38,857 - INFO - [Context] Discarded irrelevant chunk for topic='Performance Profiling'
+2026-09-01 07:17:38,857 - INFO - [Stream] Starting detailed streaming for Performance Profiling
+2026-09-01 07:17:45,833 - INFO - [Stream] Starting detailed streaming for Final System Review and Demo
+2026-09-01 07:19:07,743 - INFO - [get_learning_data] Requested roadmap_id=41, student_id=3
+2026-09-01 07:19:07,744 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-01 07:19:07,774 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 07:19:07,914 - INFO - [Stream] Starting detailed streaming for Linear Algebra for Machine Learning
+2026-09-01 07:19:17,042 - INFO - [Context] Discarded irrelevant chunk for topic='Multivariable Calculus & Optimization'
+2026-09-01 07:19:17,042 - INFO - [Stream] Starting detailed streaming for Multivariable Calculus & Optimization
+2026-09-01 07:19:20,214 - INFO - [Stream] Starting detailed streaming for Linear Algebra for Machine Learning
+2026-09-01 07:20:07,029 - INFO - [Context] Discarded irrelevant chunk for topic='Probability & Statistics for AI'
+2026-09-01 07:20:07,030 - INFO - [Stream] Starting detailed streaming for Probability & Statistics for AI
+2026-09-01 07:21:33,851 - INFO - [Stream] Starting detailed streaming for Project Documentation and GitHub Best Practices
+2026-09-01 07:21:43,397 - INFO - [Stream] Starting detailed streaming for Technical Resume Optimization
+2026-09-01 07:21:55,551 - INFO - [Stream] Starting detailed streaming for Model Serialization and Optimization
+2026-09-01 07:22:01,161 - INFO - [Stream] Starting detailed streaming for Building REST APIs with FastAPI
+2026-09-01 07:25:44,620 - INFO - [get_learning_data] Requested roadmap_id=41, student_id=3
+2026-09-01 07:25:44,623 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-01 07:25:44,882 - INFO - CACHE HIT (Fast Return): topic='Multivariable Calculus & Optimization', subject='Week 1'
+2026-09-01 07:25:44,918 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 07:25:45,148 - INFO - [Context] Discarded irrelevant chunk for topic='Multivariable Calculus & Optimization'
+2026-09-01 07:25:45,148 - INFO - [Stream] Starting detailed streaming for Multivariable Calculus & Optimization
+2026-09-01 07:28:16,417 - INFO - [get_learning_data] Requested roadmap_id=41, student_id=3
+2026-09-01 07:28:16,421 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-01 07:28:16,699 - INFO - CACHE HIT (Fast Return): topic='Multivariable Calculus & Optimization', subject='Week 1'
+2026-09-01 07:28:16,731 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 07:28:16,938 - INFO - [Context] Discarded irrelevant chunk for topic='Multivariable Calculus & Optimization'
+2026-09-01 07:28:16,938 - INFO - [Stream] Starting detailed streaming for Multivariable Calculus & Optimization
+2026-09-01 07:28:39,841 - INFO - [Stream] Starting detailed streaming for NumPy Vectorization Techniques
+2026-09-01 07:28:57,424 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 07:28:57,463 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 07:28:57,518 - INFO - [Stream] Starting detailed streaming for Interprocess Communication
+2026-09-01 07:42:43,471 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 07:42:43,473 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-01 07:42:43,475 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-01 07:42:43,475 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-01 07:42:43,476 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-01 07:42:43,477 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-01 07:42:43,479 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-01 07:42:43,480 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-01 07:42:43,481 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-01 07:42:43,492 - INFO - CACHE HIT (Fast Return): topic='Linear Algebra for Machine Learning', subject='Week 1'
+2026-09-01 07:42:43,515 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 07:43:00,760 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 07:43:00,770 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-09-01 07:43:00,788 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 07:43:03,098 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 07:43:03,101 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-01 07:43:03,106 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-01 07:43:03,107 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-01 07:43:03,108 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-01 07:43:03,110 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-01 07:43:03,112 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-01 07:43:03,113 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-01 07:43:03,115 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-01 07:43:03,128 - INFO - CACHE HIT (Fast Return): topic='Probability & Statistics for AI', subject='Week 1'
+2026-09-01 07:43:03,154 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 07:43:05,280 - INFO - [Stream] Starting detailed streaming for Data Handling with Pandas
+2026-09-01 07:43:08,858 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 07:43:08,868 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-09-01 07:43:08,888 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 07:43:10,711 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 07:43:10,714 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-01 07:43:10,716 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-01 07:43:10,717 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-01 07:43:10,718 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-01 07:43:10,719 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-01 07:43:10,721 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-01 07:43:10,722 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-01 07:43:10,723 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-01 07:43:10,763 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 09:05:48,021 - INFO - Recovered cached learning subject for topic='Multivariable Calculus & Optimization': 'Week 1'
+2026-09-01 09:05:48,021 - INFO - [get_learning_data] Requested roadmap_id=41, student_id=3
+2026-09-01 09:05:48,023 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-01 09:05:48,048 - INFO - CACHE HIT (Fast Return): topic='Multivariable Calculus & Optimization', subject='Week 1'
+2026-09-01 09:05:48,072 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 10:21:40,547 - INFO - Recovered cached learning subject for topic='Multivariable Calculus & Optimization': 'Week 1'
+2026-09-01 10:21:40,547 - INFO - [get_learning_data] Requested roadmap_id=41, student_id=3
+2026-09-01 10:21:40,550 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-01 10:21:40,838 - INFO - CACHE HIT (Fast Return): topic='Multivariable Calculus & Optimization', subject='Week 1'
+2026-09-01 10:21:40,879 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 13:14:44,034 - INFO - [Context] Discarded irrelevant chunk for topic='Convolutional Operations'
+2026-09-01 13:14:44,034 - INFO - [Stream] Starting detailed streaming for Convolutional Operations
+2026-09-01 13:14:54,647 - INFO - [Stream] Starting detailed streaming for Classic CNN Architectures
+2026-09-01 13:14:58,054 - INFO - [Context] Discarded irrelevant chunk for topic='Pooling and Normalization Layers'
+2026-09-01 13:14:58,054 - INFO - [Stream] Starting detailed streaming for Pooling and Normalization Layers
+2026-09-01 17:46:10,837 - INFO - [get_learning_data] Requested roadmap_id=41, student_id=3
+2026-09-01 17:46:10,839 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-01 17:46:10,861 - INFO - CACHE HIT (Fast Return): topic='Classic CNN Architectures', subject='Week 4'
+2026-09-01 17:46:10,895 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 17:47:17,511 - INFO - Recovered cached learning subject for topic='Linear Algebra for Machine Learning': 'Week 1'
+2026-09-01 17:47:17,512 - INFO - [get_learning_data] Requested roadmap_id=41, student_id=3
+2026-09-01 17:47:17,513 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-01 17:47:17,530 - INFO - CACHE HIT (Fast Return): topic='Linear Algebra for Machine Learning', subject='Week 1'
+2026-09-01 17:47:17,546 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 17:49:43,287 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 17:49:43,306 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-09-01 17:49:43,335 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 17:49:43,749 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 17:49:43,765 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-09-01 17:49:43,798 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 17:51:32,442 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-01 17:51:32,453 - INFO - CACHE HIT (Fast Return): topic='Introduction to Web Development', subject='Frontend Web Development'
+2026-09-01 17:51:32,472 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-01 17:51:32,649 - INFO - [Context] Discarded irrelevant chunk for topic='Introduction to Web Development'
+2026-09-01 17:51:32,649 - INFO - [Stream] Starting detailed streaming for Introduction to Web Development
+2026-09-01 17:51:46,077 - INFO - [Stream] Starting detailed streaming for Role of Frontend Development
+2026-09-02 08:07:57,331 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:07:57,376 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='None'
+2026-09-02 08:07:57,401 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:07:57,588 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:07:57,601 - INFO - CACHE HIT (Fast Return): topic='Role of Frontend Development', subject='Frontend Web Development'
+2026-09-02 08:07:57,618 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:29:48,506 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:29:48,777 - INFO - CACHE INVALIDATED (Old format): topic='Introduction to Web Development', subject='Frontend Web Development'
+2026-09-02 08:29:48,810 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:29:50,017 - INFO - [Context] Discarded irrelevant chunk for topic='Introduction to Web Development'
+2026-09-02 08:29:50,017 - INFO - --- LLM PROMPT (Subject: Frontend Web Development, Topic: Introduction to Web Development) ---
+2026-09-02 08:29:57,521 - INFO - CACHE INVALIDATED (Old format): topic='Role of Frontend Development', subject='Frontend Web Development'. Forcing regeneration...
+2026-09-02 08:29:57,535 - INFO - --- LLM PROMPT (Subject: Frontend Web Development, Topic: Role of Frontend Development) ---
+2026-09-02 08:30:00,699 - INFO - CACHE INVALIDATED (Old format): topic='Client-Side vs Server-Side', subject='Frontend Web Development'. Forcing regeneration...
+2026-09-02 08:30:00,713 - INFO - [Context] Discarded irrelevant chunk for topic='Client-Side vs Server-Side'
+2026-09-02 08:30:00,713 - INFO - --- LLM PROMPT (Subject: Frontend Web Development, Topic: Client-Side vs Server-Side) ---
+2026-09-02 08:30:02,602 - INFO - CACHE INVALIDATED (Old format): topic='Web Browsers and Developer Tools', subject='Frontend Web Development'. Forcing regeneration...
+2026-09-02 08:30:02,616 - INFO - --- LLM PROMPT (Subject: Frontend Web Development, Topic: Web Browsers and Developer Tools) ---
+2026-09-02 08:30:04,166 - INFO - CACHE INVALIDATED (Old format): topic='Introduction to HTML, CSS, and JavaScript', subject='Frontend Web Development'. Forcing regeneration...
+2026-09-02 08:30:04,181 - INFO - --- LLM PROMPT (Subject: Frontend Web Development, Topic: Introduction to HTML, CSS, and JavaScript) ---
+2026-09-02 08:30:14,055 - INFO - --- LLM PROMPT (Subject: Frontend Web Development, Topic: HTML Document Structure) ---
+2026-09-02 08:30:18,653 - INFO - [Context] Discarded irrelevant chunk for topic='Introduction to Web Development'
+2026-09-02 08:30:18,653 - INFO - --- LLM PROMPT (Subject: Frontend Web Development, Topic: Introduction to Web Development) ---
+2026-09-02 08:30:29,664 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "Introduction to Web Development"
+        },
+        {
+            "type": "paragraph",
+            "text": "Welcome to the world of web development! Think of the internet as a massive library. Web development is the art of writing the books, designing the shelves, and creating the signs that help people find exactly what they are looking for."
+        },
+        {
+            "type": "heading",
+            "text": "The Three Pillars"
+        },
+        {
+            "type": "paragraph",
+            "text": "To build any website, you need three core technologies. They work together like a house. You have the structure, the decoration, and the electricity."
+        },
+        {
+            "type": "paragraph",
+            "text": "First is HTML. This stands for HyperText Markup Language. It is the skeleton of your page. It tells the browser what content exists, like headings, paragraphs, and images."
+        }
+2026-09-02 08:30:29,665 - INFO - CACHE MISS: topic='Introduction to Web Development', subject='Frontend Web Development'
+2026-09-02 08:30:29,688 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:30:39,281 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:30:39,290 - INFO - CACHE HIT (Fast Return): topic='Introduction to Web Development', subject='Frontend Web Development'
+2026-09-02 08:30:39,323 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:30:39,968 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "Role of Frontend Development"
+        },
+        {
+            "type": "heading",
+            "text": "Concept"
+        },
+        {
+            "type": "paragraph",
+            "text": "Frontend development is the art of building the part of a website or application that users see and interact with. It is the bridge between human intuition and machine logic. While the backend handles data and servers, the frontend handles the user experience."
+        },
+        {
+            "type": "paragraph",
+            "text": "Think of it as the interior design and layout of a house. The backend is the foundation, plumbing, and electrical wiring hidden behind the walls. The frontend is the paint, furniture, and lighting that makes the space livable and inviting for the resident."
+        },
+        {
+            "type": "heading",
+            "text": "Why is it Important?"
+        },
+        {
+            "type": "pa
+2026-09-02 08:30:39,968 - INFO - CACHE MISS: topic='Role of Frontend Development', subject='Frontend Web Development'
+2026-09-02 08:30:39,977 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:30:44,065 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "Web Browsers and Developer Tools"
+        },
+        {
+            "type": "heading",
+            "text": "Concept"
+        },
+        {
+            "type": "paragraph",
+            "text": "Think of a web browser as a restaurant. The browser is the dining room where you sit. The website is the menu and the food. But how does the kitchen know what you want? That is where Developer Tools come in."
+        },
+        {
+            "type": "paragraph",
+           
+            "text": "Developer Tools are like a secret window into the kitchen. They allow you to see exactly what is happening behind the scenes. You can inspect the code, watch network requests, and fix bugs without guessing."
+        },
+        {
+            "type": "heading",
+            "text": "Why is it Important?"
+        },
+        {
+            "type": "paragraph",
+            "text": "As a frontend developer, you cannot rely on guesswork. I
+2026-09-02 08:30:44,065 - INFO - CACHE MISS: topic='Web Browsers and Developer Tools', subject='Frontend Web Development'
+2026-09-02 08:30:44,073 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:30:44,915 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "HTML Document Structure"
+        },
+        {
+            "type": "heading",
+            "text": "Concept"
+        },
+        {
+            "type": "paragraph",
+            "text": "Think of an HTML document as the skeleton of a webpage. Just like your body needs a skeleton to hold everything together, a webpage needs HTML structure to hold text, images, and links. Without this structure, the browser would not know how to display your content."
+        },
+        {
+            "type": "heading",
+            "text": "Why is it Important?"
+        },
+        {
+            "type": "paragraph",
+            "text": "A well-structured HTML document is crucial for accessibility and search engine optimization (SEO). It helps screen readers understand the content for visually impaired users. It also helps search engines like Google understand what your page is about, which can improve your ranking."
+        },
+      
+2026-09-02 08:30:44,915 - INFO - CACHE MISS: topic='HTML Document Structure', subject='Frontend Web Development'
+2026-09-02 08:30:44,926 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:30:45,205 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "Client-Side vs Server-Side"
+        },
+        {
+            "type": "heading",
+            "text": "Concept"
+        },
+        {
+            "type": "paragraph",
+            "text": "Imagine the web as a restaurant. The client is you, the customer sitting at the table. The server is the kitchen in the back."
+        },
+        {
+            "type": "paragraph",
+            "text": "Client-side code runs on your computer (the browser). It handles what you see and how you interact with the page right now."
+        },
+        {
+            "type": "paragraph",
+            "text": "Server-side code runs on a powerful computer far away. It handles the heavy lifting, like checking passwords or saving your order to a database."
+        },
+        {
+            "type": "heading",
+            "text": "Why is it Important?"
+        },
+        {
+            "type": "paragraph",
+            "text": "Understanding this
+2026-09-02 08:30:45,206 - INFO - CACHE MISS: topic='Client-Side vs Server-Side', subject='Frontend Web Development'
+2026-09-02 08:30:45,213 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:30:50,319 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "Introduction to HTML, CSS, and JavaScript"
+        },
+        {
+            "type": "paragraph",
+            "text": "Welcome to the world of frontend web development. Even though your background is heavily focused on machine learning and backend logic, understanding the web interface is crucial. It allows you to build dashboards for your models, create interactive demos, and understand how data is presented to users."
+        },
+        {
+            "type": "heading",
+            "text": "The Core Trio"
+        },
+        {
+            "type": "paragraph",
+            "text": "Think of a website as a human body. You need three distinct layers to make it functional, presentable, and interactive. These are HTML, CSS, and JavaScript. They work together to create the experience you see in your browser."
+        },
+        {
+            "type": "heading",
+            "text": "HTML: The Structure"
+        },
+   
+2026-09-02 08:30:50,319 - INFO - CACHE MISS: topic='Introduction to HTML, CSS, and JavaScript', subject='Frontend Web Development'
+2026-09-02 08:30:50,329 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:30:55,567 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "Introduction to Web Development"
+        },
+        {
+            "type": "heading",
+            "text": "What is Web Development?"
+        },
+        {
+            "type": "paragraph",
+            "text": "Welcome! Think of web development as building the digital storefronts and experiences we interact with every day. It is the process of creating websites and web applications that run on the internet or an intranet."
+        },
+        {
+            "type": "paragraph",
+            "text": "We generally split this into two main sides: Frontend and Backend. Since you are here to learn Frontend, we will focus on what the user sees and interacts with directly in their browser."
+        },
+        {
+            "type": "heading",
+            "text": "Why is it Important?"
+        },
+        {
+            "type": "paragraph",
+            "text": "In today's world, if you aren't on the web, you don't exist. Web 
+2026-09-02 08:30:55,567 - INFO - CACHE MISS: topic='Introduction to Web Development', subject='Frontend Web Development'
+2026-09-02 08:30:55,576 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:31:07,178 - INFO - CACHE INVALIDATED (Old format): topic='System Calls', subject='Operating Systems'. Forcing regeneration...
+2026-09-02 08:31:07,193 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: System Calls) ---
+2026-09-02 08:31:11,109 - INFO - CACHE INVALIDATED (Old format): topic='OS Components and Services', subject='Operating Systems'. Forcing regeneration...
+2026-09-02 08:31:11,123 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: OS Components and Services) ---
+2026-09-02 08:31:15,898 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:31:15,950 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:31:16,021 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: OS Components and Services) ---
+2026-09-02 08:31:28,038 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "System Calls"
+        },
+        {
+            "type": "heading",
+            "text": "Concept"
+        },
+        {
+            "type": "paragraph",
+            "text": "Imagine your computer program is a tenant living in an apartment. The tenant can do anything inside their room, like cook or sleep. But if they need to change the building's electricity or open the front door, they cannot just break the lock. They must ask the building manager."
+        },
+        {
+            "type": "paragraph",
+            "text": "In computing, a System Call is that formal request. It is the bridge between user space (your application) and kernel space (the operating system core). Your program uses system calls to ask the OS for services like reading a file, sending network data, or creating a new process."
+        },
+        {
+            "type": "heading",
+            "text": "Why is it Important?"
+        },
+       
+2026-09-02 08:31:28,039 - INFO - CACHE MISS: topic='System Calls', subject='Operating Systems'
+2026-09-02 08:31:28,047 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:31:32,830 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "OS Components and Services"
+        },
+        {
+            "type": "heading",
+            "text": "Concept"
+        },
+        {
+            "type": "paragraph",
+            "text": "Think of an Operating System (OS) as the grand manager of a busy office building. It does not just sit there; it actively provides essential services to everyone inside."
+        },
+        {
+            "type": "paragraph",
+            "text": "These services are the tools and resources the OS makes available to application programs. Without these services, your apps would have to talk directly to the hardware, which is messy and inefficient."
+        },
+        {
+            "type": "paragraph",
+            "text": "The OS acts as a bridge. It sits between the user's applications and the physical computer hardware, handling all the complex communication."
+        },
+        {
+            "type": "heading",
+            "text"
+2026-09-02 08:31:32,830 - INFO - CACHE MISS: topic='OS Components and Services', subject='Operating Systems'
+2026-09-02 08:31:32,838 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:31:35,749 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "OS Components and Services"
+        },
+        {
+            "type": "heading",
+            "text": "Concept"
+        },
+        {
+            "type": "paragraph",
+            "text": "Think of an Operating System (OS) as the grand manager of a computer. It does not just sit there; it actively provides specific services to make life easier for both the user and the software running on the machine."
+        },
+        {
+            "type": "paragraph",
+            "text": "These services are essentially the tools the OS offers to handle complex tasks like managing memory, handling files, and communicating with hardware. Without these services, every program would have to write its own code to talk to a printer or manage RAM, which would be chaotic."
+        },
+        {
+            "type": "heading",
+            "text": "Why is it Important?"
+        },
+        {
+            "type": "paragraph",
+            "
+2026-09-02 08:31:35,749 - INFO - CACHE MISS: topic='OS Components and Services', subject='Operating Systems'
+2026-09-02 08:31:35,758 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:34:16,494 - INFO - CACHE INVALIDATED (Old format): topic='Virtual Machines', subject='Operating Systems'. Forcing regeneration...
+2026-09-02 08:34:16,507 - INFO - [Context] Discarded irrelevant chunk for topic='Virtual Machines'
+2026-09-02 08:34:16,508 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: Virtual Machines) ---
+2026-09-02 08:34:18,673 - INFO - CACHE INVALIDATED (Old format): topic='System Boot', subject='Operating Systems'. Forcing regeneration...
+2026-09-02 08:34:18,688 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: System Boot) ---
+2026-09-02 08:34:20,923 - INFO - CACHE INVALIDATED (Old format): topic='OS Design and Implementation', subject='Operating Systems'. Forcing regeneration...
+2026-09-02 08:34:20,935 - INFO - --- LLM PROMPT (Subject: Operating Systems, Topic: OS Design and Implementation) ---
+2026-09-02 08:34:35,786 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "Virtual Machines"
+        },
+        {
+            "type": "heading",
+            "text": "Concept"
+        },
+        {
+            "type": "paragraph",
+            "text": "A Virtual Machine (VM) is a software-based computer that behaves exactly like a physical computer. It runs on top of your actual hardware but acts as if it has its own dedicated processor, memory, and storage."
+        },
+        {
+            "type": "paragraph",
+            "text": "Think of it as a computer inside a computer. You can have multiple VMs running simultaneously on a single physical machine, each with its own operating system and applications."
+        },
+        {
+            "type": "heading",
+            "text": "Why is it Important?"
+        },
+        {
+            "type": "paragraph",
+            "text": "VMs allow us to maximize the use of expensive hardware. Instead of buying ten separate physical servers for ten 
+2026-09-02 08:34:35,787 - INFO - CACHE MISS: topic='Virtual Machines', subject='Operating Systems'
+2026-09-02 08:34:35,794 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:34:37,097 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "System Boot"
+        },
+        {
+            "type": "heading",
+            "text": "Concept"
+        },
+        {
+            "type": "paragraph",
+            "text": "System boot is the process of starting up a computer system. Think of it as the computer's morning routine. When you press the power button, the machine isn't ready to work immediately. It needs to wake up, check its own health, and load the operating system before it can let you log in."
+        },
+        {
+            "type": "heading",
+            "text": "Why is it Important?"
+        },
+        {
+            "type": "paragraph",
+            "text": "Understanding boot is crucial for backend developers because it explains how your application environment is created. If you are deploying to a server, knowing what happens before your code runs helps you troubleshoot issues like hardware failures, driver conflicts, or corrupted system file
+2026-09-02 08:34:37,097 - INFO - CACHE MISS: topic='System Boot', subject='Operating Systems'
+2026-09-02 08:34:37,106 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:34:40,849 - INFO - [PracticeEngine] Generated Content snippet: {
+    "notes": [
+        {
+            "type": "heading",
+            "text": "OS Design and Implementation"
+        },
+        {
+            "type": "heading",
+            "text": "Concept"
+        },
+        {
+            "type": "paragraph",
+            "text": "Think of an Operating System (OS) as the grand conductor of an orchestra. It does not play the instruments itself, but it ensures every musician knows when to start, how loud to play, and when to stop."
+        },
+        {
+            "type": "paragraph",
+            "text": "OS Design is the blueprint or plan. It answers questions like: How do we organize memory? How do we handle multiple users? What rules govern file storage?"
+        },
+        {
+            "type": "paragraph",
+            "text": "OS Implementation is the actual building of that blueprint. It involves writing the code that makes the hardware talk to the software. It turns abstract ideas into working reality."
+        },
+        {
+            "type": "h
+2026-09-02 08:34:40,850 - INFO - CACHE MISS: topic='OS Design and Implementation', subject='Operating Systems'
+2026-09-02 08:34:40,858 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:35:52,718 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:35:52,734 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-09-02 08:35:53,018 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:48:47,917 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:48:47,935 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-09-02 08:48:48,221 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:48:48,468 - INFO - [Stream] Starting detailed streaming for OS Components and Services
+2026-09-02 08:48:59,943 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:48:59,952 - INFO - CACHE HIT (Fast Return): topic='System Calls', subject='Operating Systems'
+2026-09-02 08:48:59,988 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:49:00,135 - INFO - [Stream] Starting detailed streaming for System Calls
+2026-09-02 08:49:38,394 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:49:38,403 - INFO - CACHE HIT (Fast Return): topic='OS Design and Implementation', subject='Operating Systems'
+2026-09-02 08:49:38,421 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:49:38,545 - INFO - [Stream] Starting detailed streaming for OS Design and Implementation
+2026-09-02 08:49:42,668 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:49:42,678 - INFO - CACHE HIT (Fast Return): topic='Virtual Machines', subject='Operating Systems'
+2026-09-02 08:49:42,698 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:49:42,821 - INFO - [Context] Discarded irrelevant chunk for topic='Virtual Machines'
+2026-09-02 08:49:42,822 - INFO - [Stream] Starting detailed streaming for Virtual Machines
+2026-09-02 08:49:46,651 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:49:46,660 - INFO - CACHE HIT (Fast Return): topic='System Boot', subject='Operating Systems'
+2026-09-02 08:49:46,691 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:49:46,802 - INFO - [Stream] Starting detailed streaming for System Boot
+2026-09-02 08:49:50,120 - INFO - INVALIDATING unversioned summary cache: topic='Process Concept & Scheduling', subject='Operating Systems'
+2026-09-02 08:49:50,133 - INFO - [Stream] Starting detailed streaming for Process Concept & Scheduling
+2026-09-02 08:49:53,190 - INFO - INVALIDATING unversioned summary cache: topic='Interprocess Communication', subject='Operating Systems'
+2026-09-02 08:49:53,204 - INFO - [Stream] Starting detailed streaming for Interprocess Communication
+2026-09-02 08:50:00,070 - INFO - INVALIDATING unversioned summary cache: topic='What is Machine Learning?', subject='Machine Learning'
+2026-09-02 08:50:00,084 - INFO - [Stream] Starting detailed streaming for What is Machine Learning?
+2026-09-02 08:50:19,016 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:50:19,035 - INFO - INVALIDATING incomplete revision cache: topic='Supervised vs Unsupervised', subject='Machine Learning'
+2026-09-02 08:50:19,084 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:50:19,144 - INFO - [Stream] Starting detailed streaming for Supervised vs Unsupervised
+2026-09-02 08:50:26,331 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:50:47,762 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:50:47,775 - INFO - CACHE HIT (Fast Return): topic='Introduction to Web Development', subject='Frontend Web Development'
+2026-09-02 08:50:47,790 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:50:47,943 - INFO - [Context] Discarded irrelevant chunk for topic='Introduction to Web Development'
+2026-09-02 08:50:47,943 - INFO - [Stream] Starting detailed streaming for Introduction to Web Development
+2026-09-02 08:50:53,119 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:50:53,131 - INFO - CACHE HIT (Fast Return): topic='Role of Frontend Development', subject='Frontend Web Development'
+2026-09-02 08:50:53,154 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:50:53,323 - INFO - [Stream] Starting detailed streaming for Role of Frontend Development
+2026-09-02 08:50:57,510 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:50:57,520 - INFO - CACHE HIT (Fast Return): topic='Client-Side vs Server-Side', subject='Frontend Web Development'
+2026-09-02 08:50:57,539 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:50:57,671 - INFO - [Context] Discarded irrelevant chunk for topic='Client-Side vs Server-Side'
+2026-09-02 08:50:57,671 - INFO - [Stream] Starting detailed streaming for Client-Side vs Server-Side
+2026-09-02 08:51:02,345 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:51:02,364 - INFO - CACHE HIT (Fast Return): topic='Web Browsers and Developer Tools', subject='Frontend Web Development'
+2026-09-02 08:51:02,388 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:51:02,546 - INFO - [Stream] Starting detailed streaming for Web Browsers and Developer Tools
+2026-09-02 08:51:06,568 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:51:06,585 - INFO - CACHE HIT (Fast Return): topic='Introduction to HTML, CSS, and JavaScript', subject='Frontend Web Development'
+2026-09-02 08:51:06,608 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:51:06,772 - INFO - [Stream] Starting detailed streaming for Introduction to HTML, CSS, and JavaScript
+2026-09-02 08:52:58,437 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:53:33,299 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 08:53:45,924 - INFO - INVALIDATING unversioned summary cache: topic='History and Applications of AI', subject='Artificial Intelligence'
+2026-09-02 08:53:45,938 - INFO - [Stream] Starting detailed streaming for History and Applications of AI
+2026-09-02 08:53:48,433 - INFO - [Context] Discarded irrelevant chunk for topic='Intelligent Agents'
+2026-09-02 08:53:48,433 - INFO - [Stream] Starting detailed streaming for Intelligent Agents
+2026-09-02 08:53:51,782 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:53:51,784 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 08:53:51,786 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 08:53:51,787 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 08:53:51,788 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 08:53:51,789 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 08:53:51,790 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 08:53:51,791 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 08:53:51,792 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 08:53:51,805 - INFO - CACHE INVALIDATED (Old format): topic='Linear Algebra for Machine Learning', subject='None'
+2026-09-02 08:53:51,830 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:53:52,082 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:53:52,084 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 08:53:52,086 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 08:53:52,087 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 08:53:52,088 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 08:53:52,090 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 08:53:52,091 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 08:53:52,092 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 08:53:52,093 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 08:53:52,104 - INFO - CACHE INVALIDATED (Old format): topic='Multivariable Calculus & Optimization', subject='Week 1'
+2026-09-02 08:53:52,129 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:53:52,333 - INFO - [Context] Discarded irrelevant chunk for topic='Multivariable Calculus & Optimization'
+2026-09-02 08:53:52,335 - INFO - [Stream] Starting detailed streaming for Multivariable Calculus & Optimization
+2026-09-02 08:53:57,744 - INFO - INVALIDATING unversioned summary cache: topic='Linear Algebra for Machine Learning', subject='Week 1'
+2026-09-02 08:53:57,756 - INFO - [Stream] Starting detailed streaming for Linear Algebra for Machine Learning
+2026-09-02 08:54:07,058 - INFO - INVALIDATING unversioned summary cache: topic='Niche Selection and Audience Analysis', subject='Week 1'
+2026-09-02 08:54:07,079 - INFO - [Stream] Starting detailed streaming for Niche Selection and Audience Analysis
+2026-09-02 08:54:14,259 - INFO - [Stream] Starting detailed streaming for LLM Architecture and Tokenization Basics
+2026-09-02 08:54:20,536 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:54:20,601 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:55:10,241 - INFO - INVALIDATING unversioned summary cache: topic='Time Complexity', subject='Data Structures and Algorithms'
+2026-09-02 08:55:10,254 - INFO - [Context] Discarded irrelevant chunk for topic='Time Complexity'
+2026-09-02 08:55:10,255 - INFO - [Stream] Starting detailed streaming for Time Complexity
+2026-09-02 08:55:13,998 - INFO - INVALIDATING unversioned summary cache: topic='Space Complexity', subject='Data Structures and Algorithms'
+2026-09-02 08:55:14,012 - INFO - [Context] Discarded irrelevant chunk for topic='Space Complexity'
+2026-09-02 08:55:14,012 - INFO - [Stream] Starting detailed streaming for Space Complexity
+2026-09-02 08:55:17,034 - INFO - INVALIDATING unversioned summary cache: topic='Big O Notation', subject='Data Structures and Algorithms'
+2026-09-02 08:55:17,048 - INFO - [Context] Discarded irrelevant chunk for topic='Big O Notation'
+2026-09-02 08:55:17,048 - INFO - [Stream] Starting detailed streaming for Big O Notation
+2026-09-02 08:55:21,088 - INFO - INVALIDATING unversioned summary cache: topic='Arrays', subject='Data Structures and Algorithms'
+2026-09-02 08:55:21,105 - INFO - [Context] Discarded irrelevant chunk for topic='Arrays'
+2026-09-02 08:55:21,105 - INFO - [Stream] Starting detailed streaming for Arrays
+2026-09-02 08:55:24,098 - INFO - INVALIDATING unversioned summary cache: topic='Linked Lists', subject='Data Structures and Algorithms'
+2026-09-02 08:55:24,110 - INFO - [Stream] Starting detailed streaming for Linked Lists
+2026-09-02 08:55:26,956 - INFO - INVALIDATING unversioned summary cache: topic='Stacks', subject='Data Structures and Algorithms'
+2026-09-02 08:55:26,974 - INFO - [Context] Discarded irrelevant chunk for topic='Stacks'
+2026-09-02 08:55:26,974 - INFO - [Stream] Starting detailed streaming for Stacks
+2026-09-02 08:55:28,906 - INFO - INVALIDATING unversioned summary cache: topic='Queues', subject='Data Structures and Algorithms'
+2026-09-02 08:55:28,920 - INFO - [Context] Discarded irrelevant chunk for topic='Queues'
+2026-09-02 08:55:28,921 - INFO - [Stream] Starting detailed streaming for Queues
+2026-09-02 08:55:36,153 - INFO - [Stream] Starting detailed streaming for Natural Language Processing Basics
+2026-09-02 08:55:41,125 - INFO - INVALIDATING unversioned summary cache: topic='Linear Regression', subject='Machine Learning'
+2026-09-02 08:55:41,138 - INFO - [Stream] Starting detailed streaming for Linear Regression
+2026-09-02 08:55:43,584 - INFO - [Context] Discarded irrelevant chunk for topic='Decision Trees'
+2026-09-02 08:55:43,585 - INFO - [Stream] Starting detailed streaming for Decision Trees
+2026-09-02 08:55:44,625 - INFO - INVALIDATING unversioned summary cache: topic='Logistic Regression', subject='Machine Learning'
+2026-09-02 08:55:44,638 - INFO - [Stream] Starting detailed streaming for Logistic Regression
+2026-09-02 08:55:48,061 - INFO - [Context] Discarded irrelevant chunk for topic='K-Means Clustering'
+2026-09-02 08:55:48,061 - INFO - [Stream] Starting detailed streaming for K-Means Clustering
+2026-09-02 08:55:58,694 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-09-02 08:55:58,695 - INFO - DEBUG2 performances keys: ['OS Components and Services', 'System Calls', 'Multithreading Models', 'The Critical-Section Problem', 'Process Concept & Scheduling', 'Monitors', 'Virtual Machines', 'System Boot', 'CPU Scheduling Algorithms', 'OS Design and Implementation', 'Interprocess Communication']
+2026-09-02 08:55:58,695 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x71d07837b7d0>, <practice_models.TopicPerformance object at 0x71d07837ac50>, <practice_models.TopicPerformance object at 0x71d07838d750>, <practice_models.TopicPerformance object at 0x71d07838dc90>, <practice_models.TopicPerformance object at 0x71d07838ea90>, <practice_models.TopicPerformance object at 0x71d07837a690>, <practice_models.TopicPerformance object at 0x71d07838c6d0>, <practice_models.TopicPerformance object at 0x71d078379390>, <practice_models.TopicPerformance object at 0x71d07838f0d0>, <practice_models.TopicPerformance object at 0x71d078379910>, <practice_models.TopicPerformance object at 0x71d07838c150>]
+2026-09-02 08:55:58,848 - INFO - DEBUG2 predefined_topics: ['OS Components and Services', 'System Calls', 'OS Design and Implementation', 'Virtual Machines', 'System Boot', 'Process Concept & Scheduling', 'Interprocess Communication', 'Multithreading Models', 'CPU Scheduling Algorithms', 'Real-Time Scheduling', 'The Critical-Section Problem', "Peterson's Solution", 'Semaphores & Mutexes', 'Classic Problems of Synchronization', 'Monitors', 'System Model & Deadlock Characterization', 'Methods for Handling Deadlocks', 'Deadlock Prevention', "Deadlock Avoidance (Banker's Algorithm)", 'Deadlock Detection & Recovery', 'Swapping & Contiguous Memory Allocation', 'Paging & Segmentation', 'Virtual Memory & Demand Paging', 'Page Replacement Algorithms', 'Thrashing & Allocating Kernel Memory']
+2026-09-02 08:55:58,849 - INFO - DEBUG2 performances keys: ['OS Components and Services', 'System Calls', 'Multithreading Models', 'The Critical-Section Problem', 'Process Concept & Scheduling', 'Monitors', 'Virtual Machines', 'System Boot', 'CPU Scheduling Algorithms', 'OS Design and Implementation', 'Interprocess Communication']
+2026-09-02 08:55:58,849 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x71d07834c190>, <practice_models.TopicPerformance object at 0x71d07834e910>, <practice_models.TopicPerformance object at 0x71d0783bc650>, <practice_models.TopicPerformance object at 0x71d0783bf110>, <practice_models.TopicPerformance object at 0x71d0783be390>, <practice_models.TopicPerformance object at 0x71d0783be850>, <practice_models.TopicPerformance object at 0x71d0783bc590>, <practice_models.TopicPerformance object at 0x71d0783bc190>, <practice_models.TopicPerformance object at 0x71d0783bc1d0>, <practice_models.TopicPerformance object at 0x71d0783bd910>, <practice_models.TopicPerformance object at 0x71d0783bf850>]
+2026-09-02 08:56:12,679 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:56:12,710 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:56:12,907 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:56:12,950 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:58:33,929 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 08:58:33,946 - INFO - CACHE INVALIDATED (Old format): topic='Interprocess Communication', subject='Operating Systems'
+2026-09-02 08:58:34,230 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 08:58:34,393 - INFO - [Stream] Starting detailed streaming for Interprocess Communication
+2026-09-02 09:01:27,162 - INFO - INVALIDATING unversioned summary cache: topic='CPU Scheduling Algorithms', subject='Operating Systems'
+2026-09-02 09:01:27,176 - INFO - [Context] Discarded irrelevant chunk for topic='CPU Scheduling Algorithms'
+2026-09-02 09:01:27,177 - INFO - [Stream] Starting detailed streaming for CPU Scheduling Algorithms
+2026-09-02 09:01:30,635 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 09:05:25,721 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 09:05:27,539 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 09:11:08,067 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 09:11:08,073 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 09:11:08,364 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 09:11:08,365 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 09:11:08,367 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 09:11:08,368 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 09:11:08,370 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 09:11:08,371 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 09:11:08,372 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 09:11:08,403 - INFO - CACHE INVALIDATED (Old format): topic='LLM Architecture and Tokenization Basics', subject='Week 1'
+2026-09-02 09:11:08,432 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 09:11:08,754 - INFO - [Stream] Starting detailed streaming for LLM Architecture and Tokenization Basics
+2026-09-02 09:11:34,542 - INFO - INVALIDATING unversioned summary cache: topic='Core Prompt Components: Role, Task, Context', subject='Week 1'
+2026-09-02 09:11:34,557 - INFO - [Stream] Starting detailed streaming for Core Prompt Components: Role, Task, Context
+2026-09-02 09:11:51,206 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 09:11:56,077 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 13:04:50,761 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:04:50,765 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:04:50,768 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:04:50,769 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:04:50,769 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:04:50,771 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:04:50,772 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:04:50,773 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:04:50,774 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:04:50,791 - INFO - CACHE INVALIDATED (Old format): topic='Linear Algebra for Machine Learning', subject='Week 1'
+2026-09-02 13:04:50,811 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:04:51,012 - INFO - [Stream] Starting detailed streaming for Linear Algebra for Machine Learning
+2026-09-02 13:05:23,837 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 13:05:29,996 - INFO - INVALIDATING unversioned summary cache: topic='Data Handling with Pandas', subject='Week 1'
+2026-09-02 13:05:30,010 - INFO - [Stream] Starting detailed streaming for Data Handling with Pandas
+2026-09-02 13:05:33,069 - INFO - INVALIDATING unversioned summary cache: topic='NumPy Vectorization Techniques', subject='Week 1'
+2026-09-02 13:05:33,081 - INFO - [Stream] Starting detailed streaming for NumPy Vectorization Techniques
+2026-09-02 13:05:36,480 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:05:36,491 - INFO - CACHE INVALIDATED (Old format): topic='OS Components and Services', subject='Operating Systems'
+2026-09-02 13:05:36,521 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:05:36,612 - INFO - [Stream] Starting detailed streaming for OS Components and Services
+2026-09-02 13:13:38,422 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:13:38,426 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:13:38,430 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:13:38,430 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:13:38,431 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:13:38,432 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:13:38,435 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:13:38,436 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:13:38,437 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:13:38,707 - INFO - CACHE HIT (Fast Return): topic='NumPy Vectorization Techniques', subject='Week 1'
+2026-09-02 13:13:38,742 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:13:57,702 - INFO - [Stream] Starting detailed streaming for Variables, Data Types, and Operators
+2026-09-02 13:14:10,607 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:14:10,609 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:14:10,611 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:14:10,611 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:14:10,612 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:14:10,613 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:14:10,617 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:14:10,619 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:14:10,620 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:14:10,632 - INFO - CACHE HIT (Fast Return): topic='Control Flow: Loops and Conditionals', subject='Week 1'
+2026-09-02 13:14:10,674 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:14:10,885 - INFO - [Context] Discarded irrelevant chunk for topic='Control Flow: Loops and Conditionals'
+2026-09-02 13:14:10,885 - INFO - [Stream] Starting detailed streaming for Control Flow: Loops and Conditionals
+2026-09-02 13:15:01,586 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:15:01,596 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-09-02 13:15:01,613 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:21:51,496 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:21:51,515 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-09-02 13:21:51,806 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:21:52,080 - INFO - [Stream] Starting detailed streaming for OS Components and Services
+2026-09-02 13:22:22,624 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:22:22,643 - INFO - CACHE HIT (Fast Return): topic='System Calls', subject='Operating Systems'
+2026-09-02 13:22:22,672 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:22:22,829 - INFO - [Stream] Starting detailed streaming for System Calls
+2026-09-02 13:22:26,309 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:22:26,320 - INFO - CACHE HIT (Fast Return): topic='OS Design and Implementation', subject='Operating Systems'
+2026-09-02 13:22:26,362 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:22:26,493 - INFO - [Stream] Starting detailed streaming for OS Design and Implementation
+2026-09-02 13:22:29,339 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:22:29,352 - INFO - CACHE HIT (Fast Return): topic='Virtual Machines', subject='Operating Systems'
+2026-09-02 13:22:29,534 - INFO - [Context] Discarded irrelevant chunk for topic='Virtual Machines'
+2026-09-02 13:22:29,535 - INFO - [Stream] Starting detailed streaming for Virtual Machines
+2026-09-02 13:22:29,639 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:22:32,571 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:22:32,581 - INFO - CACHE HIT (Fast Return): topic='System Boot', subject='Operating Systems'
+2026-09-02 13:22:32,609 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:22:32,754 - INFO - [Stream] Starting detailed streaming for System Boot
+2026-09-02 13:23:27,233 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:23:27,244 - INFO - CACHE HIT (Fast Return): topic='Process Concept & Scheduling', subject='Operating Systems'
+2026-09-02 13:23:27,266 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:23:27,385 - INFO - [Stream] Starting detailed streaming for Process Concept & Scheduling
+2026-09-02 13:23:30,820 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:23:30,833 - INFO - CACHE HIT (Fast Return): topic='Interprocess Communication', subject='Operating Systems'
+2026-09-02 13:23:30,856 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:23:30,993 - INFO - [Stream] Starting detailed streaming for Interprocess Communication
+2026-09-02 13:23:40,442 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:23:40,452 - INFO - CACHE HIT (Fast Return): topic='Multithreading Models', subject='Operating Systems'
+2026-09-02 13:23:40,484 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:23:40,613 - INFO - [Stream] Starting detailed streaming for Multithreading Models
+2026-09-02 13:23:43,808 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:23:43,818 - INFO - CACHE HIT (Fast Return): topic='CPU Scheduling Algorithms', subject='Operating Systems'
+2026-09-02 13:23:43,840 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:23:43,953 - INFO - [Context] Discarded irrelevant chunk for topic='CPU Scheduling Algorithms'
+2026-09-02 13:23:43,954 - INFO - [Stream] Starting detailed streaming for CPU Scheduling Algorithms
+2026-09-02 13:23:46,809 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:23:46,818 - INFO - CACHE HIT (Fast Return): topic='Real-Time Scheduling', subject='Operating Systems'
+2026-09-02 13:23:46,848 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:23:46,983 - INFO - [Stream] Starting detailed streaming for Real-Time Scheduling
+2026-09-02 13:24:04,889 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:04,899 - INFO - CACHE HIT (Fast Return): topic='What is Machine Learning?', subject='Machine Learning'
+2026-09-02 13:24:04,922 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:05,075 - INFO - [Stream] Starting detailed streaming for What is Machine Learning?
+2026-09-02 13:24:07,948 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:07,961 - INFO - CACHE HIT (Fast Return): topic='Supervised vs Unsupervised', subject='Machine Learning'
+2026-09-02 13:24:08,008 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:08,135 - INFO - [Stream] Starting detailed streaming for Supervised vs Unsupervised
+2026-09-02 13:24:11,952 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:11,961 - INFO - CACHE HIT (Fast Return): topic='Data Preprocessing Basics', subject='Machine Learning'
+2026-09-02 13:24:11,994 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:12,251 - INFO - [Stream] Starting detailed streaming for Data Preprocessing Basics
+2026-09-02 13:24:14,323 - INFO - [Context] Discarded irrelevant chunk for topic='Overfitting & Underfitting'
+2026-09-02 13:24:14,325 - INFO - [Stream] Starting detailed streaming for Overfitting & Underfitting
+2026-09-02 13:24:15,510 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:15,561 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:15,623 - INFO - [Context] Discarded irrelevant chunk for topic='Overfitting & Underfitting'
+2026-09-02 13:24:15,624 - INFO - [Stream] Starting detailed streaming for Overfitting & Underfitting
+2026-09-02 13:24:15,630 - INFO - [PracticeEngine] LLM stream 'GPT-4o-mini' cancelled by client disconnect.
+2026-09-02 13:24:18,530 - INFO - [Stream] Starting detailed streaming for Model Evaluation Metrics
+2026-09-02 13:24:18,852 - INFO - [PracticeEngine] Generated Content snippet: {"title":"Key Takeaways","points":[{"id":1,"text":"Overfitting occurs when a model learns noise and specific details of training data, resulting in high variance and poor generalization to new data."},{"id":2,"text":"Underfitting happens when a model is too simple to capture the underlying structure of the data, leading to high bias and poor performance on both training and test sets."},{"id":3,"text":"Achieving optimal performance requires balancing bias and variance to ensure the model generalizes well without memorizing training examples or oversimplifying patterns."}]}
+2026-09-02 13:24:23,421 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:23,437 - INFO - CACHE HIT (Fast Return): topic='Linear Regression', subject='Machine Learning'
+2026-09-02 13:24:23,454 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:23,632 - INFO - [Stream] Starting detailed streaming for Linear Regression
+2026-09-02 13:24:27,480 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:27,494 - INFO - CACHE HIT (Fast Return): topic='Logistic Regression', subject='Machine Learning'
+2026-09-02 13:24:27,525 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:27,647 - INFO - [Stream] Starting detailed streaming for Logistic Regression
+2026-09-02 13:24:33,089 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:33,113 - INFO - CACHE HIT (Fast Return): topic='K-Means Clustering', subject='Machine Learning'
+2026-09-02 13:24:33,131 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:33,301 - INFO - [Context] Discarded irrelevant chunk for topic='K-Means Clustering'
+2026-09-02 13:24:33,301 - INFO - [Stream] Starting detailed streaming for K-Means Clustering
+2026-09-02 13:24:39,550 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:39,559 - INFO - CACHE HIT (Fast Return): topic='Time Complexity', subject='Data Structures and Algorithms'
+2026-09-02 13:24:39,590 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:39,749 - INFO - [Context] Discarded irrelevant chunk for topic='Time Complexity'
+2026-09-02 13:24:39,750 - INFO - [Stream] Starting detailed streaming for Time Complexity
+2026-09-02 13:24:42,739 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:42,752 - INFO - CACHE HIT (Fast Return): topic='Space Complexity', subject='Data Structures and Algorithms'
+2026-09-02 13:24:42,781 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:42,904 - INFO - [Context] Discarded irrelevant chunk for topic='Space Complexity'
+2026-09-02 13:24:42,904 - INFO - [Stream] Starting detailed streaming for Space Complexity
+2026-09-02 13:24:45,665 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:45,677 - INFO - CACHE HIT (Fast Return): topic='Big O Notation', subject='Data Structures and Algorithms'
+2026-09-02 13:24:45,715 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:45,843 - INFO - [Context] Discarded irrelevant chunk for topic='Big O Notation'
+2026-09-02 13:24:45,843 - INFO - [Stream] Starting detailed streaming for Big O Notation
+2026-09-02 13:24:50,568 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:24:50,579 - INFO - CACHE HIT (Fast Return): topic='Binary Trees', subject='Data Structures and Algorithms'
+2026-09-02 13:24:50,599 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:24:50,740 - INFO - [Context] Discarded irrelevant chunk for topic='Binary Trees'
+2026-09-02 13:24:50,740 - INFO - [Stream] Starting detailed streaming for Binary Trees
+2026-09-02 13:24:58,302 - INFO - [Stream] Starting detailed streaming for BST
+2026-09-02 13:25:00,619 - INFO - [Stream] Starting detailed streaming for BFS and DFS
+2026-09-02 13:25:06,732 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:25:06,754 - INFO - CACHE HIT (Fast Return): topic='History and Applications of AI', subject='Artificial Intelligence'
+2026-09-02 13:25:06,788 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:25:06,915 - INFO - [Stream] Starting detailed streaming for History and Applications of AI
+2026-09-02 13:25:10,792 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:25:10,802 - INFO - CACHE HIT (Fast Return): topic='Intelligent Agents', subject='Artificial Intelligence'
+2026-09-02 13:25:10,829 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:25:10,980 - INFO - [Context] Discarded irrelevant chunk for topic='Intelligent Agents'
+2026-09-02 13:25:10,980 - INFO - [Stream] Starting detailed streaming for Intelligent Agents
+2026-09-02 13:25:25,575 - INFO - [PracticeEngine] Generated Content snippet: {
+"title": "Key Takeaways",
+"points": [
+{"id": 1, "text": "ML systems rely on core components including algorithms, features, labels, and hyperparameters, where feature quality often dictates performance more than algorithm choice."},
+{"id": 2, "text": "The ML lifecycle involves preprocessing, training to minimize loss, evaluating with metrics like recall, and deploying with continuous monitoring to detect model drift."},
+{"id": 3, "text": "Critical pitfalls include overfitting, data leakage, ignoring class imbalance, and confusing correlation with causation, all of which degrade real-world model reliability."}
+]
+}
+2026-09-02 13:25:53,974 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:25:54,044 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:25:54,286 - INFO - [Stream] Starting detailed streaming for Reinforcement Learning
+2026-09-02 13:27:26,661 - INFO - [Stream] Starting detailed streaming for Supervised Learning
+2026-09-02 13:34:13,250 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:34:13,265 - INFO - CACHE HIT (Fast Return): topic='Supervised Learning', subject='Artificial Intelligence'
+2026-09-02 13:34:13,291 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:47:13,303 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:47:13,347 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:47:13,470 - INFO - [PracticeEngine] Active practice session found for student=3, skipping master bank generation to avoid LLM contention.
+2026-09-02 13:47:14,272 - INFO - Recovered cached learning subject for topic='OS Components and Services': 'Operating Systems'
+2026-09-02 13:47:33,422 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:47:33,434 - INFO - CACHE HIT (Fast Return): topic='Introduction to Web Development', subject='Frontend Web Development'
+2026-09-02 13:47:33,455 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:47:33,652 - INFO - [Context] Discarded irrelevant chunk for topic='Introduction to Web Development'
+2026-09-02 13:47:33,652 - INFO - [Stream] Starting detailed streaming for Introduction to Web Development
+2026-09-02 13:47:37,037 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:47:37,049 - INFO - CACHE HIT (Fast Return): topic='Role of Frontend Development', subject='Frontend Web Development'
+2026-09-02 13:47:37,066 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:47:37,285 - INFO - [Stream] Starting detailed streaming for Role of Frontend Development
+2026-09-02 13:47:40,428 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:47:40,438 - INFO - CACHE HIT (Fast Return): topic='Client-Side vs Server-Side', subject='Frontend Web Development'
+2026-09-02 13:47:40,456 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:47:40,613 - INFO - [Context] Discarded irrelevant chunk for topic='Client-Side vs Server-Side'
+2026-09-02 13:47:40,613 - INFO - [Stream] Starting detailed streaming for Client-Side vs Server-Side
+2026-09-02 13:47:43,862 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:47:43,874 - INFO - CACHE HIT (Fast Return): topic='Web Browsers and Developer Tools', subject='Frontend Web Development'
+2026-09-02 13:47:43,898 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:47:44,048 - INFO - [Stream] Starting detailed streaming for Web Browsers and Developer Tools
+2026-09-02 13:47:47,762 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:47:47,772 - INFO - CACHE HIT (Fast Return): topic='Introduction to HTML, CSS, and JavaScript', subject='Frontend Web Development'
+2026-09-02 13:47:47,800 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:47:47,949 - INFO - [Stream] Starting detailed streaming for Introduction to HTML, CSS, and JavaScript
+2026-09-02 13:47:54,314 - INFO - [Context] Discarded irrelevant chunk for topic='Responsive Web Design'
+2026-09-02 13:47:54,315 - INFO - [Stream] Starting detailed streaming for Responsive Web Design
+2026-09-02 13:47:56,379 - INFO - [Stream] Starting detailed streaming for Variables and Data Types
+2026-09-02 13:48:02,635 - INFO - [Context] Discarded irrelevant chunk for topic='Responsive and Mobile-First Design'
+2026-09-02 13:48:02,635 - INFO - [Stream] Starting detailed streaming for Responsive and Mobile-First Design
+2026-09-02 13:48:15,746 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:48:15,750 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:48:15,752 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:48:15,754 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:48:15,755 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:48:15,756 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:48:15,757 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:48:15,759 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:48:15,760 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:48:15,772 - INFO - CACHE HIT (Fast Return): topic='Variables, Data Types, and Operators', subject='Week 1'
+2026-09-02 13:48:15,814 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:48:23,803 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:48:23,809 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:48:23,811 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:48:23,812 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:48:23,813 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:48:23,814 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:48:23,816 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:48:23,818 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:48:23,819 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:48:23,829 - INFO - CACHE HIT (Fast Return): topic='Variables, Data Types, and Operators', subject='Week 1'
+2026-09-02 13:48:23,852 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:48:24,067 - INFO - [Stream] Starting detailed streaming for Variables, Data Types, and Operators
+2026-09-02 13:48:27,729 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:48:27,732 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:48:27,736 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:48:27,740 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:48:27,741 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:48:27,742 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:48:27,744 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:48:27,745 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:48:27,746 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:48:27,758 - INFO - CACHE HIT (Fast Return): topic='Control Flow: Loops and Conditionals', subject='Week 1'
+2026-09-02 13:48:27,779 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:48:28,061 - INFO - [Context] Discarded irrelevant chunk for topic='Control Flow: Loops and Conditionals'
+2026-09-02 13:48:28,061 - INFO - [Stream] Starting detailed streaming for Control Flow: Loops and Conditionals
+2026-09-02 13:48:31,864 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:48:31,867 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:48:31,868 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:48:31,869 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:48:31,870 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:48:31,871 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:48:31,873 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:48:31,874 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:48:31,875 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:48:31,886 - INFO - CACHE HIT (Fast Return): topic='Functions and Scope', subject='Week 1'
+2026-09-02 13:48:31,910 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:48:32,167 - INFO - [Stream] Starting detailed streaming for Functions and Scope
+2026-09-02 13:48:37,013 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:48:37,017 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:48:37,018 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:48:37,019 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:48:37,020 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:48:37,021 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:48:37,023 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:48:37,024 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:48:37,025 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:48:37,039 - INFO - CACHE HIT (Fast Return): topic='Linear Algebra for Machine Learning', subject='Week 1'
+2026-09-02 13:48:37,070 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:48:37,271 - INFO - [Stream] Starting detailed streaming for Linear Algebra for Machine Learning
+2026-09-02 13:48:39,938 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:48:39,940 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:48:39,942 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:48:39,942 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:48:39,943 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:48:39,945 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:48:39,946 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:48:39,947 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:48:39,948 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:48:39,958 - INFO - CACHE HIT (Fast Return): topic='Multivariable Calculus & Optimization', subject='Week 1'
+2026-09-02 13:48:39,990 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:48:40,223 - INFO - [Context] Discarded irrelevant chunk for topic='Multivariable Calculus & Optimization'
+2026-09-02 13:48:40,223 - INFO - [Stream] Starting detailed streaming for Multivariable Calculus & Optimization
+2026-09-02 13:48:43,111 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:48:43,114 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:48:43,115 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:48:43,116 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:48:43,117 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:48:43,118 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:48:43,119 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:48:43,121 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:48:43,122 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:48:43,133 - INFO - CACHE HIT (Fast Return): topic='Probability & Statistics for AI', subject='Week 1'
+2026-09-02 13:48:43,170 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:48:43,380 - INFO - [Context] Discarded irrelevant chunk for topic='Probability & Statistics for AI'
+2026-09-02 13:48:43,380 - INFO - [Stream] Starting detailed streaming for Probability & Statistics for AI
+2026-09-02 13:48:46,323 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:48:46,326 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:48:46,327 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:48:46,328 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:48:46,329 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:48:46,331 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:48:46,332 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:48:46,334 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:48:46,335 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:48:46,347 - INFO - CACHE HIT (Fast Return): topic='NumPy Vectorization Techniques', subject='Week 1'
+2026-09-02 13:48:46,369 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:48:46,599 - INFO - [Stream] Starting detailed streaming for NumPy Vectorization Techniques
+2026-09-02 13:48:49,895 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-02 13:48:49,901 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-02 13:48:49,903 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-02 13:48:49,904 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-02 13:48:49,905 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-02 13:48:49,907 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-02 13:48:49,909 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-02 13:48:49,911 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-02 13:48:49,912 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-02 13:48:49,930 - INFO - CACHE HIT (Fast Return): topic='Data Handling with Pandas', subject='Week 1'
+2026-09-02 13:48:49,960 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-02 13:48:50,165 - INFO - [Stream] Starting detailed streaming for Data Handling with Pandas

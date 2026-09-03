@@ -13,6 +13,43 @@ export interface ParsedLearningContent {
   revision: ParsedRevision | null;
 }
 
+/** Convert legacy structured notes into the Markdown rendered by NotesCard. */
+export function notesBlocksToMarkdown(value: unknown, fallbackTopic = "Topic"): string {
+  if (typeof value === "string") return value;
+  if (!Array.isArray(value)) return "";
+
+  return value
+    .map((block, index) => {
+      if (!block || typeof block !== "object") return "";
+      const item = block as Record<string, unknown>;
+      const type = String(item.type || "paragraph");
+      const text = String(item.text || item.content || "").trim();
+      if (type === "heading") {
+        return (index === 0 ? "# " : "## ") + (text || fallbackTopic);
+      }
+      if (type === "code_block") {
+        const title = String(item.title || "").trim();
+        const code = String(item.code || text).trim();
+        return (title ? "**" + title + "**\n\n" : "") + code;
+      }
+      if (type === "highlight") {
+        const title = String(item.title || "Important").trim();
+        return "> **" + title + ":** " + text;
+      }
+      return text;
+    })
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/** Keep the standalone revision card from duplicating an in-body section. */
+export function removeEmbeddedTakeaways(content: string): string {
+  if (!content) return content;
+  const marker = /(?:^|\r?\n)#{1,6}\s+key\s+takeaways\s*:?[ \t]*(?:\r?\n|$)/im;
+  const match = marker.exec(content);
+  return match ? content.slice(0, match.index).trim() : content;
+}
+
 const REVISION_MARKER = /---\s*REVISION\s*---/i;
 
 function parseJsonObject(raw: string): unknown {
@@ -77,9 +114,9 @@ function normalizeRevision(value: unknown): ParsedRevision | null {
  */
 export function parseRevisionPayload(content: string): ParsedLearningContent {
   const marker = REVISION_MARKER.exec(content);
-  if (!marker) return { content, revision: null };
+  if (!marker) return { content: removeEmbeddedTakeaways(content), revision: null };
 
-  const cleanContent = content.slice(0, marker.index).trim();
+  const cleanContent = removeEmbeddedTakeaways(content.slice(0, marker.index).trim());
   const revision = normalizeRevision(parseJsonObject(content.slice(marker.index + marker[0].length)));
   return { content: cleanContent, revision };
 }

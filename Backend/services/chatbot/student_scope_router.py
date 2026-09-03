@@ -81,23 +81,6 @@ _ENTERTAINMENT_GENERATION_PATTERNS = (
     ),
 )
 
-
-def is_non_learning_entertainment_request(question: str) -> bool:
-    """Return True only for direct requests to generate entertainment content."""
-    normalized = normalize_for_scope(question)
-    if not normalized:
-        return False
-    return any(pattern.search(normalized) for pattern in _ENTERTAINMENT_GENERATION_PATTERNS)
-
-
-def is_basic_student_question(question: str) -> bool:
-    """Recognize safe, clearly supported utility questions before semantic routing."""
-    normalized = normalize_for_scope(question)
-    if not normalized:
-        return False
-    return bool(_BASIC_ARITHMETIC_RE.search(normalized))
-
-
 def _is_short_supported_conversation(question: str) -> bool:
     return bool(re.fullmatch(
         r"(?:hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you|"
@@ -178,23 +161,99 @@ def _best_match(vector: np.ndarray, prototypes: list[tuple[str, str, np.ndarray]
     return scores[index], prototypes[index][0]
 
 
+_ACADEMIC_DISHONESTY_PATTERNS = (
+    re.compile(
+        r"\b(?:write|do|solve|complete)\s+(?:my\s+)?(?:essay|homework|assignment|exam|quiz)\b",
+        flags=re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:give|tell)\s+(?:me\s+)?(?:the\s+)?answers?\s+(?:to|for)\s+(?:this\s+)?(?:exam|quiz|test)\b",
+        flags=re.IGNORECASE,
+    ),
+)
+
+_TOXICITY_PATTERNS = (
+    re.compile(
+        r"\b(?:stupid|useless|idiot|dumb|hate\s+you|fuck|shit|bitch)\b",
+        flags=re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:kill\s+myself|hurt\s+myself|suicide)\b",
+        flags=re.IGNORECASE,
+    ),
+)
+
+_JAILBREAK_PATTERNS = (
+    re.compile(
+        r"\b(?:ignore|forget)\s+(?:all\s+)?(?:previous\s+)?(?:instructions|rules|prompts)\b",
+        flags=re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:developer\s+mode|system\s+prompt|unfiltered\s+ai)\b",
+        flags=re.IGNORECASE,
+    ),
+)
+
+def is_explicitly_blocked_request(question: str) -> str | None:
+    """Return the matched category if the question hits a blocked regex."""
+    normalized = normalize_for_scope(question)
+    if not normalized:
+        return None
+    if any(pattern.search(normalized) for pattern in _ENTERTAINMENT_GENERATION_PATTERNS):
+        return "non_learning_entertainment"
+    if any(pattern.search(normalized) for pattern in _ACADEMIC_DISHONESTY_PATTERNS):
+        return "academic_dishonesty"
+    if any(pattern.search(normalized) for pattern in _TOXICITY_PATTERNS):
+        return "toxicity"
+    if any(pattern.search(normalized) for pattern in _JAILBREAK_PATTERNS):
+        return "jailbreak"
+    return None
+
+
 def classify_student_scope(
     question: str,
     embed_fn: Callable[[list[str]], list[list[float]]] | None = None,
 ) -> ScopeResult:
-    """Classify the narrow blocked category while allowing general questions."""
+    """Classify allowed vs blocked scope using regex rules and semantic embeddings."""
     normalized = normalize_for_scope(question)
     if not normalized:
         return ScopeResult(ScopeDecision.BLOCK, matched_category="empty")
-    if is_non_learning_entertainment_request(normalized):
+        
+    # 1. Check strict regex rules
+    blocked_category = is_explicitly_blocked_request(normalized)
+    if blocked_category:
+        return ScopeResult(ScopeDecision.BLOCK, matched_category=blocked_category)
+
+    # 2. Check semantic prototype embeddings
+    try:
+        allowed, blocked = _get_prototypes()
+        fn = embed_fn or get_embeddings
+        vector = _unit_vector(fn([normalized])[0])
+        
+        allowed_score, _ = _best_match(vector, allowed)
+        blocked_score, matched_blocked = _best_match(vector, blocked)
+        
+        # If it strongly matches a blocked category
+        if blocked_score > 0.82 and blocked_score > allowed_score:
+            return ScopeResult(
+                ScopeDecision.BLOCK,
+                allowed_score=allowed_score,
+                blocked_score=blocked_score,
+                matched_category=matched_blocked
+            )
+            
         return ScopeResult(
-            ScopeDecision.BLOCK,
-            matched_category="non_learning_entertainment",
+            ScopeDecision.ALLOW,
+            allowed_score=allowed_score,
+            blocked_score=blocked_score,
+            matched_category="semantic_allowed"
         )
-    return ScopeResult(
-        ScopeDecision.ALLOW,
-        matched_category="general_information",
-    )
+    except Exception as exc:
+        logger.warning(f"Semantic scope classifier failed, defaulting to regex rules: {exc}")
+        return ScopeResult(
+            ScopeDecision.ALLOW,
+            matched_category="general_information",
+        )
 
 
 def is_student_question_in_scope(question: str) -> bool:

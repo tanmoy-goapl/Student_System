@@ -87,6 +87,7 @@ RULES:
 - Each question MUST have exactly 4 options (A, B, C, D)
 - Exactly ONE correct answer per question
 - Include a clear, educational explanation for the correct answer
+- NEVER output LaTeX mathematical formatting (such as \\[, \\], \\frac, \\Delta, $$). Use simple plain text for formulas (e.g. "I = dQ / dt" or "P(A|B) = P(B|A) * P(A) / P(B)").
 - Ground the questions in specific concepts, examples, mechanisms, or relationships from the context, not just the topic heading.
 - Use five different cognitive angles: recall/definition, mechanism or cause-and-effect, application/scenario, comparison/trade-off, and troubleshooting or prediction.
 - Use a different subtopic for each question where the context supports it. Do not repeat a generic stem with only the topic name changed.
@@ -193,6 +194,7 @@ RULES:
 - Each question MUST have exactly 4 options (A, B, C, D)
 - Exactly ONE correct answer per question
 - Include a clear, educational explanation for the correct answer{avoid_text}
+- NEVER output LaTeX mathematical formatting (such as \\[, \\], \\frac, \\Delta, $$). Use simple plain text for formulas (e.g. "I = dQ / dt" or "P(A|B) = P(B|A) * P(A) / P(B)").
 - Every question must target a concrete concept, example, mechanism, relationship, or decision from the context, rather than restating the topic title.
 - Deliberately vary question forms across the bank: definition, why/how, scenario/application, compare/contrast, debugging, prediction, and (when the context supports it) a small calculation.
 - Do not repeat a stem pattern with only a different noun substituted. Avoid generic "primary purpose", "best practice", and "production system" placeholders.

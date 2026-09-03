@@ -6,7 +6,7 @@ const MATH_COMMANDS: Record<string, string> = {
   cdot: "·", cdots: "…", dots: "…", ldots: "…", vdots: "⋮", ddots: "⋱",
   times: "×", le: "≤", leq: "≤", ge: "≥", geq: "≥", neq: "≠", approx: "≈",
   pm: "±", to: "→", rightarrow: "→", leftarrow: "←", in: "∈", notin: "∉",
-  top: "T", bot: "⊥", vert: "|", Vert: "||", sim: "∼", equiv: "≡", simeq: "≃",
+  top: "T", bot: "⊥", vert: "|", Vert: "||", langle: "⟨", rangle: "⟩", sim: "∼", equiv: "≡", simeq: "≃",
   sum: "Σ", prod: "Π", min: "min", max: "max", argmin: "arg min", argmax: "arg max",
   exp: "exp", log: "log", ln: "ln", sin: "sin", cos: "cos", tan: "tan", lim: "lim",
   quad: " ", qquad: " ", left: "", right: "", middle: "|", displaystyle: "", textstyle: "",
@@ -36,11 +36,64 @@ function formatScript(marker: "^" | "_", value: string): string {
   return clean.startsWith("(") && clean.endsWith(")") ? "^" + clean : "^(" + clean + ")";
 }
 
+function readGroup(input: string, start: number): { value: string; next: number } | null {
+  if (input[start] !== "{") return null;
+  let depth = 0;
+  for (let index = start; index < input.length; index += 1) {
+    if (input[index] === "\\" && index + 1 < input.length) {
+      index += 1;
+      continue;
+    }
+    if (input[index] === "{") depth += 1;
+    if (input[index] === "}") {
+      depth -= 1;
+      if (depth === 0) return { value: input.slice(start + 1, index), next: index + 1 };
+    }
+  }
+  return null;
+}
+
+function replaceFractions(input: string): string {
+  let output = "";
+  let index = 0;
+  while (index < input.length) {
+    const match = /^\\(?:frac|dfrac|tfrac)\b/.exec(input.slice(index));
+    if (!match) {
+      output += input[index];
+      index += 1;
+      continue;
+    }
+
+    let cursor = index + match[0].length;
+    while (/\s/.test(input[cursor] || "")) cursor += 1;
+    const numerator = readGroup(input, cursor);
+    if (!numerator) {
+      output += input[index];
+      index += 1;
+      continue;
+    }
+    cursor = numerator.next;
+    while (/\s/.test(input[cursor] || "")) cursor += 1;
+    const denominator = readGroup(input, cursor);
+    if (!denominator) {
+      output += input[index];
+      index += 1;
+      continue;
+    }
+
+    output += "(" + convertMathExpression(numerator.value) + ") / (" +
+      convertMathExpression(denominator.value) + ")";
+    index = denominator.next;
+  }
+  return output;
+}
+
 function convertMathExpression(input: string): string {
   let output = input;
   output = output.replace(/\\\\/g, "; ");
   output = output.replace(/\\begin\{(?:b|p)?matrix\}/g, "[");
   output = output.replace(/\\end\{(?:b|p)?matrix\}/g, "]");
+  output = replaceFractions(output);
 
   for (let pass = 0; pass < 4; pass += 1) {
     const before = output;

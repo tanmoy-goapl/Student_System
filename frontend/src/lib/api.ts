@@ -797,18 +797,26 @@ export interface LearningContentResponse {
   revision: any;
 }
 
-export async function getLearningContent(topic?: string, studentId?: number, subject?: string): Promise<LearningContentResponse> {
+export async function getLearningContent(
+  topic?: string,
+  studentId?: number,
+  subject?: string,
+  force = false,
+  signal?: AbortSignal
+): Promise<LearningContentResponse> {
   let url = "/api/learning/content";
   const params = new URLSearchParams();
   if (topic) params.append("topic", topic);
   if (studentId) params.append("student_id", studentId.toString());
   if (subject) params.append("subject", subject);
+  if (force) params.append("force", "true");
   
   const q = params.toString();
   if (q) url += `?${q}`;
   
   return request<LearningContentResponse>(url, {
     method: "GET",
+    signal,
   });
 }
 

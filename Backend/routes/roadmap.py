@@ -115,7 +115,8 @@ def get_current_roadmap(student_id: int, roadmap_id: Optional[int] = None, db: S
     latest_goal = None
     if not roadmap_id:
         latest_goal = db.query(UserGoal).filter(
-            UserGoal.student_id == student_id
+            UserGoal.student_id == student_id,
+            UserGoal.status.in_(["generating", "failed"])
         ).order_by(desc(UserGoal.created_at)).first()
 
     # Get latest roadmap or specific one.
@@ -387,8 +388,15 @@ def delete_roadmap(
         
     # Delete daily tasks associated with the roadmap
     db.query(DailyTask).filter(DailyTask.roadmap_id == roadmap_id).delete()
+    
+    goal_id = roadmap.goal_id
     # Delete the roadmap
     db.delete(roadmap)
+    
+    # Delete the corresponding goal to avoid orphaned goals
+    if goal_id:
+        db.query(UserGoal).filter(UserGoal.id == goal_id).delete()
+        
     db.commit()
     
     return {"success": True, "message": "Roadmap deleted successfully"}

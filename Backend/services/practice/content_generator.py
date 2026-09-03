@@ -11,6 +11,7 @@ from chroma_store import query_chunks
 from services.practice.base import _practice_llm_call, _practice_llm_stream
 
 logger = logging.getLogger("chatbot")
+STREAM_CACHE_MARKER = "<!-- mentorai-summary-stream-v1 -->"
 
 
 def _fallback_revision(topic: str, subject: Optional[str] = None) -> dict:
@@ -87,17 +88,54 @@ def has_valid_revision(revision) -> bool:
         for point in points[:3]
     )
 
+def has_valid_structured_notes(content) -> bool:
+    """Return whether content uses the legacy structured-notes format."""
+    if not isinstance(content, list) or not content:
+        return False
+    return any(
+        isinstance(block, dict)
+        and block.get("type") in {"heading", "paragraph", "highlight", "code_block"}
+        and str(block.get("text") or block.get("content") or block.get("code") or "").strip()
+        for block in content
+    )
+
+
+def has_valid_stream_notes(content) -> bool:
+    """Return whether content contains usable completed streamed study-guide text."""
+    if not isinstance(content, str):
+        return False
+    cached_text = content.lstrip()
+    if cached_text.startswith(STREAM_CACHE_MARKER):
+        cached_text = cached_text[len(STREAM_CACHE_MARKER):].lstrip()
+    return bool(cached_text.strip()) and "could not be generated" not in cached_text.lower()
+
+
+def remove_embedded_takeaways(content: str) -> str:
+    """Remove a duplicate in-body takeaways section from a study guide."""
+    if not isinstance(content, str):
+        return content
+    marker = re.search(
+        r"(?:^|\r?\n)#{1,6}\s+key\s+takeaways\s*:?[ \t]*(?:\r?\n|$)",
+        content,
+        flags=re.IGNORECASE,
+    )
+    return content[:marker.start()].strip() if marker else content
+
 
 def split_revision_payload(content: str, topic: str = "the topic", subject: Optional[str] = None):
     """Return clean lesson text and the optional structured revision trailer."""
     if not isinstance(content, str):
         return content, None
 
+    content = content.lstrip()
+    if content.startswith(STREAM_CACHE_MARKER):
+        content = content[len(STREAM_CACHE_MARKER):].lstrip()
+
     marker = re.search(r"---\s*REVISION\s*---", content, flags=re.IGNORECASE)
     if not marker:
-        return content, None
+        return remove_embedded_takeaways(content), None
 
-    clean_content = content[:marker.start()].strip()
+    clean_content = remove_embedded_takeaways(content[:marker.start()].strip())
     revision = None
     try:
         parsed = _parse_json_object(content[marker.end():])
@@ -143,7 +181,7 @@ def generate_learning_content(student_id: int, topic: str, db: Session, subject:
         LearningContent.topic == topic
     ).first()
 
-    if cached:
+    if cached and (has_valid_structured_notes(cached.content) or has_valid_stream_notes(cached.content)):
         cached_content, embedded_revision = split_revision_payload(cached.content, topic, subject)
         return {
             "notesResponse": cached_content,
@@ -155,6 +193,7 @@ def generate_learning_content(student_id: int, topic: str, db: Session, subject:
     system_prompt = f"""You are a university professor explaining a complex concept to a student.
 Teach the topic "{topic}" in a simple, highly readable, and structured learning note style (like an AI tutor, not a textbook).
 Keep paragraphs short. Avoid dumping technical terms together. Use simple analogies.
+NEVER output LaTeX mathematical formatting (such as using \\[, \\], \\frac, \\Delta, $$, etc.). Express all mathematical formulas and equations in simple, clear plain text (e.g. "I = dQ / dt" or "P(A|B) = P(B|A) * P(A) / P(B)").
 
 You MUST output strictly a single valid JSON object containing "notes" (a list of content blocks) and "revision" (the cheat sheet).
 JSON structure:
@@ -336,10 +375,8 @@ def generate_local_fallback_content(topic: str, subject: Optional[str], context:
 def stream_learning_content(student_id: int, topic: str, db: Session, subject: Optional[str] = None, cancel_event=None):
     """
     Stream learning content for a specific topic in Markdown.
-    Uses Parallel Streaming to achieve ultra-fast Time-To-First-Token (3-5s):
-    - Phase 1 (What, Why, How) starts streaming immediately.
-    - Phase 2 (Example, Revision) generates in a background thread simultaneously.
-    - Phase 2 appends seamlessly when Phase 1 finishes.
+    The guide is generated in one detailed LLM stream so the browser can render
+    the first available text while the remaining sections are being written.
     """
     if cancel_event and cancel_event.is_set():
         return
@@ -355,25 +392,55 @@ def stream_learning_content(student_id: int, topic: str, db: Session, subject: O
     user_prompt = f"Subject: {subject or 'General Computer Science'}\nTopic: {topic}{ctx_block}\n{extra}"
 
     # --- Detailed Single Stream ---
-    sys_prompt = f"""You are a university professor explaining a complex concept to a student. Level: {proficiency}.
-Teach the topic "{topic}" in a highly readable, structured, and detailed learning note style. Be comprehensive and thorough, making it extremely helpful for the student. Provide a full, rich explanation.
+    sys_prompt = f"""You are MentorAI, an expert academic tutor writing a professional, student-facing study guide. The learner's level is {proficiency}.
+Teach the exact topic "{topic}" in a highly readable, structured, and in-depth way. Explain the reasoning, mechanisms, relationships, practical meaning, and important edge cases instead of giving a short definition.
+
+Start immediately with the study guide. Do not greet the learner, address the learner by name, introduce yourself, say "as your professor", mention being an AI, or ask a follow-up question. Do not add conversational filler.
+Use professional academic language, short paragraphs, precise terminology, useful analogies, and concrete examples. Keep every section specific to "{topic}" and do not drift into an unrelated subject.
+Use blank lines between paragraphs and between bold-labelled points so the guide is easy to scan. Prefer short lists when presenting multiple items.
 
 Use EXACTLY these markdown headings:
 # What is {topic}?
+---
+## Core concepts
 ---
 ## Why is it important?
 ---
 ## How does it work?
 ---
+## Components, types, or mechanisms
+---
 ## Real-world Example
 💡 Example:
 [Insert your detailed real-world example here]
+---
+## Common mistakes and important details
+---
+
+Depth requirements:
+- Explain the topic from first principles, then connect it to the subject named by the user.
+- Give each major section enough substance to teach the idea; do not answer with one-line definitions or generic filler.
+- In "How does it work?", give a numbered step-by-step flow and explain what changes at each step.
+- In "Components, types, or mechanisms", distinguish the important parts and explain how they relate.
+- In the example, show a concrete scenario, the sequence of events, and the resulting behavior.
+- Include 3-5 topic-specific mistakes, limitations, or edge cases.
+- Replace the example placeholder with real content; never output the placeholder itself.
+- Do not add a "Key Takeaways" heading or takeaway list inside the study guide; the application renders that separately from the revision payload.
+- When numbering components or steps, keep the number and label on the same line, for example `2. **System Calls:** explanation`. Never put a number by itself at the end of the previous paragraph or on a separate line before its label.
+
+Teaching-material requirements:
+- Combine theory with practical material. Do not make the guide a wall of prose.
+- For programming, algorithms, databases, operating systems, networking, or other technical topics, include at least one relevant fenced Markdown code block with a language tag, then explain what it does and show the expected result when useful.
+- Use a Markdown table for meaningful comparisons, classifications, components, or trade-offs when it improves understanding. Do not force a table when it is not relevant.
+- Keep code, tables, and explanations connected to the exact topic; never add decorative or unrelated examples.
+
+Never output LaTeX or raw math commands such as \\frac, \\nabla, \\[...\\], or $$...$$. Write equations as plain text or readable Unicode.
 
 After the example, you MUST append the revision section exactly in this format:
 ---REVISION---
 {{"title":"Key Takeaways","points":[{{"id":1,"text":"First key point"}},{{"id":2,"text":"Second key point"}},{{"id":3,"text":"Third key point"}}]}}
 
-Ensure the JSON is valid and contains exactly 3 key takeaways. Do not wrap the JSON in markdown code blocks or code fences."""
+Ensure the JSON is valid, contains exactly 3 distinct key takeaways, and does not repeat the same idea. Do not wrap the JSON in markdown code blocks or code fences. Aim for a complete explanation rather than a brief answer."""
 
     logger.info(f"[Stream] Starting detailed streaming for {topic}")
     
@@ -433,11 +500,15 @@ def _save_to_cache(student_id: int, topic: str, subject: Optional[str], full_res
                 local_db.delete(existing)
                 local_db.commit()
 
+            cache_content = full_response
+            if isinstance(cache_content, str) and not cache_content.lstrip().startswith(STREAM_CACHE_MARKER):
+                cache_content = f"{STREAM_CACHE_MARKER}\n{cache_content}"
+
             new_cache = LearningContent(
                 student_id=student_id,
                 subject=subject,
                 topic=topic,
-                content=markdown_content,
+                content=cache_content,
                 revision=revision_data
             )
             local_db.add(new_cache)
@@ -446,4 +517,3 @@ def _save_to_cache(student_id: int, topic: str, subject: Optional[str], full_res
             local_db.close()
     except Exception as e:
         logger.error(f"[StreamContent] Failed to cache: {e}")
-

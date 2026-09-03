@@ -277,6 +277,25 @@ def _topic_is_present(topic: str, roadmap_text: str) -> bool:
     )
 
 
+def _parse_roadmap_json(content: str) -> dict:
+    """Parse a provider response while tolerating fences and trailing prose."""
+    candidate = str(content or "").strip()
+    fence = r"\x60\x60\x60"
+    candidate = re.sub(r"^" + fence + r"(?:json)?\s*", "", candidate, flags=re.IGNORECASE)
+    candidate = re.sub(r"\s*" + fence + r"\s*$", "", candidate).strip()
+    start = candidate.find("{")
+    if start < 0:
+        raise ValueError("Roadmap response did not contain a JSON object")
+    candidate = candidate[start:]
+    try:
+        parsed = json.loads(candidate)
+    except json.JSONDecodeError:
+        parsed = json.loads(_balance_json(candidate))
+    if not isinstance(parsed, dict):
+        raise ValueError("Roadmap response JSON was not an object")
+    return parsed
+
+
 def _domain_guidance(focus_topic: str) -> str:
     """Give the model a reusable planning policy for any learner-selected domain."""
     return f"""Before writing the roadmap, classify the primary topic "{focus_topic}" internally as one or more of:
@@ -293,6 +312,71 @@ Then select the real prerequisites, canonical concepts, tools, methods, practice
 Every week and day must remain centered on the exact primary topic "{focus_topic}".
 Use genuine domain terminology and examples; do not substitute broad labels such as internship, placement, exam preparation, or project management for the topic.
 Do not invent unrelated subjects, generic filler tasks, or internal metadata. If supporting material is supplied, use it only when it is clearly relevant to the primary topic."""
+
+
+def _generate_roadmap_in_batches(
+    focus_topic: str,
+    goal_text: str,
+    goal_type_text: str,
+    focus_description: str,
+    material_context: str,
+    num_weeks: int,
+) -> dict:
+    """Generate long roadmaps in small valid JSON responses."""
+    all_weeks = []
+    batch_size = 3
+    for start_week in range(1, num_weeks + 1, batch_size):
+        end_week = min(num_weeks, start_week + batch_size - 1)
+        expected_weeks = end_week - start_week + 1
+        batch_prompt = f"""Create weeks {start_week}-{end_week} of a roadmap for the exact subject "{focus_topic}".
+The subject is authoritative; do not replace it with the planning lens or uploaded filenames.
+Planning lens: {goal_type_text}
+Broader goal: {goal_text}
+Learner focus: {focus_description}
+Relevant supporting material: {material_context}
+
+Return ONLY valid JSON in this exact shape:
+{{"weeks":[{{"week_number":{start_week},"focus_area":"Subject-specific focus","outcome":"Measurable outcome","days":[{{"day_number":1,"topic":"Distinct canonical subject concept or task","subtopics":["Concrete concept","Concrete method"]}}]}}]}}
+
+Return exactly {expected_weeks} weeks and exactly 5 distinct days per week. Keep the progression ordered and use real terminology from "{focus_topic}". Do not use generic filler, phase labels, markdown, comments, or extra fields."""
+
+        parsed_batch = None
+        last_error = None
+        for attempt in range(2):
+            try:
+                response = _roadmap_llm_call(
+                    "You are a careful curriculum designer. Produce compact, subject-specific JSON only.",
+                    batch_prompt,
+                    max_tokens=max(2400, expected_weeks * 850),
+                )
+                parsed = _parse_roadmap_json(response)
+                weeks = parsed.get("weeks")
+                if not isinstance(weeks, list) or len(weeks) != expected_weeks:
+                    raise ValueError("Batch returned the wrong number of weeks")
+                parsed_batch = weeks
+                break
+            except Exception as exc:
+                last_error = exc
+                logger.warning(
+                    "[RoadmapEngine] Roadmap batch %s-%s attempt %s failed: %s",
+                    start_week,
+                    end_week,
+                    attempt + 1,
+                    exc,
+                )
+
+        if parsed_batch is None:
+            raise RoadmapGenerationError(
+                f"Roadmap batch {start_week}-{end_week} could not be generated"
+            ) from last_error
+        all_weeks.extend(parsed_batch)
+
+    return {
+        "focus_topic": focus_topic,
+        "title": f"{focus_topic} Roadmap",
+        "summary": f"Build practical ability in {focus_topic} through guided study and checkpoints.",
+        "weeks": all_weeks,
+    }
 
 
 def generate_roadmap_from_llm(goal: str, duration: str, document_context: str = "", description: str = "", goal_type: str = "") -> dict:
@@ -400,15 +484,33 @@ Duration: {duration}
 Learner focus and constraints: {focus_description}
 Relevant supporting material only: {material_context}"""
         logger.info("[RoadmapEngine] Using compact concept-first generation for %s weeks", num_weeks)
-        content = _roadmap_llm_call(
-            compact_system_prompt,
-            compact_user_prompt,
-            max_tokens=min(3200, max(1800, 600 + num_weeks * 160)),
-        )
-    else:
-        content = _roadmap_llm_call(system_prompt, user_prompt, max_tokens=5000)
+        parsed_from_batches = None
+        if num_weeks >= 8:
+            try:
+                logger.info("[RoadmapEngine] Using validated week batches for %s-week roadmap", num_weeks)
+                parsed_from_batches = _generate_roadmap_in_batches(
+                    focus_topic,
+                    goal_text,
+                    goal_type_text,
+                    focus_description,
+                    material_context,
+                    num_weeks,
+                )
+            except Exception as exc:
+                logger.warning("[RoadmapEngine] Batch roadmap generation failed; trying one compact fallback: %s", exc)
 
-    if not content:
+        content = ""
+        if parsed_from_batches is None:
+            content = _roadmap_llm_call(
+                compact_system_prompt,
+                compact_user_prompt,
+                max_tokens=max(4000, 1000 + num_weeks * 400),
+            )
+    else:
+        parsed_from_batches = None
+        content = _roadmap_llm_call(system_prompt, user_prompt, max_tokens=6000)
+
+    if parsed_from_batches is None and not content:
         logger.error("[RoadmapEngine] All configured LLM providers failed; no roadmap was persisted")
         raise RoadmapGenerationError("All configured LLM providers failed or timed out")
         
@@ -427,13 +529,17 @@ Relevant supporting material only: {material_context}"""
         # Robustly balance and repair JSON cutoffs
         content_str = _balance_json(content_str)
 
-        parsed = json.loads(content_str)
+        parsed = parsed_from_batches if parsed_from_batches is not None else _parse_roadmap_json(content_str)
         normalized = _normalise_roadmap(parsed, goal_text, duration, focus_description, num_weeks, focus_topic)
         if normalized is None:
             raise ValueError("Roadmap output failed quality validation")
         return normalized
     except Exception as e:
-        logger.error(f"[RoadmapEngine] Failed to parse or validate LLM JSON: {e}\nRAW CONTENT:\n{content}")
+        logger.error(
+            "[RoadmapEngine] Failed to parse or validate LLM JSON: %s (response_chars=%s)",
+            e,
+            len(content or ""),
+        )
         raise RoadmapGenerationError("The LLM returned an invalid or off-topic roadmap") from e
 
 

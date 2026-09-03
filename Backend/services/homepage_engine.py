@@ -5,11 +5,21 @@ import os
 import json
 import re
 
+from urllib.parse import urlencode
 from practice_models import TopicPerformance, RevisionItem, QuizHistory, PracticeSession, UserPerformance, BehavioralInsight, PracticeQuestion
 from services.analytics_engine import (
     calculate_topic_metrics, get_student_subjects, get_predefined_topics,
     calculate_student_metrics, calculate_study_streak_metrics
 )
+
+def _topic_action_url(path: str, topic: str, subject: str | None = None, mode: str | None = None) -> str:
+    """Keep topic context in links that can return to the learning page."""
+    params = {"topic": topic}
+    if subject:
+        params["subject"] = subject
+    if mode:
+        params["mode"] = mode
+    return f"{path}?{urlencode(params)}"
 
 def calculate_priority_score(confidence: float, accuracy: float, days_since_practice: int) -> float:
     """
@@ -434,7 +444,7 @@ def generate_suggested_next(student_id: int, db: Session) -> list:
             "title": "Continue Practice",
             "topic": focus_practice["topic"],
             "subject": focus_practice["subject"],
-            "action_url": f"/practice?topic={focus_practice['topic']}",
+            "action_url": _topic_action_url("/practice", focus_practice["topic"], focus_practice.get("subject")),
             "days_since_practice": focus_practice["days_since_practice"],
             "priority_score": focus_practice["priority_score"],
             "reason": f"Active weak area requires revision. Priority score {focus_practice['priority_score']}."
@@ -456,7 +466,7 @@ def generate_suggested_next(student_id: int, db: Session) -> list:
             "title": "Review Mistakes",
             "topic": review_mistake["topic"],
             "subject": review_mistake["subject"],
-            "action_url": f"/practice?mode=weakness&topic={review_mistake['topic']}",
+            "action_url": _topic_action_url("/practice", review_mistake["topic"], review_mistake.get("subject"), "weakness"),
             "days_since_practice": review_mistake["days_since_practice"],
             "priority_score": review_mistake["priority_score"],
             "reason": f"System caught error patterns in {review_mistake['topic']}."
@@ -468,7 +478,7 @@ def generate_suggested_next(student_id: int, db: Session) -> list:
             "title": "Learn Topic",
             "topic": learn_topic["topic"],
             "subject": learn_topic["subject"],
-            "action_url": f"/learning?topic={learn_topic['topic']}&subject={learn_topic['subject']}",
+            "action_url": _topic_action_url("/learning", learn_topic["topic"], learn_topic.get("subject")),
             "days_since_practice": learn_topic["days_since_practice"],
             "priority_score": learn_topic["priority_score"],
             "reason": "Unstarted required curriculum topic."
@@ -481,7 +491,7 @@ def generate_suggested_next(student_id: int, db: Session) -> list:
             "title": "Take Quiz",
             "topic": strong_topic["topic"],
             "subject": strong_topic["subject"],
-            "action_url": f"/practice?topic={strong_topic['topic']}",
+            "action_url": _topic_action_url("/practice", strong_topic["topic"], strong_topic.get("subject")),
             "days_since_practice": strong_topic["days_since_practice"],
             "priority_score": strong_topic["priority_score"],
             "reason": "Verify your long-term memory retention."
@@ -809,21 +819,21 @@ def calculate_pending_tasks(student_id: int, db: Session) -> list:
                     topic, subject, "learning",
                     "Learning is incomplete.",
                     priority, days,
-                    f"/learning?topic={topic}&subject={subject}",
+                    _topic_action_url("/learning", topic, subject),
                 )
             if metrics["sessions"] > 0 and metrics["confidence"] < 40:
                 add_task(
                     topic, subject, "practice",
                     "Confidence is below the practice threshold.",
                     priority, days,
-                    f"/practice?mode=weakness&topic={topic}",
+                    _topic_action_url("/practice", topic, subject, "weakness"),
                 )
             if metrics["sessions"] > 0 and metrics["last_practiced_at"] and days >= 5:
                 add_task(
                     topic, subject, "revision",
                     f"Not practiced for {days} days.",
                     priority, days,
-                    f"/practice?topic={topic}",
+                    _topic_action_url("/practice", topic, subject),
                 )
 
     for overdue in calculate_overdue_topics(student_id, db):
@@ -831,14 +841,14 @@ def calculate_pending_tasks(student_id: int, db: Session) -> list:
             overdue["topic"], overdue["subject"], overdue["type"],
             overdue["reason"], 75.0 + min(overdue.get("days", 0), 20),
             overdue.get("days", 0),
-            f"/practice?topic={overdue['topic']}",
+            _topic_action_url("/practice", overdue["topic"], overdue.get("subject")),
         )
 
     for quiz in calculate_due_quizzes(student_id, db):
         add_task(
             quiz["topic"], quiz["subject"], "quiz",
             quiz["reason"], 85.0, 0,
-            f"/practice?topic={quiz['topic']}",
+            _topic_action_url("/practice", quiz["topic"], quiz.get("subject")),
         )
 
     # Include explicit revision requests, including personal/custom topics that
@@ -848,7 +858,7 @@ def calculate_pending_tasks(student_id: int, db: Session) -> list:
             revision["topic"], revision["subject"], "revision",
             revision["reason"], revision["priority_score"],
             revision["days_since_practice"],
-            f"/practice?topic={revision['topic']}",
+            _topic_action_url("/practice", revision["topic"], revision.get("subject")),
         )
 
     result = []

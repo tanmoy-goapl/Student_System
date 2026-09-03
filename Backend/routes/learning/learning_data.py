@@ -10,7 +10,7 @@ from sqlalchemy import desc
 from database import get_db
 from practice_models import RevisionItem, TopicPerformance, LearningContent
 from services.practice.topic_extractor import extract_topics_from_documents
-from services.practice.content_generator import has_valid_revision, split_revision_payload
+from services.practice.content_generator import has_valid_revision, has_valid_structured_notes, has_valid_stream_notes, split_revision_payload
 from services.authorization import require_student
 
 logger = logging.getLogger("chatbot")
@@ -63,6 +63,36 @@ def resolve_standard_subject(topic: str, current_subject: Optional[str] = None) 
     return current_subject
 
 
+def _resolve_cached_subject(
+    student_id: int,
+    topic: Optional[str],
+    subject: Optional[str],
+    db: Session,
+) -> Optional[str]:
+    """Recover the original summary scope when an older link omitted subject."""
+    if subject or not topic:
+        return subject
+
+    cached_subject = (
+        db.query(LearningContent.subject)
+        .filter(
+            LearningContent.student_id == student_id,
+            LearningContent.topic == topic,
+            LearningContent.subject.isnot(None),
+            LearningContent.subject != "",
+        )
+        .order_by(LearningContent.id.desc())
+        .first()
+    )
+    if cached_subject and cached_subject[0]:
+        logger.info(
+            "Recovered cached learning subject for topic='%s': '%s'",
+            topic,
+            cached_subject[0],
+        )
+        return cached_subject[0]
+    return subject
+
 def _get_revision_status(student_id: int, topic: Optional[str], db: Session) -> dict:
     if not topic:
         return {"is_queued": False, "priority": None, "item_id": None}
@@ -92,6 +122,7 @@ def get_learning_data(
 ):
     require_student(student_id, db)
     subject = resolve_standard_subject(topic or "", subject)
+    subject = _resolve_cached_subject(student_id, topic, subject, db)
 
     sidebar_data = []
 
@@ -225,7 +256,10 @@ def get_learning_data(
         is_old_format = False
         if cached_content:
             cached_str = str(cached_content.content)
-            is_old_format = isinstance(cached_content.content, list) or ("why is it important" not in cached_str.lower() and "how does it work" not in cached_str.lower())
+            is_old_format = not (
+                has_valid_structured_notes(cached_content.content)
+                or has_valid_stream_notes(cached_content.content)
+            )
             if subject and ("keshav" in cached_str.lower() or "placement policy" in cached_str.lower() or "deregistered" in cached_str.lower()):
                 is_old_format = True
 
@@ -768,7 +802,10 @@ def get_learning_data(
     if cached_content:
         cached_str = str(cached_content.content)
         # Check case-insensitively to prevent minor casing differences from invalidating valid caches
-        is_old_format = isinstance(cached_content.content, list) or ("why is it important" not in cached_str.lower() and "how does it work" not in cached_str.lower())
+        is_old_format = not (
+            has_valid_structured_notes(cached_content.content)
+            or has_valid_stream_notes(cached_content.content)
+        )
         if subject and ("keshav" in cached_str.lower() or "placement policy" in cached_str.lower() or "deregistered" in cached_str.lower()):
             logger.warning(f"CACHE INVALIDATED (Resume/Policy Leak detected): topic='{selected_topic}', subject='{subject}'")
             is_old_format = True
