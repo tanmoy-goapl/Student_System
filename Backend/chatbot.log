@@ -22732,3 +22732,130 @@ RAW CONTENT:
 2026-09-02 13:48:49,930 - INFO - CACHE HIT (Fast Return): topic='Data Handling with Pandas', subject='Week 1'
 2026-09-02 13:48:49,960 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
 2026-09-02 13:48:50,165 - INFO - [Stream] Starting detailed streaming for Data Handling with Pandas
+2026-09-03 06:32:57,204 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-03 06:32:57,208 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-03 06:32:57,210 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-03 06:32:57,211 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-03 06:32:57,212 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-03 06:32:57,213 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-03 06:32:57,215 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-03 06:32:57,216 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-03 06:32:57,217 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-03 06:32:57,238 - INFO - CACHE HIT (Fast Return): topic='Linear Algebra for Machine Learning', subject='Week 1'
+2026-09-03 06:32:57,268 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-03 09:45:36,161 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-03 09:45:36,165 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-03 09:45:36,168 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-03 09:45:36,169 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-03 09:45:36,170 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-03 09:45:36,171 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-03 09:45:36,172 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-03 09:45:36,174 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-03 09:45:36,175 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-03 09:45:36,197 - INFO - CACHE HIT (Fast Return): topic='Linear Algebra for Machine Learning', subject='Week 1'
+2026-09-03 09:45:36,227 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-03 10:42:08,304 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-03 10:42:08,310 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-03 10:42:08,312 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-03 10:42:08,313 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-03 10:42:08,314 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-03 10:42:08,316 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-03 10:42:08,317 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-03 10:42:08,318 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-03 10:42:08,319 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-03 10:42:08,331 - INFO - CACHE HIT (Fast Return): topic='Linear Algebra for Machine Learning', subject='Week 1'
+2026-09-03 10:42:08,360 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-04 06:05:52,777 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-04 06:05:52,781 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-04 06:05:52,784 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-04 06:05:52,784 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-04 06:05:52,785 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-04 06:05:52,787 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-04 06:05:52,788 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-04 06:05:52,789 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-04 06:05:52,790 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-04 06:05:52,812 - INFO - CACHE HIT (Fast Return): topic='Linear Algebra for Machine Learning', subject='Week 1'
+2026-09-04 06:05:52,842 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-04 07:04:18,380 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-04 07:04:18,384 - INFO - [get_learning_data] Retrieved roadmap id=41, title='Applied AI Engineering: From Foundations to Production Deployment'
+2026-09-04 07:04:18,386 - INFO - [get_learning_data] Retrieved roadmap id=40, title='Instagram and YouTube Content Creation Roadmap'
+2026-09-04 07:04:18,387 - INFO - [get_learning_data] Retrieved roadmap id=39, title='Mastering Prompt Engineering: From Foundations to Advanced Optimization'
+2026-09-04 07:04:18,391 - INFO - [get_learning_data] Retrieved roadmap id=38, title='Organic Chemistry Mastery Roadmap'
+2026-09-04 07:04:18,392 - INFO - [get_learning_data] Retrieved roadmap id=30, title='Deep Learning Roadmap'
+2026-09-04 07:04:18,394 - INFO - [get_learning_data] Retrieved roadmap id=29, title='Machine Learning Engineer Roadmap'
+2026-09-04 07:04:18,395 - INFO - [get_learning_data] Retrieved roadmap id=28, title='Fast-Track Placement Prep Roadmap'
+2026-09-04 07:04:18,396 - INFO - [get_learning_data] Retrieved roadmap id=27, title='Fullstack Development 11‑Week Roadmap'
+2026-09-04 07:04:18,411 - INFO - CACHE HIT (Fast Return): topic='Linear Algebra for Machine Learning', subject='Week 1'
+2026-09-04 07:04:18,446 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-04 07:04:47,486 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-04 07:04:47,498 - INFO - CACHE HIT (Fast Return): topic='Responsive and Mobile-First Design', subject='Frontend Web Development'
+2026-09-04 07:04:47,515 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-07 07:33:23,273 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-07 07:33:23,303 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-09-07 07:33:23,351 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-07 07:33:37,692 - INFO - DEBUG2 predefined_topics: ['Time Complexity', 'Space Complexity', 'Big O Notation', 'Arrays', 'Linked Lists', 'Stacks', 'Queues', 'Binary Trees', 'BST', 'Graph Traversal', 'BFS and DFS', 'Binary Search', 'Merge Sort', 'Quick Sort', 'Heap Sort', 'Memoization', 'Knapsack', 'LCS', 'DP Problems']
+2026-09-07 07:33:37,693 - INFO - DEBUG2 performances keys: ['Knapsack', 'Time Complexity', 'Arrays']
+2026-09-07 07:33:37,693 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x77439d791a90>, <practice_models.TopicPerformance object at 0x77439d792990>, <practice_models.TopicPerformance object at 0x77439d7a9a50>]
+2026-09-07 07:33:37,846 - INFO - DEBUG2 predefined_topics: ['Time Complexity', 'Space Complexity', 'Big O Notation', 'Arrays', 'Linked Lists', 'Stacks', 'Queues', 'Binary Trees', 'BST', 'Graph Traversal', 'BFS and DFS', 'Binary Search', 'Merge Sort', 'Quick Sort', 'Heap Sort', 'Memoization', 'Knapsack', 'LCS', 'DP Problems']
+2026-09-07 07:33:37,846 - INFO - DEBUG2 performances keys: ['Knapsack', 'Time Complexity', 'Arrays']
+2026-09-07 07:33:37,846 - INFO - DEBUG2 matched perfs: [<practice_models.TopicPerformance object at 0x77439d7b30d0>, <practice_models.TopicPerformance object at 0x77439d7b1b90>, <practice_models.TopicPerformance object at 0x77439d7b14d0>]
+2026-09-11 07:03:20,602 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-11 07:03:20,680 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-11 07:03:20,845 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-09-11 07:03:20,857 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-09-11 07:03:20,875 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-11 07:03:28,686 - INFO - [Practice] Starting/resuming session: mode=topic, topic=OS Components and Services, difficulty=mixed
+2026-09-11 07:03:28,687 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-11 07:03:28,810 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-11 07:03:39,895 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "OS Components and Services",
+    "subtopic": "System Calls and Abstraction",
+    "difficulty": "MEDIUM",
+    "question": "In a layered operating system architecture, when an application invokes a high-level library function such as fopen(), which component is directly responsible for translating this request into a specific kernel trap or system call to the file system service?",
+    "options": [
+      {
+        "id": "A",
+        "text": "The hardware abstraction layer, which directly executes the machine instructions for disk I/O."
+      },
+      {
+        "id": "B",
+        "text": "The system call interface, which acts as the boundary between user space and kernel space to enforce protection."
+      },
+      {
+        "id": "C",
+        "text": "The device driver, which manages the physical movement of the disk heads."
+      },
+      {
+        "id": "D",
+        "text": "The shell, which parses the command line arguments before passing them to the kernel."
+     
+2026-09-11 07:03:40,449 - INFO - [Practice] Background generation added 3 questions to session 2804
+2026-09-11 07:03:50,991 - INFO - [PracticeEngine] Generated Content snippet: [
+  {
+    "topic": "OS Components and Services",
+    "subtopic": "System Calls and Abstraction",
+    "difficulty": "MEDIUM",
+    "question": "Consider a scenario where a high-level application invokes a standard library function to read a file. Which of the following best describes the precise sequence of events that occurs within the OS kernel to transition from user mode to kernel mode during this operation?",
+    "options": [
+      {
+        "id": "A",
+        "text": "The application directly modifies the hardware registers of the disk controller to fetch data, bypassing the kernel entirely for performance optimization."
+      },
+      {
+        "id": "B",
+        "text": "The standard library function triggers a software interrupt or syscall instruction, causing the CPU to switch to kernel mode, after which the kernel validates the request and executes the appropriate driver."
+      },
+      {
+        "id": "C",
+        "text": "The compiler translates the read function into assem
+2026-09-11 07:03:51,305 - INFO - [Practice] Background generation added 2 questions to session 2804
+2026-09-11 07:03:51,307 - INFO - [Practice] Background generation completed for session 2804 (5 questions)
+2026-09-11 07:03:59,764 - INFO - PRACTICE SESSION CLOSED WITHOUT ANSWERS | Session: 2804
+2026-09-11 07:04:07,203 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-09-11 07:04:07,382 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-10-05 14:48:35,792 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-10-05 14:48:35,908 - INFO - [get_learning_data] Requested roadmap_id=None, student_id=3
+2026-10-05 14:48:35,967 - INFO - CACHE HIT (Fast Return): topic='OS Components and Services', subject='Operating Systems'
+2026-10-05 14:48:36,026 - INFO - [PracticeEngine] Synchronized document custom topics for student 3
+2026-10-05 14:48:36,048 - INFO - [PracticeEngine] Synchronized document custom topics for student 3

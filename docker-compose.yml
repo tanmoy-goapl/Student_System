@@ -20,6 +20,8 @@ services:
     build:
       context: ./Backend
       dockerfile: Dockerfile
+      network: host
+    image: student_system-backend:latest
     container_name: student_backend
     depends_on:
       db:
@@ -37,11 +39,17 @@ services:
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
 
   mentor_ai:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+      network: host
     image: student_system-backend:latest
     container_name: student_mentor_ai
     depends_on:
       db:
         condition: service_healthy
+      backend:
+        condition: service_started
     network_mode: "host"
     env_file:
       - ./Backend/.env
@@ -60,6 +68,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      network: host
     container_name: student_frontend
     network_mode: "host"
     volumes:
