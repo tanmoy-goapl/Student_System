@@ -1,0 +1,19 @@
+Student Academic Report
+==============================
+Name: Rahul Sharma
+Roll Number: CS2024003
+Semester: 3
+
+Subject Results:
+- Mathematics: 45/100 (FAIL)
+- Data Structures: 78/100 (PASS)
+- Physics: 38/100 (FAIL)
+- English: 82/100 (PASS)
+- Programming Lab: 91/100 (PASS)
+
+Percentage: 66.8%
+Attendance: 68% (WARNING - below 75%)
+
+Teacher Feedback:
+Rahul needs to focus on Mathematics and Physics.
+Strong performance in practical subjects.

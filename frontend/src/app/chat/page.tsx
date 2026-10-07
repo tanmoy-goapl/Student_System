@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ChatPage from "@/app/pages/ChatPage";
-import LoginForm from "@/components/LoginForm";
+import { PageLoadingState } from "@/components/DashboardLoading";
 
 export default function Chat() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,24 +18,20 @@ export default function Chat() {
     setLoading(false);
   }, []);
 
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-    router.refresh();
-  };
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.replace("/login?next=/chat");
+    }
+  }, [loading, isAuthenticated, router]);
 
   if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <p className="text-gray-400">Loading...</p>
-      </div>
-    );
+    return <PageLoadingState text="Loading..." />;
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login Required</h2>
-        <LoginForm onLoginSuccess={handleLoginSuccess} redirectAfterLogin="/chat" />
+      <div className="rounded-lg bg-white p-6 shadow-md">
+        <p className="text-gray-400">Redirecting to login…</p>
       </div>
     );
   }

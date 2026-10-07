@@ -1,0 +1,13 @@
+College Academic Policy 2024
+==============================
+Minimum attendance required: 75%
+Students below 75% attendance will not be permitted to sit exams.
+
+Fee Structure:
+- Engineering: 120000 per year
+- Science: 80000 per year
+- Arts: 60000 per year
+
+Exam Rules:
+- No mobile phones in examination hall
+- Students must carry their ID card

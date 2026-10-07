@@ -1,0 +1,97 @@
+{
+  "Programming Fundamentals": [
+    "Variables and Data Types",
+    "Input Output Operations",
+    "Operators",
+    "Conditional Statements",
+    "Loops",
+    "Functions",
+    "Recursion",
+    "Arrays",
+    "Strings",
+    "Pointers",
+    "Structures",
+    "File Handling"
+  ],
+
+  "Operating Systems": [
+    "Introduction to Operating Systems",
+    "Processes",
+    "Threads",
+    "CPU Scheduling",
+    "Synchronization",
+    "Deadlocks",
+    "Memory Management",
+    "Paging",
+    "Virtual Memory",
+    "File Systems"
+  ],
+
+  "Data Structures": [
+    "Introduction to Data Structures",
+    "Arrays and Strings",
+    "Linked Lists",
+    "Stacks",
+    "Queues",
+    "Trees",
+    "Binary Search Trees",
+    "Heaps",
+    "Graphs",
+    "Hashing",
+    "Sorting Algorithms",
+    "Searching Algorithms"
+  ],
+
+  "Database Management Systems": [
+    "Database System Concepts",
+    "Relational Data Model",
+    "SQL Basics",
+    "Advanced SQL",
+    "Database Design",
+    "ER Modeling",
+    "Normalization",
+    "Transaction Management",
+    "Concurrency Control",
+    "Database Recovery",
+    "Indexing and Hashing"
+  ],
+
+  "Computer Networks": [
+    "Introduction to Networks",
+    "OSI and TCP/IP Models",
+    "Physical Layer",
+    "Data Link Layer",
+    "Medium Access Control",
+    "Network Layer",
+    "IP Addressing and Routing",
+    "Transport Layer",
+    "TCP and UDP",
+    "Application Layer",
+    "Network Security"
+  ],
+
+  "Object-Oriented Programming": [
+    "Introduction to OOP",
+    "Classes and Objects",
+    "Constructors and Destructors",
+    "Encapsulation",
+    "Inheritance",
+    "Polymorphism",
+    "Abstraction",
+    "Interfaces and Abstract Classes",
+    "Exception Handling",
+    "File I/O in OOP"
+  ],
+
+  "Software Engineering": [
+    "Software Process Models",
+    "Agile Development",
+    "Requirements Engineering",
+    "System Modeling",
+    "Software Architecture",
+    "Design Patterns",
+    "Software Testing",
+    "Software Maintenance",
+    "Project Management"
+  ]
+}

@@ -1,0 +1,39 @@
+Course Code: CS302
+Course Name: Database Management Systems
+Semester: Fall 2026
+
+Course Objectives:
+Learn about database design, SQL, and transaction processing.
+
+Course Content:
+
+UNIT 1: Introduction
+- Database Architecture
+- Data Models
+- ER Diagrams
+
+UNIT 2: Relational Model
+- Relational Algebra
+- Tuple Calculus
+- Domain Calculus
+
+UNIT 3: SQL
+- Basic Queries
+- Joins
+- Subqueries
+- Triggers
+
+UNIT 4: Normalization
+- 1NF
+- 2NF
+- 3NF
+- BCNF
+
+UNIT 5: Transaction Processing
+- ACID Properties
+- Concurrency Control
+- Locking Protocols
+
+Suggested Books:
+- Primary Textbook: Elmasri, Navathe - Fundamentals of Database Systems
+- Reference Book: Raghu Ramakrishnan - Database Management Systems

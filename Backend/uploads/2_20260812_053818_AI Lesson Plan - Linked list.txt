@@ -1,0 +1,252 @@
+# 📚 Lesson Plan – **Linked Lists**  
+**Course:** Data Structures & Algorithms (DSA)  
+**Level:** Undergraduate (2nd‑year) / Introductory graduate  
+**Duration:** 60 minutes (single lecture)  
+**Instructor:** ______________________  
+
+---  
+
+## 1. Learning Objectives  
+
+By the end of this session students will be able to:  
+
+| # | Objective | Assessment Indicator |
+|---|-----------|-----------------------|
+| 1 | **Define** a linked list and contrast it with static arrays. | Correctly state differences in memory layout, access time, and mutability. |
+| 2 | **Identify** the three canonical variants – singly, doubly, and circular linked lists – and **explain** when each is appropriate. | List at least two use‑cases per variant. |
+| 3 | **Implement** a singly‑linked list in a chosen language (C / Java / Python) with `insert`, `delete`, `search`, and `traverse` operations. | Write syntactically correct code on the in‑class worksheet. |
+| 4 | **Analyse** time and space complexities of the basic operations and **justify** why they are O(1) or O(n). | Provide Big‑O notation with brief reasoning. |
+| 5 | **Detect** and **resolve** common pitfalls (null‑pointer dereference, memory leaks, off‑by‑one errors). | Explain a bug scenario and propose a fix. |
+| 6 | **Apply** a linked list to solve a simple algorithmic problem (e.g., “remove duplicates from an unsorted list”). | Outline the algorithm steps and give pseudo‑code. |
+
+---
+
+## 2. Lecture Timeline (60 min)
+
+| Time | Segment | Pedagogical Technique |
+|------|---------|-----------------------|
+| **0‑5 min** | **Opening & Motivation** – real‑world analogies (train cars, playlist, memory fragmentation). | Mini‑lecture + quick poll (hand‑raise). |
+| **5‑12 min** | **Fundamentals** – definition, node structure, head/tail pointers, memory model. | Whiteboard diagram + live coding of node struct. |
+| **12‑20 min** | **Variants** – singly, doubly, circular; trade‑offs (space vs. operation cost). | Comparative table on slide; short “think‑pair‑share”. |
+| **20‑30 min** | **Core Operations** – insertion (front, after a node, end), deletion, search, traversal. | Live coding (language of choice) with step‑by‑step walkthrough. |
+| **30‑38 min** | **Complexity Analysis** – O(1) vs. O(n), amortised cost for tail insert with a stored pointer. | Group activity: students annotate a pre‑written code fragment with Big‑O notes. |
+| **38‑45 min** | **Common Bugs & Debugging** – null checks, memory leaks (C), garbage collection (Java/Python), infinite loops in circular lists. | Pair debugging of a deliberately broken snippet. |
+| **45‑55 min** | **In‑Class Activity** – solve “Remove duplicates from an unsorted singly linked list” (two approaches). | Students work in groups of three; instructor circulates, provides hints. |
+| **55‑60 min** | **Wrap‑up & Reflection** – recap objectives, answer lingering questions, assign homework. | Exit ticket (one‑sentence takeaway). |
+
+---
+
+## 3. Core Concepts & Explanations  
+
+### 3.1 What Is a Linked List?  
+
+- **Dynamic, non‑contiguous** data structure composed of *nodes*.
+- Each node stores **data** + **reference(s)** (pointers) to other nodes.
+- The **head** pointer gives entry to the structure; the **tail** (optional) points to the last node or back to the head (circular).
+
+| Property | Array | Linked List |
+|----------|-------|-------------|
+| Memory layout | Contiguous block | Scattered nodes (heap) |
+| Random access | O(1) via index | O(n) by traversal |
+| Insertion/Deletion | O(n) (shift) | O(1) if position known |
+| Size flexibility | Fixed (or costly resize) | Naturally grows/shrinks |
+
+### 3.2 Node Structure (language‑agnostic)
+
+```text
++-----------+-----------+
+|  data     |  next ptr |
++-----------+-----------+
+```
+
+- **Singly**: one `next` pointer.
+- **Doubly**: `next` **and** `prev` pointers.
+- **Circular**: last node’s `next` points to `head` (and `prev` to `tail` for doubly‑circular).
+
+### 3.3 Variants & When to Use  
+
+| Variant | Pointer Layout | Advantages | Disadvantages | Typical Use‑Case |
+|---------|----------------|------------|---------------|-----------------|
+| **Singly** | `next` only | Minimal memory, simple | No backward traversal, delete requires predecessor | Simple stacks, queues, adjacency lists |
+| **Doubly** | `next` + `prev` | O(1) delete given node, reverse traversal | Extra memory, more pointer updates | Browser history, LRU cache, undo/redo |
+| **Circular** | `next` (and optionally `prev`) with wrap‑around | No null terminator, easy round‑robin, constant‑time concatenation | Must guard against infinite loops | Music playlists, round‑robin scheduling, Josephus problem |
+
+### 3.4 Core Operations (Pseudo‑code)  
+
+#### 3.4.1 Insertion  
+
+```pseudo
+function insertFront(head, value):
+    node = new Node(value)
+    node.next = head
+    head = node
+    return head
+```
+
+- **After a given node** (requires pointer to that node):
+  ```pseudo
+  node.next = target.next
+  target.next = node
+  ```
+- **At tail** (if tail pointer stored → O(1); otherwise traverse → O(n)).
+
+#### 3.4.2 Deletion  
+
+```pseudo
+function deleteNode(head, key):
+    if head == null: return null
+    if head.data == key:
+        temp = head
+        head = head.next
+        free(temp)          // C only
+        return head
+    prev = head
+    cur  = head.next
+    while cur != null and cur.data != key:
+        prev = cur
+        cur  = cur.next
+    if cur != null:
+        prev.next = cur.next
+        free(cur)
+    return head
+```
+
+#### 3.4.3 Search  
+
+Linear scan → O(n). Return pointer to node or `null`.
+
+#### 3.4.4 Traversal  
+
+```pseudo
+cur = head
+while cur != null:
+    process(cur.data)
+    cur = cur.next
+```
+
+### 3.5 Complexity Summary  
+
+| Operation | Best | Average | Worst | Remarks |
+|-----------|------|---------|-------|---------|
+| Insert front | O(1) | O(1) | O(1) | No traversal |
+| Insert after node | O(1) | O(1) | O(1) | Requires node reference |
+| Insert at tail (no tail ptr) | O(n) | O(n) | O(n) | Traversal needed |
+| Delete (known node) | O(1) | O(1) | O(1) | With doubly linked list |
+| Delete by value | O(n) | O(n) | O(n) | Need search |
+| Search | O(n) | O(n) | O(n) | Linear scan |
+| Space per node | O(1) | O(1) | O(1) | + pointer(s) |
+
+### 3.6 Common Pitfalls  
+
+| Pitfall | Symptom | Fix |
+|---------|---------|-----|
+| Forgetting to update `prev` in doubly list | Corrupted backward links → infinite loop or segmentation fault | Update both `next` and `prev` consistently |
+| Using a freed node (C) | Crash, “use after free” | Set pointer to `NULL` after `free`, or use smart pointers (C++) |
+| Not handling `null` in circular list | Endless loop in traversal | Detect loop by counting nodes or using a sentinel |
+| Off‑by‑one when inserting at tail without tail pointer | Last node’s `next` stays `null` → list appears truncated | After traversal, set `last.next = newNode` and `newNode.next = null` (or head for circular) |
+| Memory leak (Java/Python) by retaining obsolete references | GC cannot reclaim → high memory usage | Nullify references after deletion |
+
+---
+
+## 4. Discussion Questions  
+
+1. **Design Choice:**  
+   *If you were implementing a browser’s back/forward history, would you choose a singly, doubly, or circular list? Justify your answer in terms of operation cost and memory.*  
+
+2. **Amortised Analysis:**  
+   *Suppose we maintain a tail pointer for a singly linked list. Inserting at the tail is O(1). However, if we occasionally need to “reset” the tail after a bulk deletion, how does this affect the amortised cost?*  
+
+3. **Cache Locality:**  
+   *Arrays benefit from spatial locality; linked lists do not. In what scenarios does this disadvantage outweigh the O(1) insertion benefit?*  
+
+4. **Hybrid Structures:**  
+   *Can you think of a data structure that combines the strengths of arrays and linked lists? (e.g., unrolled linked list, skip list). Briefly describe it.*  
+
+5. **Safety in Modern Languages:**  
+   *How do languages with automatic memory management (Java, Python, Rust with ownership) mitigate the classic linked‑list bugs? Discuss any remaining risks.*  
+
+---
+
+## 5. In‑Class Activities  
+
+### 5.1 Warm‑Up Pair‑Programming (5 min)  
+- **Task:** Write the `Node` class/struct in the language of the day, including a `__str__`/`toString` method for debugging.  
+- **Goal:** Ensure every student can instantiate a node and print its contents.
+
+### 5.2 Group Annotation (8 min)  
+- Provide a printed snippet that inserts a node at the tail **without** a tail pointer.  
+- **Students:** In groups of three, label each line with its time complexity and identify any missing null‑checks.  
+- **Outcome:** Reinforces O‑notation and defensive coding.
+
+### 5.3 Debugging Challenge (7 min)  
+- Distribute a buggy `deleteNode` routine (e.g., missing `prev.next = cur.next` update).  
+- **Pairs:** Run the code on a small list (1→2→3) and locate the runtime error.  
+- **Instructor:** Walk around, prompting “What does the pointer diagram look like after this line?”
+
+### 5.4 Algorithmic Mini‑Project (10 min) – *Remove Duplicates*  
+
+**Problem Statement:**  
+Given an unsorted singly linked list, delete all duplicate values, preserving the first occurrence.
+
+**Two Approaches to Discuss:**  
+
+| Approach | Data‑Structure Used | Time | Space |
+|----------|--------------------|------|-------|
+| Brute‑force (nested loops) | None | O(n²) | O(1) |
+| Hash‑set tracking | `HashSet`/`unordered_set` | O(n) | O(n) |
+
+- **Activity:** Each group writes pseudo‑code for one approach, then swaps with another group for peer review.  
+- **Deliverable:** One‑sentence description of why their chosen method is preferable in practice.
+
+### 5.5 Exit Ticket (2 min)  
+- Prompt: *“Write, in one sentence, the most important advantage of a doubly linked list over a singly linked list.”*  
+- Collect on sticky notes or via a quick online poll.
+
+---
+
+## 6. Homework Assignment  
+
+1. **Implementation:**  
+   - Implement a **circular doubly linked list** with the following public methods: `pushFront`, `pushBack`, `popFront`, `popBack`, `find(value)`, `remove(node)`.  
+   - Include a `display()` that prints the list forward and backward.
+
+2. **Complexity Proof:**  
+   - Write a short (≈200 words) justification for the O(1) amortised cost of `pushBack` when a tail pointer is maintained.
+
+3. **Application Problem:**  
+   - Given a stream of integers, maintain a linked list that always holds the **last k** elements (sliding window). Provide code and explain how you achieve O(1) per insertion and deletion.
+
+*Submission:* GitHub repository link (private) by next Monday, 23:59.
+
+---
+
+## 7. Materials & Resources  
+
+| Item | Description | Link |
+|------|-------------|------|
+| Slides | 20‑slide PDF covering definitions, diagrams, and complexity tables. | (upload) |
+| Code Templates | Starter files in C, Java, Python (node class + main driver). | (GitHub classroom) |
+| Reading | “Data Structures and Algorithm Analysis in C++” – Chapter 4 (Linked Lists). | ISBN 978-0132121670 |
+| Video | 5‑minute visualisation of pointer manipulation (YouTube). | https://youtu.be/… |
+| Quiz | 5‑question formative quiz on Moodle (auto‑graded). | (link) |
+
+---
+
+## 8. Assessment & Feedback  
+
+- **In‑class participation** (30 % of lecture grade) – measured via poll responses, group activity contributions, and exit ticket.  
+- **Homework** (70 % of lecture grade) – evaluated on correctness, code style (comments, naming), and written complexity justification.  
+- **Feedback loop:** After grading, a 15‑minute “common errors” review will be posted on the course forum.
+
+---
+
+### Closing Thought  
+
+> *“A linked list is the embodiment of flexibility in memory; mastering it teaches you to think about data not as a static block, but as a living chain of relationships.”*  
+
+---  
+
+**Prepared by:**  
+Prof. ______________________  
+Department of Computer Science  
+[Date]  

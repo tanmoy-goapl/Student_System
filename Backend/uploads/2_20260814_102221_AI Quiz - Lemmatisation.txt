@@ -1,0 +1,291 @@
+# Lemmatisation in Artificial Intelligence  
+
+**Subject:** Artificial Intelligence (Natural Language Processing)  
+**Topic:** Lemmatisation  
+
+---
+
+## 1. Introduction  
+
+Lemmatisation (or lemmatization) is a fundamental preprocessing step in Natural Language Processing (NLP). It transforms each word in a text into its **lemma** – the canonical, dictionary‑form representation of that word. Unlike stemming, which merely chops off affixes, lemmatisation uses morphological analysis and vocabulary knowledge to return a linguistically valid base form.  
+
+> **Why lemmatisation matters**  
+- Reduces lexical sparsity, improving statistical estimates.  
+- Enhances recall in information retrieval: a query for “run” also matches “running”, “ran”, “runs”.  
+- Provides cleaner features for downstream tasks such as sentiment analysis, machine translation, and question answering.  
+
+---
+
+## 2. Core Concepts  
+
+| Concept | Description |
+|---------|-------------|
+| **Lemma** | The dictionary or citation form of a word (e.g., *run* for *running*, *ran*, *runs*). |
+| **Morphology** | Study of word structure; lemmatisation relies on morphological rules (inflection, derivation). |
+| **Part‑of‑Speech (POS) Tag** | The grammatical category (noun, verb, adjective, etc.) that guides lemmatisation because many words have different lemmas depending on POS (e.g., *better* → *good* as adjective, but *better* → *better* as verb). |
+| **Lexicon / Morphological Dictionary** | A curated list mapping surface forms to lemmas together with POS information. |
+| **Rule‑Based vs. Statistical Lemmatisers** | Rule‑based lemmatisers apply handcrafted morphological rules; statistical lemmatisers learn patterns from annotated corpora. |
+| **Context‑Sensitive Lemmatisation** | Uses surrounding words to disambiguate POS and select the correct lemma (e.g., “saw” as noun vs. verb). |
+
+---
+
+## 3. Lemmatisation Pipeline  
+
+1. **Tokenisation** – Split raw text into tokens (words, punctuation).  
+2. **POS Tagging** – Assign a POS tag to each token (e.g., using the Penn Treebank tag set).  
+3. **Morphological Analysis** – Consult a lexicon and apply morphological rules to map token + POS → lemma.  
+4. **Disambiguation (if needed)** – Resolve cases where multiple lemmas are possible (e.g., “flies” could be noun *fly* or verb *fly*).  
+
+A typical pipeline in Python (using spaCy) looks like:
+
+```python
+import spacy
+nlp = spacy.load("en_core_web_sm")
+doc = nlp("The children were playing in the gardens.")
+lemmas = [token.lemma_ for token in doc]
+print(lemmas)   # ['the', 'child', 'be', 'play', 'in', 'the', 'garden', '.']
+```
+
+---
+
+## 4. Linguistic Foundations  
+
+### 4.1 Inflection vs. Derivation  
+
+- **Inflection** modifies a word to express grammatical categories (tense, number, case) without changing its core meaning.  
+  - *run* → *runs* (3rd‑person singular)  
+  - *run* → *ran* (past tense)  
+
+- **Derivation** creates a new lexical item, often changing the part of speech.  
+  - *run* → *runner* (noun)  
+  - *happy* → *happiness* (noun)  
+
+Lemmatisation primarily handles **inflectional** variants; derivational forms are usually left untouched because they convey distinct meanings.
+
+### 4.2 Morphological Paradigms  
+
+Languages differ in the richness of their morphology:
+
+| Language | Morphological Type | Typical Lemma Challenges |
+|----------|-------------------|--------------------------|
+| English  | Analytic, weak inflection | Irregular verbs (go → went), plural nouns (mouse → mice) |
+| German   | Fusional, strong inflection | Compound nouns, case endings |
+| Turkish  | Agglutinative | Long suffix chains, vowel harmony |
+| Finnish  | Agglutinative, extensive case system | Numerous case forms per lemma |
+
+A robust lemmatiser must encode language‑specific paradigms or learn them from data.
+
+---
+
+## 5. Rule‑Based Lemmatisers  
+
+### 5.1 How They Work  
+
+1. **Lookup Table** – Direct mapping for irregular forms (e.g., *went* → *go*).  
+2. **Suffix Stripping Rules** – Apply ordered rules that remove known inflectional suffixes (e.g., remove “‑ing” → base verb).  
+3. **POS‑Conditioned Rules** – Different rule sets for nouns, verbs, adjectives.  
+
+### 5.2 Advantages  
+
+- Deterministic output – same input always yields same lemma.  
+- Fast and lightweight; suitable for embedded systems.  
+
+### 5.3 Limitations  
+
+- Coverage gaps for rare or newly coined words.  
+- Difficulty handling ambiguous forms without context.  
+
+**Example:** The Porter Stemmer (a classic stemming algorithm) is often confused with lemmatisation, but it does not guarantee dictionary‑valid lemmas (e.g., “studies” → “studi”).  
+
+---
+
+## 6. Statistical & Machine‑Learning Lemmatisers  
+
+### 6.1 Supervised Approaches  
+
+- **Training Data:** Sentences annotated with token, POS, and lemma (e.g., the Universal Dependencies corpora).  
+- **Model Types:** Conditional Random Fields (CRF), Bi‑LSTM, Transformer‑based sequence‑to‑sequence models.  
+- **Features:** Word form, character n‑grams, POS tag, surrounding context windows.  
+
+**Workflow:**  
+`token + context → model → predicted lemma`  
+
+### 6.2 Neural Lemmatisers  
+
+- **Encoder‑Decoder Architecture:** Encoder reads the token and context; decoder generates the lemma character by character.  
+- **Pre‑trained Language Models:** Fine‑tune BERT, RoBERTa, or XLM‑R on lemma prediction tasks.  
+- **Advantages:**  
+  - Handles unseen words via sub‑word embeddings.  
+  - Learns complex morphological patterns (e.g., German separable prefixes).  
+
+### 6.3 Evaluation Metrics  
+
+| Metric | Definition |
+|--------|------------|
+| **Accuracy** | Percentage of tokens where predicted lemma exactly matches gold lemma. |
+| **Levenshtein Distance** | Average edit distance between predicted and gold lemmas (useful for near‑misses). |
+| **F1‑Score (per POS)** | Harmonic mean of precision and recall for each POS class, then macro‑averaged. |
+
+Typical state‑of‑the‑art lemmatisers achieve > 97 % accuracy on well‑studied languages like English and German.
+
+---
+
+## 7. Context‑Sensitive Lemmatisation  
+
+Ambiguities arise when a token can belong to multiple POS categories:
+
+- **“saw”** – noun (a tool) vs. verb (past of see).  
+- **“lead”** – noun (metal) vs. verb (to guide).  
+
+A context‑aware lemmatiser first performs POS tagging (or joint POS‑lemma prediction) and then selects the appropriate lemma. Joint models reduce error propagation because POS and lemma are predicted simultaneously.
+
+**Joint Model Example (simplified):**
+
+```
+input: token sequence + character embeddings
+output: for each token, (POS, lemma) pair
+loss = α * cross_entropy(POS) + β * cross_entropy(lemma)
+```
+
+The hyper‑parameters α and β balance the two objectives.
+
+---
+
+## 8. Practical Considerations  
+
+### 8.1 Choosing a Lemmatizer  
+
+| Scenario | Recommended Tool |
+|----------|-------------------|
+| Fast prototyping in Python | spaCy, NLTK WordNetLemmatizer |
+| High‑accuracy multilingual pipelines | Stanza (Stanford NLP), UDPipe |
+| Resource‑constrained environment | Rule‑based lemmatiser from Snowball |
+| Custom domain (medical, legal) | Train a neural lemmatiser on domain‑specific annotated data |
+
+### 8.2 Integration with Other NLP Tasks  
+
+- **Information Retrieval:** Index lemmas instead of raw tokens to improve recall.  
+- **Sentiment Analysis:** Lemmatise before feeding into bag‑of‑words or TF‑IDF models.  
+- **Machine Translation:** Lemma‑based alignment can help low‑resource language pairs.  
+
+### 8.3 Common Pitfalls  
+
+1. **Skipping POS Tagging:** Feeding tokens without POS leads to many incorrect lemmas (e.g., “better” → “good” only when tagged as adjective).  
+2. **Over‑Lemmatising:** Reducing derivational forms (e.g., *happiness* → *happy*) can lose nuance.  
+3. **Language Mismatch:** Using an English lemmatiser on a code‑mixed text (English‑Spanish) yields many failures.  
+
+---
+
+## 9. Emerging Trends  
+
+### 9.1 End‑to‑End Morphological Modeling  
+
+Research is moving toward models that jointly learn tokenisation, POS, morphological features, and lemmatisation in a single neural architecture, often using multilingual pre‑training (e.g., mBERT, XLM‑R).  
+
+### 9.2 Zero‑Shot Lemmatisation  
+
+Leveraging large language models (LLMs) to infer lemmas for languages with no annotated data by prompting the model:  
+
+> *“Given the word ‘correr’ (Spanish) and its part of speech ‘verb’, return its lemma.”*  
+
+Early experiments show promising results, though consistency remains a challenge.  
+
+### 9.3 Morphological Richness Benchmarks  
+
+The **CoNLL‑2022 Shared Task** on multilingual lemmatisation introduced a benchmark covering 30 languages, encouraging the community to report results on low‑resource and morphologically complex languages.  
+
+---
+
+## 10. Implementation Example: Building a Simple Neural Lemmatizer  
+
+Below is a concise PyTorch example that trains a character‑level seq2seq lemmatiser on a small English dataset.
+
+```python
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, Dataset
+
+# 1. Dataset ---------------------------------------------------------
+class LemmaDataset(Dataset):
+    def __init__(self, pairs, char_vocab, max_len=30):
+        self.pairs = pairs          # list of (word, lemma) tuples
+        self.char2idx = {c:i+1 for i,c in enumerate(char_vocab)}  # 0 = padding
+        self.max_len = max_len
+
+    def __len__(self):
+        return len(self.pairs)
+
+    def encode(self, text):
+        ids = [self.char2idx.get(ch, 0) for ch in text[:self.max_len]]
+        ids += [0] * (self.max_len - len(ids))
+        return torch.tensor(ids, dtype=torch.long)
+
+    def __getitem__(self, idx):
+        w, l = self.pairs[idx]
+        return self.encode(w), self.encode(l)
+
+# 2. Model -----------------------------------------------------------
+class Lemmatizer(nn.Module):
+    def __init__(self, vocab_size, embed_dim=64, hidden_dim=128):
+        super().__init__()
+        self.emb = nn.Embedding(vocab_size, embed_dim, padding_idx=0)
+        self.encoder = nn.LSTM(embed_dim, hidden_dim, batch_first=True)
+        self.decoder = nn.LSTM(embed_dim, hidden_dim, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self, src, tgt):
+        # src: (B, L) word characters
+        # tgt: (B, L) lemma characters (teacher forcing)
+        src_emb = self.emb(src)
+        _, (h, c) = self.encoder(src_emb)
+
+        tgt_emb = self.emb(tgt)
+        out, _ = self.decoder(tgt_emb, (h, c))
+        logits = self.fc(out)               # (B, L, vocab)
+        return logits
+
+# 3. Training loop ---------------------------------------------------
+def train(model, loader, epochs=5, lr=0.001):
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    crit = nn.CrossEntropyLoss(ignore_index=0)   # ignore padding
+    for epoch in range(epochs):
+        total = 0
+        for src, tgt in loader:
+            opt.zero_grad()
+            logits = model(src, tgt[:, :-1])               # predict next char
+            loss = crit(logits.reshape(-1, logits.size(-1)),
+                        tgt[:, 1:].reshape(-1))
+            loss.backward()
+            opt.step()
+            total += loss.item()
+        print(f'Epoch {epoch+1}: loss = {total/len(loader):.4f}')
+
+# 4. Example usage ----------------------------------------------------
+pairs = [('running', 'run'), ('children', 'child'), ('better', 'good')]
+chars = set(''.join(w+l for w,l in pairs))
+dataset = LemmaDataset(pairs, chars)
+loader = DataLoader(dataset, batch_size=2, shuffle=True)
+
+model = Lemmatizer(vocab_size=len(dataset.char2idx)+1)
+train(model, loader, epochs=10)
+```
+
+**Key points of the example**
+
+- Operates at the **character level**, allowing it to handle unseen words.  
+- Uses **teacher forcing** (feeding the gold lemma characters during training).  
+- The model learns to map *running* → *run* and can generalise to similar patterns.  
+
+For production use, replace the tiny dataset with a large annotated corpus (e.g., Universal Dependencies) and consider a transformer encoder for richer context.
+
+---
+
+## 11. Summary  
+
+- **Lemmatisation** converts surface word forms to their dictionary lemmas, reducing lexical variation while preserving meaning.  
+- It relies on **morphological analysis**, **POS information**, and often a **lexicon**.  
+- Approaches range from **rule‑based** (fast, deterministic) to **statistical** and **neural** (high accuracy, adaptable).  
+- **Context‑sensitive** lemmatisers mitigate ambiguity by jointly predicting POS and lemma.  
+- Proper lemmatisation improves downstream AI tasks such as search, classification, and translation, especially in morphologically rich languages.  
+
+By understanding the linguistic underpinnings and the algorithmic options, AI practitioners can select or build lemmatisers that best fit their application’s speed, accuracy, and language coverage requirements.

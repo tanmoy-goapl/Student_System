@@ -1,0 +1,261 @@
+# Embeddings in Artificial Intelligence 
+**Subject:** Artificial Intelligence 
+**Topic:** Embeddings 
+**Level:** Upper‑undergraduate / early graduate 
+**Estimated time:** 90‑120 minutes 
+
+---
+
+## 1. Introduction 
+
+Embeddings are dense vector representations that map discrete objects—words, items, users, graphs, etc.—into a continuous vector space. In this space, similarity between objects is captured by geometric proximity (e.g., Euclidean distance or cosine similarity). The key idea is that semantic or relational information is encoded in the coordinates of the vectors, enabling downstream models to operate on fixed‑size numeric inputs regardless of the original object’s type or size.
+
+Typical use‑cases include:
+
+| Domain | Example | Embedding technique |
+|--------|---------|--------------------|
+| Natural language processing | Words, sentences, documents | Word2Vec, GloVe, FastText, BERT, Sentence‑BERT |
+| Recommender systems | Users, items | Matrix factorisation, Neural collaborative filtering |
+| Computer vision | Image patches, whole images | CNN‑based feature vectors, CLIP |
+| Graph analytics | Nodes, sub‑graphs | DeepWalk, node2vec, GraphSAGE |
+| Multimodal learning | Text‑image pairs | CLIP, ALIGN |
+
+In this practice set you will work through concrete calculations that illustrate how embeddings are learned, evaluated, and applied. Each scenario is followed by a series of questions and a complete step‑by‑step solution.
+
+---
+
+## 2. Problem Set 
+
+### Problem 1 – Word2Vec Skip‑gram with Negative Sampling 
+
+You are given a tiny corpus consisting of three sentences (tokens are already lower‑cased and punctuation removed):
+
+1. “the cat sat on the mat” 
+2. “the dog sat on the rug” 
+3. “the cat chased the mouse”
+
+The vocabulary **V** = the, cat, sat, on, mat, dog, rug, chased, mouse. 
+Assume we use a skip‑gram model with a context window of size 1 (i.e., each target word predicts its immediate left and right neighbor). The embedding dimension **d** = 2. 
+
+For simplicity, we will perform **one** training step on the target word **cat** (the first occurrence in sentence 1) with the positive context word **the** (left neighbor). Negative sampling draws **k = 2** negative words uniformly from V the, cat. Suppose the sampled negatives are **dog** and **mouse**.
+
+The current embedding vectors (row‑wise) are:
+
+| Word | Input vector (v) | Output vector (u) |
+|--------|------------------|-------------------|
+| the | (0.2, 0.1) | (0.0, 0.1) |
+| cat | (0.5, ‑0.2) | (‑0.1, 0.3) |
+| sat | (‑0.3, 0.4) | (0.2, ‑0.2) |
+| on | (0.1, ‑0.1) | (‑0.2, 0.2) |
+| mat | (‑0.2, 0.3) | (0.1, 0.0) |
+| dog | (0.0, ‑0.3) | (‑0.1, ‑0.1) |
+| rug | (0.3, 0.2) | (0.2, 0.1) |
+| chased | (‑0.1, 0.0) | (‑0.2, ‑0.2) |
+| mouse | (0.2, ‑0.2) | (0.0, ‑0.1) |
+
+The loss for a single positive pair (target, context) with negative samples is 
+
+loss = -log σ(u[c]ontext · vₜarget) - Σᵢ₌₁^(k) log σ(‑uₙegativeᵢ · vₜarget) 
+
+where σ(x) = 1 / (1 + exp(‑x)) is the sigmoid function.
+
+**Questions** 
+
+1. Compute the dot product uₜhe · v[c]at. 
+2. Compute the sigmoid of that dot product. 
+3. Compute the dot products for the two negative samples (dog, mouse) and their sigmoids. 
+4. Calculate the total loss value for this training step. 
+5. Using a learning rate η = 0.1, perform a gradient update on the **input vector** v[c]at (ignore updates to output vectors for this exercise). Show the updated v[c]at.
+
+---
+
+#### Solution 1 
+
+**Step 1 – Positive dot product** 
+
+v[c]at = (0.5, ‑0.2) 
+uₜhe = (0.0, 0.1) 
+
+dot = 0.5 * 0.0 + (‑0.2) * 0.1 = 0 + (‑0.02) = **‑0.02**
+
+**Step 2 – Sigmoid of positive dot** 
+
+σ(‑0.02) = 1 / (1 + exp(0.02)) ≈ 1 / (1 + 1.0202) ≈ 1 / 2.0202 ≈ **0.495** (rounded to three decimals)
+
+**Step 3 – Negative dot products** 
+
+*Dog* 
+u[d]og = (‑0.1, ‑0.1) 
+dot[d]og = (‑0.1) * 0.5 + (‑0.1) * (‑0.2) = (‑0.05) + 0.02 = **‑0.03** 
+σ(‑dot[d]og) = σ(0.03) = 1 / (1 + exp(‑0.03)) ≈ 1 / (1 + 0.9704) ≈ 0.5075 → **0.508**
+
+*Mouse* 
+uₘouse = (0.0, ‑0.1) 
+dotₘouse = 0.0 * 0.5 + (‑0.1) * (‑0.2) = 0 + 0.02 = **0.02** 
+σ(‑dotₘouse) = σ(‑0.02) = 0.495 (same as step 2) → **0.495**
+
+**Step 4 – Total loss** 
+
+loss = –log(σₚos) – [log(σₙeg[d]og) + log(σₙegₘouse)] 
+
+= –log(0.495) – [log(0.508) + log(0.495)] 
+
+Compute logs (natural log): 
+
+log(0.495) ≈ –0.703 
+log(0.508) ≈ –0.677 
+
+loss = –(‑0.703) – (‑0.677 + ‑0.703) = 0.703 + 1.380 = **2.083** (rounded to three decimals)
+
+**Step 5 – Gradient for v[c]at** 
+
+For skip‑gram, gradient of loss w.r.t. vₜarget = (σ(u[c]ontext·vₜarget) ‑ 1) * u[c]ontext + Σᵢ₌₁^(k) σ(uₙegativeᵢ·vₜarget) * uₙegativeᵢ 
+
+Compute each term:
+
+*Positive term* 
+σₚos = 0.495 → (0.495 ‑ 1) = –0.505 
+(‑0.505) * uₜhe = –0.505 * (0.0, 0.1) = (0.0, ‑0.0505)
+
+*Negative terms* 
+
+Dog: σ(u[d]og·v[c]at) = σ(‑0.03) = 0.4925 (since σ(‑x)=1‑σ(x); we already have σ(0.03)=0.508) → use 0.4925 
+Contribution = 0.4925 * u[d]og = 0.4925 * (‑0.1, ‑0.1) = (‑0.0493, ‑0.0493)
+
+Mouse: σ(uₘouse·v[c]at) = σ(0.02) = 0.505 → contribution = 0.505 * (0.0, ‑0.1) = (0.0, ‑0.0505)
+
+Sum of contributions: 
+
+(0.0, ‑0.0505) + (‑0.0493, ‑0.0493) + (0.0, ‑0.0505) = (‑0.0493, ‑0.1503)
+
+Gradient = (‑0.0493, ‑0.1503)
+
+Update rule (SGD): v[c]atₙew = v[c]at – η * gradient 
+
+η = 0.1 → η * gradient = (‑0.00493, ‑0.01503) 
+
+v[c]atₒld = (0.5, ‑0.2) 
+
+v[c]atₙew = (0.5 ‑ (‑0.00493), ‑0.2 ‑ (‑0.01503)) = (0.5049, ‑0.18497) 
+
+Rounded to three decimals: **v[c]at ≈ (0.505, ‑0.185)**.
+
+---
+
+### Problem 2 – Cosine Similarity and Retrieval 
+
+A movie‑recommendation system stores 4‑dimensional embeddings for five movies:
+
+| Movie | Vector |
+|-------|--------|
+| A (Action‑hero) | (0.6, 0.1, ‑0.2, 0.5) |
+| B (Romantic‑comedy) | (‑0.1, 0.8, 0.3, ‑0.4) |
+| C (Sci‑fi) | (0.5, ‑0.2, 0.6, 0.1) |
+| D (Documentary) | (‑0.3, 0.4, ‑0.5, 0.2) |
+| E (Action‑comedy) | (0.55, 0.05, ‑0.1, 0.45) |
+
+A user’s recent watch history is represented by the average of the embeddings of movies **A** and **C**.
+
+**Questions** 
+
+1. Compute the user profile vector (average of A and C). 
+2. Calculate cosine similarity between the user profile and each movie vector. 
+3. Rank the movies from most to least similar. 
+4. Explain why movie **E** is ranked where it is, in terms of vector geometry.
+
+---
+
+#### Solution 2 
+
+**Step 1 – User profile** 
+
+Average = ( (0.6 + 0.5)/2 , (0.1 + ‑0.2)/2 , (‑0.2 + 0.6)/2 , (0.5 + 0.1)/2 ) 
+
+= (1.1/2 , (‑0.1)/2 , 0.4/2 , 0.6/2) 
+
+= (0.55 , ‑0.05 , 0.20 , 0.30)
+
+**Step 2 – Cosine similarity** 
+
+cosine(u, v) = (u·v) / (||u|| * ||v||) 
+
+First compute ||u|| (norm of user profile): 
+
+||u|| = sqrt(0.55² + (‑0.05)² + 0.20² + 0.30²) 
+= sqrt(0.3025 + 0.0025 + 0.04 + 0.09) = sqrt(0.435) ≈ 0.660
+
+Now each movie norm:
+
+- ||A|| = sqrt(0.6² + 0.1² + (‑0.2)² + 0.5²) = sqrt(0.36 + 0.01 + 0.04 + 0.25) = sqrt(0.66) ≈ 0.812 
+- ||B|| = sqrt((‑0.1)² + 0.8² + 0.3² + (‑0.4)²) = sqrt(0.01 + 0.64 + 0.09 + 0.16) = sqrt(0.90) ≈ 0.949 
+- ||C|| = sqrt(0.5² + (‑0.2)² + 0.6² + 0.1²) = sqrt(0.25 + 0.04 + 0.36 + 0.01) = sqrt(0.66) ≈ 0.812 
+- ||D|| = sqrt((‑0.3)² + 0.4² + (‑0.5)² + 0.2²) = sqrt(0.09 + 0.16 + 0.25 + 0.04) = sqrt(0.54) ≈ 0.735 
+- ||E|| = sqrt(0.55² + 0.05² + (‑0.1)² + 0.45²) = sqrt(0.3025 + 0.0025 + 0.01 + 0.2025) = sqrt(0.5175) ≈ 0.720 
+
+Dot products with user profile:
+
+- u·A = 0.55*0.6 + (‑0.05)*0.1 + 0.20*(‑0.2) + 0.30*0.5 
+= 0.33 – 0.005 – 0.04 + 0.15 = **0.435**
+
+- u·B = 0.55*(‑0.1) + (‑0.05)*0.8 + 0.20*0.3 + 0.30*(‑0.4) 
+= –0.055 – 0.04 + 0.06 – 0.12 = **‑0.155**
+
+- u·C = 0.55*0.5 + (‑0.05)*(‑0.2) + 0.20*0.6 + 0.30*0.1 
+= 0.275 + 0.01 + 0.12 + 0.03 = **0.435** (same as A because A and C are symmetric in this example)
+
+- u·D = 0.55*(‑0.3) + (‑0.05)*0.4 + 0.20*(‑0.5) + 0.30*0.2 
+= –0.165 – 0.02 – 0.10 + 0.06 = **‑0.225**
+
+- u·E = 0.55*0.55 + (‑0.05)*0.05 + 0.20*(‑0.1) + 0.30*0.45 
+= 0.3025 – 0.0025 – 0.02 + 0.135 = **0.415**
+
+Now cosine similarities:
+
+- sim(A) = 0.435 / (0.660 * 0.812) = 0.435 / 0.536 ≈ **0.812** 
+- sim(B) = –0.155 / (0.660 * 0.949) = –0.155 / 0.627 ≈ **‑0.247** 
+- sim(C) = 0.435 / (0.660 * 0.812) = **0.812** (identical to A) 
+- sim(D) = –0.225 / (0.660 * 0.735) = –0.225 / 0.485 ≈ **‑0.464** 
+- sim(E) = 0.415 / (0.660 * 0.720) = 0.415 / 0.475 ≈ **0.874**
+
+**Step 3 – Ranking** 
+
+1. **E** (0.874) – highest 
+2. **A** (0.812) – tie with C 
+3. **C** (0.812) 
+4. **B** (‑0.247) 
+5. **D** (‑0.464)
+
+**Step 4 – Interpretation** 
+
+Movie E’s vector is a blend of the action‑hero (A) and action‑comedy (E) dimensions: its first and fourth components are close to those of A, while the second and third components are near zero, matching the user profile’s modest values. Because cosine similarity is scale‑invariant, the fact that E’s norm is slightly smaller than A’s does not hurt; the direction of E aligns even better with the user vector, yielding the highest similarity.
+
+---
+
+### Problem 3 – Principal Component Analysis (PCA) on Sentence Embeddings 
+
+A researcher has computed 3‑dimensional sentence embeddings for four short sentences using a pre‑trained transformer. The embeddings are:
+
+| Sentence | Vector |
+|----------|--------|
+| S1: “I love pizza.” | (2.0, 1.0, 0.5) |
+| S2: “Pizza is delicious.” | (1.8, 0.9, 0.6) |
+| S3: “I hate rain.” | (‑1.5, ‑0.8, ‑0.3) |
+| S4: “Rain makes me sad.” | (‑1.6, ‑0.9, ‑0.4) |
+
+The researcher wants to reduce the dimensionality to 2 using PCA and then visualise the sentences on a 2‑D plot.
+
+**Questions** 
+
+1. Center the data by subtracting the mean vector. Show the centered matrix. 
+2. Compute the covariance matrix of the centered data (use the unbiased estimator dividing by N‑1, where N = 4). 
+3. Find the eigenvalues (λ₁ ≥ λ₂ ≥ λ₃) of the covariance matrix (you may state the numeric results). 
+4. Identify the principal component that will be discarded (the one with the smallest eigenvalue). 
+5. Project the centered vectors onto the two retained principal components to obtain 2‑D coordinates. Provide the final coordinates for each sentence.
+
+---
+
+#### Solution 3 
+
+**Step 1 – Mean vector** 
+
+Mean = ( (2.0 + 1.8 + ‑1.5 + ‑1.6)/4 , (1.0 + 0.9 +

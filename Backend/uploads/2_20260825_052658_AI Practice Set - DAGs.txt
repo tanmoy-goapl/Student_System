@@ -1,0 +1,82 @@
+# Practice Worksheet: Directed Acyclic Graphs in AI
+
+## Introduction
+Directed Acyclic Graphs (DAGs) are fundamental structures in artificial intelligence, particularly in probabilistic graphical models, causal inference, and the execution of computational tasks. A DAG consists of nodes representing variables or operations and directed edges representing dependencies or relationships, with the critical constraint that no cycles exist. This worksheet explores the theoretical properties, computational implications, and practical applications of DAGs.
+
+## Problems
+
+### Problem 1: Conceptual Foundations and Cycles
+Consider a simple graph with three nodes: A, B, and C.
+1. Describe the specific structural property that distinguishes a Directed Acyclic Graph (DAG) from a general directed graph.
+2. If we add a directed edge from C back to A in a graph where edges already exist as A -> B and B -> C, what structural violation occurs? Explain why this violation prevents the graph from being a DAG.
+3. In the context of Bayesian Networks, why is the acyclic property essential for defining a valid joint probability distribution over the variables?
+
+### Problem 2: Topological Sorting and Execution Order
+In machine learning frameworks like TensorFlow or PyTorch, computational graphs are often DAGs. The order in which operations are executed matters.
+1. Define a topological sort of a DAG.
+2. Given the following set of dependencies for a simple neural network layer:
+   - Input X must be processed before Hidden Layer H.
+   - Hidden Layer H must be processed before Output O.
+   - Bias B must be added before Output O.
+   - Bias B can be processed in parallel with Hidden Layer H.
+   
+   Construct a valid topological ordering of the nodes {X, H, O, B}. List one such valid sequence.
+3. If the dependency "Bias B must be processed before Hidden Layer H" is added to the system above, does a valid topological sort still exist? Explain your reasoning.
+
+### Problem 3: Causal Inference and d-Separation
+DAGs are used to model causal relationships between variables.
+1. Consider a DAG with three variables: Smoking (S), Lung Cancer (L), and Genetic Predisposition (G). Suppose the edges are S -> L, G -> S, and G -> L.
+2. Identify all paths between S and L.
+3. Determine if S and L are d-separated given the variable G. Explain the concept of "collider" or "fork" in this context and how it affects conditional independence.
+4. If we observe that a person has Lung Cancer (L), does this provide information about their Smoking status (S) if we do not know their Genetic Predisposition (G)?
+
+### Problem 4: Debugging a Computational DAG
+A data scientist is building a pipeline for training a model. They define the following dependencies:
+- Node A: Load Data
+- Node B: Preprocess Data (depends on A)
+- Node C: Feature Engineering (depends on B)
+- Node D: Train Model (depends on C)
+- Node E: Evaluate Model (depends on D)
+- Node F: Save Model (depends on D)
+- Node G: Visualize Results (depends on E and F)
+
+The scientist reports that the pipeline hangs indefinitely when trying to execute Node G.
+1. Analyze the dependency structure. Is there a cycle?
+2. If there is no cycle, what is the most likely cause of the hang in a standard DAG execution engine that assumes all nodes are reachable from a single source?
+3. Propose a fix to the dependency graph to ensure Node G executes only after both Node E and Node F are complete, assuming the engine requires a strict linear flow or explicit synchronization.
+
+### Problem 5: Real-World Scenario: Scheduling and Resource Constraints
+A research lab has a cluster of computers to run several experiments. Each experiment is a node in a DAG. Some experiments must finish before others can start due to data dependencies. However, the cluster has limited resources.
+1. Explain how the DAG structure helps in identifying the "critical path" of the project.
+2. If Experiment X and Experiment Y are independent (no path between them) but both require the same specialized GPU, how does the DAG structure alone fail to capture this constraint?
+3. Propose a modification to the DAG representation or the scheduling algorithm to handle resource constraints while respecting the original dependency order.
+
+---
+
+# Answer Guide
+
+## Problem 1: Conceptual Foundations
+1. A DAG must not contain any directed cycles. This means there is no sequence of edges that starts and ends at the same node.
+2. Adding C -> A creates a cycle: A -> B -> C -> A. This violates the acyclic property. In a DAG, you cannot return to a starting node by following the direction of the edges.
+3. In Bayesian Networks, the joint probability is defined as the product of conditional probabilities for each node given its parents. If a cycle existed, a variable would depend on itself indirectly, creating a circular definition that makes the probability distribution undefined or requiring complex equilibrium assumptions not present in standard Bayesian Networks.
+
+## Problem 2: Topological Sorting
+1. A topological sort is a linear ordering of vertices such that for every directed edge u -> v, vertex u comes before v in the ordering.
+2. One valid ordering is: X, B, H, O. Another is: B, X, H, O. The key is that X precedes H, H precedes O, and B precedes O. B and X can be in any relative order since they are independent.
+3. Yes, a valid sort still exists. The new dependency B -> H does not create a cycle. The graph remains acyclic. A valid order would be: X, B, H, O.
+
+## Problem 3: Causal Inference
+1. The paths are: S -> L (direct) and S <- G -> L (indirect via G).
+2. S and L are NOT d-separated given G. The path S <- G -> L is a "fork" at G. Conditioning on G opens this path, allowing association between S and L.
+3. The edge G -> S and G -> L creates a common cause. If we do not condition on G, the path S <- G -> L is blocked (assuming no other variables). However, the direct path S -> L is always open. Therefore, S and L are dependent. If we condition on G, the indirect path is open, but the direct path remains open. Thus, S and L are dependent regardless.
+4. Yes. The direct edge S -> L exists. Observing L provides information about S because S is a direct cause of L. The lack of knowledge about G does not block the direct causal link.
+
+## Problem 4: Debugging a Computational DAG
+1. There is no cycle in the described dependencies. The structure is a standard DAG.
+2. The hang is likely due to a synchronization issue. Node G depends on E and F. Node E depends on D, and Node F depends on D. If the execution engine does not properly handle fan-out and fan-in synchronization, it might wait for a node that has already completed or fail to trigger G when both E and F are done. A common error is assuming a single predecessor.
+3. The fix is to ensure the execution engine supports multi-parent nodes. If the engine is simplistic, introduce a dummy synchronization node. Create Node Sync_EF. Add edges E -> Sync_EF and F -> Sync_EF. Then change G's dependency to Sync_EF. This ensures G waits for both E and F to complete.
+
+## Problem 5: Real-World Scenario
+1. The critical path is the longest path from start to finish in terms of time. The DAG structure allows us to calculate the earliest start and latest finish times for each node. The critical path determines the minimum project duration.
+2. The DAG structure only captures logical dependencies (data flow). It does not capture resource constraints (capacity). Two independent nodes might require the same resource, creating a conflict that is not visible in the graph topology.
+3. Modify the scheduling algorithm to include resource availability checks. Instead of just checking if predecessors are done, the scheduler must also check if the required resource is free. This turns the problem into a resource-constrained project scheduling problem (RCPSP), which may require heuristics or integer programming beyond simple topological sorting.

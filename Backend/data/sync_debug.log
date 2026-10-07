@@ -1,0 +1,27 @@
+
+--- Sync starting for student 3 ---
+Data: {'subjects': [{'name': 'Operating Systems', 'topics': [{'name': 'Processes', 'subtopics': ['Process Concept', 'Process Control Block (PCB)', 'Process States'], 'difficulty': 'medium', 'importance': 'high'}, {'name': 'Scheduling', 'subtopics': ['First-Come, First-Served (FCFS)', 'Shortest Job First (SJF)', 'Round Robin'], 'difficulty': 'medium', 'importance': 'high'}, {'name': 'Memory Management', 'subtopics': ['Paging', 'Segmentation', 'Virtual Memory'], 'difficulty': 'medium', 'importance': 'high'}, {'name': 'Deadlocks', 'subtopics': ['Deadlock Characterization', "Banker's Algorithm", 'Deadlock Prevention'], 'difficulty': 'hard', 'importance': 'high'}, {'name': 'File Systems', 'subtopics': ['File Concept', 'Access Methods', 'Direct Access'], 'difficulty': 'medium', 'importance': 'medium'}]}]}
+Subject: Operating Systems
+  Topic: Processes
+    Existing CustomTopic: False
+    Added new CustomTopic
+    Existing TopicPerformance: False
+    Added new TopicPerformance
+  Topic: Scheduling
+    Existing CustomTopic: False
+    Added new CustomTopic
+    Existing TopicPerformance: False
+    Added new TopicPerformance
+  Topic: Memory Management
+    Existing CustomTopic: False
+    Added new CustomTopic
+    Existing TopicPerformance: True
+  Topic: Deadlocks
+    Existing CustomTopic: False
+    Added new CustomTopic
+    Existing TopicPerformance: True
+  Topic: File Systems
+    Existing CustomTopic: False
+    Added new CustomTopic
+    Existing TopicPerformance: True
+Committed successfully!

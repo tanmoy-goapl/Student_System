@@ -1,0 +1,134 @@
+{
+  "Operating Systems": [
+    {
+      "title": "Course Syllabus",
+      "type": "PDF",
+      "file": "resources/os_syllabus.pdf"
+    },
+    {
+      "title": "Unit Notes",
+      "type": "PDF",
+      "file": "resources/os_unit_notes.pdf"
+    },
+    {
+      "title": "Assignments",
+      "type": "PDF",
+      "file": "resources/os_assignments.pdf"
+    },
+    {
+      "title": "Previous Year Questions",
+      "type": "PDF",
+      "file": "resources/os_pyq.pdf"
+    }
+  ],
+  "Database Management Systems": [
+    {
+      "title": "Course Syllabus",
+      "type": "PDF",
+      "file": "resources/dbms_syllabus.pdf"
+    },
+    {
+      "title": "Unit Notes",
+      "type": "PDF",
+      "file": "resources/dbms_unit_notes.pdf"
+    },
+    {
+      "title": "Assignments",
+      "type": "PDF",
+      "file": "resources/dbms_assignments.pdf"
+    },
+    {
+      "title": "Previous Year Questions",
+      "type": "PDF",
+      "file": "resources/dbms_pyq.pdf"
+    }
+  ],
+  "Discrete Mathematics": [
+    {
+      "title": "Course Syllabus",
+      "type": "PDF",
+      "file": "resources/discrete_maths_syllabus.pdf"
+    },
+    {
+      "title": "Unit Notes",
+      "type": "PDF",
+      "file": "resources/discrete_maths_unit_notes.pdf"
+    },
+    {
+      "title": "Assignments",
+      "type": "PDF",
+      "file": "resources/discrete_maths_assignments.pdf"
+    },
+    {
+      "title": "Previous Year Questions",
+      "type": "PDF",
+      "file": "resources/discrete_maths_pyq.pdf"
+    }
+  ],
+  "Software Engineering": [
+    {
+      "title": "Course Syllabus",
+      "type": "PDF",
+      "file": "resources/se_syllabus.pdf"
+    },
+    {
+      "title": "Unit Notes",
+      "type": "PDF",
+      "file": "resources/se_unit_notes.pdf"
+    },
+    {
+      "title": "Assignments",
+      "type": "PDF",
+      "file": "resources/se_assignments.pdf"
+    },
+    {
+      "title": "Previous Year Questions",
+      "type": "PDF",
+      "file": "resources/se_pyq.pdf"
+    }
+  ],
+  "Java Programming": [
+    {
+      "title": "Course Syllabus",
+      "type": "PDF",
+      "file": "resources/java_syllabus.pdf"
+    },
+    {
+      "title": "Unit Notes",
+      "type": "PDF",
+      "file": "resources/java_unit_notes.pdf"
+    },
+    {
+      "title": "Assignments",
+      "type": "PDF",
+      "file": "resources/java_assignments.pdf"
+    },
+    {
+      "title": "Previous Year Questions",
+      "type": "PDF",
+      "file": "resources/java_pyq.pdf"
+    }
+  ],
+  "default": [
+    {
+      "title": "Course Syllabus",
+      "type": "PDF",
+      "file": "resources/default_syllabus.pdf"
+    },
+    {
+      "title": "Unit Notes",
+      "type": "PDF",
+      "file": "resources/default_notes.pdf"
+    },
+    {
+      "title": "Assignments",
+      "type": "PDF",
+      "file": "resources/default_assignments.pdf"
+    },
+    {
+      "title": "Previous Year Questions",
+      "type": "PDF",
+      "file": "resources/default_pyq.pdf"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+# Quiz: Open Source Large Language Models
+
+**Instructions:** Read each question carefully. Select the single best answer from the four options provided. There is no time limit, but aim for accuracy over speed.
+
+### Question 1
+**Conceptual Understanding: Model Licensing**
+
+Llama models, developed by Meta, are widely used in both academic research and commercial product development. A key feature that distinguishes Llama from many other open-weight models is its specific licensing framework. Which of the following best describes the primary characteristic of the Llama Community License that allows for broad adoption while protecting the developer?
+
+A. The license is fully public domain (CC0), allowing anyone to use, modify, and distribute the model without any attribution or liability restrictions.
+B. The license grants permission to use, modify, and distribute the model for commercial purposes, provided the user agrees not to use the model to create competing services or engage in illegal activities.
+C. The license is strictly non-commercial, prohibiting any use of the model weights for profit-generating applications or enterprise software development.
+D. The license requires all derivative works to be released under the same open-source license, meaning any company using Llama must release their proprietary code.
+
+### Question 2
+**Application: Fine-Tuning Strategies**
+
+You are a machine learning engineer tasked with adapting a base Llama model for a specific customer support chatbot. You have a limited dataset of 500 customer service transcripts. You want to preserve the model’s general language capabilities while teaching it the specific tone and knowledge of your company. Which technique is most appropriate for this scenario?
+
+A. Full Fine-Tuning: Updating all model parameters using the small dataset to ensure maximum customization.
+B. Low-Rank Adaptation (LoRA): Training only a small set of additional parameters while keeping the base model frozen, which is computationally efficient and prevents catastrophic forgetting.
+C. Pre-Training: Continuing to train the model on the entire internet corpus to reinforce its general knowledge before applying the specific data.
+D. Quantization: Reducing the precision of the model weights from 16-bit to 8-bit to speed up inference without changing the model's knowledge base.
+
+### Question 3
+**Scenario: Hardware Constraints**
+
+Your startup has developed a novel open-source LLM that outperforms Llama 3 in specific reasoning tasks but requires 80GB of VRAM to run at full precision. Your target customers are individual developers with consumer-grade GPUs that typically have 12GB to 16GB of VRAM. To make your model accessible to this audience without significantly degrading performance, which approach should you prioritize?
+
+A. Increase the model size to 70 billion parameters to ensure that the loss from compression is negligible.
+B. Implement post-training quantization (e.g., Q4_K_M) to reduce the memory footprint while maintaining acceptable accuracy for inference.
+C. Remove the attention mechanism from the transformer architecture to reduce computational complexity.
+D. Require users to install a specific operating system that optimizes memory management for large language models.
+
+### Question 4
+**Conceptual Understanding: The Open-Source Ecosystem**
+
+The rise of open-source LLMs like Llama has led to a vibrant ecosystem of community contributions. What is the primary role of platforms like Hugging Face in this ecosystem?
+
+A. They act as regulatory bodies that audit open-source models for safety before allowing them to be downloaded.
+B. They provide a centralized repository for hosting model weights, datasets, and code, facilitating easy sharing and integration of open-source AI components.
+C. They generate synthetic training data for open-source models to ensure they do not learn from human-generated internet content.
+D. They provide free cloud computing resources for training large language models for all community members.
+
+### Question 5
+**Application: Safety and Alignment**
+
+Base Llama models are trained on vast amounts of internet text and may generate harmful, biased, or unhelpful content. To make these models suitable for public-facing applications, developers often apply a specific process after pre-training. What is this process called, and what is its primary goal?
+
+A. Reinforcement Learning from Human Feedback (RLHF): Aligning the model’s outputs with human preferences for helpfulness, honesty, and harmlessness.
+B. Gradient Descent: Minimizing the loss function during the initial pre-training phase to improve prediction accuracy.
+C. Tokenization: Breaking down text into sub-word units to make the input manageable for the neural network.
+D. Embedding: Converting words into numerical vectors to capture semantic meaning for similarity search.

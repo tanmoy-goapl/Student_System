@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
+export const runtime = "edge";
+export const dynamic = "force-dynamic";
+
+const BACKEND_URL = process.env.CHAT_BACKEND_URL || process.env.BACKEND_URL || "http://10.10.90.95:8001"
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,9 +12,26 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: req.signal,
     });
-    const data = await response.json();
-    return NextResponse.json(data, { status: response.status });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { detail: errData.detail || `Backend error: ${response.status}` },
+        { status: response.status }
+      );
+    }
+
+    return new Response(response.body, {
+      status: response.status,
+      headers: {
+        "Content-Type": "application/x-ndjson",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    });
   } catch {
     return NextResponse.json(
       { detail: "Backend server is not reachable." },
@@ -24,6 +44,9 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const studentId = searchParams.get("student_id");
+    if (!studentId) {
+      return NextResponse.json({ detail: "student_id is required" }, { status: 400 });
+    }
     const response = await fetch(`${BACKEND_URL}/chat/history/${studentId}`, {
       method: "DELETE",
     });

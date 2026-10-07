@@ -1,0 +1,177 @@
+## Supervised Learning – Practice Worksheet 
+
+### Instructions 
+Answer each question in the space provided. Show all reasoning, calculations, or code snippets that you use. You may use a calculator or a programming environment, but be sure to write down the key steps so you can compare them with the answer guide.
+
+---
+
+### Problem 1 – Conceptual Understanding 
+
+Explain **why** a validation set (or cross‑validation) is needed when training a supervised model, even though we already have a training set that we can use to compute the loss. In your answer discuss **over‑fitting**, **model selection**, and the role of an unbiased estimate of generalisation performance.
+
+---
+
+### Problem 2 – Simple Linear Regression Calculation 
+
+You are given the following three data points for a one‑dimensional regression problem: 
+
+| x | y |
+|---|---|
+| 1 | 2 |
+| 2 | 3 |
+| 4 | 5 |
+
+1. Write the design matrix **X** (including the intercept column). 
+2. Compute the ordinary least‑squares estimate of the coefficients **betaₕat** = (beta₀ , beta₁) using the closed‑form formula **betaₕat = (Xᵀ X)⁻¹ Xᵀ y**. Show each matrix multiplication step. 
+3. Using the fitted line, predict the output for **x = 3**.
+
+---
+
+### Problem 3 – Debugging a Classification Script 
+
+Below is a short Python snippet that is intended to train a logistic regression classifier on a binary dataset `Xₜrain, yₜrain` using scikit‑learn, then evaluate accuracy on a test set `Xₜest, yₜest`.
+
+```python
+from sklearn.linear_model import LogisticRegression
+model = LogisticRegression()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+accuracy = sum(y_pred == y_test) / len(y_test)
+print("Test accuracy:", accuracy)
+```
+
+When you run the code you obtain an **error** that says: 
+
+```
+ValueError: Unknown label type: 'continuous'
+```
+
+1. Identify the most likely cause of this error. 
+2. Propose a minimal change to the code that would fix the problem, assuming the data are correctly loaded. 
+
+---
+
+### Problem 4 – Choosing a Loss Function 
+
+You are building a supervised model to predict the **price of a house** (a continuous variable). Two loss functions are under consideration:
+
+* Mean Squared Error (MSE) = (1/n) Σ (yᵢ – ŷᵢ)² 
+* Mean Absolute Error (MAE) = (1/n) Σ |yᵢ – ŷᵢ|
+
+Discuss the advantages and disadvantages of each loss function for this task. In particular, address how each loss reacts to outliers and how that influences the model you would obtain.
+
+---
+
+### Problem 5 – Real‑World Scenario: Model Deployment 
+
+A company wants to deploy a supervised model that classifies customer support tickets into three categories: *Billing*, *Technical*, and *General*. 
+
+1. List **four** key steps that must be taken **after** the model has been trained and validated, before it can be safely used in production. 
+2. For each step, give a brief justification (one or two sentences). 
+
+---
+
+## Answer Guide 
+
+### Problem 1 – Conceptual Understanding 
+
+* Over‑fitting occurs when a model captures noise in the training data, leading to low training loss but poor performance on new data. 
+* A validation set provides an **unbiased estimate** of how the model will behave on unseen examples because it is not used during parameter updates. 
+* Model selection (choosing hyper‑parameters, feature sets, algorithm type) relies on comparing validation performance; without it we would be tempted to pick the model that simply memorises the training set. 
+* Cross‑validation repeats this idea by rotating the validation fold, giving a more stable estimate when data are limited.
+
+---
+
+### Problem 2 – Simple Linear Regression Calculation 
+
+1. **Design matrix** (including intercept): 
+
+ X = 
+ [1 , 1] 
+ [1 , 2] 
+ [1 , 4] 
+ 
+
+2. Compute **Xᵀ X**: 
+
+ Xᵀ X = 
+ [3 , 7] (sum of intercepts = 3, sum of x = 1+2+4 = 7) 
+ [7 , 21] (sum of x = 7, sum of x² = 1²+2²+4² = 21) 
+ 
+
+ Compute **Xᵀ y**: 
+
+ y = [2, 3, 5]ᵀ 
+
+ Xᵀ y = 
+ 2+3+5 = 10 
+ 1·2 + 2·3 + 4·5 = 2 + 6 + 20 = 28 
+ 
+
+ Invert **Xᵀ X** (2×2 matrix): 
+
+ det = 3·21 – 7·7 = 63 – 49 = 14 
+
+ (Xᵀ X)⁻¹ = (1/14) * 
+ [21 , -7] 
+ [-7 , 3] 
+ 
+
+ Multiply by Xᵀ y: 
+
+ betaₕat = (1/14) * 
+ 21·10 + (‑7)·28 = 210 – 196 = 14 
+ (‑7)·10 + 3·28 = –70 + 84 = 14 
+ = 14/14 , 14/14 = 1 , 1 
+
+ So the fitted line is ŷ = 1 + 1·x. 
+
+3. Prediction for x = 3: 
+
+ ŷ = 1 + 1·3 = 4.
+
+---
+
+### Problem 3 – Debugging a Classification Script 
+
+1. **Cause** – The target vector `yₜrain` (and consequently `yₜest`) contains continuous values (e.g., 0.0, 1.0, 2.0) instead of discrete class labels. LogisticRegression expects categorical labels. 
+
+2. **Fix** – Convert the targets to integer class labels before fitting, e.g.:
+
+```python
+y_train_int = y_train.astype(int)
+y_test_int  = y_test.astype(int)
+
+model.fit(X_train, y_train_int)
+y_pred = model.predict(X_test)
+accuracy = (y_pred == y_test_int).mean()
+```
+
+If the problem is that the labels are strings, encode them with `LabelEncoder` first.
+
+---
+
+### Problem 4 – Choosing a Loss Function 
+
+* **MSE** 
+ * Advantages: Differentiable everywhere, gives a closed‑form solution for linear regression, heavily penalises large errors, which can lead to more accurate predictions when outliers are genuine. 
+ * Disadvantages: Sensitive to outliers; a single extreme price can dominate the loss and pull the fitted line away from the bulk of the data. 
+
+* **MAE** 
+ * Advantages: Linear penalty on errors, so each observation contributes proportionally; robust to outliers because large deviations are not squared. 
+ * Disadvantages: Not differentiable at zero, which can make optimization slower (requires sub‑gradient methods); may produce a model that under‑estimates the impact of rare but important high‑price houses. 
+
+* **Practical guidance** – If the housing price distribution has many extreme values (luxury homes) that you do **not** want to dominate the model, MAE is safer. If you care about minimizing overall squared error (e.g., for financial risk calculations), MSE is appropriate.
+
+---
+
+### Problem 5 – Real‑World Scenario: Model Deployment 
+
+| Step | Why it matters |
+|------|----------------|
+| **1. Data preprocessing pipeline in production** | Guarantees that incoming tickets are transformed (tokenisation, stop‑word removal, vectorisation) exactly as during training, preventing feature mismatches. |
+| **2. Monitoring of model performance** | Tracks metrics such as accuracy or drift over time; alerts when the model degrades due to changing ticket language or new topics. |
+| **3. Handling of unknown or low‑confidence predictions** | Provides a fallback (e.g., route to human agent) for tickets the model is unsure about, maintaining service quality. |
+| **4. Security and privacy checks** | Ensures that ticket text does not leak sensitive customer information and that the model complies with data‑protection regulations before being exposed via an API. |
+
+These steps close the gap between a high‑performing offline model and a reliable, safe production service.

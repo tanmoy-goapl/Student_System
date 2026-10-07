@@ -1,0 +1,73 @@
+# RAG
+
+## Overview
+
+In the early days of Large Language Models (LLMs), developers faced a significant limitation: the knowledge contained within a model was fixed at the moment of training. If a model was trained on data from 2023, it could not answer questions about events that happened in 2024. Furthermore, models often suffered from "hallucinations," where they confidently generated plausible-sounding but factually incorrect information because they were trying to predict the next word rather than retrieving the truth.
+
+Retrieval-Augmented Generation, commonly known as RAG, is a technique designed to solve these problems. It combines the generative power of an LLM with the factual accuracy of a search engine. Instead of relying solely on its internal memory, a RAG system first looks up relevant information from an external, up-to-date database and then uses that information to generate a response.
+
+Think of RAG as giving an AI a "open-book" exam format. Instead of forcing the AI to recall everything from memory (closed-book), you provide it with a textbook or a set of reference documents. The AI reads the reference material and then writes its answer based on what it just read. This approach significantly reduces hallucinations and allows the system to use private or proprietary data that was not part of its original training.
+
+## Core ideas
+
+To understand RAG, you need to grasp three fundamental components that work together:
+
+1.  **The Retriever**: This is the search component. Its job is to find the most relevant pieces of information from a large external knowledge base. This knowledge base is often a vector database, which stores documents as numerical representations (embeddings) that capture their semantic meaning.
+2.  **The Generator**: This is the Large Language Model itself. It takes the retrieved information and generates a natural language response. Crucially, it is instructed to base its answer strictly on the provided context.
+3.  **The Context Window**: This is the bridge between the retriever and the generator. The retrieved documents are combined into a single block of text, known as the context, which is fed into the LLM along with the user's original question.
+
+The core philosophy of RAG is separation of concerns. The LLM is optimized for language understanding and generation, not for storing vast amounts of specific factual data. By offloading the storage and retrieval tasks to specialized systems, the LLM can perform better at what it does best: synthesizing information into coherent text.
+
+## How it works
+
+The RAG process follows a clear, linear pipeline. Here is the step-by-step mechanism:
+
+**Step 1: Indexing (Preparation)**
+Before a RAG system can answer questions, it must be built. This involves taking a collection of documents (such as PDFs, web pages, or internal company wikis) and breaking them down into smaller chunks. Each chunk is then converted into a vector embedding using an embedding model. These vectors are stored in a vector database. This step happens offline and is not part of the real-time response generation.
+
+**Step 2: Querying (Retrieval)**
+When a user asks a question, the system converts that question into a vector embedding using the same embedding model. It then searches the vector database to find the chunks of text that are most similar to the query. This is done using similarity metrics, such as cosine similarity. The system typically retrieves the top-k most relevant chunks.
+
+**Step 3: Augmentation (Context Building)**
+The system takes the user's original question and the retrieved text chunks and combines them into a single prompt. This is often structured like this:
+"Based on the following context, answer the question: [Context Text] Question: [User Query]"
+
+**Step 4: Generation**
+This combined prompt is sent to the LLM. The LLM reads the context and generates a response. Because the context contains the specific facts needed, the LLM can answer accurately without needing to have memorized that information during its pre-training.
+
+**Step 5: Post-processing**
+In advanced systems, the output might be checked for consistency or filtered to ensure it only uses information from the provided context.
+
+## Worked example
+
+Let’s walk through a concrete example to see RAG in action. Imagine you are building a customer support bot for a software company called "CloudTech." You want the bot to answer questions about their latest pricing plan, which was released last week.
+
+**The Problem:** The LLM powering the bot was trained on data from two years ago. It has no idea what the "CloudTech Pro Plan" is or how much it costs. If you ask it directly, it might hallucinate a price like $50/month.
+
+**The RAG Solution:**
+
+1.  **Indexing:** A developer takes the PDF of the new pricing page and breaks it into chunks. One chunk contains: "The CloudTech Pro Plan includes unlimited storage and costs $99 per month, effective January 1st, 2024." This chunk is stored in the vector database.
+2.  **Querying:** A user asks the bot: "How much is the CloudTech Pro Plan?"
+3.  **Retrieval:** The system converts the user's question into a vector and searches the database. It identifies the chunk about the Pro Plan as the most relevant match.
+4.  **Augmentation:** The system creates a prompt for the LLM:
+    *   Context: "The CloudTech Pro Plan includes unlimited storage and costs $99 per month, effective January 1st, 2024."
+    *   Question: "How much is the CloudTech Pro Plan?"
+5.  **Generation:** The LLM receives this prompt. It sees the explicit price in the context. It generates the response: "The CloudTech Pro Plan costs $99 per month."
+
+Without RAG, the LLM would have guessed. With RAG, it retrieved the exact fact and reported it accurately.
+
+## Quick self-check
+
+Reflect on the following questions to test your understanding of the RAG architecture:
+
+1.  Why is it important to use the same embedding model for both the documents during indexing and the user query during retrieval? What happens if the models are different?
+2.  If a user asks a question that is not covered by any of the retrieved documents, what is likely to happen when the LLM generates a response? How might this differ from a standard LLM without RAG?
+3.  Consider the trade-off between retrieval and generation. If you retrieve too many documents (a very large context window), what potential issues might arise regarding the LLM's performance or accuracy?
+
+## Key takeaways
+
+*   **RAG bridges the gap** between static LLM knowledge and dynamic, real-world data. It allows models to access information they were not trained on.
+*   **It reduces hallucinations** by grounding the model's responses in verified external sources rather than relying solely on probabilistic memory.
+*   **The pipeline consists of four main stages:** Indexing (creating the knowledge base), Retrieval (finding relevant info), Augmentation (building the context prompt), and Generation (creating the final answer).
+*   **Vector databases are essential** for efficient retrieval, allowing systems to find semantically similar information rather than just matching exact keywords.
+*   **RAG enables personalization** by allowing organizations to plug in their own private data, making the AI useful for specific business contexts without retraining the underlying model.

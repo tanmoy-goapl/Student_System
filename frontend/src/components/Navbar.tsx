@@ -2,84 +2,192 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { prepareChatForLogout, useChatSession } from "@/components/ChatSessionProvider";
+import { 
+  Home, MessageSquare, BookOpen, Compass, ClipboardCheck, 
+  FileText, LayoutDashboard, Settings, Sparkles, LogOut,
+  ChevronLeft, ChevronRight
+} from "lucide-react";
 
-export default function Navbar() {
+interface NavbarProps {
+  collapsed?: boolean;
+  onToggle?: () => void;
+}
+
+export default function Navbar({ collapsed = false, onToggle }: NavbarProps) {
   const pathname = usePathname();
-  const [role, setRole] = useState<"admin" | "student" | null>(null);
+  const { role, loading, userName } = useAuth();
+  const { startGeneralChat } = useChatSession();
+  const [userEmail, setUserEmail] = useState("student@university.edu");
+  const searchParams = useSearchParams();
+  const sourceParam = searchParams?.get("source");
 
   useEffect(() => {
-    const updateRole = () => {
-      const storedRole = localStorage.getItem("role") as "admin" | "student" | null;
-      setRole(storedRole);
-    };
+    if (typeof window !== "undefined") {
+      setUserEmail(localStorage.getItem("user_email") || "student@university.edu");
+    }
+  }, []);
 
-    // Initial load
-    updateRole();
+  const handleLogout = () => {
+    prepareChatForLogout();
+    localStorage.removeItem("role");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("last_visited_class_path");
+    window.dispatchEvent(new Event("storage"));
+    window.location.href = "/";
+  };
+  
+  let selectedMode = "courses";
+  if (pathname?.startsWith("/personal") || sourceParam === "personal") {
+    selectedMode = "personal";
+  } else if (pathname?.startsWith("/courses") || pathname === "/" || sourceParam === "courses") {
+    selectedMode = "courses";
+  }
 
-    // Listen for storage changes (when user logs in/out)
-    window.addEventListener("storage", updateRole);
-    
-    // Also check on pathname change (in case of same-tab navigation)
-    updateRole();
-
-    return () => {
-      window.removeEventListener("storage", updateRole);
-    };
-  }, [pathname]);
-
+  // Student Navigation list
   const navItems = [
-    { id: "home", label: "HOME", path: "/" },
-    { id: "dashboard", label: "DASHBOARD", path: "/dashboard" },
-    { id: "profile", label: "PROFILE", path: "/profile" },
-    // documents tab should only be visible after login (role is set)
-    ...(role ? [{ id: "documents", label: "DOCUMENTS", path: "/documents" }] : []),
-    { id: "chat", label: "CHAT", path: "/chat" },
-    // { id: "integrations", label: "INTEGRATIONS", path: "/integrations" },
-    // settings page should also only be visible after login
-    ...(role ? [{ id: "settings", label: "SETTINGS", path: "/settings" }] : []),
+    { id: "home", label: "Home", path: selectedMode === "personal" ? "/personal" : "/courses", icon: Home },
+    { id: "chat", label: "AI Chatbot", path: "/chat", icon: MessageSquare },
+    { id: "classes", label: "My Classes", path: "/classes", icon: BookOpen },
+    { id: "learning", label: "Learning Path", path: `/learning?source=${selectedMode}`, icon: Compass },
+    { id: "practice", label: "Practice Arena", path: `/practice?source=${selectedMode}`, icon: ClipboardCheck },
+    { id: "documents", label: "My Documents", path: "/documents", icon: FileText },
+    { id: "analytics", label: "Performance", path: "/analytics", icon: LayoutDashboard },
+    { id: "settings", label: "Settings", path: "/settings", icon: Settings },
   ];
 
-  // Only add users page for admin - explicitly check role
-  const filteredNavItems =
-    role === "admin"
-      ? [...navItems, { id: "users", label: "USERS", path: "/users" }]
-      : navItems;
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   const isActive = (path: string) => {
-    if (path === "/") {
-      return pathname === "/";
+    if (pathname?.startsWith('/practice') && path.startsWith('/practice')) {
+      return true;
     }
-    return pathname?.startsWith(path);
+
+    if (pathname?.startsWith('/learning')) {
+      if (path.startsWith('/learning')) return true;
+      if (path.startsWith('/classes')) return false;
+    }
+
+    if (searchParams?.get('source') === 'classes') {
+      if (path.startsWith('/classes')) return true;
+      if (path.startsWith('/courses') || path === '/') return false;
+    }
+
+    if (path === "/") return pathname === "/";
+    const pathBase = path.split('?')[0];
+    const pathQuery = path.split('?')[1];
+    
+    if (pathQuery) {
+      const queryParams = new URLSearchParams(pathQuery);
+      for (const [key, value] of queryParams.entries()) {
+        if (searchParams?.get(key) !== value) return false;
+      }
+      return pathname === pathBase;
+    }
+    
+    return !!pathname?.startsWith(pathBase);
   };
 
   return (
-    <header className="bg-blue-600 shadow-sm sticky top-0 z-30">
-      <div className="max-w-full mx-auto px-6 py-3">
-        <nav className="flex items-center gap-6">
-          <Link
-            href="/"
-            className="text-lg font-bold text-white mr-4"
+    <aside className={`h-screen border-r border-white/5 bg-[#090D1F] flex flex-col justify-between select-none shrink-0 text-white font-sans fixed left-0 top-0 z-50 transition-all duration-300 ${collapsed ? "w-20" : "w-56"}`}>
+      {/* Fixed Logo Header */}
+      <div className={`p-4 shrink-0 flex ${collapsed ? "flex-col items-center gap-3" : "items-center justify-between"}`}>
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          {!collapsed && (
+            <div>
+              <h1 className="text-sm font-bold tracking-wider text-white">Mentor AI</h1>
+              <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest leading-none">Student Portal</p>
+            </div>
+          )}
+        </div>
+        {onToggle && (
+          <button 
+            onClick={onToggle}
+            className={`p-1.5 rounded-lg hover:bg-white/5 text-white/50 hover:text-white transition-colors ${collapsed ? "" : ""}`}
+            title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            Mentor AI
-          </Link>
-          {filteredNavItems.map((item) => (
-            <Link
-              key={item.id}
-              href={item.path}
-              className={`text-sm font-medium uppercase tracking-wide transition-colors ${
-                isActive(item.path)
-                  ? "text-white font-bold border-b-2 border-cyan-300 pb-1"
-                  : "text-white hover:text-cyan-200"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+        )}
       </div>
-      <div className="h-px bg-gray-300"></div>
-    </header>
+
+      {/* Scrollable Navigation */}
+      <div className={`flex-1 overflow-y-auto purple-scrollbar px-3 pb-5 space-y-6 ${collapsed ? "scrollbar-none" : ""}`}>
+        <div>
+          {!collapsed && (
+            <h2 className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold mb-3 px-3">Navigation</h2>
+          )}
+          <nav className="space-y-1.5">
+            {loading ? (
+              <div className="w-full py-4 flex justify-center">
+                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              navItems.map(item => {
+                const active = isActive(item.path);
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.path}
+                    onClick={() => {
+                      if (item.id === "chat") startGeneralChat();
+                    }}
+                    title={collapsed ? item.label : undefined}
+                    className={`flex items-center rounded-xl text-xs font-semibold transition ${
+                      collapsed ? "justify-center py-3 px-0 mx-auto w-12" : "gap-3 py-2.5 px-3"
+                    } ${
+                      active
+                        ? "bg-gradient-to-r from-blue-600/20 to-indigo-650/10 text-white border border-blue-500/20 shadow-[0_0_12px_rgba(59,130,246,0.1)]"
+                        : "text-white/50 hover:bg-white/5 hover:text-white"
+                    }`}
+                  >
+                    <item.icon size={collapsed ? 18 : 15} strokeWidth={active ? 2.2 : 1.8} className="shrink-0" />
+                    {!collapsed && <span>{item.label}</span>}
+                  </Link>
+                );
+              })
+            )}
+          </nav>
+        </div>
+      </div>
+
+      {/* Footer Profile */}
+      {role && !loading && (
+        <div className={`p-4 border-t border-white/5 bg-black/10 flex shrink-0 ${collapsed ? "flex-col items-center gap-4" : "items-center justify-between gap-3"}`}>
+          <div className="flex items-center gap-2.5 truncate max-w-full">
+            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-650 flex items-center justify-center text-white text-xs font-bold shadow-[0_0_12px_rgba(59,130,246,0.15)] shrink-0">
+              {getInitials(userName || "User")}
+            </div>
+            {!collapsed && (
+              <div className="truncate">
+                <h4 className="text-xs font-bold text-white leading-tight truncate">{userName || "Student User"}</h4>
+                <p className="text-[9px] text-white/40 truncate">{userEmail || "student@university.edu"}</p>
+              </div>
+            )}
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="h-8 w-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-slate-400 hover:text-rose-400 transition shrink-0"
+            title="Logout"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
+      )}
+    </aside>
   );
 }
-

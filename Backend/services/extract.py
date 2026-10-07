@@ -21,10 +21,34 @@ from typing import List
 # ── Constants ─────────────────────────────────────────────────────────────────
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tiff", ".tif"}
 
-# Chunk tuning
-CHUNK_TARGET_WORDS = 180    # aim for ~180 words per chunk
-CHUNK_MAX_WORDS    = 280    # hard cap
-CHUNK_OVERLAP_WORDS = 30    # word overlap between consecutive chunks
+# Chunk tuning (Targeting ~500 chars size, ~100 chars overlap)
+CHUNK_TARGET_WORDS = 80     # aim for ~500 chars per chunk
+CHUNK_MAX_WORDS    = 100    # hard cap
+CHUNK_OVERLAP_WORDS = 16    # word overlap between consecutive chunks
+
+
+def get_pdf_page_count(file_path: str) -> int | None:
+    """Return the structural PDF page count without estimating from file size."""
+    readers = []
+    try:
+        from pypdf import PdfReader
+        readers.append(PdfReader)
+    except ImportError:
+        pass
+
+    try:
+        from PyPDF2 import PdfReader
+        readers.append(PdfReader)
+    except ImportError:
+        pass
+
+    for reader_type in readers:
+        try:
+            with open(file_path, "rb") as fh:
+                return len(reader_type(fh, strict=False).pages)
+        except Exception:
+            continue
+    return None
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -33,12 +57,13 @@ CHUNK_OVERLAP_WORDS = 30    # word overlap between consecutive chunks
 
 def extract_text_from_pdf(file_path: str) -> str:
     try:
-        import PyPDF2
+        # pyrefly: ignore [missing-import]
+        import pypdf
         with open(file_path, "rb") as fh:
-            reader = PyPDF2.PdfReader(fh)
+            reader = pypdf.PdfReader(fh)
             pages = []
             for page in reader.pages:
-                raw = page.extract_text() or ""
+                raw = page.extract_text(extraction_mode="layout") or ""
                 pages.append(_clean_page(raw))
             return "\n\n".join(p for p in pages if p.strip())
     except Exception as e:
@@ -57,16 +82,6 @@ def extract_text_from_docx(file_path: str) -> str:
     try:
         from docx import Document
         doc = Document(file_path)
-        # Preserve table rows (marks tables) as tab-separated lines
-        parts: list[str] = []
-        for block in doc.element.body:
-            tag = block.tag.split("}")[-1]
-            if tag == "p":
-                para = block.text_content() if hasattr(block, "text_content") else ""
-                # Use python-docx paragraph API for cleaner text
-                pass
-            elif tag == "tbl":
-                pass  # handled below via doc.tables
 
         paragraphs = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
         table_rows = []

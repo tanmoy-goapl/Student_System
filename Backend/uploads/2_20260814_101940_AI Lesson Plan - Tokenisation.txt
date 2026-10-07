@@ -1,0 +1,166 @@
+# Lesson Plan – Tokenisation  
+**Subject:** Artificial Intelligence  
+**Topic:** Tokenisation (the first step in most modern NLP pipelines)  
+**Class Length:** 60 minutes  
+**Level:** Upper‑undergraduate / early graduate (students familiar with basic programming and machine‑learning concepts)  
+
+---  
+
+## 1. Learning Objectives  
+
+By the end of the session, students will be able to:  
+
+1. **Define tokenisation** and explain why it is a prerequisite for most language‑modeling tasks.  
+2. **Distinguish** between character‑level, word‑level, sub‑word (byte‑pair encoding, WordPiece, SentencePiece) and sentence‑level tokenisers.  
+3. **Describe** the trade‑offs of each tokenisation strategy in terms of vocabulary size, out‑of‑vocabulary (OOV) handling, computational efficiency, and downstream model performance.  
+4. **Implement** a simple tokeniser in Python using standard libraries (e.g., `re`, `nltk`, `tokenizers`).  
+5. **Critically evaluate** tokenisation choices for a given NLP application (e.g., sentiment analysis vs. machine translation).  
+6. **Articulate** current research directions such as unsupervised token learning, multilingual tokenisers, and tokenisation‑aware pre‑training.  
+
+---  
+
+## 2. Lecture Timeline (60 min)
+
+| Time | Activity | Purpose |
+|------|----------|---------|
+| 0‑5 min | **Opening & Motivation** – real‑world examples (search query parsing, chat‑bot input) | Capture interest, show relevance |
+| 5‑12 min | **What is Tokenisation?** – definition, historical context | Build foundational knowledge |
+| 12‑22 min | **Tokenisation Taxonomy** – character, word, sub‑word, sentence | Organise concepts, compare approaches |
+| 22‑30 min | **Deep Dive: Sub‑word Methods** – BPE, WordPiece, SentencePiece (algorithmic steps, examples) | Show why sub‑words dominate modern LLMs |
+| 30‑38 min | **Hands‑On Coding Demo** – implement a simple BPE tokenizer in Jupyter (5 min) + run on a sample sentence (3 min) | Translate theory into practice |
+| 38‑45 min | **Discussion Break** – small groups answer three guided questions (see Section 4) | Encourage critical thinking |
+| 45‑55 min | **Application Exercise** – students choose a downstream task, decide on a tokeniser, justify choice, and sketch a short pipeline (pair work) | Consolidate learning, connect to real tasks |
+| 55‑60 min | **Wrap‑Up & Take‑aways** – recap, preview next lecture (embedding & positional encoding) | Reinforce key points, set expectations |
+
+---  
+
+## 3. Core Concepts  
+
+### 3.1 Definition  
+Tokenisation is the process of converting a raw text string into a sequence of **tokens**—the atomic units that a model will consume. Tokens can be characters, words, sub‑words, or larger linguistic chunks. The output is usually a list of strings and, after mapping to an integer vocabulary, a list of IDs.
+
+### 3.2 Why Tokenisation Matters  
+
+| Aspect | Impact of Tokenisation |
+|--------|------------------------|
+| **Vocabulary Size** | Larger vocabularies increase memory and compute; sub‑word methods keep vocabularies to a few tens of thousands. |
+| **OOV Handling** | Word‑level tokenisers produce many OOVs for rare or misspelled words; sub‑word tokenisers can represent any string as a combination of known pieces. |
+| **Sequence Length** | Fine‑grained tokenisers (character) produce longer sequences, which may exceed model limits; coarse tokenisers (word) keep sequences short but risk OOVs. |
+| **Semantic Granularity** | Sub‑words capture morphemes (e.g., “un‑”, “‑able”) improving generalisation across related words. |
+| **Speed** | Tokeniser speed matters for large‑scale training; compiled tokenisers (e.g., HuggingFace `tokenizers` library) run orders of magnitude faster than pure Python regex. |
+
+### 3.3 Tokenisation Strategies  
+
+| Strategy | Typical Unit | Example (sentence: “Unbelievable!”) | Pros | Cons |
+|----------|--------------|--------------------------------------|------|------|
+| **Character** | Single Unicode code point | [U, n, b, e, l, i, e, v, a, b, l, e, !] | Handles any text, no OOV | Very long sequences, loses word‑level semantics |
+| **Whitespace/Regex Word** | Words split on spaces/punctuation | [Unbelievable, !] | Simple, fast | OOV for rare words, language‑specific tokenisation rules |
+| **Rule‑Based Word** (NLTK, SpaCy) | Language‑aware word tokens | [Unbelievable, !] (recognises punctuation) | Better handling of contractions, clitics | Still OOV, requires language resources |
+| **Byte‑Pair Encoding (BPE)** | Sub‑word units learned from data | [Un, ##bel, ##ievable, !] | Small vocab, good OOV coverage | Requires training step, may split awkwardly |
+| **WordPiece** | Similar to BPE but uses a likelihood‑based merge criterion | [Un, ##bel, ##ievable, !] (often identical to BPE) | Used in BERT, robust | Slightly more complex training |
+| **SentencePiece (Unigram)** | Sub‑word units learned via a probabilistic model; can operate directly on raw bytes | [▁Un, bel, ievable, !] (▁ marks word boundary) | Language‑agnostic, works on raw text without pre‑tokenisation | Needs careful hyper‑parameter tuning |
+| **Sentence‑level** | Whole sentences or clauses (often via punctuation) | [“Unbelievable!”] | Useful for tasks needing sentence embeddings | Not a tokeniser for language models; used downstream |
+
+### 3.4 Algorithmic Sketch – Byte‑Pair Encoding  
+
+1. **Initialize** the vocabulary with all unique characters in the training corpus.  
+2. **Count** all adjacent symbol pairs (e.g., “a b”, “b c”).  
+3. **Select** the most frequent pair and merge it into a new symbol (e.g., “ab”).  
+4. **Add** the new symbol to the vocabulary and repeat steps 2‑3 for a pre‑defined number of merges (often 30 k‑50 k).  
+5. **Encoding** a new word: greedily replace the longest matching symbols from the vocabulary until the word is fully segmented.
+
+The same high‑level steps apply to WordPiece (with a different scoring function) and SentencePiece (which may start from byte‑level units).
+
+### 3.5 Tokeniser Implementation Tips  
+
+* **Unicode Normalisation** – apply NFKC or NFC to avoid different code points for the same visual character.  
+* **Deterministic Splitting** – ensure the same input always yields the same token list (important for reproducibility).  
+* **Special Tokens** – reserve IDs for `[CLS]`, `[SEP]`, `[PAD]`, `[MASK]` etc.; they are not part of the learned vocabulary.  
+* **Batch Processing** – tokenise whole datasets in parallel (e.g., using `multiprocessing.Pool.map`).  
+
+---  
+
+## 4. Discussion Questions (to be tackled in small groups, 7 min)
+
+1. **Trade‑off Analysis** – For a low‑resource language with limited training data, would you prefer a word‑level or sub‑word tokeniser? Justify your choice considering OOV rate, vocabulary size, and downstream performance.  
+2. **Ethical Angle** – How can tokenisation amplify or mitigate bias (e.g., splitting gendered suffixes, handling profanity, or preserving rare dialectal words)? Propose a mitigation strategy.  
+3. **Future Directions** – Recent papers explore “token‑free” models that operate directly on bytes or characters. What are the potential advantages and drawbacks of abandoning explicit tokenisation?  
+
+Each group reports a 30‑second summary; the instructor synthesises common themes.
+
+---  
+
+## 5. In‑Class Activities  
+
+### 5.1 Live Coding Demo (8 min)  
+
+*Open a Jupyter notebook and walk through:*  
+
+```python
+# 1. Load a tiny corpus
+corpus = ["unbelievable", "unbelievably", "unbelievable!", "unbelievable?"]
+
+# 2. Build initial vocab (characters)
+vocab = set("".join(corpus))
+print("Initial vocab:", vocab)
+
+# 3. Count pair frequencies
+from collections import Counter, defaultdict
+pair_counts = Counter()
+for word in corpus:
+    symbols = list(word)
+    for i in range(len(symbols)-1):
+        pair_counts[(symbols[i], symbols[i+1])] += 1
+print("Top pairs:", pair_counts.most_common(3))
+
+# 4. Merge most frequent pair (example: ('e','l') -> 'el')
+merged = "el"
+new_word = "unbelievable".replace("el", merged)
+print("After merge:", new_word)
+```
+
+*Explain each step, then show how the `tokenizers` library can load a pre‑trained BPE model and encode a sentence in one line.*  
+
+### 5.2 Pair Exercise – Design a Tokenisation Pipeline (10 min)  
+
+Students work in pairs. They receive a brief task description (e.g., “Classify tweets for hate speech”). They must:  
+
+1. Choose a tokenisation strategy.  
+2. List required preprocessing steps (lower‑casing, URL removal, emoji handling).  
+3. Sketch the pipeline: raw text → preprocessing → tokeniser → ID mapping → model input.  
+
+Pairs write their answer on a shared Google Doc; the instructor circulates, offering quick feedback.
+
+---  
+
+## 6. Assessment & Follow‑Up  
+
+| Form | Timing | Details |
+|------|--------|---------|
+| **In‑class participation** | During discussion & activities | Observe ability to articulate trade‑offs. |
+| **Homework** | Next week | Implement a BPE tokenizer from scratch on a provided dataset (≈5 k sentences) and report OOV rate, average token length, and training time. |
+| **Quiz** | Week after | 5‑question multiple‑choice / short‑answer covering definitions, algorithm steps, and pros/cons. |
+
+---  
+
+## 7. Resources  
+
+| Type | Link / Reference |
+|------|-------------------|
+| **Reading** | *“Neural Machine Translation of Rare Words with Subword Units”* – Sennrich et al., 2016 (BPE). |
+| **Tutorial** | HuggingFace `tokenizers` library documentation (https://huggingface.co/docs/tokenizers). |
+| **Dataset** | WikiText‑103 (for tokeniser training). |
+| **Video** | Stanford CS224N Lecture 3 – “Tokenization & Word Embeddings”. |
+| **Tool** | `sentencepiece` Python package (`pip install sentencepiece`). |
+
+---  
+
+## 8. Closing Remarks  
+
+Tokenisation may appear as a simple preprocessing step, yet it shapes the entire learning dynamics of modern language models. By understanding the underlying algorithms, their linguistic assumptions, and practical implementation details, students gain the ability to tailor NLP pipelines to diverse languages and tasks—an essential skill for both research and industry. The next lecture will build on this foundation by exploring how token sequences are turned into dense vectors through embeddings and positional encodings.  
+
+---  
+
+*Prepared by:*  
+Prof. [Your Name] – Department of Computer Science, [University]  
+Date: 14 August 2026  

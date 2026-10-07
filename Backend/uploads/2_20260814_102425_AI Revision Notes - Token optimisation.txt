@@ -1,0 +1,138 @@
+## Token Optimisation – AI Revision Notes  
+*(≈ 720 words – concise, bullet‑point format for quick recall)*  
+
+---  
+
+### 1. What is a “Token”?  
+- **Token** – the smallest unit a language model (LM) processes.  
+  - In **byte‑pair encoding (BPE)** or **sentence‑piece** it can be a sub‑word, character, or whole word.  
+  - In **GPT‑style** models a token ≈ 4 characters on average (English).  
+- **Token‑level vs. word‑level**  
+  - Token‑level gives finer granularity → better handling of rare words, misspellings, multilingual text.  
+  - Word‑level reduces sequence length but suffers from OOV (out‑of‑vocabulary) problems.  
+
+### 2. Why Optimise Tokens?  
+- **Cost** – API pricing, GPU memory, and inference latency are usually charged per token.  
+- **Performance** – Shorter sequences → lower attention‑matrix size (quadratic in length).  
+- **Quality** – Proper tokenisation preserves semantics, reduces fragmentation, and improves downstream tasks (translation, summarisation, retrieval).  
+
+### 3. Core Objectives of Token Optimisation  
+| Goal | Typical Metric | Desired Effect |
+|------|----------------|----------------|
+| **Minimise token count** | Avg. tokens per document | Lower compute, cheaper API calls |
+| **Maximise semantic fidelity** | BLEU, ROUGE, semantic similarity | No loss of meaning despite compression |
+| **Maintain model compatibility** | Tokeniser‑model alignment | No OOV or unexpected token splits |
+| **Reduce variance** | Std. dev. of token length across corpus | Predictable resource allocation |
+
+### 4. Tokenisation Strategies  
+
+#### 4.1 Fixed‑Vocabulary Sub‑word Methods  
+- **Byte‑Pair Encoding (BPE)**  
+  - Iteratively merges most frequent symbol pairs.  
+  - Vocabulary size (V) typically 30k–50k for English LMs.  
+  - **Pros:** Good trade‑off between coverage and length.  
+  - **Cons:** Still creates many rare sub‑words for domain‑specific jargon.  
+
+- **SentencePiece (Unigram / BPE)**  
+  - Trains on raw text, can operate on Unicode bytes → language‑agnostic.  
+  - **Unigram model** selects a subset of candidate tokens that maximises likelihood.  
+
+#### 4.2 Adaptive / Dynamic Tokenisers  
+- **Adaptive Input Representations** (e.g., **Adaptive Softmax**) allocate larger embeddings to frequent tokens, smaller ones to rare tokens → indirectly reduces effective token count.  
+- **Dynamic BPE** – re‑train merges on a per‑domain basis; useful for specialised corpora (legal, medical).  
+
+#### 4.3 Byte‑Level Tokenisers  
+- **Byte‑Level BPE (e.g., GPT‑NeoX)** treats each byte as a base symbol.  
+  - **Pros:** No OOV, perfect Unicode coverage.  
+  - **Cons:** Slightly longer sequences for ASCII‑heavy text, but eliminates preprocessing errors.  
+
+#### 4.4 Hybrid Approaches  
+- **Word‑piece + Byte‑fallback** – primary sub‑word vocab, fall back to byte‑level for unknowns.  
+- **Chunk‑level tokenisation** – split long documents into logical chunks (paragraphs, sentences) before tokenisation; each chunk processed separately, then recombined.  
+
+### 5. Practical Optimisation Techniques  
+
+#### 5.1 Vocabulary Pruning  
+- **Frequency‑based cut‑off** – remove tokens below a usage threshold (e.g., <0.001 % of corpus).  
+- **Embedding‑norm pruning** – discard tokens with low embedding magnitude (often noise).  
+
+#### 5.2 Token Merging & Compression  
+- **Greedy merge of adjacent tokens** that form a known phrase (e.g., “New York” → “NewYork”).  
+- **Dictionary‑based compression** – replace frequent multi‑token patterns with a single custom token (requires updating the tokenizer).  
+
+#### 5.3 Text Normalisation before Tokenisation  
+- **Lower‑casing / case‑folding** – reduces distinct tokens for capitalised forms.  
+- **Unicode normalisation (NFKC)** – merges visually identical characters.  
+- **Punctuation stripping** (where semantics allow) – e.g., remove commas in numeric lists.  
+
+#### 5.4 Prompt Engineering for API Calls  
+- **System‑prompt condensation** – move static instructions to system message; keep user message minimal.  
+- **Use of placeholders** – replace long repeated strings (e.g., URLs) with short tokens and reconstruct post‑processing.  
+
+#### 5.5 Chunking & Sliding‑Window Strategies  
+- For documents > model’s max context (e.g., 4 k tokens):  
+  - **Chunk size ≈ 75 % of max** → overlap 25 % to preserve cross‑chunk context.  
+  - **Sliding window** with stride = chunk size – overlap.  
+
+#### 5.6 Retrieval‑Augmented Generation (RAG)  
+- Store large knowledge base as **vector index**; retrieve only the most relevant passages → token count limited to top‑k results (often 2–3 passages).  
+
+### 6. Evaluation & Benchmarks  
+
+| Test | What it Measures | Typical Target |
+|------|------------------|----------------|
+| **Tokens‑per‑sentence (TPS)** | Average length after tokenisation | < 15 for conversational data |
+| **Compression Ratio (CR)** = original chars / token count | Efficiency of tokeniser | > 4 for English prose |
+| **Semantic Retention Score (SRS)** – cosine similarity between original and reconstructed text embeddings | Quality vs. compression | > 0.95 (high‑quality) |
+| **Inference Latency (ms)** per token | Speed impact | < 0.5 ms/token on GPU |
+| **Cost per 1k tokens** (API) | Economic impact | As low as possible; compare provider rates |
+
+### 7. Comparison of Popular Tokenisers  
+
+| Tokeniser | Vocabulary Size | Avg. Tokens / 100 words | OOV Rate (English) | Strengths | Weaknesses |
+|-----------|----------------|------------------------|--------------------|-----------|------------|
+| **GPT‑3 BPE** | 50 k | ~ 130 | ≈ 0 % (byte‑fallback) | Strong multilingual support, stable API | Slightly longer sequences for rare words |
+| **BERT WordPiece** | 30 k | ~ 115 | ≈ 0.2 % | Good for downstream fine‑tuning | Fixed vocab; struggles with new slang |
+| **SentencePiece Unigram** | 32 k | ~ 120 | ≈ 0 % | Language‑agnostic, easy to train | Requires careful hyper‑parameter tuning |
+| **Byte‑Level BPE (NeoX)** | 256 k (bytes) | ~ 140 | 0 % | No OOV, perfect Unicode | Highest token count for pure ASCII |
+| **Custom Domain BPE** | 20 k (domain) | ~ 100 | ≈ 0 % (after fine‑tune) | Minimal tokens for specialised text | Needs re‑training per domain |
+
+### 8. Exam‑Style Quick‑Recall  
+
+- **Define “token”.** Smallest text unit processed by an LM; can be a character, sub‑word, or whole word depending on the tokenizer.  
+- **Why does token count matter?** Directly influences compute cost, memory usage, and latency (attention matrix scales quadratically with sequence length).  
+- **Name two sub‑word tokenisation algorithms.** BPE and SentencePiece (Unigram or BPE).  
+- **What is the main advantage of a byte‑level tokenizer?** Guarantees zero OOV tokens and full Unicode coverage.  
+- **Give one method to reduce token count without losing meaning.** Merge frequent multi‑token phrases into a single custom token, or apply aggressive normalisation (lower‑casing, Unicode NFKC).  
+- **How does RAG help token optimisation?** Retrieves only the most relevant passages, limiting the number of tokens fed to the generator.  
+- **What metric quantifies compression efficiency?** Compression Ratio = original characters ÷ token count.  
+
+### 9. Checklist for Token Optimisation Projects  
+
+1. **Corpus Analysis**  
+   - Compute token distribution with baseline tokenizer.  
+   - Identify high‑frequency multi‑token patterns.  
+
+2. **Select Tokeniser**  
+   - Choose BPE, SentencePiece, or byte‑level based on language, domain, and API constraints.  
+
+3. **Pre‑processing Pipeline**  
+   - Normalise Unicode, lower‑case (if acceptable), strip unnecessary punctuation.  
+
+4. **Vocabulary Tuning**  
+   - Train on domain‑specific data; prune low‑frequency tokens.  
+
+5. **Post‑Tokenisation Compression**  
+   - Apply phrase‑merging, custom token injection, or dictionary replacement.  
+
+6. **Evaluation Loop**  
+   - Measure TPS, CR, SRS, latency, and cost.  
+   - Iterate until targets met (e.g., TPS < 15, SRS > 0.95).  
+
+7. **Deployment**  
+   - Freeze tokenizer version; embed in inference container.  
+   - Monitor token usage in production logs; adjust if drift occurs.  
+
+---  
+
+**Bottom line:** Effective token optimisation balances three pillars – **efficiency (fewer tokens → lower cost)**, **compatibility (tokeniser must match model expectations)**, and **semantic integrity (meaning must survive compression)**. Mastery of tokenizer selection, vocabulary pruning, and smart preprocessing equips you to squeeze maximum performance out of any LLM, whether you’re fine‑tuning a private model or calling a commercial API.

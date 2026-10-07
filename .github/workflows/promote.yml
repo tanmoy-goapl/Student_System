@@ -1,0 +1,87 @@
+# Example: promote an exact, tested commit from a source branch to a production
+# branch, only if every pull request in between was reviewed.
+#
+# ADAPT: SOURCE_BRANCH and TARGET_BRANCH. Also add your own "CI passed on this
+# exact commit" check to the "Verify the candidate" step.
+# Save as .github/workflows/promote.yml on your default branch.
+name: Promote To Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact commit on the source branch to promote (40 characters)
+        required: true
+        type: string
+      confirmation_sha:
+        description: Repeat the exact commit to confirm
+        required: true
+        type: string
+      break_glass_reason:
+        description: Emergency only. Reason for promoting without the required reviews
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: promote-to-production
+  cancel-in-progress: false
+
+env:
+  SOURCE_BRANCH: main
+  TARGET_BRANCH: prod
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          ref: ${{ env.SOURCE_BRANCH }}
+      - name: Verify the candidate
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CONFIRMATION_SHA: ${{ inputs.confirmation_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$CONFIRMATION_SHA" = "$CANDIDATE_SHA"
+          git fetch --no-tags origin "$SOURCE_BRANCH" "$TARGET_BRANCH"
+          # The candidate must be on the source branch and ahead of production.
+          git merge-base --is-ancestor "$CANDIDATE_SHA" "origin/$SOURCE_BRANCH"
+          git merge-base --is-ancestor "origin/$TARGET_BRANCH" "$CANDIDATE_SHA"
+      - name: Verify every pull request in this promotion was reviewed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          BREAK_GLASS_REASON: ${{ inputs.break_glass_reason }}
+          REVIEW_POLICY_MODE: warn # use "warn" for a trial period
+        run: |
+          set -euo pipefail
+          # Trusted copy: take the roster and the checker from what is already in
+          # production, so a promotion cannot approve itself by editing them.
+          # The very first promotion has none yet and uses the candidate's copy.
+          ref="origin/$TARGET_BRANCH"
+          if ! git cat-file -e "$ref:.github/review-roster.json" 2>/dev/null; then
+            echo "No roster in production yet; using the candidate's copy for this promotion"
+            ref="$CANDIDATE_SHA"
+          fi
+          git show "$ref:.github/review-roster.json" > "$RUNNER_TEMP/review-roster.json"
+          git show "$ref:scripts/review_policy.py" > "$RUNNER_TEMP/review_policy.py"
+          python3 "$RUNNER_TEMP/review_policy.py" \
+            --repository "$GITHUB_WORKSPACE" --roster "$RUNNER_TEMP/review-roster.json" \
+            range --base "origin/$TARGET_BRANCH" --head "$CANDIDATE_SHA" \
+            --break-glass "$BREAK_GLASS_REASON" --actor "$GITHUB_ACTOR" \
+            --summary "$GITHUB_STEP_SUMMARY"
+      - name: Fast-forward the production branch to the exact candidate
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          set -euo pipefail
+          git push origin "${CANDIDATE_SHA}:refs/heads/${TARGET_BRANCH}"

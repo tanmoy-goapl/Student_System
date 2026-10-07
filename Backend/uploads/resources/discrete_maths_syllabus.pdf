@@ -1,0 +1,71 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+2 0 obj
+<< >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [ 4 0 R ] /Count 1 >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 3 0 R /Resources << /Font << /F1 6 0 R /F2 7 0 R /F3 8 0 R >> >> /MediaBox [ 0 0 595 842 ] /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 866 >>
+stream
+BT
+/F1 14 Tf
+50 780 Td
+(Indraprastha Institute of Information Technology, Delhi) Tj
+0 -20 Td
+/F2 12 Tf
+(IIIT-Delhi - Department of Computer Science & Engineering) Tj
+0 -25 Td
+/F1 11 Tf
+(Discrete Mathematics - Course Syllabus) Tj
+0 -20 Td
+/F2 9 Tf
+(Course Resource Package) Tj
+0 -30 Td
+/F3 10 Tf
+(Course Code: CSE111 | Course: Discrete Mathematics) Tj
+0 -18 Td
+(1. Logic & Proofs: Propositional logic, quantifiers, rules of inference, mathematical induction.) Tj
+0 -18 Td
+(2. Sets, Relations & Functions: Equivalence relations, poset, lattices, growth of functions.) Tj
+0 -18 Td
+(3. Combinatorics: Permutations, combinations, generating functions, recurrence relations.) Tj
+0 -18 Td
+(4. Graph Theory: Isomorphism, Euler/Hamilton paths, planar graphs, graph coloring.) Tj
+0 -18 Td
+(5. Group Theory: Groups, subgroups, Lagrange's Theorem, cyclic groups.) Tj
+0 -18 Td
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>
+endobj
+8 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000079 00000 n 
+0000000138 00000 n 
+0000000286 00000 n 
+0000001203 00000 n 
+0000001278 00000 n 
+0000001356 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+1426
+%%EOF

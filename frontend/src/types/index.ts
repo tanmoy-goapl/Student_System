@@ -6,7 +6,7 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   user_id: number;
-  role: "student" | "admin" | "teacher";
+  role: "student" | "admin" | "professor";
   message: string;
   name?: string | null;
   email?: string;
