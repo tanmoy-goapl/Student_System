@@ -1,0 +1,39 @@
+name: Review Status
+
+# A signal on each pull request. GitHub Free cannot block the merge button, so
+# the blocking checks run at promotion and release (see review_policy.py).
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled, unlabeled, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: review-status-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review-status:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Evaluate the review policy for this pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if [[ ! -f scripts/review_policy.py ]]; then
+            echo "::notice::Trusted base has no review checker yet; human bootstrap review is required."
+            echo "Review policy not installed in the trusted base. No automated approval check was performed; human bootstrap approval is still required." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 scripts/review_policy.py pr --pr "$PR_NUMBER" --summary "$GITHUB_STEP_SUMMARY"

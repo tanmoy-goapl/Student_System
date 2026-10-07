@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "enforce_from": "2099-01-01T00:00:00+00:00",
+  "senior": [
+    "tanmoy-goapl"
+  ],
+  "engineers": [
+    "keshavg125"
+  ],
+  "interns": [
+    "Kanak-25"
+  ],
+  "never_auto_assign": [],
+  "break_glass": [],
+  "high_risk_required_approvers": [
+    "tanmoy-goapl"
+  ],
+  "high_risk_paths": [
+    ".github/*",
+    "scripts/review_policy.py",
+    ".scripts/*",
+    "deploy/*"
+  ],
+  "deadlines_working_hours": {
+    "hotfix": 4,
+    "default": 16
+  },
+  "working_hours": {
+    "timezone_offset": "+05:30",
+    "weekdays": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "start": "09:00",
+    "end": "17:00"
+  }
+}

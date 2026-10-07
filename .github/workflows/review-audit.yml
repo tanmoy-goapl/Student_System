@@ -1,0 +1,31 @@
+name: Review Audit
+
+on:
+  schedule:
+    # ADAPT: cron is in UTC. This is hourly, 04:00-13:00 UTC, Monday to Friday.
+    - cron: "0 3-12 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: review-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Flag unreviewed merges and overdue reviews
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # ADAPT: list your long-lived branches (for example: main, or dev prod).
+        run: python3 scripts/review_policy.py audit --branches main --issue-label review-violation
