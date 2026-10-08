@@ -1,0 +1,33 @@
+name: Automated Review
+on:
+  pull_request:
+    branches: [main] # ADAPT: the branches pull requests are opened against
+permissions:
+  contents: read
+concurrency:
+  group: automated-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  automated-review-python:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: Galaxy-Office-Automation/automated-code-review@d0b0c18f201ffdc9f76f42a57b171179b002c5f4 # v1.1.0
+        with:
+          preset: python # ADAPT: python or react
+
+  automated-review-react:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: Galaxy-Office-Automation/automated-code-review@d0b0c18f201ffdc9f76f42a57b171179b002c5f4 # v1.1.0
+        with:
+          preset: react # ADAPT: python or react
