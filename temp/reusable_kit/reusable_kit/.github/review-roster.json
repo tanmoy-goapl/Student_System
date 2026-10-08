@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "enforce_from": "2099-01-01T00:00:00+00:00",
+  "senior": ["REPLACE-senior-login-1", "REPLACE-senior-login-2"],
+  "engineers": ["REPLACE-engineer-login-1", "REPLACE-engineer-login-2"],
+  "interns": ["REPLACE-intern-login-1"],
+  "never_auto_assign": [],
+  "break_glass": ["REPLACE-senior-login-1"],
+  "high_risk_required_approvers": [],
+  "high_risk_paths": [
+    ".github/*",
+    "scripts/review_policy.py",
+    "Dockerfile",
+    "docker-compose*.yml",
+    "migrations/*",
+    "deploy/*"
+  ],
+  "deadlines_working_hours": {"hotfix": 4, "default": 8},
+  "working_hours": {
+    "timezone_offset": "+00:00",
+    "weekdays": [0, 1, 2, 3, 4],
+    "start": "09:00",
+    "end": "17:00"
+  }
+}

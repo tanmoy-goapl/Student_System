@@ -1,0 +1,28 @@
+# Example: a step to paste into an existing GitHub Actions deploy workflow,
+# before the step that deploys. The job needs fetch-depth: 0 on checkout and
+# these permissions:  contents: read   pull-requests: read
+#
+# ADAPT: how DEPLOYED_SHA is found. Common choices:
+#   - a tag you move after each deploy:   git rev-parse "refs/tags/deployed-prod^{commit}"
+#   - your production branch before it is updated:  git rev-parse origin/prod
+#   - an endpoint or file that reports the running version
+# With the tag method, create the tag once on the commit that is live today,
+# and move it at the end of every successful deployment:
+#   git tag -f deployed-prod <sha> && git push -f origin deployed-prod
+      - name: Verify every pull request in this deployment was reviewed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVIEW_POLICY_MODE: enforce # use "warn" for a trial period
+        run: |
+          set -euo pipefail
+          git fetch --tags --force origin
+          DEPLOYED_SHA="$(git rev-parse 'refs/tags/deployed-prod^{commit}')"
+          ref="$DEPLOYED_SHA"
+          if ! git cat-file -e "$ref:.github/review-roster.json" 2>/dev/null; then
+            ref="$GITHUB_SHA"   # first gated deployment only
+          fi
+          git show "$ref:.github/review-roster.json" > "$RUNNER_TEMP/review-roster.json"
+          git show "$ref:scripts/review_policy.py" > "$RUNNER_TEMP/review_policy.py"
+          python3 "$RUNNER_TEMP/review_policy.py" \
+            --repository "$GITHUB_WORKSPACE" --roster "$RUNNER_TEMP/review-roster.json" \
+            range --base "$DEPLOYED_SHA" --head "$GITHUB_SHA" --summary "$GITHUB_STEP_SUMMARY"
